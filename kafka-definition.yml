@@ -1,0 +1,18 @@
+name: com.newrelic.kafka
+description: Reports status and metrics for Kafka services
+protocol_version: 1
+os: linux
+
+commands:
+  metrics:
+    command:
+      - ./bin/nr-kafka
+      - --metrics
+    interval: 15
+
+  inventory:
+    command:
+      - ./bin/nr-kafka
+      - --inventory
+    prefix: config/kafka
+    interval: 15

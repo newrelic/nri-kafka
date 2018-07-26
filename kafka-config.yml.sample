@@ -1,0 +1,34 @@
+integration_name: com.newrelic.kafka
+
+instances:
+  - name: kafka-metrics
+    command: metrics
+    arguments:
+      zookeeper_hosts: <JSON Array of Zookeeper Hosts of the form [{"host": "zookeeper_host", "port" 2181}]>
+      zookeeper_auth_scheme: <Auth Scheme for Zookeeper>
+      zookeeper_auth_secret: <Auth string for Zookeeper>
+      default_jmx_host: <Default Host to collect JMX Metrics>
+      default_jmx_port: <Default Port to collect JMX Metrics>
+      default_jmx_user: <Default User name for JMX Connection>
+      default_jmx_password: <Default Password for JMX Connection>
+      collect_broker_topic_data: <true or false. Signals if Broker and Topic metrics should be collected. Should be turned off if collecting only producer or consuemrs in topic_mode All>
+      producers: <JSON Array of Producers of the structure [{"name": "myProducer", "host": "prod_host", "port": 24, "username": "me', "password": "secret"}]
+      consumers: <JSON Array of Consumers of the structure [{"name": "myConsumer", "host": "con_host", "port": 24, "username": "me', "password": "secret"}]
+      topic_mode: <All, None, or List. All mode requires a zookeeper_host to be specified>
+      collect_topic_size: <true or false. Indicate if topic size should be collected as it is a very resource intensive metric to collect>
+      topic_list: <JSON Array of Topics to monitor. Ignored if topic_mode is not List>
+    labels:
+      env: production
+      role: kafka
+
+  - name: kafka-inventory
+    command: inventory
+    arguments:
+      zookeeper_hosts: <JSON Array of Zookeeper Hosts of the form [{"host": "zookeeper_host", "port" 2181}]>
+      zookeeper_auth_scheme: <Auth Scheme for Zookeeper>
+      zookeeper_auth_secret: <Auth string for Zookeeper>
+      topic_mode: <All, None, or List. All mode requires a zookeeper_host to be specified>
+      topic_list: <JSON Array of Topics to monitor. Ignored if topic_mode is not List>
+    labels:
+      env: production
+      role: kafka
