@@ -1,4 +1,4 @@
-# New Relic Infrastructure Integration for kafka
+# New Relic Infrastructure Integration for Kafka
 
 
 New Relic Infrastructure Integration for Kafka captures critical performance metrics and inventory reported by Kafka clusters. Data on Brokers, Topics, Java Producers, and Java Consumers is collected.
