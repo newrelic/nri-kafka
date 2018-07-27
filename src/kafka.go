@@ -7,6 +7,7 @@ import (
 	"github.com/newrelic/nri-kafka/args"
 	bc "github.com/newrelic/nri-kafka/brokercollect"
 	"github.com/newrelic/nri-kafka/logger"
+	pcc "github.com/newrelic/nri-kafka/prodconcollect"
 	tc "github.com/newrelic/nri-kafka/topiccollect"
 	"github.com/newrelic/nri-kafka/utils"
 	"github.com/newrelic/nri-kafka/zookeeper"
@@ -44,8 +45,8 @@ func main() {
 	// Start all worker pools
 	brokerChan := bc.StartBrokerPool(3, &wg, zkConn, kafkaIntegration, collectedTopics)
 	topicChan := tc.StartTopicPool(5, &wg, zkConn)
-	consumerChan := startWorkerPool(3, &wg, kafkaIntegration, collectedTopics, consumerWorker)
-	producerChan := startWorkerPool(3, &wg, kafkaIntegration, collectedTopics, producerWorker)
+	consumerChan := pcc.StartWorkerPool(3, &wg, kafkaIntegration, collectedTopics, pcc.ConsumerWorker)
+	producerChan := pcc.StartWorkerPool(3, &wg, kafkaIntegration, collectedTopics, pcc.ProducerWorker)
 
 	// After all worker pools are created start feeding them.
 	// It is important to not start feeding any pool until all are created
@@ -53,8 +54,8 @@ func main() {
 	// Run all of theses in their own Go Routine to maximize concurrency
 	go bc.FeedBrokerPool(zkConn, brokerChan)
 	go tc.FeedTopicPool(topicChan, kafkaIntegration, collectedTopics)
-	go feedWorkerPool(consumerChan, utils.KafkaArgs.Consumers)
-	go feedWorkerPool(producerChan, utils.KafkaArgs.Producers)
+	go pcc.FeedWorkerPool(consumerChan, utils.KafkaArgs.Consumers)
+	go pcc.FeedWorkerPool(producerChan, utils.KafkaArgs.Producers)
 
 	wg.Wait()
 

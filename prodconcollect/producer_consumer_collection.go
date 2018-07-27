@@ -1,4 +1,5 @@
-package main
+// Package prodconcollect handles collection of Consumer and Producer metric data
+package prodconcollect
 
 import (
 	"strconv"
@@ -12,9 +13,9 @@ import (
 	"github.com/newrelic/nri-kafka/utils"
 )
 
-// Starts a pool of workers to handle collecting data for wither Consumer or producer entities.
+// StartWorkerPool starts a pool of workers to handle collecting data for wither Consumer or producer entities.
 // The channel returned is to be closed by the user (or by feedWorkerPool)
-func startWorkerPool(poolSize int, wg *sync.WaitGroup, integration *integration.Integration, collectedTopics []string,
+func StartWorkerPool(poolSize int, wg *sync.WaitGroup, integration *integration.Integration, collectedTopics []string,
 	worker func(<-chan *args.JMXHost, *sync.WaitGroup, *integration.Integration, []string)) chan *args.JMXHost {
 
 	jmxHostChan := make(chan *args.JMXHost)
@@ -27,9 +28,9 @@ func startWorkerPool(poolSize int, wg *sync.WaitGroup, integration *integration.
 	return jmxHostChan
 }
 
-// Feeds the worker pool with jmxHost objects, which contain connection information
+// FeedWorkerPool feeds the worker pool with jmxHost objects, which contain connection information
 // for each producer/consumer to be collected
-func feedWorkerPool(jmxHostChan chan<- *args.JMXHost, jmxHosts []*args.JMXHost) {
+func FeedWorkerPool(jmxHostChan chan<- *args.JMXHost, jmxHosts []*args.JMXHost) {
 	defer close(jmxHostChan)
 
 	for _, jmxHost := range jmxHosts {
@@ -37,8 +38,8 @@ func feedWorkerPool(jmxHostChan chan<- *args.JMXHost, jmxHosts []*args.JMXHost) 
 	}
 }
 
-// Collect information for consumers sent down the consumerChan
-func consumerWorker(consumerChan <-chan *args.JMXHost, wg *sync.WaitGroup, i *integration.Integration, collectedTopics []string) {
+// ConsumerWorker collects information for consumers sent down the consumerChan
+func ConsumerWorker(consumerChan <-chan *args.JMXHost, wg *sync.WaitGroup, i *integration.Integration, collectedTopics []string) {
 	defer wg.Done()
 
 	for {
@@ -93,8 +94,8 @@ func consumerWorker(consumerChan <-chan *args.JMXHost, wg *sync.WaitGroup, i *in
 	}
 }
 
-// Collect information for producers sent down the producerChan
-func producerWorker(producerChan <-chan *args.JMXHost, wg *sync.WaitGroup, i *integration.Integration, collectedTopics []string) {
+// ProducerWorker collect information for Producers sent down the producerChan
+func ProducerWorker(producerChan <-chan *args.JMXHost, wg *sync.WaitGroup, i *integration.Integration, collectedTopics []string) {
 	defer wg.Done()
 	for {
 		jmxInfo, ok := <-producerChan

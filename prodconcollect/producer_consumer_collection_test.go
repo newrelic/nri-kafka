@@ -1,4 +1,4 @@
-package main
+package prodconcollect
 
 import (
 	"errors"
@@ -19,7 +19,7 @@ func TestStartWorkerPool(t *testing.T) {
 		t.Error(err)
 	}
 
-	consumerHosts := startWorkerPool(3, &wg, i, collectedTopics, consumerWorker)
+	consumerHosts := StartWorkerPool(3, &wg, i, collectedTopics, ConsumerWorker)
 
 	c := make(chan int)
 	go func() {
@@ -42,7 +42,7 @@ func TestFeedWorkerPool(t *testing.T) {
 		{},
 		{},
 	}
-	go feedWorkerPool(jmxHostChan, jmxHosts)
+	go FeedWorkerPool(jmxHostChan, jmxHosts)
 
 	var retrievedJmxHosts []*args.JMXHost
 	for {
@@ -70,7 +70,7 @@ func TestConsumerWorker(t *testing.T) {
 	utils.SetupTestArgs()
 
 	wg.Add(1)
-	go consumerWorker(consumerChan, &wg, i, collectedTopics)
+	go ConsumerWorker(consumerChan, &wg, i, collectedTopics)
 
 	newJmx := &args.JMXHost{
 		Name: "test",
@@ -96,7 +96,7 @@ func TestConsumerWorker_JmxOpenFuncErr(t *testing.T) {
 	utils.SetupTestArgs()
 
 	wg.Add(1)
-	go consumerWorker(consumerChan, &wg, i, collectedTopics)
+	go ConsumerWorker(consumerChan, &wg, i, collectedTopics)
 
 	newJmx := &args.JMXHost{
 		Name: "test",
@@ -120,7 +120,7 @@ func TestProducerWorker(t *testing.T) {
 	utils.SetupTestArgs()
 
 	wg.Add(1)
-	go producerWorker(producerChan, &wg, i, collectedTopics)
+	go ProducerWorker(producerChan, &wg, i, collectedTopics)
 
 	newJmx := &args.JMXHost{
 		Name: "test",
@@ -146,7 +146,7 @@ func TestProducerWorker_JmxOpenFuncErr(t *testing.T) {
 	utils.SetupTestArgs()
 
 	wg.Add(1)
-	go producerWorker(producerChan, &wg, i, collectedTopics)
+	go ProducerWorker(producerChan, &wg, i, collectedTopics)
 
 	newJmx := &args.JMXHost{
 		Name: "test",
