@@ -11,6 +11,8 @@ import (
 	"github.com/newrelic/infra-integrations-sdk/data/inventory"
 	"github.com/newrelic/infra-integrations-sdk/data/metric"
 	"github.com/newrelic/infra-integrations-sdk/integration"
+	"github.com/newrelic/nri-kafka/args"
+	"github.com/newrelic/nri-kafka/zookeeper"
 )
 
 func TestGetTopics(t *testing.T) {
@@ -25,10 +27,10 @@ func TestGetTopics(t *testing.T) {
 		{"Specific", []string{"test1", "test2"}, []string{"test1", "test2"}, false},
 		{"FakeMode", []string{"test1", "test2"}, nil, true},
 	}
-	zkConn := &mockZookeeper{}
+	zkConn := &zookeeper.MockConnection{}
 
 	for _, tc := range testCases {
-		kafkaArgs = &kafkaArguments{
+		kafkaArgs = &args.KafkaArguments{
 			TopicMode: tc.topicMode,
 			TopicList: tc.topicNames,
 		}
@@ -54,12 +56,12 @@ func TestGetTopics_zkErr(t *testing.T) {
 		{"Specific", []string{"test1", "test2"}, []string{"test1", "test2"}, false},
 		{"FakeMode", []string{"test1", "test2"}, nil, true},
 	}
-	zkConn := &mockZookeeper{ReturnChildrenError: true}
+	zkConn := &zookeeper.MockConnection{ReturnChildrenError: true}
 	i, _ := integration.New("kafka", "1.0.0")
 	logger = i.Logger()
 
 	for _, tc := range testCases {
-		kafkaArgs = &kafkaArguments{
+		kafkaArgs = &args.KafkaArguments{
 			TopicMode: tc.topicMode,
 			TopicList: tc.topicNames,
 		}
@@ -77,7 +79,7 @@ func TestGetTopics_zkErr(t *testing.T) {
 func TestStartTopicPool(t *testing.T) {
 	setupTestArgs()
 	var wg sync.WaitGroup
-	zkConn := mockZookeeper{}
+	zkConn := zookeeper.MockConnection{}
 
 	topicChan := startTopicPool(3, &wg, &zkConn)
 	close(topicChan)
@@ -103,7 +105,7 @@ func TestFeedTopicPool(t *testing.T) {
 	if err != nil {
 		t.Error("Failed to create integration")
 	}
-	zkConn := mockZookeeper{}
+	zkConn := zookeeper.MockConnection{}
 	topicChan := make(chan *topic, 10)
 
 	collectedTopics, err := getTopics(zkConn)
@@ -135,7 +137,7 @@ func TestFeedTopicPool(t *testing.T) {
 func TestTopicWorker(t *testing.T) {
 	topicChan := make(chan *topic)
 	var wg sync.WaitGroup
-	zkConn := mockZookeeper{}
+	zkConn := zookeeper.MockConnection{}
 
 	setupTestArgs()
 	kafkaArgs.Metrics = false
@@ -227,7 +229,7 @@ func TestPopulateTopicInventory(t *testing.T) {
 }
 
 func TestPopulateTopicMetrics(t *testing.T) {
-	zkConn := &mockZookeeper{}
+	zkConn := &zookeeper.MockConnection{}
 
 	testTopic := &topic{
 		Name: "test",

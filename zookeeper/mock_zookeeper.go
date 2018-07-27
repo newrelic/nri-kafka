@@ -1,4 +1,4 @@
-package main
+package zookeeper
 
 import (
 	"errors"
@@ -7,21 +7,15 @@ import (
 	"github.com/samuel/go-zookeeper/zk"
 )
 
-// Interface to allow easy mocking of a ZooKeeper connection
-type zookeeperConn interface {
-	Get(string) ([]byte, *zk.Stat, error)
-	Children(string) ([]string, *zk.Stat, error)
-}
-
-// A zookeeper struct that implements zookeeperConn to facilitate testing.
+// MockConnection implements Connectionto facilitate testing.
 // Includes two properties
-type mockZookeeper struct {
+type MockConnection struct {
 	ReturnGetError      bool // If true, a Get() method call will return an error
 	ReturnChildrenError bool // If true, a Children() method call will return an error
 }
 
-// Implementing the Get function of the zookeeperConn interface
-func (m mockZookeeper) Get(s string) ([]byte, *zk.Stat, error) {
+// Get function of the Connection interface
+func (m MockConnection) Get(s string) ([]byte, *zk.Stat, error) {
 	if m.ReturnGetError {
 		return nil, nil, errors.New("This is a test error")
 	}
@@ -58,8 +52,8 @@ func (m mockZookeeper) Get(s string) ([]byte, *zk.Stat, error) {
 	return nil, nil, errors.New("The endpoint " + s + " is not defined in the mock connection interface.")
 }
 
-// Implement the Children method of the zookeeperConn interface
-func (m mockZookeeper) Children(s string) ([]string, *zk.Stat, error) {
+// Children method of the Connection interface
+func (m MockConnection) Children(s string) ([]string, *zk.Stat, error) {
 	if m.ReturnChildrenError {
 		return nil, nil, errors.New("This is a test error")
 	}

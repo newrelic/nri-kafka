@@ -6,14 +6,15 @@ import (
 
 	"github.com/newrelic/infra-integrations-sdk/data/metric"
 	"github.com/newrelic/infra-integrations-sdk/integration"
+	"github.com/newrelic/nri-kafka/args"
 )
 
 // Starts a pool of workers to handle collecting data for wither Consumer or producer entities.
 // The channel returned is to be closed by the user (or by feedWorkerPool)
 func startWorkerPool(poolSize int, wg *sync.WaitGroup, integration *integration.Integration, collectedTopics []string,
-	worker func(<-chan *jmxHost, *sync.WaitGroup, *integration.Integration, []string)) chan *jmxHost {
+	worker func(<-chan *args.JMXHost, *sync.WaitGroup, *integration.Integration, []string)) chan *args.JMXHost {
 
-	jmxHostChan := make(chan *jmxHost)
+	jmxHostChan := make(chan *args.JMXHost)
 
 	for i := 0; i < poolSize; i++ {
 		wg.Add(1)
@@ -25,7 +26,7 @@ func startWorkerPool(poolSize int, wg *sync.WaitGroup, integration *integration.
 
 // Feeds the worker pool with jmxHost objects, which contain connection information
 // for each producer/consumer to be collected
-func feedWorkerPool(jmxHostChan chan<- *jmxHost, jmxHosts []*jmxHost) {
+func feedWorkerPool(jmxHostChan chan<- *args.JMXHost, jmxHosts []*args.JMXHost) {
 	defer close(jmxHostChan)
 
 	for _, jmxHost := range jmxHosts {
@@ -34,7 +35,7 @@ func feedWorkerPool(jmxHostChan chan<- *jmxHost, jmxHosts []*jmxHost) {
 }
 
 // Collect information for consumers sent down the consumerChan
-func consumerWorker(consumerChan <-chan *jmxHost, wg *sync.WaitGroup, i *integration.Integration, collectedTopics []string) {
+func consumerWorker(consumerChan <-chan *args.JMXHost, wg *sync.WaitGroup, i *integration.Integration, collectedTopics []string) {
 	defer wg.Done()
 
 	for {
@@ -90,7 +91,7 @@ func consumerWorker(consumerChan <-chan *jmxHost, wg *sync.WaitGroup, i *integra
 }
 
 // Collect information for producers sent down the producerChan
-func producerWorker(producerChan <-chan *jmxHost, wg *sync.WaitGroup, i *integration.Integration, collectedTopics []string) {
+func producerWorker(producerChan <-chan *args.JMXHost, wg *sync.WaitGroup, i *integration.Integration, collectedTopics []string) {
 	defer wg.Done()
 	for {
 		jmxInfo, ok := <-producerChan

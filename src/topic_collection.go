@@ -8,6 +8,7 @@ import (
 	"github.com/Shopify/sarama"
 	"github.com/newrelic/infra-integrations-sdk/data/metric"
 	"github.com/newrelic/infra-integrations-sdk/integration"
+	"github.com/newrelic/nri-kafka/zookeeper"
 )
 
 // topic is a storage struct for information about topics
@@ -22,7 +23,7 @@ type topic struct {
 
 // Starts a pool of topicWorkers to handle collecting data for Topic entities.
 // The channel returned is to be closed by the user.
-func startTopicPool(poolSize int, wg *sync.WaitGroup, zkConn zookeeperConn) chan *topic {
+func startTopicPool(poolSize int, wg *sync.WaitGroup, zkConn zookeeper.Connection) chan *topic {
 	topicChan := make(chan *topic)
 
 	if kafkaArgs.CollectBrokerTopicData {
@@ -35,7 +36,7 @@ func startTopicPool(poolSize int, wg *sync.WaitGroup, zkConn zookeeperConn) chan
 }
 
 // Returns the list of topics to collect based on the user-provided configuration
-func getTopics(zkConn zookeeperConn) ([]string, error) {
+func getTopics(zkConn zookeeper.Connection) ([]string, error) {
 	switch kafkaArgs.TopicMode {
 	case "None":
 		return []string{}, nil
@@ -75,7 +76,7 @@ func feedTopicPool(topicChan chan<- *topic, integration *integration.Integration
 }
 
 // Collect inventory and metrics for topics sent down topicChan
-func topicWorker(topicChan <-chan *topic, wg *sync.WaitGroup, zkConn zookeeperConn) {
+func topicWorker(topicChan <-chan *topic, wg *sync.WaitGroup, zkConn zookeeper.Connection) {
 	wg.Add(1)
 	defer wg.Done()
 
@@ -117,7 +118,7 @@ func topicWorker(topicChan <-chan *topic, wg *sync.WaitGroup, zkConn zookeeperCo
 }
 
 // Calculate topic metrics and populate metric set with them
-func populateTopicMetrics(t *topic, sample *metric.Set, zkConn zookeeperConn) error {
+func populateTopicMetrics(t *topic, sample *metric.Set, zkConn zookeeper.Connection) error {
 
 	if err := calculateTopicRetention(t.Configs, sample); err != nil {
 		return err
@@ -167,7 +168,7 @@ func calculateUnderReplicatedCount(partitions []*partition, sample *metric.Set) 
 }
 
 // Makes a metadata request to determine whether a topic is able to respond
-func topicRespondsToMetadata(t *topic, zkConn zookeeperConn) int {
+func topicRespondsToMetadata(t *topic, zkConn zookeeper.Connection) int {
 
 	// Get connection information for a broker
 	host, _, port, err := getBrokerConnectionInfo(0, zkConn)
@@ -193,7 +194,7 @@ func topicRespondsToMetadata(t *topic, zkConn zookeeperConn) int {
 }
 
 // Collect and populate the remainder of the topic struct fields
-func setTopicInfo(t *topic, zkConn zookeeperConn) error {
+func setTopicInfo(t *topic, zkConn zookeeper.Connection) error {
 
 	// Collect topic configuration from Zookeeper
 	config, _, err := zkConn.Get("/config/topics/" + t.Name)

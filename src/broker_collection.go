@@ -7,6 +7,7 @@ import (
 
 	"github.com/newrelic/infra-integrations-sdk/data/metric"
 	"github.com/newrelic/infra-integrations-sdk/integration"
+	"github.com/newrelic/nri-kafka/zookeeper"
 )
 
 // broker is a storage struct for information about brokers
@@ -22,7 +23,7 @@ type broker struct {
 // Starts a pool of brokerWorkers to handle collecting data for Broker entities.
 // The returned channel can be fed brokerIDs to collect, and is to be closed by the user
 // (or closed by feedBrokerPool)
-func startBrokerPool(poolSize int, wg *sync.WaitGroup, zkConn zookeeperConn, integration *integration.Integration, collectedTopics []string) chan int {
+func startBrokerPool(poolSize int, wg *sync.WaitGroup, zkConn zookeeper.Connection, integration *integration.Integration, collectedTopics []string) chan int {
 	brokerChan := make(chan int)
 
 	// Only spin off brokerWorkers if signaled
@@ -37,7 +38,7 @@ func startBrokerPool(poolSize int, wg *sync.WaitGroup, zkConn zookeeperConn, int
 
 // Collects a list of brokerIDs from ZooKeeper and feeds them into a
 // channel to be read by a broker worker pool
-func feedBrokerPool(zkConn zookeeperConn, brokerChan chan<- int) {
+func feedBrokerPool(zkConn zookeeper.Connection, brokerChan chan<- int) {
 	defer close(brokerChan) // close the broker channel when done feeding
 
 	// Don't make API calls or feed down channel if we don't want to collect brokers
@@ -59,7 +60,7 @@ func feedBrokerPool(zkConn zookeeperConn, brokerChan chan<- int) {
 // Reads brokerIDs from a channel, creates an entity for each broker, and collects
 // inventory and metrics data for that broker. Exits when it determines the channel has
 // been closed
-func brokerWorker(brokerChan <-chan int, collectedTopics []string, wg *sync.WaitGroup, zkConn zookeeperConn, i *integration.Integration) {
+func brokerWorker(brokerChan <-chan int, collectedTopics []string, wg *sync.WaitGroup, zkConn zookeeper.Connection, i *integration.Integration) {
 	wg.Add(1)
 	defer wg.Done()
 
@@ -95,7 +96,7 @@ func brokerWorker(brokerChan <-chan int, collectedTopics []string, wg *sync.Wait
 
 // Creates and populates a broker struct with all the information needed to
 // populate inventory and metrics.
-func createBroker(brokerID int, zkConn zookeeperConn, i *integration.Integration) (*broker, error) {
+func createBroker(brokerID int, zkConn zookeeper.Connection, i *integration.Integration) (*broker, error) {
 
 	// Collect broker connection information from ZooKeeper
 	host, jmxPort, kafkaPort, err := getBrokerConnectionInfo(brokerID, zkConn)
@@ -193,7 +194,7 @@ func populateBrokerMetrics(b *broker) error {
 }
 
 // Collect broker connection info from Zookeeper
-func getBrokerConnectionInfo(brokerID int, zkConn zookeeperConn) (string, int, int, error) {
+func getBrokerConnectionInfo(brokerID int, zkConn zookeeper.Connection) (string, int, int, error) {
 
 	// Query Zookeeper for broker information
 	rawBrokerJSON, _, err := zkConn.Get("/brokers/ids/" + strconv.Itoa(brokerID))
@@ -217,7 +218,7 @@ func getBrokerConnectionInfo(brokerID int, zkConn zookeeperConn) (string, int, i
 }
 
 // Collect broker configuration from Zookeeper
-func getBrokerConfig(brokerID int, zkConn zookeeperConn) (map[string]string, error) {
+func getBrokerConfig(brokerID int, zkConn zookeeper.Connection) (map[string]string, error) {
 
 	// Query Zookeeper for broker configuration
 	rawBrokerConfig, _, err := zkConn.Get("/config/brokers/" + strconv.Itoa(brokerID))

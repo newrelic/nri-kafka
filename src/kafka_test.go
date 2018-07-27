@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/newrelic/infra-integrations-sdk/log"
+	"github.com/newrelic/nri-kafka/args"
 )
 
 func setupJmxTesting() {
@@ -15,5 +16,5 @@ func setupTestLogger() {
 }
 
 func setupTestArgs() {
-	kafkaArgs = &kafkaArguments{CollectBrokerTopicData: true}
+	kafkaArgs = &args.KafkaArguments{CollectBrokerTopicData: true}
 }

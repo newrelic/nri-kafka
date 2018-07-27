@@ -5,6 +5,8 @@ import (
 	"sync"
 	"testing"
 	"time"
+
+	"github.com/newrelic/nri-kafka/zookeeper"
 )
 
 func TestCollectPartitions(t *testing.T) {
@@ -50,7 +52,7 @@ func TestPartitionWorker(t *testing.T) {
 	partitionInChan := make(chan *partitionSender, 10)
 	partitionOutChan := make(chan interface{}, 10)
 	var wg sync.WaitGroup
-	zkConn := mockZookeeper{}
+	zkConn := zookeeper.MockConnection{}
 	expectedPartition := &partition{
 		ID:             0,
 		Leader:         2,
@@ -91,7 +93,7 @@ func TestFeedPartitionPool(t *testing.T) {
 		},
 	}
 
-	zkConn := mockZookeeper{}
+	zkConn := zookeeper.MockConnection{}
 
 	partitionInChan := make(chan *partitionSender)
 	go feedPartitionPool(partitionInChan, "test1", &zkConn)
@@ -114,7 +116,7 @@ func TestFeedPartitionPool(t *testing.T) {
 
 func TestStartPartitionPool(t *testing.T) {
 	var wg sync.WaitGroup
-	zkConn := mockZookeeper{}
+	zkConn := zookeeper.MockConnection{}
 
 	partitionInChan, partitionOutChan := startPartitionPool(3, &wg, &zkConn)
 	if len(partitionOutChan) != 3 {

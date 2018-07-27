@@ -11,13 +11,14 @@ import (
 	"github.com/kr/pretty"
 	"github.com/newrelic/infra-integrations-sdk/data/inventory"
 	"github.com/newrelic/infra-integrations-sdk/integration"
+	"github.com/newrelic/nri-kafka/zookeeper"
 )
 
 func TestStartBrokerPool(t *testing.T) {
 	setupTestArgs()
 
 	var wg sync.WaitGroup
-	zkConn := mockZookeeper{}
+	zkConn := zookeeper.MockConnection{}
 	collectedTopics := make([]string, 0)
 	i, err := integration.New("kafka", "1.0.0")
 	if err != nil {
@@ -43,7 +44,7 @@ func TestStartBrokerPool(t *testing.T) {
 
 func TestFeedBrokerPool_NoError(t *testing.T) {
 	setupTestArgs()
-	zkConn := mockZookeeper{}
+	zkConn := zookeeper.MockConnection{}
 	brokerChan := make(chan int, 10)
 
 	defer func() {
@@ -61,7 +62,7 @@ func TestFeedBrokerPool_NoError(t *testing.T) {
 
 func TestFeedBrokerPool_Error(t *testing.T) {
 	setupTestArgs()
-	zkConn := mockZookeeper{ReturnChildrenError: true}
+	zkConn := zookeeper.MockConnection{ReturnChildrenError: true}
 	brokerChan := make(chan int, 10)
 
 	defer func() {
@@ -73,11 +74,11 @@ func TestFeedBrokerPool_Error(t *testing.T) {
 }
 
 func TestBrokerWorker(t *testing.T) {
-	zkConn := &mockZookeeper{}
+	zkConn := &zookeeper.MockConnection{}
 	var wg sync.WaitGroup
 	brokerChan := make(chan int, 10)
 	i, _ := integration.New("kafka", "1.0.0")
-	kafkaArgs = &kafkaArguments{}
+	setupTestArgs()
 
 	go brokerWorker(brokerChan, []string{}, &wg, zkConn, i)
 
@@ -89,7 +90,7 @@ func TestBrokerWorker(t *testing.T) {
 
 func TestCreateBroker_ZKError(t *testing.T) {
 	setupTestLogger()
-	brokerID, zkConn := 0, &mockZookeeper{ReturnGetError: true}
+	brokerID, zkConn := 0, &zookeeper.MockConnection{ReturnGetError: true}
 	i, _ := integration.New("kafka", "1.0.0")
 
 	_, err := createBroker(brokerID, zkConn, i)
@@ -100,7 +101,7 @@ func TestCreateBroker_ZKError(t *testing.T) {
 
 func TestCreateBroker_Normal(t *testing.T) {
 	setupTestLogger()
-	brokerID, zkConn := 0, &mockZookeeper{}
+	brokerID, zkConn := 0, &zookeeper.MockConnection{}
 	i, _ := integration.New("kafka", "1.0.0")
 
 	b, err := createBroker(brokerID, zkConn, i)
@@ -263,7 +264,7 @@ func TestPopulateBrokerMetrics_Normal(t *testing.T) {
 
 func TestGetBrokerJMX(t *testing.T) {
 	brokerID := 0
-	zkConn := mockZookeeper{}
+	zkConn := zookeeper.MockConnection{}
 
 	host, jmxPort, kafkaPort, err := getBrokerConnectionInfo(brokerID, &zkConn)
 	if err != nil {
@@ -282,7 +283,7 @@ func TestGetBrokerJMX(t *testing.T) {
 }
 
 func TestGetBrokerConfig(t *testing.T) {
-	zkConn := mockZookeeper{}
+	zkConn := zookeeper.MockConnection{}
 
 	testCases := []struct {
 		brokerID       int

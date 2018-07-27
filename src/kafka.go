@@ -1,14 +1,13 @@
 package main
 
 import (
-	"fmt"
 	"sync"
-	"time"
 
 	"github.com/newrelic/infra-integrations-sdk/integration"
 	"github.com/newrelic/infra-integrations-sdk/jmx"
 	"github.com/newrelic/infra-integrations-sdk/log"
-	"github.com/samuel/go-zookeeper/zk"
+	"github.com/newrelic/nri-kafka/args"
+	"github.com/newrelic/nri-kafka/zookeeper"
 )
 
 const (
@@ -18,7 +17,7 @@ const (
 
 var (
 	logger    log.Logger
-	kafkaArgs *kafkaArguments
+	kafkaArgs *args.KafkaArguments
 
 	jmxLock sync.Mutex
 
@@ -29,9 +28,9 @@ var (
 )
 
 func main() {
-	var args argumentList
+	var argList args.ArgumentList
 	// Create Integration
-	kafkaIntegration, err := integration.New(integrationName, integrationVersion, integration.Args(&args))
+	kafkaIntegration, err := integration.New(integrationName, integrationVersion, integration.Args(&argList))
 	panicOnErr(err)
 
 	// Needs to be after integration creation for args to be set
@@ -39,10 +38,10 @@ func main() {
 
 	// Parse args into structs
 	// This has to be after integration creation for defaults to be populated
-	kafkaArgs, err = parseArgs(args)
+	kafkaArgs, err = args.ParseArgs(argList)
 	panicOnErr(err)
 
-	zkConn, err := makeZookeeperConnection()
+	zkConn, err := zookeeper.NewConnection(kafkaArgs)
 	panicOnErr(err)
 
 	// Get topic list
@@ -70,27 +69,6 @@ func main() {
 	wg.Wait()
 
 	panicOnErr(kafkaIntegration.Publish())
-}
-
-// Waiting on issue https://github.com/samuel/go-zookeeper/issues/108 so we can change this function
-// and allow us to mock out the zk.Connect function
-func makeZookeeperConnection() (zookeeperConn, error) {
-
-	// Create array of host:port strings for connecting
-	zkHosts := make([]string, 0, len(kafkaArgs.ZookeeperHosts))
-	for _, zkHost := range kafkaArgs.ZookeeperHosts {
-		zkHosts = append(zkHosts, fmt.Sprintf("%s:%d", zkHost.Host, zkHost.Port))
-	}
-
-	// Create connection and add authentication if provided
-	zkConn, _, err := zk.Connect(zkHosts, time.Second)
-	if kafkaArgs.ZookeeperAuthScheme != "" {
-		if err = zkConn.AddAuth(kafkaArgs.ZookeeperAuthScheme, []byte(kafkaArgs.ZookeeperAuthSecret)); err != nil {
-			return nil, err
-		}
-	}
-
-	return zkConn, nil
 }
 
 func panicOnErr(err error) {

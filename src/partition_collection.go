@@ -1,9 +1,11 @@
 package main
 
 import (
-	json "encoding/json"
+	"encoding/json"
 	"strconv"
 	"sync"
+
+	"github.com/newrelic/nri-kafka/zookeeper"
 )
 
 // partition is a storage struct for information about partitions
@@ -23,7 +25,7 @@ type partitionSender struct {
 
 // Starts a pool of partitionWorkers to handle collection partition information
 // Returns a channel for inbound partitionSenders and outbound partition/error
-func startPartitionPool(poolSize int, wg *sync.WaitGroup, zkConn zookeeperConn) (chan *partitionSender, []chan interface{}) {
+func startPartitionPool(poolSize int, wg *sync.WaitGroup, zkConn zookeeper.Connection) (chan *partitionSender, []chan interface{}) {
 	partitionInChan := make(chan *partitionSender, 20)
 	var partitionOutChans []chan interface{}
 	for i := 0; i < poolSize; i++ {
@@ -39,7 +41,7 @@ func startPartitionPool(poolSize int, wg *sync.WaitGroup, zkConn zookeeperConn) 
 // Collects the list of partition IDs from zookeeper, then feeds the partition
 // workers with partitionSender structs which contain all the information needed
 // for the partitionWorker to populate a partition struct
-func feedPartitionPool(partitionInChan chan<- *partitionSender, topicName string, zkConn zookeeperConn) {
+func feedPartitionPool(partitionInChan chan<- *partitionSender, topicName string, zkConn zookeeper.Connection) {
 	defer close(partitionInChan)
 
 	// Collect the partition replication info from the topic configuration in Zookeeper
@@ -137,7 +139,7 @@ func collectPartitions(partitionOutChans []chan interface{}) []*partition {
 }
 
 // Reads partitionSenders from a channel and pushes a completed partition struct onto its unique partitionOutChan
-func partitionWorker(partitionInChan chan *partitionSender, partitionOutChan chan interface{}, wg *sync.WaitGroup, c zookeeperConn) {
+func partitionWorker(partitionInChan chan *partitionSender, partitionOutChan chan interface{}, wg *sync.WaitGroup, c zookeeper.Connection) {
 	wg.Add(1)
 	defer wg.Done()
 	defer close(partitionOutChan)
