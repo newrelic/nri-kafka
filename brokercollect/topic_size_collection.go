@@ -1,5 +1,4 @@
-// This file contains most code related to gather topic size adn it involves communication between brokerWorkers and topicWorkers
-package main
+package brokercollect
 
 import (
 	"fmt"

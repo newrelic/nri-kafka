@@ -1,4 +1,5 @@
-package main
+// Package brokercollect handles collection of Broker inventory and metric data
+package brokercollect
 
 import (
 	"encoding/json"
@@ -23,10 +24,10 @@ type broker struct {
 	Config    map[string]string
 }
 
-// Starts a pool of brokerWorkers to handle collecting data for Broker entities.
+// StartBrokerPool starts a pool of brokerWorkers to handle collecting data for Broker entities.
 // The returned channel can be fed brokerIDs to collect, and is to be closed by the user
 // (or closed by feedBrokerPool)
-func startBrokerPool(poolSize int, wg *sync.WaitGroup, zkConn zookeeper.Connection, integration *integration.Integration, collectedTopics []string) chan int {
+func StartBrokerPool(poolSize int, wg *sync.WaitGroup, zkConn zookeeper.Connection, integration *integration.Integration, collectedTopics []string) chan int {
 	brokerChan := make(chan int)
 
 	// Only spin off brokerWorkers if signaled
@@ -39,15 +40,15 @@ func startBrokerPool(poolSize int, wg *sync.WaitGroup, zkConn zookeeper.Connecti
 	return brokerChan
 }
 
-// Collects a list of brokerIDs from ZooKeeper and feeds them into a
+// FeedBrokerPool collects a list of brokerIDs from ZooKeeper and feeds them into a
 // channel to be read by a broker worker pool
-func feedBrokerPool(zkConn zookeeper.Connection, brokerChan chan<- int) {
+func FeedBrokerPool(zkConn zookeeper.Connection, brokerChan chan<- int) {
 	defer close(brokerChan) // close the broker channel when done feeding
 
 	// Don't make API calls or feed down channel if we don't want to collect brokers
 	if utils.KafkaArgs.CollectBrokerTopicData {
 		brokerIDs, _, err := zkConn.Children("/brokers/ids")
-		panicOnErr(err) // If unable to collect a list of brokerIDs, panic
+		utils.PanicOnErr(err) // If unable to collect a list of brokerIDs, panic
 
 		for _, id := range brokerIDs {
 			intID, err := strconv.Atoi(id)
@@ -102,7 +103,7 @@ func brokerWorker(brokerChan <-chan int, collectedTopics []string, wg *sync.Wait
 func createBroker(brokerID int, zkConn zookeeper.Connection, i *integration.Integration) (*broker, error) {
 
 	// Collect broker connection information from ZooKeeper
-	host, jmxPort, kafkaPort, err := getBrokerConnectionInfo(brokerID, zkConn)
+	host, jmxPort, kafkaPort, err := GetBrokerConnectionInfo(brokerID, zkConn)
 	if err != nil {
 		logger.Errorf("Unable to get broker JMX information for broker id %s: %s", host, err)
 		return nil, err
@@ -196,8 +197,8 @@ func populateBrokerMetrics(b *broker) error {
 	return nil
 }
 
-// Collect broker connection info from Zookeeper
-func getBrokerConnectionInfo(brokerID int, zkConn zookeeper.Connection) (string, int, int, error) {
+// GetBrokerConnectionInfo Collects Broker connection info from Zookeeper
+func GetBrokerConnectionInfo(brokerID int, zkConn zookeeper.Connection) (string, int, int, error) {
 
 	// Query Zookeeper for broker information
 	rawBrokerJSON, _, err := zkConn.Get("/brokers/ids/" + strconv.Itoa(brokerID))

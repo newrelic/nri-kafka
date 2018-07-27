@@ -8,6 +8,7 @@ import (
 	"github.com/Shopify/sarama"
 	"github.com/newrelic/infra-integrations-sdk/data/metric"
 	"github.com/newrelic/infra-integrations-sdk/integration"
+	bc "github.com/newrelic/nri-kafka/brokercollect"
 	"github.com/newrelic/nri-kafka/logger"
 	"github.com/newrelic/nri-kafka/utils"
 	"github.com/newrelic/nri-kafka/zookeeper"
@@ -173,7 +174,7 @@ func calculateUnderReplicatedCount(partitions []*partition, sample *metric.Set) 
 func topicRespondsToMetadata(t *topic, zkConn zookeeper.Connection) int {
 
 	// Get connection information for a broker
-	host, _, port, err := getBrokerConnectionInfo(0, zkConn)
+	host, _, port, err := bc.GetBrokerConnectionInfo(0, zkConn)
 	if err != nil {
 		return 0
 	}

@@ -1,4 +1,4 @@
-package main
+package brokercollect
 
 import (
 	"errors"
@@ -26,7 +26,7 @@ func TestStartBrokerPool(t *testing.T) {
 		t.Error(err)
 	}
 
-	brokerChan := startBrokerPool(3, &wg, &zkConn, i, collectedTopics)
+	brokerChan := StartBrokerPool(3, &wg, &zkConn, i, collectedTopics)
 	close(brokerChan)
 
 	c := make(chan int)
@@ -50,10 +50,10 @@ func TestFeedBrokerPool_NoError(t *testing.T) {
 
 	defer func() {
 		if r := recover(); r != nil {
-			t.Error("feedBrokerPool paniced")
+			t.Error("FeedBrokerPool paniced")
 		}
 	}()
-	feedBrokerPool(&zkConn, brokerChan)
+	FeedBrokerPool(&zkConn, brokerChan)
 
 	brokerID := <-brokerChan
 	if brokerID != 0 {
@@ -68,10 +68,10 @@ func TestFeedBrokerPool_Error(t *testing.T) {
 
 	defer func() {
 		if r := recover(); r == nil {
-			t.Error("feedBrokerPool did not panic")
+			t.Error("FeedBrokerPool did not panic")
 		}
 	}()
-	feedBrokerPool(&zkConn, brokerChan)
+	FeedBrokerPool(&zkConn, brokerChan)
 }
 
 func TestBrokerWorker(t *testing.T) {
@@ -261,7 +261,7 @@ func TestGetBrokerJMX(t *testing.T) {
 	brokerID := 0
 	zkConn := zookeeper.MockConnection{}
 
-	host, jmxPort, kafkaPort, err := getBrokerConnectionInfo(brokerID, &zkConn)
+	host, jmxPort, kafkaPort, err := GetBrokerConnectionInfo(brokerID, &zkConn)
 	if err != nil {
 		t.Error(err)
 	}

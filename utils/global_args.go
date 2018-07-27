@@ -12,3 +12,10 @@ var KafkaArgs *args.KafkaArguments
 func SetupTestArgs() {
 	KafkaArgs = &args.KafkaArguments{CollectBrokerTopicData: true}
 }
+
+// PanicOnErr checks if err is nil and if not panic
+func PanicOnErr(err error) {
+	if err != nil {
+		panic(err)
+	}
+}
