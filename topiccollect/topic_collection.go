@@ -1,4 +1,5 @@
-package main
+// Package topiccollect handles collection of Topic inventory and metric data
+package topiccollect
 
 import (
 	"encoding/json"
@@ -14,8 +15,8 @@ import (
 	"github.com/newrelic/nri-kafka/zookeeper"
 )
 
-// topic is a storage struct for information about topics
-type topic struct {
+// Topic is a storage struct for information about topics
+type Topic struct {
 	Entity            *integration.Entity
 	Name              string
 	PartitionCount    int
@@ -24,10 +25,10 @@ type topic struct {
 	Partitions        []*partition
 }
 
-// Starts a pool of topicWorkers to handle collecting data for Topic entities.
+// StartTopicPool Starts a pool of topicWorkers to handle collecting data for Topic entities.
 // The channel returned is to be closed by the user.
-func startTopicPool(poolSize int, wg *sync.WaitGroup, zkConn zookeeper.Connection) chan *topic {
-	topicChan := make(chan *topic)
+func StartTopicPool(poolSize int, wg *sync.WaitGroup, zkConn zookeeper.Connection) chan *Topic {
+	topicChan := make(chan *Topic)
 
 	if utils.KafkaArgs.CollectBrokerTopicData {
 		for i := 0; i < poolSize; i++ {
@@ -38,8 +39,8 @@ func startTopicPool(poolSize int, wg *sync.WaitGroup, zkConn zookeeper.Connectio
 	return topicChan
 }
 
-// Returns the list of topics to collect based on the user-provided configuration
-func getTopics(zkConn zookeeper.Connection) ([]string, error) {
+// GetTopics retrieves the list of topics to collect based on the user-provided configuration
+func GetTopics(zkConn zookeeper.Connection) ([]string, error) {
 	switch utils.KafkaArgs.TopicMode {
 	case "None":
 		return []string{}, nil
@@ -58,8 +59,8 @@ func getTopics(zkConn zookeeper.Connection) ([]string, error) {
 	}
 }
 
-// Send topic structs down the topicChan for workers to collect and build topic structs
-func feedTopicPool(topicChan chan<- *topic, integration *integration.Integration, collectedTopics []string) {
+// FeedTopicPool sends Topic structs down the topicChan for workers to collect and build Topic structs
+func FeedTopicPool(topicChan chan<- *Topic, integration *integration.Integration, collectedTopics []string) {
 	defer close(topicChan)
 
 	if utils.KafkaArgs.CollectBrokerTopicData {
@@ -70,7 +71,7 @@ func feedTopicPool(topicChan chan<- *topic, integration *integration.Integration
 				logger.Errorf("Unable to create an entity for topic %s", topicName)
 			}
 
-			topicChan <- &topic{
+			topicChan <- &Topic{
 				Name:   topicName,
 				Entity: topicEntity,
 			}
@@ -79,7 +80,7 @@ func feedTopicPool(topicChan chan<- *topic, integration *integration.Integration
 }
 
 // Collect inventory and metrics for topics sent down topicChan
-func topicWorker(topicChan <-chan *topic, wg *sync.WaitGroup, zkConn zookeeper.Connection) {
+func topicWorker(topicChan <-chan *Topic, wg *sync.WaitGroup, zkConn zookeeper.Connection) {
 	wg.Add(1)
 	defer wg.Done()
 
@@ -121,7 +122,7 @@ func topicWorker(topicChan <-chan *topic, wg *sync.WaitGroup, zkConn zookeeper.C
 }
 
 // Calculate topic metrics and populate metric set with them
-func populateTopicMetrics(t *topic, sample *metric.Set, zkConn zookeeper.Connection) error {
+func populateTopicMetrics(t *Topic, sample *metric.Set, zkConn zookeeper.Connection) error {
 
 	if err := calculateTopicRetention(t.Configs, sample); err != nil {
 		return err
@@ -171,7 +172,7 @@ func calculateUnderReplicatedCount(partitions []*partition, sample *metric.Set) 
 }
 
 // Makes a metadata request to determine whether a topic is able to respond
-func topicRespondsToMetadata(t *topic, zkConn zookeeper.Connection) int {
+func topicRespondsToMetadata(t *Topic, zkConn zookeeper.Connection) int {
 
 	// Get connection information for a broker
 	host, _, port, err := bc.GetBrokerConnectionInfo(0, zkConn)
@@ -197,7 +198,7 @@ func topicRespondsToMetadata(t *topic, zkConn zookeeper.Connection) int {
 }
 
 // Collect and populate the remainder of the topic struct fields
-func setTopicInfo(t *topic, zkConn zookeeper.Connection) error {
+func setTopicInfo(t *Topic, zkConn zookeeper.Connection) error {
 
 	// Collect topic configuration from Zookeeper
 	config, _, err := zkConn.Get("/config/topics/" + t.Name)
@@ -230,7 +231,7 @@ func setTopicInfo(t *topic, zkConn zookeeper.Connection) error {
 }
 
 // Populate inventory with topic configuration
-func populateTopicInventory(t *topic) []error {
+func populateTopicInventory(t *Topic) []error {
 
 	// Add partition scheme to inventory
 	var errors []error

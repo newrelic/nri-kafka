@@ -1,4 +1,4 @@
-package main
+package topiccollect
 
 import (
 	"fmt"
@@ -36,7 +36,7 @@ func TestGetTopics(t *testing.T) {
 			TopicList: tc.topicNames,
 		}
 
-		topicNames, err := getTopics(zkConn)
+		topicNames, err := GetTopics(zkConn)
 		if (err != nil) != tc.expectedErr {
 			t.Error("Incorrect error state returned.")
 		}
@@ -65,7 +65,7 @@ func TestGetTopics_zkErr(t *testing.T) {
 			TopicList: tc.topicNames,
 		}
 
-		topicNames, err := getTopics(zkConn)
+		topicNames, err := GetTopics(zkConn)
 		if (err != nil) != tc.expectedErr {
 			t.Error("Incorrect error state returned.")
 		}
@@ -80,7 +80,7 @@ func TestStartTopicPool(t *testing.T) {
 	var wg sync.WaitGroup
 	zkConn := zookeeper.MockConnection{}
 
-	topicChan := startTopicPool(3, &wg, &zkConn)
+	topicChan := StartTopicPool(3, &wg, &zkConn)
 	close(topicChan)
 
 	c := make(chan int)
@@ -105,17 +105,17 @@ func TestFeedTopicPool(t *testing.T) {
 		t.Error("Failed to create integration")
 	}
 	zkConn := zookeeper.MockConnection{}
-	topicChan := make(chan *topic, 10)
+	topicChan := make(chan *Topic, 10)
 
-	collectedTopics, err := getTopics(zkConn)
+	collectedTopics, err := GetTopics(zkConn)
 	if err != nil {
 		t.Errorf("Unexpected error: %s", err.Error())
 		t.FailNow()
 	}
 
-	feedTopicPool(topicChan, i, collectedTopics)
+	FeedTopicPool(topicChan, i, collectedTopics)
 
-	var topics []*topic
+	var topics []*Topic
 	for {
 		topic, ok := <-topicChan
 		if !ok {
@@ -134,7 +134,7 @@ func TestFeedTopicPool(t *testing.T) {
 }
 
 func TestTopicWorker(t *testing.T) {
-	topicChan := make(chan *topic)
+	topicChan := make(chan *Topic)
 	var wg sync.WaitGroup
 	zkConn := zookeeper.MockConnection{}
 
@@ -152,7 +152,7 @@ func TestTopicWorker(t *testing.T) {
 
 	go topicWorker(topicChan, &wg, &zkConn)
 
-	myTopic := &topic{
+	myTopic := &Topic{
 		Name:   "test",
 		Entity: e,
 	}
@@ -162,7 +162,7 @@ func TestTopicWorker(t *testing.T) {
 
 	wg.Wait()
 
-	expectedTopic := &topic{
+	expectedTopic := &Topic{
 		Name:              "test",
 		Partitions:        nil,
 		PartitionCount:    3,
@@ -191,7 +191,7 @@ func TestPopulateTopicInventory(t *testing.T) {
 		t.Error(err)
 	}
 
-	myTopic := &topic{
+	myTopic := &Topic{
 		Entity:            e,
 		Name:              "test",
 		PartitionCount:    1,
@@ -230,7 +230,7 @@ func TestPopulateTopicInventory(t *testing.T) {
 func TestPopulateTopicMetrics(t *testing.T) {
 	zkConn := &zookeeper.MockConnection{}
 
-	testTopic := &topic{
+	testTopic := &Topic{
 		Name: "test",
 	}
 
