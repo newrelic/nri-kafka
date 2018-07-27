@@ -8,6 +8,8 @@ import (
 	"github.com/Shopify/sarama"
 	"github.com/newrelic/infra-integrations-sdk/data/metric"
 	"github.com/newrelic/infra-integrations-sdk/integration"
+	"github.com/newrelic/nri-kafka/logger"
+	"github.com/newrelic/nri-kafka/utils"
 	"github.com/newrelic/nri-kafka/zookeeper"
 )
 
@@ -26,7 +28,7 @@ type topic struct {
 func startTopicPool(poolSize int, wg *sync.WaitGroup, zkConn zookeeper.Connection) chan *topic {
 	topicChan := make(chan *topic)
 
-	if kafkaArgs.CollectBrokerTopicData {
+	if utils.KafkaArgs.CollectBrokerTopicData {
 		for i := 0; i < poolSize; i++ {
 			go topicWorker(topicChan, wg, zkConn)
 		}
@@ -37,11 +39,11 @@ func startTopicPool(poolSize int, wg *sync.WaitGroup, zkConn zookeeper.Connectio
 
 // Returns the list of topics to collect based on the user-provided configuration
 func getTopics(zkConn zookeeper.Connection) ([]string, error) {
-	switch kafkaArgs.TopicMode {
+	switch utils.KafkaArgs.TopicMode {
 	case "None":
 		return []string{}, nil
 	case "Specific":
-		return kafkaArgs.TopicList, nil
+		return utils.KafkaArgs.TopicList, nil
 	case "All":
 		// If they want all topics, ask Zookeeper for the list of topics
 		collectedTopics, _, err := zkConn.Children("/brokers/topics")
@@ -51,7 +53,7 @@ func getTopics(zkConn zookeeper.Connection) ([]string, error) {
 		}
 		return collectedTopics, nil
 	default:
-		return nil, fmt.Errorf("Bad topic_mode '%s'", kafkaArgs.TopicMode)
+		return nil, fmt.Errorf("Bad topic_mode '%s'", utils.KafkaArgs.TopicMode)
 	}
 }
 
@@ -59,7 +61,7 @@ func getTopics(zkConn zookeeper.Connection) ([]string, error) {
 func feedTopicPool(topicChan chan<- *topic, integration *integration.Integration, collectedTopics []string) {
 	defer close(topicChan)
 
-	if kafkaArgs.CollectBrokerTopicData {
+	if utils.KafkaArgs.CollectBrokerTopicData {
 		for _, topicName := range collectedTopics {
 			// create topic entity
 			topicEntity, err := integration.Entity(topicName, "topic")
@@ -93,7 +95,7 @@ func topicWorker(topicChan <-chan *topic, wg *sync.WaitGroup, zkConn zookeeper.C
 		}
 
 		// Collect and populate inventory with topic configuration
-		if kafkaArgs.Inventory || kafkaArgs.All() {
+		if utils.KafkaArgs.Inventory || utils.KafkaArgs.All() {
 			errors := populateTopicInventory(topic)
 			if len(errors) != 0 {
 				logger.Errorf("Failed to populate inventory with %d errors", len(errors))
@@ -102,7 +104,7 @@ func topicWorker(topicChan <-chan *topic, wg *sync.WaitGroup, zkConn zookeeper.C
 		}
 
 		// Collect topic metrics
-		if kafkaArgs.Metrics || kafkaArgs.All() {
+		if utils.KafkaArgs.Metrics || utils.KafkaArgs.All() {
 			// Create metric set for topic
 			sample := topic.Entity.NewMetricSet("KafkaTopicSample",
 				metric.Attribute{Key: "displayName", Value: topic.Name},

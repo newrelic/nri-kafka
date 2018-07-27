@@ -11,11 +11,12 @@ import (
 	"github.com/kr/pretty"
 	"github.com/newrelic/infra-integrations-sdk/data/inventory"
 	"github.com/newrelic/infra-integrations-sdk/integration"
+	"github.com/newrelic/nri-kafka/utils"
 	"github.com/newrelic/nri-kafka/zookeeper"
 )
 
 func TestStartBrokerPool(t *testing.T) {
-	setupTestArgs()
+	utils.SetupTestArgs()
 
 	var wg sync.WaitGroup
 	zkConn := zookeeper.MockConnection{}
@@ -43,7 +44,7 @@ func TestStartBrokerPool(t *testing.T) {
 }
 
 func TestFeedBrokerPool_NoError(t *testing.T) {
-	setupTestArgs()
+	utils.SetupTestArgs()
 	zkConn := zookeeper.MockConnection{}
 	brokerChan := make(chan int, 10)
 
@@ -61,7 +62,7 @@ func TestFeedBrokerPool_NoError(t *testing.T) {
 }
 
 func TestFeedBrokerPool_Error(t *testing.T) {
-	setupTestArgs()
+	utils.SetupTestArgs()
 	zkConn := zookeeper.MockConnection{ReturnChildrenError: true}
 	brokerChan := make(chan int, 10)
 
@@ -78,7 +79,7 @@ func TestBrokerWorker(t *testing.T) {
 	var wg sync.WaitGroup
 	brokerChan := make(chan int, 10)
 	i, _ := integration.New("kafka", "1.0.0")
-	setupTestArgs()
+	utils.SetupTestArgs()
 
 	go brokerWorker(brokerChan, []string{}, &wg, zkConn, i)
 
@@ -89,7 +90,6 @@ func TestBrokerWorker(t *testing.T) {
 }
 
 func TestCreateBroker_ZKError(t *testing.T) {
-	setupTestLogger()
 	brokerID, zkConn := 0, &zookeeper.MockConnection{ReturnGetError: true}
 	i, _ := integration.New("kafka", "1.0.0")
 
@@ -100,7 +100,6 @@ func TestCreateBroker_ZKError(t *testing.T) {
 }
 
 func TestCreateBroker_Normal(t *testing.T) {
-	setupTestLogger()
 	brokerID, zkConn := 0, &zookeeper.MockConnection{}
 	i, _ := integration.New("kafka", "1.0.0")
 
@@ -134,7 +133,6 @@ func TestCreateBroker_Normal(t *testing.T) {
 }
 
 func TestPopulateBrokerInventory(t *testing.T) {
-	setupTestLogger()
 	testBroker := &broker{
 		Host:      "kafkabroker",
 		JMXPort:   9999,
@@ -171,12 +169,11 @@ func TestPopulateBrokerInventory(t *testing.T) {
 }
 
 func TestPopulateBrokerMetrics_JMXOpenError(t *testing.T) {
-	setupTestLogger()
-	setupTestArgs()
-	setupJmxTesting()
+	utils.SetupTestArgs()
+	utils.SetupJmxTesting()
 	errorText := "jmx error"
 
-	jmxOpenFunc = func(hostname, port, username, password string) error { return errors.New(errorText) }
+	utils.JMXOpen = func(hostname, port, username, password string) error { return errors.New(errorText) }
 	testBroker := &broker{
 		Host:      "kafkabroker",
 		JMXPort:   9999,
@@ -196,12 +193,11 @@ func TestPopulateBrokerMetrics_JMXOpenError(t *testing.T) {
 }
 
 func TestPopulateBrokerMetrics_JMXQueryError(t *testing.T) {
-	setupTestLogger()
-	setupTestArgs()
-	setupJmxTesting()
+	utils.SetupTestArgs()
+	utils.SetupJmxTesting()
 	errorText := "jmx error"
 
-	queryFunc = func(query string, timeout int) (map[string]interface{}, error) { return nil, errors.New(errorText) }
+	utils.JMXQuery = func(query string, timeout int) (map[string]interface{}, error) { return nil, errors.New(errorText) }
 	testBroker := &broker{
 		Host:      "kafkabroker",
 		JMXPort:   9999,
@@ -224,9 +220,8 @@ func TestPopulateBrokerMetrics_JMXQueryError(t *testing.T) {
 }
 
 func TestPopulateBrokerMetrics_Normal(t *testing.T) {
-	setupTestLogger()
-	setupTestArgs()
-	setupJmxTesting()
+	utils.SetupTestArgs()
+	utils.SetupJmxTesting()
 
 	testBroker := &broker{
 		Host:      "kafkabroker",

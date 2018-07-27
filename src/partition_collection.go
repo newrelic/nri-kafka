@@ -5,6 +5,7 @@ import (
 	"strconv"
 	"sync"
 
+	"github.com/newrelic/nri-kafka/logger"
 	"github.com/newrelic/nri-kafka/zookeeper"
 )
 

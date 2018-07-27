@@ -6,15 +6,14 @@ import (
 	"testing"
 
 	"github.com/newrelic/infra-integrations-sdk/integration"
+	"github.com/newrelic/nri-kafka/utils"
 )
 
 func TestGatherTopicSize_Single(t *testing.T) {
-	setupJmxTesting()
-	setupTestArgs()
-	setupTestLogger()
+	utils.SetupJmxTesting()
+	utils.SetupTestArgs()
 
 	i, err := integration.New("test", "1.0.0")
-	logger = i.Logger()
 	if err != nil {
 		t.Errorf("Unexpected error %s", err.Error())
 		t.FailNow()
@@ -26,7 +25,7 @@ func TestGatherTopicSize_Single(t *testing.T) {
 		t.FailNow()
 	}
 
-	queryFunc = func(query string, timeout int) (map[string]interface{}, error) {
+	utils.JMXQuery = func(query string, timeout int) (map[string]interface{}, error) {
 		return map[string]interface{}{
 			"one":   float64(1),
 			"two":   float64(2),
@@ -67,12 +66,10 @@ func TestGatherTopicSize_Single(t *testing.T) {
 }
 
 func TestGatherTopicSize_QueryError(t *testing.T) {
-	setupJmxTesting()
-	setupTestArgs()
-	setupTestLogger()
+	utils.SetupJmxTesting()
+	utils.SetupTestArgs()
 
 	i, err := integration.New("test", "1.0.0")
-	logger = i.Logger()
 	if err != nil {
 		t.Errorf("Unexpected error %s", err.Error())
 		t.FailNow()
@@ -84,7 +81,7 @@ func TestGatherTopicSize_QueryError(t *testing.T) {
 		t.FailNow()
 	}
 
-	queryFunc = func(query string, timeout int) (map[string]interface{}, error) { return nil, errors.New("error") }
+	utils.JMXQuery = func(query string, timeout int) (map[string]interface{}, error) { return nil, errors.New("error") }
 
 	collectedTopics := []string{
 		"topic",
@@ -104,12 +101,10 @@ func TestGatherTopicSize_QueryError(t *testing.T) {
 }
 
 func TestGatherTopicSize_QueryBlank(t *testing.T) {
-	setupJmxTesting()
-	setupTestArgs()
-	setupTestLogger()
+	utils.SetupJmxTesting()
+	utils.SetupTestArgs()
 
 	i, err := integration.New("test", "1.0.0")
-	logger = i.Logger()
 	if err != nil {
 		t.Errorf("Unexpected error %s", err.Error())
 		t.FailNow()
@@ -121,7 +116,7 @@ func TestGatherTopicSize_QueryBlank(t *testing.T) {
 		t.FailNow()
 	}
 
-	queryFunc = func(query string, timeout int) (map[string]interface{}, error) {
+	utils.JMXQuery = func(query string, timeout int) (map[string]interface{}, error) {
 		return make(map[string]interface{}), nil
 	}
 
@@ -143,12 +138,10 @@ func TestGatherTopicSize_QueryBlank(t *testing.T) {
 }
 
 func TestGatherTopicSize_JMXOpenFail(t *testing.T) {
-	setupJmxTesting()
-	setupTestArgs()
-	setupTestLogger()
+	utils.SetupJmxTesting()
+	utils.SetupTestArgs()
 
 	i, err := integration.New("test", "1.0.0")
-	logger = i.Logger()
 	if err != nil {
 		t.Errorf("Unexpected error %s", err.Error())
 		t.FailNow()
@@ -160,7 +153,7 @@ func TestGatherTopicSize_JMXOpenFail(t *testing.T) {
 		t.FailNow()
 	}
 
-	jmxOpenFunc = func(hostname, port, username, password string) error { return errors.New("error") }
+	utils.JMXOpen = func(hostname, port, username, password string) error { return errors.New("error") }
 
 	collectedTopics := []string{
 		"topic",
@@ -180,12 +173,10 @@ func TestGatherTopicSize_JMXOpenFail(t *testing.T) {
 }
 
 func TestGatherTopicSize_AggregateError(t *testing.T) {
-	setupJmxTesting()
-	setupTestArgs()
-	setupTestLogger()
+	utils.SetupJmxTesting()
+	utils.SetupTestArgs()
 
 	i, err := integration.New("test", "1.0.0")
-	logger = i.Logger()
 	if err != nil {
 		t.Errorf("Unexpected error %s", err.Error())
 		t.FailNow()
@@ -197,7 +188,7 @@ func TestGatherTopicSize_AggregateError(t *testing.T) {
 		t.FailNow()
 	}
 
-	queryFunc = func(query string, timeout int) (map[string]interface{}, error) {
+	utils.JMXQuery = func(query string, timeout int) (map[string]interface{}, error) {
 		return map[string]interface{}{
 			"one":  "nope",
 			"four": float64(4),

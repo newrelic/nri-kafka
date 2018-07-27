@@ -7,6 +7,9 @@ import (
 
 	"github.com/newrelic/infra-integrations-sdk/data/metric"
 	"github.com/newrelic/infra-integrations-sdk/integration"
+	"github.com/newrelic/nri-kafka/logger"
+	"github.com/newrelic/nri-kafka/metrics"
+	"github.com/newrelic/nri-kafka/utils"
 	"github.com/newrelic/nri-kafka/zookeeper"
 )
 
@@ -27,7 +30,7 @@ func startBrokerPool(poolSize int, wg *sync.WaitGroup, zkConn zookeeper.Connecti
 	brokerChan := make(chan int)
 
 	// Only spin off brokerWorkers if signaled
-	if kafkaArgs.CollectBrokerTopicData {
+	if utils.KafkaArgs.CollectBrokerTopicData {
 		for i := 0; i < poolSize; i++ {
 			go brokerWorker(brokerChan, collectedTopics, wg, zkConn, integration)
 		}
@@ -42,7 +45,7 @@ func feedBrokerPool(zkConn zookeeper.Connection, brokerChan chan<- int) {
 	defer close(brokerChan) // close the broker channel when done feeding
 
 	// Don't make API calls or feed down channel if we don't want to collect brokers
-	if kafkaArgs.CollectBrokerTopicData {
+	if utils.KafkaArgs.CollectBrokerTopicData {
 		brokerIDs, _, err := zkConn.Children("/brokers/ids")
 		panicOnErr(err) // If unable to collect a list of brokerIDs, panic
 
@@ -79,14 +82,14 @@ func brokerWorker(brokerChan <-chan int, collectedTopics []string, wg *sync.Wait
 		}
 
 		// Populate inventory for broker
-		if kafkaArgs.Inventory || kafkaArgs.All() {
+		if utils.KafkaArgs.Inventory || utils.KafkaArgs.All() {
 			if err := populateBrokerInventory(b); err != nil {
 				continue
 			}
 		}
 
 		// Populate metrics for broker
-		if kafkaArgs.All() || kafkaArgs.Metrics {
+		if utils.KafkaArgs.All() || utils.KafkaArgs.Metrics {
 			if err := collectBrokerMetrics(b, collectedTopics); err != nil {
 				continue
 			}
@@ -154,7 +157,7 @@ func populateBrokerInventory(b *broker) error {
 }
 
 func collectBrokerMetrics(b *broker, collectedTopics []string) error {
-	if kafkaArgs.CollectTopicSize {
+	if utils.KafkaArgs.CollectTopicSize {
 		go gatherTopicSizes(b, collectedTopics)
 	}
 
@@ -165,13 +168,13 @@ func collectBrokerMetrics(b *broker, collectedTopics []string) error {
 func populateBrokerMetrics(b *broker) error {
 
 	// Lock since we can only make a single JMX connection at a time.
-	jmxLock.Lock()
+	utils.JMXLock.Lock()
 
 	// Open JMX connection
-	if err := jmxOpenFunc(b.Host, strconv.Itoa(b.JMXPort), kafkaArgs.DefaultJMXUser, kafkaArgs.DefaultJMXPassword); err != nil {
+	if err := utils.JMXOpen(b.Host, strconv.Itoa(b.JMXPort), utils.KafkaArgs.DefaultJMXUser, utils.KafkaArgs.DefaultJMXPassword); err != nil {
 		logger.Errorf("Unable to make JMX connection for Broker '%s': %s", b.Host, err.Error())
-		jmxCloseFunc() // Close needs to be called even on a failed open to clear out any set variables
-		jmxLock.Unlock()
+		utils.JMXClose() // Close needs to be called even on a failed open to clear out any set variables
+		utils.JMXLock.Unlock()
 		return err
 	}
 
@@ -182,13 +185,13 @@ func populateBrokerMetrics(b *broker) error {
 	)
 
 	// Populate metrics set with broker metrics
-	if err := getBrokerMetrics(sample); err != nil {
+	if err := metrics.GetBrokerMetrics(sample); err != nil {
 		logger.Errorf("Error collecting metrics from Broker '%s': %s", b.Host, err.Error())
 	}
 
 	// Close connection and release lock so another process can make JMX Connections
-	jmxCloseFunc()
-	jmxLock.Unlock()
+	utils.JMXClose()
+	utils.JMXLock.Unlock()
 
 	return nil
 }

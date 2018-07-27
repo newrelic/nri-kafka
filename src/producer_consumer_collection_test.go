@@ -8,6 +8,7 @@ import (
 
 	"github.com/newrelic/infra-integrations-sdk/integration"
 	"github.com/newrelic/nri-kafka/args"
+	"github.com/newrelic/nri-kafka/utils"
 )
 
 func TestStartWorkerPool(t *testing.T) {
@@ -57,17 +58,16 @@ func TestFeedWorkerPool(t *testing.T) {
 }
 
 func TestConsumerWorker(t *testing.T) {
-	setupJmxTesting()
+	utils.SetupJmxTesting()
 	consumerChan := make(chan *args.JMXHost, 10)
 	var wg sync.WaitGroup
 	i, err := integration.New("kafka", "1.0.0")
 	if err != nil {
 		t.Error(err)
 	}
-	logger = i.Logger()
 	collectedTopics := []string{"test1", "test2"}
 
-	setupTestArgs()
+	utils.SetupTestArgs()
 
 	wg.Add(1)
 	go consumerWorker(consumerChan, &wg, i, collectedTopics)
@@ -83,18 +83,17 @@ func TestConsumerWorker(t *testing.T) {
 }
 
 func TestConsumerWorker_JmxOpenFuncErr(t *testing.T) {
-	setupJmxTesting()
-	jmxOpenFunc = func(hostname, port, username, password string) error { return errors.New("Test") }
+	utils.SetupJmxTesting()
+	utils.JMXOpen = func(hostname, port, username, password string) error { return errors.New("Test") }
 	consumerChan := make(chan *args.JMXHost, 10)
 	var wg sync.WaitGroup
 	i, err := integration.New("kafka", "1.0.0")
 	if err != nil {
 		t.Error(err)
 	}
-	logger = i.Logger()
 	collectedTopics := []string{"test1", "test2"}
 
-	setupTestArgs()
+	utils.SetupTestArgs()
 
 	wg.Add(1)
 	go consumerWorker(consumerChan, &wg, i, collectedTopics)
@@ -109,17 +108,16 @@ func TestConsumerWorker_JmxOpenFuncErr(t *testing.T) {
 }
 
 func TestProducerWorker(t *testing.T) {
-	setupJmxTesting()
+	utils.SetupJmxTesting()
 	producerChan := make(chan *args.JMXHost, 10)
 	var wg sync.WaitGroup
 	i, err := integration.New("kafka", "1.0.0")
 	if err != nil {
 		t.Error(err)
 	}
-	logger = i.Logger()
 	collectedTopics := []string{"test1", "test2"}
 
-	setupTestArgs()
+	utils.SetupTestArgs()
 
 	wg.Add(1)
 	go producerWorker(producerChan, &wg, i, collectedTopics)
@@ -135,18 +133,17 @@ func TestProducerWorker(t *testing.T) {
 }
 
 func TestProducerWorker_JmxOpenFuncErr(t *testing.T) {
-	setupJmxTesting()
-	jmxOpenFunc = func(hostname, port, username, password string) error { return errors.New("Test") }
+	utils.SetupJmxTesting()
+	utils.JMXOpen = func(hostname, port, username, password string) error { return errors.New("Test") }
 	producerChan := make(chan *args.JMXHost, 10)
 	var wg sync.WaitGroup
 	i, err := integration.New("kafka", "1.0.0")
 	if err != nil {
 		t.Error(err)
 	}
-	logger = i.Logger()
 	collectedTopics := []string{"test1", "test2"}
 
-	setupTestArgs()
+	utils.SetupTestArgs()
 
 	wg.Add(1)
 	go producerWorker(producerChan, &wg, i, collectedTopics)
