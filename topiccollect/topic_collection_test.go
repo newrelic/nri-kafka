@@ -1,4 +1,4 @@
-package main
+package topiccollect
 
 import (
 	"fmt"
@@ -11,6 +11,9 @@ import (
 	"github.com/newrelic/infra-integrations-sdk/data/inventory"
 	"github.com/newrelic/infra-integrations-sdk/data/metric"
 	"github.com/newrelic/infra-integrations-sdk/integration"
+	"github.com/newrelic/nri-kafka/args"
+	"github.com/newrelic/nri-kafka/utils"
+	"github.com/newrelic/nri-kafka/zookeeper"
 )
 
 func TestGetTopics(t *testing.T) {
@@ -25,15 +28,15 @@ func TestGetTopics(t *testing.T) {
 		{"Specific", []string{"test1", "test2"}, []string{"test1", "test2"}, false},
 		{"FakeMode", []string{"test1", "test2"}, nil, true},
 	}
-	zkConn := &mockZookeeper{}
+	zkConn := &zookeeper.MockConnection{}
 
 	for _, tc := range testCases {
-		kafkaArgs = &kafkaArguments{
+		utils.KafkaArgs = &args.KafkaArguments{
 			TopicMode: tc.topicMode,
 			TopicList: tc.topicNames,
 		}
 
-		topicNames, err := getTopics(zkConn)
+		topicNames, err := GetTopics(zkConn)
 		if (err != nil) != tc.expectedErr {
 			t.Error("Incorrect error state returned.")
 		}
@@ -54,17 +57,15 @@ func TestGetTopics_zkErr(t *testing.T) {
 		{"Specific", []string{"test1", "test2"}, []string{"test1", "test2"}, false},
 		{"FakeMode", []string{"test1", "test2"}, nil, true},
 	}
-	zkConn := &mockZookeeper{ReturnChildrenError: true}
-	i, _ := integration.New("kafka", "1.0.0")
-	logger = i.Logger()
+	zkConn := &zookeeper.MockConnection{ReturnChildrenError: true}
 
 	for _, tc := range testCases {
-		kafkaArgs = &kafkaArguments{
+		utils.KafkaArgs = &args.KafkaArguments{
 			TopicMode: tc.topicMode,
 			TopicList: tc.topicNames,
 		}
 
-		topicNames, err := getTopics(zkConn)
+		topicNames, err := GetTopics(zkConn)
 		if (err != nil) != tc.expectedErr {
 			t.Error("Incorrect error state returned.")
 		}
@@ -75,11 +76,11 @@ func TestGetTopics_zkErr(t *testing.T) {
 }
 
 func TestStartTopicPool(t *testing.T) {
-	setupTestArgs()
+	utils.SetupTestArgs()
 	var wg sync.WaitGroup
-	zkConn := mockZookeeper{}
+	zkConn := zookeeper.MockConnection{}
 
-	topicChan := startTopicPool(3, &wg, &zkConn)
+	topicChan := StartTopicPool(3, &wg, &zkConn)
 	close(topicChan)
 
 	c := make(chan int)
@@ -96,25 +97,25 @@ func TestStartTopicPool(t *testing.T) {
 }
 
 func TestFeedTopicPool(t *testing.T) {
-	setupTestArgs()
-	kafkaArgs.TopicMode = "All"
+	utils.SetupTestArgs()
+	utils.KafkaArgs.TopicMode = "All"
 
 	i, err := integration.New("kafka", "1.0.0")
 	if err != nil {
 		t.Error("Failed to create integration")
 	}
-	zkConn := mockZookeeper{}
-	topicChan := make(chan *topic, 10)
+	zkConn := zookeeper.MockConnection{}
+	topicChan := make(chan *Topic, 10)
 
-	collectedTopics, err := getTopics(zkConn)
+	collectedTopics, err := GetTopics(zkConn)
 	if err != nil {
 		t.Errorf("Unexpected error: %s", err.Error())
 		t.FailNow()
 	}
 
-	feedTopicPool(topicChan, i, collectedTopics)
+	FeedTopicPool(topicChan, i, collectedTopics)
 
-	var topics []*topic
+	var topics []*Topic
 	for {
 		topic, ok := <-topicChan
 		if !ok {
@@ -133,12 +134,12 @@ func TestFeedTopicPool(t *testing.T) {
 }
 
 func TestTopicWorker(t *testing.T) {
-	topicChan := make(chan *topic)
+	topicChan := make(chan *Topic)
 	var wg sync.WaitGroup
-	zkConn := mockZookeeper{}
+	zkConn := zookeeper.MockConnection{}
 
-	setupTestArgs()
-	kafkaArgs.Metrics = false
+	utils.SetupTestArgs()
+	utils.KafkaArgs.Metrics = false
 
 	i, err := integration.New("kafka", "1.0.0")
 	if err != nil {
@@ -151,7 +152,7 @@ func TestTopicWorker(t *testing.T) {
 
 	go topicWorker(topicChan, &wg, &zkConn)
 
-	myTopic := &topic{
+	myTopic := &Topic{
 		Name:   "test",
 		Entity: e,
 	}
@@ -161,7 +162,7 @@ func TestTopicWorker(t *testing.T) {
 
 	wg.Wait()
 
-	expectedTopic := &topic{
+	expectedTopic := &Topic{
 		Name:              "test",
 		Partitions:        nil,
 		PartitionCount:    3,
@@ -179,7 +180,7 @@ func TestTopicWorker(t *testing.T) {
 }
 
 func TestPopulateTopicInventory(t *testing.T) {
-	setupTestArgs()
+	utils.SetupTestArgs()
 
 	i, err := integration.New("kafka", "1.0.0")
 	if err != nil {
@@ -190,7 +191,7 @@ func TestPopulateTopicInventory(t *testing.T) {
 		t.Error(err)
 	}
 
-	myTopic := &topic{
+	myTopic := &Topic{
 		Entity:            e,
 		Name:              "test",
 		PartitionCount:    1,
@@ -227,9 +228,9 @@ func TestPopulateTopicInventory(t *testing.T) {
 }
 
 func TestPopulateTopicMetrics(t *testing.T) {
-	zkConn := &mockZookeeper{}
+	zkConn := &zookeeper.MockConnection{}
 
-	testTopic := &topic{
+	testTopic := &Topic{
 		Name: "test",
 	}
 

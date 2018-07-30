@@ -1,27 +1,39 @@
-package main
+// Package metrics contains definitions for all JMX collected Metrics, and core collection
+// methods for Brokers, Consumers, and Producers.
+package metrics
 
 import (
 	"fmt"
 
 	"github.com/newrelic/infra-integrations-sdk/data/metric"
 	"github.com/newrelic/infra-integrations-sdk/integration"
+	"github.com/newrelic/nri-kafka/logger"
+	"github.com/newrelic/nri-kafka/utils"
 )
 
-func getBrokerMetrics(sample *metric.Set) error {
+// GetBrokerMetrics collects all Broker JMX metrics and stores them in sample
+func GetBrokerMetrics(sample *metric.Set) error {
 	return collectMetricDefintions(sample, brokerMetricDefs, nil)
 }
 
-func getConsumerMetrics(consumerName string, sample *metric.Set) error {
+// GetConsumerMetrics collects all Consumer metrics for the given
+// consumerName and stores them in sample.
+func GetConsumerMetrics(consumerName string, sample *metric.Set) error {
 	return collectMetricDefintions(sample, consumerMetricDefs, applyConsumerName(consumerName))
 }
 
-func getProducerMetrics(producerName string, sample *metric.Set) error {
+// GetProducerMetrics collects all Producer and Producer metrics for the given
+// producerName and stores them in sample.
+func GetProducerMetrics(producerName string, sample *metric.Set) error {
 	return collectMetricDefintions(sample, producerMetricDefs, applyProducerName(producerName))
 }
 
-// Collects topic-related metrics from a producer or consumer
-func collectTopicSubMetrics(entity *integration.Entity, entityType string,
-	metricSets []*jmxMetricSet, topicList []string,
+// CollectTopicSubMetrics collects Topic metrics that are related to either a Producer or Consumer
+//
+// beanModifier is a function that is used to replace place holder with actual Consumer/Producer
+// and Topic names for a given MBean
+func CollectTopicSubMetrics(entity *integration.Entity, entityType string,
+	metricSets []*JMXMetricSet, topicList []string,
 	beanModifier func(string, string) func(string) string) {
 	for _, topicName := range topicList {
 		topicSample := entity.NewMetricSet("Kafka"+entity.Metadata.Namespace+"Sample",
@@ -36,8 +48,8 @@ func collectTopicSubMetrics(entity *integration.Entity, entityType string,
 	}
 }
 
-// Collect the set of metrics from the current open JMX connection and add them to the sample
-func collectMetricDefintions(sample *metric.Set, metricSets []*jmxMetricSet, beanModifier func(string) string) error {
+// collectMetricDefintions collects the set of metrics from the current open JMX connection and add them to the sample
+func collectMetricDefintions(sample *metric.Set, metricSets []*JMXMetricSet, beanModifier func(string) string) error {
 	notFoundMetrics := make([]string, 0)
 
 	for _, metricSet := range metricSets {
@@ -48,7 +60,7 @@ func collectMetricDefintions(sample *metric.Set, metricSets []*jmxMetricSet, bea
 		}
 
 		// Return all the results under a specific mBean
-		results, err := queryFunc(beanName, kafkaArgs.Timeout)
+		results, err := utils.JMXQuery(beanName, utils.KafkaArgs.Timeout)
 		if err != nil {
 			return err
 		}

@@ -1,4 +1,4 @@
-package main
+package args
 
 import (
 	"reflect"
@@ -10,7 +10,7 @@ import (
 )
 
 func TestParseArgs(t *testing.T) {
-	a := argumentList{
+	a := ArgumentList{
 		DefaultArgumentList: sdkArgs.DefaultArgumentList{
 			Verbose:   false,
 			Pretty:    false,
@@ -33,7 +33,7 @@ func TestParseArgs(t *testing.T) {
 		Timeout:                1000,
 	}
 
-	expectedArgs := &kafkaArguments{
+	expectedArgs := &KafkaArguments{
 		DefaultArgumentList: sdkArgs.DefaultArgumentList{
 			Verbose:   false,
 			Pretty:    false,
@@ -41,7 +41,7 @@ func TestParseArgs(t *testing.T) {
 			Metrics:   false,
 			Events:    false,
 		},
-		ZookeeperHosts: []*zookeeperHost{
+		ZookeeperHosts: []*ZookeeperHost{
 			{
 				Host: "host1",
 				Port: 2180,
@@ -56,7 +56,7 @@ func TestParseArgs(t *testing.T) {
 		DefaultJMXUser:         "admin1",
 		DefaultJMXPassword:     "admin2",
 		CollectBrokerTopicData: true,
-		Producers: []*jmxHost{
+		Producers: []*JMXHost{
 			{
 				Name:     "producer1",
 				Host:     "producerhost",
@@ -72,12 +72,12 @@ func TestParseArgs(t *testing.T) {
 				Password: "admin2",
 			},
 		},
-		Consumers: []*jmxHost{},
+		Consumers: []*JMXHost{},
 		TopicMode: "Specific",
 		TopicList: []string{"test1", "test2", "test3"},
 		Timeout:   1000,
 	}
-	parsedArgs, err := parseArgs(a)
+	parsedArgs, err := ParseArgs(a)
 	if err != nil {
 		t.Error(err)
 	}
@@ -88,10 +88,10 @@ func TestParseArgs(t *testing.T) {
 }
 
 func TestDefaultArgs(t *testing.T) {
-	var a argumentList
-	_, err := integration.New(integrationName, integrationVersion, integration.Args(&a))
+	var a ArgumentList
+	_, err := integration.New("name", "1.0.0", integration.Args(&a))
 
-	expectedArgs := &kafkaArguments{
+	expectedArgs := &KafkaArguments{
 		DefaultArgumentList: sdkArgs.DefaultArgumentList{
 			Verbose:   false,
 			Pretty:    false,
@@ -99,7 +99,7 @@ func TestDefaultArgs(t *testing.T) {
 			Metrics:   false,
 			Events:    false,
 		},
-		ZookeeperHosts: []*zookeeperHost{
+		ZookeeperHosts: []*ZookeeperHost{
 			{
 				Host: "localhost",
 				Port: 2181,
@@ -110,15 +110,15 @@ func TestDefaultArgs(t *testing.T) {
 		DefaultJMXUser:         "admin",
 		DefaultJMXPassword:     "admin",
 		CollectBrokerTopicData: true,
-		Producers:              []*jmxHost{},
-		Consumers:              []*jmxHost{},
+		Producers:              []*JMXHost{},
+		Consumers:              []*JMXHost{},
 		TopicMode:              "None",
 		TopicList:              []string{},
 		Timeout:                2000,
 		CollectTopicSize:       false,
 	}
 
-	parsedArgs, err := parseArgs(a)
+	parsedArgs, err := ParseArgs(a)
 	if err != nil {
 		t.Error(err)
 	}

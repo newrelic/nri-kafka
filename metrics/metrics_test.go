@@ -1,4 +1,4 @@
-package main
+package metrics
 
 import (
 	"errors"
@@ -9,6 +9,7 @@ import (
 
 	"github.com/newrelic/infra-integrations-sdk/data/metric"
 	"github.com/newrelic/infra-integrations-sdk/integration"
+	"github.com/newrelic/nri-kafka/utils"
 )
 
 func TestGetBrokerMetrics(t *testing.T) {
@@ -17,7 +18,7 @@ func TestGetBrokerMetrics(t *testing.T) {
 		"event_type":           "testMetrics",
 	}
 
-	queryFunc = func(query string, timeout int) (map[string]interface{}, error) {
+	utils.JMXQuery = func(query string, timeout int) (map[string]interface{}, error) {
 		result := map[string]interface{}{
 			"kafka.network:type=RequestMetrics,name=TotalTimeMs,request=Fetch,attr=Mean": 24,
 		}
@@ -25,10 +26,9 @@ func TestGetBrokerMetrics(t *testing.T) {
 		return result, nil
 	}
 
-	setupTestArgs()
+	utils.SetupTestArgs()
 
 	i, err := integration.New("test", "1.0.0")
-	logger = i.Logger()
 	if err != nil {
 		t.Errorf("Unexpected error %s", err.Error())
 		t.FailNow()
@@ -42,7 +42,7 @@ func TestGetBrokerMetrics(t *testing.T) {
 
 	m := e.NewMetricSet("testMetrics")
 
-	if err := getBrokerMetrics(m); err != nil {
+	if err := GetBrokerMetrics(m); err != nil {
 		t.Errorf("Unexpected error %s", err.Error())
 		t.FailNow()
 	}
@@ -55,12 +55,11 @@ func TestGetBrokerMetrics(t *testing.T) {
 func TestCollectMetricDefinitions_QueryError(t *testing.T) {
 	errString := "this is an error"
 
-	queryFunc = func(query string, timeout int) (map[string]interface{}, error) {
+	utils.JMXQuery = func(query string, timeout int) (map[string]interface{}, error) {
 		return nil, errors.New(errString)
 	}
 
 	i, err := integration.New("test", "1.0.0")
-	logger = i.Logger()
 	if err != nil {
 		t.Errorf("Unexpected error %s", err.Error())
 		t.FailNow()
@@ -86,7 +85,7 @@ func TestCollectMetricDefinitions_MetricError(t *testing.T) {
 		"event_type": "testMetrics",
 	}
 
-	queryFunc = func(query string, timeout int) (map[string]interface{}, error) {
+	utils.JMXQuery = func(query string, timeout int) (map[string]interface{}, error) {
 		result := map[string]interface{}{
 			"kafka.network:type=RequestMetrics,name=TotalTimeMs,request=Fetch,attr=Mean": "stuff",
 		}
@@ -95,7 +94,6 @@ func TestCollectMetricDefinitions_MetricError(t *testing.T) {
 	}
 
 	i, err := integration.New("test", "1.0.0")
-	logger = i.Logger()
 	if err != nil {
 		t.Errorf("Unexpected error %s", err.Error())
 		t.FailNow()
@@ -120,11 +118,11 @@ func TestCollectMetricDefinitions_MetricError(t *testing.T) {
 }
 
 func TestCollectMetricDefinitions_BeanModifier(t *testing.T) {
-	testMetricSet := []*jmxMetricSet{
+	testMetricSet := []*JMXMetricSet{
 		{
 			MBean:        "kafka.network:replace=%REPLACE_ME%",
 			MetricPrefix: "kafka.network:replace=%REPLACE_ME%,",
-			MetricDefs: []*metricDefinition{
+			MetricDefs: []*MetricDefinition{
 				{
 					Name:       "my.metric",
 					SourceType: metric.GAUGE,
@@ -136,7 +134,7 @@ func TestCollectMetricDefinitions_BeanModifier(t *testing.T) {
 
 	expectedBean := "kafka.network:replace=Replaced"
 
-	queryFunc = func(query string, timeout int) (map[string]interface{}, error) {
+	utils.JMXQuery = func(query string, timeout int) (map[string]interface{}, error) {
 		if query != expectedBean {
 			return nil, fmt.Errorf("Expected bean '%s' got '%s'", expectedBean, query)
 		}
@@ -154,7 +152,6 @@ func TestCollectMetricDefinitions_BeanModifier(t *testing.T) {
 	}
 
 	i, err := integration.New("test", "1.0.0")
-	logger = i.Logger()
 	if err != nil {
 		t.Errorf("Unexpected error %s", err.Error())
 		t.FailNow()

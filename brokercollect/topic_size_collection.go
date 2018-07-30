@@ -1,25 +1,27 @@
-// This file contains most code related to gather topic size adn it involves communication between brokerWorkers and topicWorkers
-package main
+package brokercollect
 
 import (
 	"fmt"
 	"strconv"
 
 	"github.com/newrelic/infra-integrations-sdk/data/metric"
+	"github.com/newrelic/nri-kafka/logger"
+	"github.com/newrelic/nri-kafka/metrics"
+	"github.com/newrelic/nri-kafka/utils"
 )
 
 func gatherTopicSizes(b *broker, collectedTopics []string) {
-	jmxLock.Lock()
-	if err := jmxOpenFunc(b.Host, strconv.Itoa(b.JMXPort), kafkaArgs.DefaultJMXUser, kafkaArgs.DefaultJMXPassword); err != nil {
+	utils.JMXLock.Lock()
+	if err := utils.JMXOpen(b.Host, strconv.Itoa(b.JMXPort), utils.KafkaArgs.DefaultJMXUser, utils.KafkaArgs.DefaultJMXPassword); err != nil {
 		logger.Errorf("Broker '%s' failed to open JMX connection for Topic Size collection: %s", b.Host, err.Error())
-		jmxCloseFunc()
-		jmxLock.Unlock()
+		utils.JMXClose()
+		utils.JMXLock.Unlock()
 		return
 	}
 
 	for _, topicName := range collectedTopics {
-		beanName := applyTopicName(topicSizeMetricDef.MBean, topicName)
-		results, err := queryFunc(beanName, kafkaArgs.Timeout)
+		beanName := metrics.ApplyTopicName(metrics.TopicSizeMetricDef.MBean, topicName)
+		results, err := utils.JMXQuery(beanName, utils.KafkaArgs.Timeout)
 		if err != nil {
 			logger.Errorf("Broker '%s' failed to make JMX Query: %s", b.Host, err.Error())
 			// Close channel to signal early exit for waiting topic worker
@@ -45,8 +47,8 @@ func gatherTopicSizes(b *broker, collectedTopics []string) {
 		}
 	}
 
-	jmxCloseFunc()
-	jmxLock.Unlock()
+	utils.JMXClose()
+	utils.JMXLock.Unlock()
 	return
 }
 
