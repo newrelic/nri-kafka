@@ -15,7 +15,7 @@ const (
 // ArgumentList is the raw arguments passed into the integration via yaml or CLI args
 type ArgumentList struct {
 	sdkArgs.DefaultArgumentList
-	ZookeeperHosts         string `default:"" help:"JSON array of ZooKeeper hosts with the following fields: host, port. Port defaults to 2181"`
+	ZookeeperHosts         string `default:"[]" help:"JSON array of ZooKeeper hosts with the following fields: host, port. Port defaults to 2181"`
 	ZookeeperAuthScheme    string `default:"" help:"ACL scheme for authenticating ZooKeeper connection."`
 	ZookeeperAuthSecret    string `default:"" help:"Authentication string for ZooKeeper."`
 	DefaultJMXPort         int    `default:"9999" help:"Default port for JMX collection."`

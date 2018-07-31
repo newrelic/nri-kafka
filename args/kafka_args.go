@@ -46,13 +46,9 @@ func ParseArgs(a ArgumentList) (*KafkaArguments, error) {
 
 	// Parse ZooKeeper hosts
 	var zookeeperHosts []*ZookeeperHost
-	if a.ZookeeperHosts != "" {
-		err := json.Unmarshal([]byte(a.ZookeeperHosts), &zookeeperHosts)
-		if err != nil {
-			return nil, err
-		}
-	} else {
-		zookeeperHosts = make([]*ZookeeperHost, 0)
+	err := json.Unmarshal([]byte(a.ZookeeperHosts), &zookeeperHosts)
+	if err != nil {
+		return nil, err
 	}
 
 	for _, zookeeperHost := range zookeeperHosts {
