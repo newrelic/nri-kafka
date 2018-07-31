@@ -7,7 +7,7 @@ import (
 	"github.com/samuel/go-zookeeper/zk"
 )
 
-// MockConnection implements Connectionto facilitate testing.
+// MockConnection implements Connection to facilitate testing.
 // Includes two properties
 type MockConnection struct {
 	ReturnGetError      bool // If true, a Get() method call will return an error
