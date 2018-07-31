@@ -100,11 +100,12 @@ func Open(hostname, port, username, password string) error {
 			stdErr, _ := ioutil.ReadAll(cmdError)
 			cmdErr <- fmt.Errorf("JMX tool exited with error: %s [state: %s] (%s)", err, cmd.ProcessState, string(stdErr))
 		}
-		done.Done()
 
 		lock.Lock()
 		defer lock.Unlock()
 		cmd = nil
+
+		done.Done()
 	}()
 
 	return nil
@@ -114,15 +115,17 @@ func Open(hostname, port, username, password string) error {
 // input and canceling the execution afterwards to clean-up.
 func Close() {
 	lock.Lock()
-	defer lock.Unlock()
 
 	if cmd == nil {
+		lock.Unlock()
 		return
 	}
 
 	cancel()
 	_ = cmdIn.Close()
 	_ = cmdError.Close()
+
+	lock.Unlock()
 
 	done.Wait()
 }
@@ -200,7 +203,7 @@ func receiveResult(lineCh chan []byte, queryErrors chan error, cancelFn context.
 }
 
 func flushWarnings() {
-	for w := range warnings {
-		_, _ = os.Stderr.WriteString(string(w) + "\n")
+	for _, w := range warnings {
+		_, _ = os.Stderr.WriteString(w + "\n")
 	}
 }
