@@ -8,60 +8,88 @@ import (
 
 // Broker metrics
 var brokerMetricDefs = []*JMXMetricSet{
-	// Request Metrics
+	// Metadata request Metrics
 	{
-		MBean:        "kafka.network:type=RequestMetrics,name=TotalTimeMs,request=*",
-		MetricPrefix: "kafka.network:type=RequestMetrics,name=TotalTimeMs,",
+		MBean:        "kafka.network:type=RequestMetrics,name=TotalTimeMs,request=Metadata",
+		MetricPrefix: "kafka.network:type=RequestMetrics,name=TotalTimeMs,request=Metadata,",
 		MetricDefs: []*MetricDefinition{
-			{
-				Name:       "request.avgTimeFetch",
-				SourceType: metric.GAUGE,
-				JMXAttr:    "request=Fetch,attr=Mean",
-			},
 			{
 				Name:       "request.avgTimeMetadata",
 				SourceType: metric.GAUGE,
-				JMXAttr:    "request=Metadata,attr=Mean",
+				JMXAttr:    "attr=Mean",
 			},
 			{
 				Name:       "request.avgTimeMetadata99Percentile",
 				SourceType: metric.GAUGE,
-				JMXAttr:    "request=Metadata,attr=99thPercentile",
+				JMXAttr:    "attr=99thPercentile",
 			},
+		},
+	},
+	// Fetch request metrics
+	{
+		MBean:        "kafka.network:type=RequestMetrics,name=TotalTimeMs,request=Fetch",
+		MetricPrefix: "kafka.network:type=RequestMetrics,name=TotalTimeMs,request=Fetch,",
+		MetricDefs: []*MetricDefinition{
 			{
-				Name:       "request.avgTimeOffset",
+				Name:       "request.avgTimeFetch",
 				SourceType: metric.GAUGE,
-				JMXAttr:    "request=Offsets,attr=Mean",
-			},
-			{
-				Name:       "request.avgTimeOffset99Percentile",
-				SourceType: metric.GAUGE,
-				JMXAttr:    "request=Offsets,attr=99thPercentile",
-			},
-			{
-				Name:       "request.avgTimeUpdateMetadata",
-				SourceType: metric.GAUGE,
-				JMXAttr:    "request=UpdateMetadata,attr=Mean",
-			},
-			{
-				Name:       "request.avgTimeUpdateMetadata99Percentile",
-				SourceType: metric.GAUGE,
-				JMXAttr:    "request=UpdateMetadata,attr=99thPercentile",
+				JMXAttr:    "attr=Mean",
 			},
 			{
 				Name:       "request.fetchTime99Percentile",
 				SourceType: metric.GAUGE,
-				JMXAttr:    "request=Fetch,attr=99thPercentile",
+				JMXAttr:    "attr=99thPercentile",
 			},
+		},
+	},
+	// Offset request metrics
+	{
+		MBean:        "kafka.network:type=RequestMetrics,name=TotalTimeMs,request=Offsets",
+		MetricPrefix: "kafka.network:type=RequestMetrics,name=TotalTimeMs,request=Offsets,",
+		MetricDefs: []*MetricDefinition{
+			{
+				Name:       "request.avgTimeUpdateMetadata",
+				SourceType: metric.GAUGE,
+				JMXAttr:    "attr=Mean",
+			},
+			{
+				Name:       "request.avgTimeUpdateMetadata99Percentile",
+				SourceType: metric.GAUGE,
+				JMXAttr:    "attr=99thPercentile",
+			},
+		},
+	},
+	// UpdateMetadata request metrics
+	{
+		MBean:        "kafka.network:type=RequestMetrics,name=TotalTimeMs,request=UpdateMetadata",
+		MetricPrefix: "kafka.network:type=RequestMetrics,name=TotalTimeMs,request=UpdateMetadata,",
+		MetricDefs: []*MetricDefinition{
+			{
+				Name:       "request.avgTimeUpdateMetadata",
+				SourceType: metric.GAUGE,
+				JMXAttr:    "attr=Mean",
+			},
+			{
+				Name:       "request.avgTimeUpdateMetadata99Percentile",
+				SourceType: metric.GAUGE,
+				JMXAttr:    "attr=99thPercentile",
+			},
+		},
+	},
+	// Produce request metrics
+	{
+		MBean:        "kafka.network:type=RequestMetrics,name=TotalTimeMs,request=Produce",
+		MetricPrefix: "kafka.network:type=RequestMetrics,name=TotalTimeMs,request=Produce,",
+		MetricDefs: []*MetricDefinition{
 			{
 				Name:       "requests.avgTimeProduceRequest",
 				SourceType: metric.GAUGE,
-				JMXAttr:    "request=Produce,attr=Mean",
+				JMXAttr:    "attr=Mean",
 			},
 			{
 				Name:       "requests.produceTime99Percentile",
 				SourceType: metric.GAUGE,
-				JMXAttr:    "request=Produce,attr=99thPercentile",
+				JMXAttr:    "attr=99thPercentile",
 			},
 		},
 	},
