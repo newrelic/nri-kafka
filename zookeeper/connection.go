@@ -16,10 +16,15 @@ type Connection interface {
 }
 
 // NewConnection creates a new Connection with the given arguments.
+// If not hosts are specified then a nil Connection and error will be returned
 //
 // Waiting on issue https://github.com/samuel/go-zookeeper/issues/108 so we can change this function
 // and allow us to mock out the zk.Connect function
 func NewConnection(kafkaArgs *args.KafkaArguments) (Connection, error) {
+	// No Zookeeper hosts so can't make a connection
+	if len(kafkaArgs.ZookeeperHosts) == 0 {
+		return nil, nil
+	}
 
 	// Create array of host:port strings for connecting
 	zkHosts := make([]string, 0, len(kafkaArgs.ZookeeperHosts))
@@ -29,6 +34,10 @@ func NewConnection(kafkaArgs *args.KafkaArguments) (Connection, error) {
 
 	// Create connection and add authentication if provided
 	zkConn, _, err := zk.Connect(zkHosts, time.Second)
+	if err != nil {
+		return nil, err
+	}
+
 	if kafkaArgs.ZookeeperAuthScheme != "" {
 		if err = zkConn.AddAuth(kafkaArgs.ZookeeperAuthScheme, []byte(kafkaArgs.ZookeeperAuthSecret)); err != nil {
 			return nil, err

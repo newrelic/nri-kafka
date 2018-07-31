@@ -3,6 +3,7 @@ package topiccollect
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"sync"
 
@@ -30,7 +31,7 @@ type Topic struct {
 func StartTopicPool(poolSize int, wg *sync.WaitGroup, zkConn zookeeper.Connection) chan *Topic {
 	topicChan := make(chan *Topic)
 
-	if utils.KafkaArgs.CollectBrokerTopicData {
+	if utils.KafkaArgs.CollectBrokerTopicData && zkConn != nil {
 		for i := 0; i < poolSize; i++ {
 			go topicWorker(topicChan, wg, zkConn)
 		}
@@ -47,6 +48,10 @@ func GetTopics(zkConn zookeeper.Connection) ([]string, error) {
 	case "Specific":
 		return utils.KafkaArgs.TopicList, nil
 	case "All":
+		if zkConn == nil {
+			return nil, errors.New("zookeeper connection must not be nil for 'All' mode")
+		}
+
 		// If they want all topics, ask Zookeeper for the list of topics
 		collectedTopics, _, err := zkConn.Children("/brokers/topics")
 		if err != nil {

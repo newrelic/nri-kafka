@@ -99,12 +99,7 @@ func TestDefaultArgs(t *testing.T) {
 			Metrics:   false,
 			Events:    false,
 		},
-		ZookeeperHosts: []*ZookeeperHost{
-			{
-				Host: "localhost",
-				Port: 2181,
-			},
-		},
+		ZookeeperHosts:         []*ZookeeperHost{},
 		ZookeeperAuthScheme:    "",
 		ZookeeperAuthSecret:    "",
 		DefaultJMXUser:         "admin",

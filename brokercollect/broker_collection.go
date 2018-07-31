@@ -31,7 +31,7 @@ func StartBrokerPool(poolSize int, wg *sync.WaitGroup, zkConn zookeeper.Connecti
 	brokerChan := make(chan int)
 
 	// Only spin off brokerWorkers if signaled
-	if utils.KafkaArgs.CollectBrokerTopicData {
+	if utils.KafkaArgs.CollectBrokerTopicData && zkConn != nil {
 		for i := 0; i < poolSize; i++ {
 			go brokerWorker(brokerChan, collectedTopics, wg, zkConn, integration)
 		}
@@ -46,7 +46,7 @@ func FeedBrokerPool(zkConn zookeeper.Connection, brokerChan chan<- int) {
 	defer close(brokerChan) // close the broker channel when done feeding
 
 	// Don't make API calls or feed down channel if we don't want to collect brokers
-	if utils.KafkaArgs.CollectBrokerTopicData {
+	if utils.KafkaArgs.CollectBrokerTopicData && zkConn != nil {
 		brokerIDs, _, err := zkConn.Children("/brokers/ids")
 		utils.PanicOnErr(err) // If unable to collect a list of brokerIDs, panic
 

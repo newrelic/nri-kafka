@@ -76,6 +76,16 @@ func TestGetTopics_zkErr(t *testing.T) {
 	}
 }
 
+func TestGetTopics_zkNil(t *testing.T) {
+	utils.KafkaArgs = &args.KafkaArguments{
+		TopicMode: "All",
+	}
+
+	if _, err := GetTopics(nil); err == nil {
+		t.Error("Did not get expected error")
+	}
+}
+
 func TestStartTopicPool(t *testing.T) {
 	testutils.SetupTestArgs()
 	var wg sync.WaitGroup
