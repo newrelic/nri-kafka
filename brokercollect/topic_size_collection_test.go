@@ -6,12 +6,13 @@ import (
 	"testing"
 
 	"github.com/newrelic/infra-integrations-sdk/integration"
+	"github.com/newrelic/nri-kafka/testutils"
 	"github.com/newrelic/nri-kafka/utils"
 )
 
 func TestGatherTopicSize_Single(t *testing.T) {
-	utils.SetupJmxTesting()
-	utils.SetupTestArgs()
+	testutils.SetupJmxTesting()
+	testutils.SetupTestArgs()
 
 	i, err := integration.New("test", "1.0.0")
 	if err != nil {
@@ -66,8 +67,8 @@ func TestGatherTopicSize_Single(t *testing.T) {
 }
 
 func TestGatherTopicSize_QueryError(t *testing.T) {
-	utils.SetupJmxTesting()
-	utils.SetupTestArgs()
+	testutils.SetupJmxTesting()
+	testutils.SetupTestArgs()
 
 	i, err := integration.New("test", "1.0.0")
 	if err != nil {
@@ -101,8 +102,8 @@ func TestGatherTopicSize_QueryError(t *testing.T) {
 }
 
 func TestGatherTopicSize_QueryBlank(t *testing.T) {
-	utils.SetupJmxTesting()
-	utils.SetupTestArgs()
+	testutils.SetupJmxTesting()
+	testutils.SetupTestArgs()
 
 	i, err := integration.New("test", "1.0.0")
 	if err != nil {
@@ -138,8 +139,8 @@ func TestGatherTopicSize_QueryBlank(t *testing.T) {
 }
 
 func TestGatherTopicSize_JMXOpenFail(t *testing.T) {
-	utils.SetupJmxTesting()
-	utils.SetupTestArgs()
+	testutils.SetupJmxTesting()
+	testutils.SetupTestArgs()
 
 	i, err := integration.New("test", "1.0.0")
 	if err != nil {
@@ -173,8 +174,8 @@ func TestGatherTopicSize_JMXOpenFail(t *testing.T) {
 }
 
 func TestGatherTopicSize_AggregateError(t *testing.T) {
-	utils.SetupJmxTesting()
-	utils.SetupTestArgs()
+	testutils.SetupJmxTesting()
+	testutils.SetupTestArgs()
 
 	i, err := integration.New("test", "1.0.0")
 	if err != nil {

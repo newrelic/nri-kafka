@@ -83,7 +83,7 @@ func brokerWorker(brokerChan <-chan int, collectedTopics []string, wg *sync.Wait
 		}
 
 		// Populate inventory for broker
-		if utils.KafkaArgs.Inventory || utils.KafkaArgs.All() {
+		if utils.KafkaArgs.All() || utils.KafkaArgs.Inventory {
 			if err := populateBrokerInventory(b); err != nil {
 				continue
 			}

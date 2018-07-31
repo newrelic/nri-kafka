@@ -36,7 +36,6 @@ func startPartitionPool(poolSize int, wg *sync.WaitGroup, zkConn zookeeper.Conne
 	}
 
 	return partitionInChan, partitionOutChans
-
 }
 
 // Collects the list of partition IDs from zookeeper, then feeds the partition

@@ -97,7 +97,7 @@ func topicWorker(topicChan <-chan *Topic, wg *sync.WaitGroup, zkConn zookeeper.C
 		}
 
 		// Collect and populate inventory with topic configuration
-		if utils.KafkaArgs.Inventory || utils.KafkaArgs.All() {
+		if utils.KafkaArgs.All() || utils.KafkaArgs.Inventory {
 			errors := populateTopicInventory(topic)
 			if len(errors) != 0 {
 				logger.Errorf("Failed to populate inventory with %d errors", len(errors))
@@ -106,7 +106,7 @@ func topicWorker(topicChan <-chan *Topic, wg *sync.WaitGroup, zkConn zookeeper.C
 		}
 
 		// Collect topic metrics
-		if utils.KafkaArgs.Metrics || utils.KafkaArgs.All() {
+		if utils.KafkaArgs.All() || utils.KafkaArgs.Metrics {
 			// Create metric set for topic
 			sample := topic.Entity.NewMetricSet("KafkaTopicSample",
 				metric.Attribute{Key: "displayName", Value: topic.Name},
@@ -158,6 +158,7 @@ func calculateNonPreferredLeader(partitions []*partition, sample *metric.Set) er
 			numberNonPreferredLeader++
 		}
 	}
+
 	return sample.SetMetric("topic.partitionsWithNonPreferredLeader", numberNonPreferredLeader, metric.GAUGE)
 }
 
@@ -168,6 +169,7 @@ func calculateUnderReplicatedCount(partitions []*partition, sample *metric.Set) 
 			numberUnderReplicated++
 		}
 	}
+
 	return sample.SetMetric("topic.underReplicatedPartitions", numberUnderReplicated, metric.GAUGE)
 }
 
