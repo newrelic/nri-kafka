@@ -50,6 +50,7 @@ func ParseArgs(a ArgumentList) (*KafkaArguments, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	for _, zookeeperHost := range zookeeperHosts {
 		// Set port to default if unset
 		if zookeeperHost.Port == 0 {

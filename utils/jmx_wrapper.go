@@ -24,10 +24,3 @@ var (
 	// easier mocking during tests
 	JMXClose = jmx.Close
 )
-
-// SetupJmxTesting sets all JMX wrapper variables to basic shells
-func SetupJmxTesting() {
-	JMXOpen = func(hostname, port, username, password string) error { return nil }
-	JMXClose = func() {}
-	JMXQuery = func(query string, timeout int) (map[string]interface{}, error) { return map[string]interface{}{}, nil }
-}

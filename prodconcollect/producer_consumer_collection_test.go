@@ -8,6 +8,7 @@ import (
 
 	"github.com/newrelic/infra-integrations-sdk/integration"
 	"github.com/newrelic/nri-kafka/args"
+	"github.com/newrelic/nri-kafka/testutils"
 	"github.com/newrelic/nri-kafka/utils"
 )
 
@@ -58,7 +59,7 @@ func TestFeedWorkerPool(t *testing.T) {
 }
 
 func TestConsumerWorker(t *testing.T) {
-	utils.SetupJmxTesting()
+	testutils.SetupJmxTesting()
 	consumerChan := make(chan *args.JMXHost, 10)
 	var wg sync.WaitGroup
 	i, err := integration.New("kafka", "1.0.0")
@@ -67,7 +68,7 @@ func TestConsumerWorker(t *testing.T) {
 	}
 	collectedTopics := []string{"test1", "test2"}
 
-	utils.SetupTestArgs()
+	testutils.SetupTestArgs()
 
 	wg.Add(1)
 	go ConsumerWorker(consumerChan, &wg, i, collectedTopics)
@@ -83,7 +84,7 @@ func TestConsumerWorker(t *testing.T) {
 }
 
 func TestConsumerWorker_JmxOpenFuncErr(t *testing.T) {
-	utils.SetupJmxTesting()
+	testutils.SetupJmxTesting()
 	utils.JMXOpen = func(hostname, port, username, password string) error { return errors.New("Test") }
 	consumerChan := make(chan *args.JMXHost, 10)
 	var wg sync.WaitGroup
@@ -93,7 +94,7 @@ func TestConsumerWorker_JmxOpenFuncErr(t *testing.T) {
 	}
 	collectedTopics := []string{"test1", "test2"}
 
-	utils.SetupTestArgs()
+	testutils.SetupTestArgs()
 
 	wg.Add(1)
 	go ConsumerWorker(consumerChan, &wg, i, collectedTopics)
@@ -108,7 +109,7 @@ func TestConsumerWorker_JmxOpenFuncErr(t *testing.T) {
 }
 
 func TestProducerWorker(t *testing.T) {
-	utils.SetupJmxTesting()
+	testutils.SetupJmxTesting()
 	producerChan := make(chan *args.JMXHost, 10)
 	var wg sync.WaitGroup
 	i, err := integration.New("kafka", "1.0.0")
@@ -117,7 +118,7 @@ func TestProducerWorker(t *testing.T) {
 	}
 	collectedTopics := []string{"test1", "test2"}
 
-	utils.SetupTestArgs()
+	testutils.SetupTestArgs()
 
 	wg.Add(1)
 	go ProducerWorker(producerChan, &wg, i, collectedTopics)
@@ -133,7 +134,7 @@ func TestProducerWorker(t *testing.T) {
 }
 
 func TestProducerWorker_JmxOpenFuncErr(t *testing.T) {
-	utils.SetupJmxTesting()
+	testutils.SetupJmxTesting()
 	utils.JMXOpen = func(hostname, port, username, password string) error { return errors.New("Test") }
 	producerChan := make(chan *args.JMXHost, 10)
 	var wg sync.WaitGroup
@@ -143,7 +144,7 @@ func TestProducerWorker_JmxOpenFuncErr(t *testing.T) {
 	}
 	collectedTopics := []string{"test1", "test2"}
 
-	utils.SetupTestArgs()
+	testutils.SetupTestArgs()
 
 	wg.Add(1)
 	go ProducerWorker(producerChan, &wg, i, collectedTopics)

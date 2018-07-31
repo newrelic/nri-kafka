@@ -9,6 +9,7 @@ import (
 
 	"github.com/newrelic/infra-integrations-sdk/data/metric"
 	"github.com/newrelic/infra-integrations-sdk/integration"
+	"github.com/newrelic/nri-kafka/testutils"
 	"github.com/newrelic/nri-kafka/utils"
 )
 
@@ -26,7 +27,7 @@ func TestGetBrokerMetrics(t *testing.T) {
 		return result, nil
 	}
 
-	utils.SetupTestArgs()
+	testutils.SetupTestArgs()
 
 	i, err := integration.New("test", "1.0.0")
 	if err != nil {
