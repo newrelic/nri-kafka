@@ -76,6 +76,7 @@ func ConsumerWorker(consumerChan <-chan *args.JMXHost, wg *sync.WaitGroup, i *in
 			)
 
 			// Collect the consumer metrics and populate the sample with them
+			logger.Debugf("Collecting metrics for Consumer '%s'", consumerEntity.Metadata.Name)
 			metrics.GetConsumerMetrics(consumerEntity.Metadata.Name, sample)
 
 			// Collect metrics that are topic-specific per Consumer
@@ -126,6 +127,7 @@ func ProducerWorker(producerChan <-chan *args.JMXHost, wg *sync.WaitGroup, i *in
 			)
 
 			// Collect producer metrics and populate the metric set with them
+			logger.Debugf("Collecting metrics for Producer '%s'", producerEntity.Metadata.Name)
 			metrics.GetProducerMetrics(producerEntity.Metadata.Name, sample)
 
 			// Collect metrics that are topic specific per Producer
