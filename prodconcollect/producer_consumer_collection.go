@@ -76,12 +76,7 @@ func ConsumerWorker(consumerChan <-chan *args.JMXHost, wg *sync.WaitGroup, i *in
 			)
 
 			// Collect the consumer metrics and populate the sample with them
-			if err := metrics.GetConsumerMetrics(consumerEntity.Metadata.Name, sample); err != nil {
-				logger.Errorf("Error collecting metrics from Consumer '%s': %s", consumerEntity.Metadata.Name, err.Error())
-				utils.JMXClose()
-				utils.JMXLock.Unlock()
-				continue
-			}
+			metrics.GetConsumerMetrics(consumerEntity.Metadata.Name, sample)
 
 			// Collect metrics that are topic-specific per Consumer
 			metrics.CollectTopicSubMetrics(consumerEntity, "consumer", metrics.ConsumerTopicMetricDefs,
@@ -131,12 +126,7 @@ func ProducerWorker(producerChan <-chan *args.JMXHost, wg *sync.WaitGroup, i *in
 			)
 
 			// Collect producer metrics and populate the metric set with them
-			if err := metrics.GetProducerMetrics(producerEntity.Metadata.Name, sample); err != nil {
-				logger.Errorf("Error collecting metrics from Producer '%s': %s", producerEntity.Metadata.Name, err.Error())
-				utils.JMXClose()
-				utils.JMXLock.Unlock()
-				continue
-			}
+			metrics.GetProducerMetrics(producerEntity.Metadata.Name, sample)
 
 			// Collect metrics that are topic specific per Producer
 			metrics.CollectTopicSubMetrics(producerEntity, "producer", metrics.ProducerTopicMetricDefs,

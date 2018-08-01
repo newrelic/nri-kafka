@@ -43,10 +43,7 @@ func TestGetBrokerMetrics(t *testing.T) {
 
 	m := e.NewMetricSet("testMetrics")
 
-	if err := GetBrokerMetrics(m); err != nil {
-		t.Errorf("Unexpected error %s", err.Error())
-		t.FailNow()
-	}
+	GetBrokerMetrics(m)
 
 	if !reflect.DeepEqual(expected, m.Metrics) {
 		t.Errorf("Expected %+v got %+v", expected, m.Metrics)
@@ -54,6 +51,7 @@ func TestGetBrokerMetrics(t *testing.T) {
 }
 
 func TestCollectMetricDefinitions_QueryError(t *testing.T) {
+	testutils.SetupTestArgs()
 	errString := "this is an error"
 
 	utils.JMXQuery = func(query string, timeout int) (map[string]interface{}, error) {
@@ -74,14 +72,15 @@ func TestCollectMetricDefinitions_QueryError(t *testing.T) {
 
 	m := e.NewMetricSet("testMetrics")
 
-	if err := collectMetricDefintions(m, brokerMetricDefs, nil); err == nil {
-		t.Error("Did not get error when expected")
-	} else if err.Error() != errString {
-		t.Errorf("Unexpected error %s", err.Error())
+	CollectMetricDefintions(m, brokerMetricDefs, nil)
+
+	if len(m.Metrics) != 1 {
+		t.Error("Metrics where inserted even with a bad query")
 	}
 }
 
 func TestCollectMetricDefinitions_MetricError(t *testing.T) {
+	testutils.SetupTestArgs()
 	expected := map[string]interface{}{
 		"event_type": "testMetrics",
 	}
@@ -108,10 +107,7 @@ func TestCollectMetricDefinitions_MetricError(t *testing.T) {
 
 	m := e.NewMetricSet("testMetrics")
 
-	if err := collectMetricDefintions(m, brokerMetricDefs, nil); err != nil {
-		t.Errorf("Unexpected error %s", err.Error())
-		t.FailNow()
-	}
+	CollectMetricDefintions(m, brokerMetricDefs, nil)
 
 	if !reflect.DeepEqual(expected, m.Metrics) {
 		t.Errorf("Expected %+v got %+v", expected, m.Metrics)
@@ -119,6 +115,7 @@ func TestCollectMetricDefinitions_MetricError(t *testing.T) {
 }
 
 func TestCollectMetricDefinitions_BeanModifier(t *testing.T) {
+	testutils.SetupTestArgs()
 	testMetricSet := []*JMXMetricSet{
 		{
 			MBean:        "kafka.network:replace=%REPLACE_ME%",
@@ -172,10 +169,7 @@ func TestCollectMetricDefinitions_BeanModifier(t *testing.T) {
 		}
 	}
 
-	if err := collectMetricDefintions(m, testMetricSet, renameFunc("Replaced")); err != nil {
-		t.Errorf("Unexpected error %s", err.Error())
-		t.FailNow()
-	}
+	CollectMetricDefintions(m, testMetricSet, renameFunc("Replaced"))
 
 	if !reflect.DeepEqual(expected, m.Metrics) {
 		t.Errorf("Expected %+v got %+v", expected, m.Metrics)

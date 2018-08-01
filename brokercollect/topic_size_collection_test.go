@@ -5,6 +5,7 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/newrelic/infra-integrations-sdk/data/metric"
 	"github.com/newrelic/infra-integrations-sdk/integration"
 	"github.com/newrelic/nri-kafka/testutils"
 	"github.com/newrelic/nri-kafka/utils"
@@ -35,8 +36,12 @@ func TestGatherTopicSize_Single(t *testing.T) {
 		}, nil
 	}
 
-	collectedTopics := []string{
-		"topic",
+	collectedTopics := map[string]*metric.Set{
+		"topic": e.NewMetricSet("KafkaBrokerSample",
+			metric.Attribute{Key: "displayName", Value: "testEntity"},
+			metric.Attribute{Key: "entityName", Value: "broker:testEntity"},
+			metric.Attribute{Key: "topic", Value: "topic"},
+		),
 	}
 
 	broker := &broker{
@@ -46,11 +51,6 @@ func TestGatherTopicSize_Single(t *testing.T) {
 	}
 
 	gatherTopicSizes(broker, collectedTopics)
-
-	if len(broker.Entity.Metrics) != 1 {
-		t.Error("No metric set created")
-		t.FailNow()
-	}
 
 	expected := map[string]interface{}{
 		"topic.diskSize": float64(10),
@@ -84,8 +84,12 @@ func TestGatherTopicSize_QueryError(t *testing.T) {
 
 	utils.JMXQuery = func(query string, timeout int) (map[string]interface{}, error) { return nil, errors.New("error") }
 
-	collectedTopics := []string{
-		"topic",
+	collectedTopics := map[string]*metric.Set{
+		"topic": e.NewMetricSet("KafkaBrokerSample",
+			metric.Attribute{Key: "displayName", Value: "testEntity"},
+			metric.Attribute{Key: "entityName", Value: "broker:testEntity"},
+			metric.Attribute{Key: "topic", Value: "topic"},
+		),
 	}
 
 	broker := &broker{
@@ -96,8 +100,8 @@ func TestGatherTopicSize_QueryError(t *testing.T) {
 
 	gatherTopicSizes(broker, collectedTopics)
 
-	if len(broker.Entity.Metrics) != 0 {
-		t.Error("Metric set was created")
+	if _, ok := broker.Entity.Metrics[0].Metrics["topic.diskSize"]; ok {
+		t.Error("topic.diskSize metric set was created")
 	}
 }
 
@@ -121,8 +125,12 @@ func TestGatherTopicSize_QueryBlank(t *testing.T) {
 		return make(map[string]interface{}), nil
 	}
 
-	collectedTopics := []string{
-		"topic",
+	collectedTopics := map[string]*metric.Set{
+		"topic": e.NewMetricSet("KafkaBrokerSample",
+			metric.Attribute{Key: "displayName", Value: "testEntity"},
+			metric.Attribute{Key: "entityName", Value: "broker:testEntity"},
+			metric.Attribute{Key: "topic", Value: "topic"},
+		),
 	}
 
 	broker := &broker{
@@ -133,43 +141,8 @@ func TestGatherTopicSize_QueryBlank(t *testing.T) {
 
 	gatherTopicSizes(broker, collectedTopics)
 
-	if len(broker.Entity.Metrics) != 0 {
-		t.Error("Metric set was created")
-	}
-}
-
-func TestGatherTopicSize_JMXOpenFail(t *testing.T) {
-	testutils.SetupJmxTesting()
-	testutils.SetupTestArgs()
-
-	i, err := integration.New("test", "1.0.0")
-	if err != nil {
-		t.Errorf("Unexpected error %s", err.Error())
-		t.FailNow()
-	}
-
-	e, err := i.Entity("testEntity", "testNamespace")
-	if err != nil {
-		t.Errorf("Unexpected error %s", err.Error())
-		t.FailNow()
-	}
-
-	utils.JMXOpen = func(hostname, port, username, password string) error { return errors.New("error") }
-
-	collectedTopics := []string{
-		"topic",
-	}
-
-	broker := &broker{
-		Host:    "localhost",
-		JMXPort: 9999,
-		Entity:  e,
-	}
-
-	gatherTopicSizes(broker, collectedTopics)
-
-	if len(broker.Entity.Metrics) != 0 {
-		t.Error("Metric set was created")
+	if _, ok := broker.Entity.Metrics[0].Metrics["topic.diskSize"]; ok {
+		t.Error("topic.diskSize metric set was created")
 	}
 }
 
@@ -196,8 +169,12 @@ func TestGatherTopicSize_AggregateError(t *testing.T) {
 		}, nil
 	}
 
-	collectedTopics := []string{
-		"topic",
+	collectedTopics := map[string]*metric.Set{
+		"topic": e.NewMetricSet("KafkaBrokerSample",
+			metric.Attribute{Key: "displayName", Value: "testEntity"},
+			metric.Attribute{Key: "entityName", Value: "broker:testEntity"},
+			metric.Attribute{Key: "topic", Value: "topic"},
+		),
 	}
 
 	broker := &broker{
@@ -208,7 +185,7 @@ func TestGatherTopicSize_AggregateError(t *testing.T) {
 
 	gatherTopicSizes(broker, collectedTopics)
 
-	if len(broker.Entity.Metrics) != 0 {
-		t.Error("Metric set was created")
+	if _, ok := broker.Entity.Metrics[0].Metrics["topic.diskSize"]; ok {
+		t.Error("topic.diskSize metric set was created")
 	}
 }

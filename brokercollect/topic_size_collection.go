@@ -2,7 +2,6 @@ package brokercollect
 
 import (
 	"fmt"
-	"strconv"
 
 	"github.com/newrelic/infra-integrations-sdk/data/metric"
 	"github.com/newrelic/nri-kafka/logger"
@@ -10,21 +9,14 @@ import (
 	"github.com/newrelic/nri-kafka/utils"
 )
 
-func gatherTopicSizes(b *broker, collectedTopics []string) {
-	utils.JMXLock.Lock()
-	if err := utils.JMXOpen(b.Host, strconv.Itoa(b.JMXPort), utils.KafkaArgs.DefaultJMXUser, utils.KafkaArgs.DefaultJMXPassword); err != nil {
-		logger.Errorf("Broker '%s' failed to open JMX connection for Topic Size collection: %s", b.Host, err.Error())
-		utils.JMXClose()
-		utils.JMXLock.Unlock()
-		return
-	}
+func gatherTopicSizes(b *broker, topicSampleLookup map[string]*metric.Set) {
+	for topicName, sample := range topicSampleLookup {
+		beanModifier := metrics.ApplyTopicName(topicName)
 
-	for _, topicName := range collectedTopics {
-		beanName := metrics.ApplyTopicName(metrics.TopicSizeMetricDef.MBean, topicName)
+		beanName := beanModifier(metrics.TopicSizeMetricDef.MBean)
 		results, err := utils.JMXQuery(beanName, utils.KafkaArgs.Timeout)
 		if err != nil {
 			logger.Errorf("Broker '%s' failed to make JMX Query: %s", b.Host, err.Error())
-			// Close channel to signal early exit for waiting topic worker
 			continue
 		} else if len(results) == 0 {
 			continue
@@ -36,19 +28,10 @@ func gatherTopicSizes(b *broker, collectedTopics []string) {
 			continue
 		}
 
-		sample := b.Entity.NewMetricSet("KafkaBrokerSample",
-			metric.Attribute{Key: "displayName", Value: b.Entity.Metadata.Name},
-			metric.Attribute{Key: "entityName", Value: "broker:" + b.Entity.Metadata.Name},
-			metric.Attribute{Key: "topic", Value: topicName},
-		)
-
 		if err := sample.SetMetric("topic.diskSize", topicSize, metric.GAUGE); err != nil {
 			logger.Errorf("Unable to collect topic size for Topic %s on Broker %s: %s", topicName, b.Entity.Metadata.Name, err.Error())
 		}
 	}
-
-	utils.JMXClose()
-	utils.JMXLock.Unlock()
 	return
 }
 
