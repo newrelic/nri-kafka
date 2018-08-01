@@ -62,6 +62,7 @@ func TestPartitionWorker(t *testing.T) {
 
 	topicReplication := map[string][]int{"0": {0, 1, 2}}
 
+	wg.Add(1)
 	go partitionWorker(partitionInChan, partitionOutChan, &wg, &zkConn)
 
 	partitionInChan <- &partitionSender{

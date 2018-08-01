@@ -82,6 +82,7 @@ func TestBrokerWorker(t *testing.T) {
 	i, _ := integration.New("kafka", "1.0.0")
 	testutils.SetupTestArgs()
 
+	wg.Add(1)
 	go brokerWorker(brokerChan, []string{}, &wg, zkConn, i)
 
 	brokerChan <- 0

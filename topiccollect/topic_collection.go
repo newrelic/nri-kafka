@@ -33,6 +33,7 @@ func StartTopicPool(poolSize int, wg *sync.WaitGroup, zkConn zookeeper.Connectio
 
 	if utils.KafkaArgs.CollectBrokerTopicData && zkConn != nil {
 		for i := 0; i < poolSize; i++ {
+			wg.Add(1)
 			go topicWorker(topicChan, wg, zkConn)
 		}
 	}
@@ -86,7 +87,6 @@ func FeedTopicPool(topicChan chan<- *Topic, integration *integration.Integration
 
 // Collect inventory and metrics for topics sent down topicChan
 func topicWorker(topicChan <-chan *Topic, wg *sync.WaitGroup, zkConn zookeeper.Connection) {
-	wg.Add(1)
 	defer wg.Done()
 
 	for {

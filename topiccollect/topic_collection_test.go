@@ -161,6 +161,7 @@ func TestTopicWorker(t *testing.T) {
 		t.Error(err)
 	}
 
+	wg.Add(1)
 	go topicWorker(topicChan, &wg, &zkConn)
 
 	myTopic := &Topic{
