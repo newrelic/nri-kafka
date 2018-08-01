@@ -50,6 +50,84 @@ func TestGetBrokerMetrics(t *testing.T) {
 	}
 }
 
+func TestGetConsumerMetrics(t *testing.T) {
+	expected := map[string]interface{}{
+		"consumer.maxLag": float64(24),
+		"event_type":      "testMetrics",
+	}
+
+	consumerName := "consumer"
+
+	utils.JMXQuery = func(query string, timeout int) (map[string]interface{}, error) {
+		result := map[string]interface{}{
+			"kafka.consumer:type=consumer-fetch-manager-metrics,client-id=" + consumerName + ",attr=records-lag-max": 24,
+		}
+
+		return result, nil
+	}
+
+	testutils.SetupTestArgs()
+
+	i, err := integration.New("test", "1.0.0")
+	if err != nil {
+		t.Errorf("Unexpected error %s", err.Error())
+		t.FailNow()
+	}
+
+	e, err := i.Entity("testEntity", "testNamespace")
+	if err != nil {
+		t.Errorf("Unexpected error %s", err.Error())
+		t.FailNow()
+	}
+
+	m := e.NewMetricSet("testMetrics")
+
+	GetConsumerMetrics(consumerName, m)
+
+	if !reflect.DeepEqual(expected, m.Metrics) {
+		t.Errorf("Expected %+v got %+v", expected, m.Metrics)
+	}
+}
+
+func TestGetProducerMetrics(t *testing.T) {
+	expected := map[string]interface{}{
+		"producer.ageMetadataUsedInMilliseconds": float64(24),
+		"event_type":                             "testMetrics",
+	}
+
+	producerName := "producer"
+
+	utils.JMXQuery = func(query string, timeout int) (map[string]interface{}, error) {
+		result := map[string]interface{}{
+			"kafka.producer:type=producer-metrics,client-id=" + producerName + ",attr=metadata-age": 24,
+		}
+
+		return result, nil
+	}
+
+	testutils.SetupTestArgs()
+
+	i, err := integration.New("test", "1.0.0")
+	if err != nil {
+		t.Errorf("Unexpected error %s", err.Error())
+		t.FailNow()
+	}
+
+	e, err := i.Entity("testEntity", "testNamespace")
+	if err != nil {
+		t.Errorf("Unexpected error %s", err.Error())
+		t.FailNow()
+	}
+
+	m := e.NewMetricSet("testMetrics")
+
+	GetProducerMetrics(producerName, m)
+
+	if !reflect.DeepEqual(expected, m.Metrics) {
+		t.Errorf("Expected %+v got %+v", expected, m.Metrics)
+	}
+}
+
 func TestCollectMetricDefinitions_QueryError(t *testing.T) {
 	testutils.SetupTestArgs()
 	errString := "this is an error"

@@ -12,7 +12,7 @@ const consumerHolder = "%CONSUMER%"
 var consumerMetricDefs = []*JMXMetricSet{
 	{
 		MBean:        "kafka.consumer:type=consumer-fetch-manager-metrics,client-id=" + consumerHolder,
-		MetricPrefix: "kafka.consumer:type=consumer-fetch-manager-metrics,client-id=" + consumerHolder,
+		MetricPrefix: "kafka.consumer:type=consumer-fetch-manager-metrics,client-id=" + consumerHolder + ",",
 		MetricDefs: []*MetricDefinition{
 			{
 				Name:       "consumer.bytesInPerSecond",
@@ -91,9 +91,9 @@ func applyConsumerName(consumerName string) func(string) string {
 	}
 }
 
-// ApplyconsumerTopicName to be used when passed to CollectMetricDefinitions to modified bean name
+// ApplyConsumerTopicName to be used when passed to CollectMetricDefinitions to modified bean name
 // for Consumer and Topic
-func ApplyconsumerTopicName(consumerName, topicName string) func(string) string {
+func ApplyConsumerTopicName(consumerName, topicName string) func(string) string {
 	return func(beanName string) string {
 		modifiedBeanName := strings.Replace(beanName, consumerHolder, consumerName, -1)
 		return strings.Replace(modifiedBeanName, topicHolder, topicName, -1)

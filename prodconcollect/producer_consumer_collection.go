@@ -80,7 +80,7 @@ func ConsumerWorker(consumerChan <-chan *args.JMXHost, wg *sync.WaitGroup, i *in
 
 			// Collect metrics that are topic-specific per Consumer
 			metrics.CollectTopicSubMetrics(consumerEntity, "consumer", metrics.ConsumerTopicMetricDefs,
-				collectedTopics, metrics.ApplyconsumerTopicName)
+				collectedTopics, metrics.ApplyConsumerTopicName)
 
 			// Close connection and release lock so another process can make JMX Connections
 			utils.JMXClose()
