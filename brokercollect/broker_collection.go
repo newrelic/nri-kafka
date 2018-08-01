@@ -33,6 +33,7 @@ func StartBrokerPool(poolSize int, wg *sync.WaitGroup, zkConn zookeeper.Connecti
 	// Only spin off brokerWorkers if signaled
 	if utils.KafkaArgs.CollectBrokerTopicData && zkConn != nil {
 		for i := 0; i < poolSize; i++ {
+			wg.Add(1)
 			go brokerWorker(brokerChan, collectedTopics, wg, zkConn, integration)
 		}
 	}
@@ -65,7 +66,6 @@ func FeedBrokerPool(zkConn zookeeper.Connection, brokerChan chan<- int) {
 // inventory and metrics data for that broker. Exits when it determines the channel has
 // been closed
 func brokerWorker(brokerChan <-chan int, collectedTopics []string, wg *sync.WaitGroup, zkConn zookeeper.Connection, i *integration.Integration) {
-	wg.Add(1)
 	defer wg.Done()
 
 	for {

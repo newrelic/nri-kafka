@@ -32,6 +32,7 @@ func startPartitionPool(poolSize int, wg *sync.WaitGroup, zkConn zookeeper.Conne
 	for i := 0; i < poolSize; i++ {
 		partitionOutChan := make(chan interface{}, 20)
 		partitionOutChans = append(partitionOutChans, partitionOutChan)
+		wg.Add(1)
 		go partitionWorker(partitionInChan, partitionOutChan, wg, zkConn)
 	}
 
@@ -140,7 +141,6 @@ func collectPartitions(partitionOutChans []chan interface{}) []*partition {
 
 // Reads partitionSenders from a channel and pushes a completed partition struct onto its unique partitionOutChan
 func partitionWorker(partitionInChan chan *partitionSender, partitionOutChan chan interface{}, wg *sync.WaitGroup, c zookeeper.Connection) {
-	wg.Add(1)
 	defer wg.Done()
 	defer close(partitionOutChan)
 
