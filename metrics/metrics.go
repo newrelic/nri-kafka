@@ -13,20 +13,20 @@ import (
 )
 
 // GetBrokerMetrics collects all Broker JMX metrics and stores them in sample
-func GetBrokerMetrics(sample *metric.Set) error {
-	return collectMetricDefintions(sample, brokerMetricDefs, nil)
+func GetBrokerMetrics(sample *metric.Set) {
+	CollectMetricDefintions(sample, brokerMetricDefs, nil)
 }
 
 // GetConsumerMetrics collects all Consumer metrics for the given
 // consumerName and stores them in sample.
-func GetConsumerMetrics(consumerName string, sample *metric.Set) error {
-	return collectMetricDefintions(sample, consumerMetricDefs, applyConsumerName(consumerName))
+func GetConsumerMetrics(consumerName string, sample *metric.Set) {
+	CollectMetricDefintions(sample, consumerMetricDefs, applyConsumerName(consumerName))
 }
 
 // GetProducerMetrics collects all Producer and Producer metrics for the given
 // producerName and stores them in sample.
-func GetProducerMetrics(producerName string, sample *metric.Set) error {
-	return collectMetricDefintions(sample, producerMetricDefs, applyProducerName(producerName))
+func GetProducerMetrics(producerName string, sample *metric.Set) {
+	CollectMetricDefintions(sample, producerMetricDefs, applyProducerName(producerName))
 }
 
 // CollectTopicSubMetrics collects Topic metrics that are related to either a Producer or Consumer
@@ -47,14 +47,12 @@ func CollectTopicSubMetrics(entity *integration.Entity, entityType string,
 			metric.Attribute{Key: "topic", Value: topicName},
 		)
 
-		if err := collectMetricDefintions(topicSample, metricSets, beanModifier(entity.Metadata.Name, topicName)); err != nil {
-			logger.Errorf("Unable to collect Topic %s metrics for entity %s: %s", topicName, entity.Metadata.Name, err.Error())
-		}
+		CollectMetricDefintions(topicSample, metricSets, beanModifier(entity.Metadata.Name, topicName))
 	}
 }
 
-// collectMetricDefintions collects the set of metrics from the current open JMX connection and add them to the sample
-func collectMetricDefintions(sample *metric.Set, metricSets []*JMXMetricSet, beanModifier func(string) string) error {
+// CollectMetricDefintions collects the set of metrics from the current open JMX connection and add them to the sample
+func CollectMetricDefintions(sample *metric.Set, metricSets []*JMXMetricSet, beanModifier func(string) string) {
 	notFoundMetrics := make([]string, 0)
 
 	for _, metricSet := range metricSets {
@@ -66,8 +64,10 @@ func collectMetricDefintions(sample *metric.Set, metricSets []*JMXMetricSet, bea
 
 		// Return all the results under a specific mBean
 		results, err := utils.JMXQuery(beanName, utils.KafkaArgs.Timeout)
+		// If we fail we don't want a total failure as other metrics can be collected even if a single failure/timout occurs
 		if err != nil {
-			return err
+			logger.Errorf("Unable to execute JMX query for MBean '%s': %s", beanName, err.Error())
+			continue
 		}
 
 		// For each metric to collect, populate the sample if it is
@@ -90,6 +90,4 @@ func collectMetricDefintions(sample *metric.Set, metricSets []*JMXMetricSet, bea
 	if len(notFoundMetrics) > 0 {
 		logger.Debugf("Can't find raw metrics in results for keys: %v", notFoundMetrics)
 	}
-
-	return nil
 }

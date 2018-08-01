@@ -108,6 +108,11 @@ var brokerMetricDefs = []*JMXMetricSet{
 				SourceType: metric.RATE,
 				JMXAttr:    "name=IsrShrinksPerSec,attr=Count",
 			},
+			{
+				Name:       "replication.unreplicatedPartitions",
+				SourceType: metric.RATE,
+				JMXAttr:    "name=UnderReplicatedPartitions,attr=Value",
+			},
 		},
 	},
 	// Leader Metrics
@@ -207,6 +212,21 @@ var brokerMetricDefs = []*JMXMetricSet{
 	},
 }
 
+// BrokerTopicMetricDefs metric definitions for topic metrics that are specific to a Broker
+var BrokerTopicMetricDefs = []*JMXMetricSet{
+	{
+		MBean:        "kafka.server:type=BrokerTopicMetrics,name=BytesInPerSec,topic=" + topicHolder,
+		MetricPrefix: "kafka.server:type=BrokerTopicMetrics,name=BytesInPerSec,topic=" + topicHolder + ",",
+		MetricDefs: []*MetricDefinition{
+			{
+				Name:       "topic.bytesWritten",
+				SourceType: metric.GAUGE,
+				JMXAttr:    "attr=Count",
+			},
+		},
+	},
+}
+
 // TopicSizeMetricDef metric definition for calculating the roll up for a Topic's
 // on disk size for a given Broker
 var TopicSizeMetricDef = &JMXMetricSet{
@@ -214,6 +234,8 @@ var TopicSizeMetricDef = &JMXMetricSet{
 }
 
 // ApplyTopicName to modified bean name for Topic
-func ApplyTopicName(beanName, topicName string) string {
-	return strings.Replace(beanName, topicHolder, topicName, -1)
+func ApplyTopicName(topicName string) func(string) string {
+	return func(beanName string) string {
+		return strings.Replace(beanName, topicHolder, topicName, -1)
+	}
 }

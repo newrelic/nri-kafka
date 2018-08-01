@@ -10,6 +10,7 @@ import (
 
 	"github.com/kr/pretty"
 	"github.com/newrelic/infra-integrations-sdk/data/inventory"
+	"github.com/newrelic/infra-integrations-sdk/data/metric"
 	"github.com/newrelic/infra-integrations-sdk/integration"
 	"github.com/newrelic/nri-kafka/testutils"
 	"github.com/newrelic/nri-kafka/utils"
@@ -41,7 +42,6 @@ func TestStartBrokerPool(t *testing.T) {
 	case <-time.After(10 * time.Millisecond):
 		t.Error("Wait group did not exit in a reasonable amount of time")
 	}
-
 }
 
 func TestFeedBrokerPool_NoError(t *testing.T) {
@@ -185,38 +185,11 @@ func TestPopulateBrokerMetrics_JMXOpenError(t *testing.T) {
 
 	testBroker.Entity, _ = i.Entity(testBroker.Host, "broker")
 
-	err := populateBrokerMetrics(testBroker)
+	err := collectBrokerMetrics(testBroker, []string{})
 	if err == nil {
 		t.Error("Did not get expected error")
 	} else if err.Error() != errorText {
 		t.Errorf("Expected error '%s' got '%s'", errorText, err.Error())
-	}
-}
-
-func TestPopulateBrokerMetrics_JMXQueryError(t *testing.T) {
-	testutils.SetupTestArgs()
-	testutils.SetupJmxTesting()
-	errorText := "jmx error"
-
-	utils.JMXQuery = func(query string, timeout int) (map[string]interface{}, error) { return nil, errors.New(errorText) }
-	testBroker := &broker{
-		Host:      "kafkabroker",
-		JMXPort:   9999,
-		KafkaPort: 9092,
-		ID:        0,
-	}
-	i, _ := integration.New("kafka", "1.0.0")
-
-	testBroker.Entity, _ = i.Entity(testBroker.Host, "broker")
-
-	err := populateBrokerMetrics(testBroker)
-	if err != nil {
-		t.Errorf("Unexpected Error: %s", err.Error())
-	}
-
-	// MetricSet should still be created during a failed query.
-	if len(testBroker.Entity.Metrics) != 1 {
-		t.Errorf("Expected one metric set got %d", len(testBroker.Entity.Metrics))
 	}
 }
 
@@ -234,10 +207,7 @@ func TestPopulateBrokerMetrics_Normal(t *testing.T) {
 
 	testBroker.Entity, _ = i.Entity(testBroker.Host, "broker")
 
-	err := populateBrokerMetrics(testBroker)
-	if err != nil {
-		t.Errorf("Unexpected Error: %s", err.Error())
-	}
+	populateBrokerMetrics(testBroker)
 
 	// MetricSet should still be created during a failed query.
 	if len(testBroker.Entity.Metrics) != 1 {
@@ -302,4 +272,54 @@ func TestGetBrokerConfig(t *testing.T) {
 	}
 
 	return
+}
+
+func TestCollectBrokerTopicMetrics(t *testing.T) {
+	testutils.SetupTestArgs()
+	testutils.SetupJmxTesting()
+
+	utils.JMXQuery = func(query string, timeout int) (map[string]interface{}, error) {
+		result := map[string]interface{}{
+			"kafka.server:type=BrokerTopicMetrics,name=BytesInPerSec,topic=topic,attr=Count": 24,
+		}
+
+		return result, nil
+	}
+
+	i, err := integration.New("test", "1.0.0")
+	if err != nil {
+		t.Errorf("Unexpected error %s", err.Error())
+		t.FailNow()
+	}
+
+	e, err := i.Entity("testEntity", "testNamespace")
+	if err != nil {
+		t.Errorf("Unexpected error %s", err.Error())
+		t.FailNow()
+	}
+
+	testBroker := &broker{
+		Host:      "kafkabroker",
+		JMXPort:   9999,
+		KafkaPort: 9092,
+		ID:        0,
+		Entity:    e,
+	}
+
+	sample := e.NewMetricSet("KafkaBrokerSample",
+		metric.Attribute{Key: "displayName", Value: "testEntity"},
+		metric.Attribute{Key: "entityName", Value: "broker:testEntity"},
+		metric.Attribute{Key: "topic", Value: "topic"})
+
+	sample.SetMetric("topic.bytesWritten", float64(24), metric.GAUGE)
+
+	expected := map[string]*metric.Set{
+		"topic": sample,
+	}
+
+	out := collectBrokerTopicMetrics(testBroker, []string{"topic"})
+
+	if !reflect.DeepEqual(out, expected) {
+		t.Errorf("Expected %+v got %+v", expected, out)
+	}
 }

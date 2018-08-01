@@ -158,16 +158,6 @@ func populateBrokerInventory(b *broker) error {
 }
 
 func collectBrokerMetrics(b *broker, collectedTopics []string) error {
-	if utils.KafkaArgs.CollectTopicSize {
-		go gatherTopicSizes(b, collectedTopics)
-	}
-
-	return populateBrokerMetrics(b)
-}
-
-// For a given broker struct, collect and populate its entity with broker metrics
-func populateBrokerMetrics(b *broker) error {
-
 	// Lock since we can only make a single JMX connection at a time.
 	utils.JMXLock.Lock()
 
@@ -179,6 +169,25 @@ func populateBrokerMetrics(b *broker) error {
 		return err
 	}
 
+	// Collect broker metrics
+	populateBrokerMetrics(b)
+
+	// Gather Broker specific Topic metrics
+	topicSampleLookup := collectBrokerTopicMetrics(b, collectedTopics)
+
+	// If enabled collect topic sizes
+	if utils.KafkaArgs.CollectTopicSize {
+		gatherTopicSizes(b, topicSampleLookup)
+	}
+
+	// Close connection and release lock so another process can make JMX Connections
+	utils.JMXClose()
+	utils.JMXLock.Unlock()
+	return nil
+}
+
+// For a given broker struct, collect and populate its entity with broker metrics
+func populateBrokerMetrics(b *broker) {
 	// Create a metric set on the broker entity
 	sample := b.Entity.NewMetricSet("KafkaBrokerSample",
 		metric.Attribute{Key: "displayName", Value: b.Entity.Metadata.Name},
@@ -186,15 +195,29 @@ func populateBrokerMetrics(b *broker) error {
 	)
 
 	// Populate metrics set with broker metrics
-	if err := metrics.GetBrokerMetrics(sample); err != nil {
-		logger.Errorf("Error collecting metrics from Broker '%s': %s", b.Host, err.Error())
+	logger.Debugf("Collecting metrics for Broker '%s'", b.Entity.Metadata.Name)
+	metrics.GetBrokerMetrics(sample)
+}
+
+// collectBrokerTopicMetrics gathers Broker specific Topic metrics.
+// Returns a map of Topic names to the corresponding entity *metric.Set
+func collectBrokerTopicMetrics(b *broker, collectedTopics []string) map[string]*metric.Set {
+	topicSampleLookup := make(map[string]*metric.Set)
+
+	for _, topicName := range collectedTopics {
+		sample := b.Entity.NewMetricSet("KafkaBrokerSample",
+			metric.Attribute{Key: "displayName", Value: b.Entity.Metadata.Name},
+			metric.Attribute{Key: "entityName", Value: "broker:" + b.Entity.Metadata.Name},
+			metric.Attribute{Key: "topic", Value: topicName},
+		)
+
+		// Insert into map
+		topicSampleLookup[topicName] = sample
+
+		metrics.CollectMetricDefintions(sample, metrics.BrokerTopicMetricDefs, metrics.ApplyTopicName(topicName))
 	}
 
-	// Close connection and release lock so another process can make JMX Connections
-	utils.JMXClose()
-	utils.JMXLock.Unlock()
-
-	return nil
+	return topicSampleLookup
 }
 
 // GetBrokerConnectionInfo Collects Broker connection info from Zookeeper
