@@ -4,6 +4,7 @@ package metrics
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/newrelic/infra-integrations-sdk/data/metric"
 	"github.com/newrelic/infra-integrations-sdk/integration"
@@ -35,8 +36,12 @@ func GetProducerMetrics(producerName string, sample *metric.Set) error {
 func CollectTopicSubMetrics(entity *integration.Entity, entityType string,
 	metricSets []*JMXMetricSet, topicList []string,
 	beanModifier func(string, string) func(string) string) {
+
+	// need to title case the type so it matches the metric set of the parent entity
+	titleEntityType := strings.Title(entity.Metadata.Namespace)
+
 	for _, topicName := range topicList {
-		topicSample := entity.NewMetricSet("Kafka"+entity.Metadata.Namespace+"Sample",
+		topicSample := entity.NewMetricSet("Kafka"+titleEntityType+"Sample",
 			metric.Attribute{Key: "displayName", Value: entity.Metadata.Name},
 			metric.Attribute{Key: "entityName", Value: fmt.Sprintf("%s:%s", entity.Metadata.Namespace, entity.Metadata.Name)},
 			metric.Attribute{Key: "topic", Value: topicName},
