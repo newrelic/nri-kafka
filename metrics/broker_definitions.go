@@ -108,6 +108,11 @@ var brokerMetricDefs = []*JMXMetricSet{
 				SourceType: metric.RATE,
 				JMXAttr:    "name=IsrShrinksPerSec,attr=Count",
 			},
+			{
+				Name:       "replication.unreplicatedPartitions",
+				SourceType: metric.RATE,
+				JMXAttr:    "name=UnderReplicatedPartitions,attr=Value",
+			},
 		},
 	},
 	// Leader Metrics
