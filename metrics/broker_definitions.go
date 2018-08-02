@@ -195,8 +195,8 @@ var brokerMetricDefs = []*JMXMetricSet{
 	},
 	// Delayed Fetch Metrics
 	{
-		MBean:        "kafak.server:type=DelayedFetchMetrics,name=ExpiresPerSec,fetcherType=*",
-		MetricPrefix: "kafak.server:type=DelayedFetchMetrics,name=ExpiresPerSec,",
+		MBean:        "kafka.server:type=DelayedFetchMetrics,name=ExpiresPerSec,fetcherType=*",
+		MetricPrefix: "kafka.server:type=DelayedFetchMetrics,name=ExpiresPerSec,",
 		MetricDefs: []*MetricDefinition{
 			{
 				Name:       "consumer.requestsExpiredPerSecond",
