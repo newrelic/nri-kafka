@@ -5,6 +5,7 @@ import (
 	"errors"
 
 	sdkArgs "github.com/newrelic/infra-integrations-sdk/args"
+	"github.com/newrelic/nri-kafka/logger"
 )
 
 // KafkaArguments is an special version of the config arguments that has advanced parsing
@@ -48,6 +49,7 @@ func ParseArgs(a ArgumentList) (*KafkaArguments, error) {
 	var zookeeperHosts []*ZookeeperHost
 	err := json.Unmarshal([]byte(a.ZookeeperHosts), &zookeeperHosts)
 	if err != nil {
+		logger.Errorf("failed to parse zookeepers from json")
 		return nil, err
 	}
 
@@ -61,18 +63,21 @@ func ParseArgs(a ArgumentList) (*KafkaArguments, error) {
 	// Parse consumers
 	consumers, err := unmarshalJMXHosts([]byte(a.Consumers), &a)
 	if err != nil {
+		logger.Errorf("failed to parse consumers from json")
 		return nil, err
 	}
 
 	// Parse producers
 	producers, err := unmarshalJMXHosts([]byte(a.Producers), &a)
 	if err != nil {
+		logger.Errorf("failed to parse producers from json")
 		return nil, err
 	}
 
 	// Parse topics
 	var topics []string
 	if err = json.Unmarshal([]byte(a.TopicList), &topics); err != nil {
+		logger.Errorf("failed to parse topics from json")
 		return nil, err
 	}
 
