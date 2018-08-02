@@ -61,7 +61,8 @@ func GetTopics(zkConn zookeeper.Connection) ([]string, error) {
 		}
 		return collectedTopics, nil
 	default:
-		return nil, fmt.Errorf("Bad topic_mode '%s'", utils.KafkaArgs.TopicMode)
+		logger.Errorf("Invalid topic mode %s", utils.KafkaArgs.TopicMode)
+		return nil, fmt.Errorf("invalid topic_mode '%s'", utils.KafkaArgs.TopicMode)
 	}
 }
 
