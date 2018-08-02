@@ -151,13 +151,17 @@ func TestPopulateBrokerInventory(t *testing.T) {
 	}
 
 	expectedInventoryItems := map[string]inventory.Item{
-		"Connection": {
-			"Host":       testBroker.Host,
-			"JMX Port":   testBroker.JMXPort,
-			"Kafka Port": testBroker.KafkaPort,
+		"broker.hostname": {
+			"value": testBroker.Host,
 		},
-		"Config": {
-			"leader.replication.throttled.replicas": "10000",
+		"broker.jmxPort": {
+			"value": testBroker.JMXPort,
+		},
+		"broker.kafkaPort": {
+			"value": testBroker.KafkaPort,
+		},
+		"broker.leader.replication.throttled.replicas": {
+			"value": "10000",
 		},
 	}
 
