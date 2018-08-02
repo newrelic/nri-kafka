@@ -56,12 +56,13 @@ func GetTopics(zkConn zookeeper.Connection) ([]string, error) {
 		// If they want all topics, ask Zookeeper for the list of topics
 		collectedTopics, _, err := zkConn.Children("/brokers/topics")
 		if err != nil {
-			logger.Errorf("Unable to get list of topics from Zookeeper with error: %s", err)
+			logger.Errorf("unable to get list of topics from Zookeeper with error: %s", err)
 			return nil, err
 		}
 		return collectedTopics, nil
 	default:
-		return nil, fmt.Errorf("Bad topic_mode '%s'", utils.KafkaArgs.TopicMode)
+		logger.Errorf("invalid topic mode %s", utils.KafkaArgs.TopicMode)
+		return nil, fmt.Errorf("invalid topic_mode '%s'", utils.KafkaArgs.TopicMode)
 	}
 }
 
