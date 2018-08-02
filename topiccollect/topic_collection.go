@@ -242,16 +242,16 @@ func populateTopicInventory(t *Topic) []error {
 
 	// Add partition scheme to inventory
 	var errors []error
-	if err := t.Entity.SetInventoryItem("Partition Scheme", "Number of Partitions", t.PartitionCount); err != nil {
+	if err := t.Entity.SetInventoryItem("topic.partitionScheme", "Number of Partitions", t.PartitionCount); err != nil {
 		errors = append(errors, err)
 	}
-	if err := t.Entity.SetInventoryItem("Partition Scheme", "Replication Factor", t.ReplicationFactor); err != nil {
+	if err := t.Entity.SetInventoryItem("topic.partitionScheme", "Replication Factor", t.ReplicationFactor); err != nil {
 		errors = append(errors, err)
 	}
 
 	// Add topic configs to inventory
 	for key, value := range t.Configs {
-		if err := t.Entity.SetInventoryItem("Config", key, value); err != nil {
+		if err := t.Entity.SetInventoryItem("topic."+key, "value", value); err != nil {
 			errors = append(errors, err)
 		}
 	}

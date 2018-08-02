@@ -220,12 +220,12 @@ func TestPopulateTopicInventory(t *testing.T) {
 	}
 
 	expectedInventoryItems := inventory.Items{
-		"Partition Scheme": {
+		"topic.partitionScheme": {
 			"Number of Partitions": 1,
 			"Replication Factor":   1,
 		},
-		"Config": {
-			"flush.messages": "12345",
+		"topic.flush.messages": {
+			"value": "12345",
 		},
 	}
 

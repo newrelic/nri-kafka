@@ -3,6 +3,7 @@ package brokercollect
 
 import (
 	"encoding/json"
+	"fmt"
 	"strconv"
 	"sync"
 
@@ -84,6 +85,7 @@ func brokerWorker(brokerChan <-chan int, collectedTopics []string, wg *sync.Wait
 
 		// Populate inventory for broker
 		if utils.KafkaArgs.All() || utils.KafkaArgs.Inventory {
+			fmt.Println("Collecting broker inventory")
 			if err := populateBrokerInventory(b); err != nil {
 				continue
 			}
@@ -137,19 +139,19 @@ func createBroker(brokerID int, zkConn zookeeper.Connection, i *integration.Inte
 // For a given broker struct, populate the inventory of its entity with the information gathered
 func populateBrokerInventory(b *broker) error {
 	// Populate connection information
-	if err := b.Entity.SetInventoryItem("Connection", "Host", b.Host); err != nil {
+	if err := b.Entity.SetInventoryItem("broker.hostname", "value", b.Host); err != nil {
 		logger.Errorf("Unable to set Hostinventory item for broker %d: %s", b.ID, err)
 	}
-	if err := b.Entity.SetInventoryItem("Connection", "JMX Port", b.JMXPort); err != nil {
+	if err := b.Entity.SetInventoryItem("broker.jmxPort", "value", b.JMXPort); err != nil {
 		logger.Errorf("Unable to set JMX Port inventory item for broker %d: %s", b.ID, err)
 	}
-	if err := b.Entity.SetInventoryItem("Connection", "Kafka Port", b.KafkaPort); err != nil {
+	if err := b.Entity.SetInventoryItem("broker.kafkaPort", "value", b.KafkaPort); err != nil {
 		logger.Errorf("Unable to set Kafka Port inventory item for broker %d: %s", b.ID, err)
 	}
 
 	// Populate configuration information
 	for key, value := range b.Config {
-		if err := b.Entity.SetInventoryItem("Config", key, value); err != nil {
+		if err := b.Entity.SetInventoryItem("broker."+key, "value", value); err != nil {
 			logger.Errorf("Unable to set inventory item for broker %d: %s", b.ID, err)
 		}
 	}
