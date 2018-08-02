@@ -17,7 +17,7 @@ var consumerMetricDefs = []*JMXMetricSet{
 			{
 				Name:       "consumer.bytesInPerSecond",
 				SourceType: metric.RATE,
-				JMXAttr:    "attr=consumed-rate",
+				JMXAttr:    "attr=bytes-consumed-rate",
 			},
 			{
 				Name:       "consumer.fetchPerSecond",
