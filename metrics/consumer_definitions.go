@@ -30,7 +30,7 @@ var consumerMetricDefs = []*JMXMetricSet{
 				JMXAttr:    "attr=records-lag-max",
 			},
 			{
-				Name:       "consumer.MessageConsumptionPerSecond",
+				Name:       "consumer.messageConsumptionPerSecond",
 				SourceType: metric.RATE,
 				JMXAttr:    "attr=records-consumed-rate",
 			},
