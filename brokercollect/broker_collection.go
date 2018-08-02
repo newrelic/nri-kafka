@@ -3,7 +3,6 @@ package brokercollect
 
 import (
 	"encoding/json"
-	"fmt"
 	"strconv"
 	"sync"
 
@@ -85,7 +84,6 @@ func brokerWorker(brokerChan <-chan int, collectedTopics []string, wg *sync.Wait
 
 		// Populate inventory for broker
 		if utils.KafkaArgs.All() || utils.KafkaArgs.Inventory {
-			fmt.Println("Collecting broker inventory")
 			if err := populateBrokerInventory(b); err != nil {
 				continue
 			}
