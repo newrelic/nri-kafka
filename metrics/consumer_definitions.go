@@ -16,12 +16,12 @@ var consumerMetricDefs = []*JMXMetricSet{
 		MetricDefs: []*MetricDefinition{
 			{
 				Name:       "consumer.bytesInPerSecond",
-				SourceType: metric.RATE,
+				SourceType: metric.GAUGE,
 				JMXAttr:    "attr=bytes-consumed-rate",
 			},
 			{
 				Name:       "consumer.fetchPerSecond",
-				SourceType: metric.RATE,
+				SourceType: metric.GAUGE,
 				JMXAttr:    "attr=fetch-rate",
 			},
 			{
@@ -31,7 +31,7 @@ var consumerMetricDefs = []*JMXMetricSet{
 			},
 			{
 				Name:       "consumer.messageConsumptionPerSecond",
-				SourceType: metric.RATE,
+				SourceType: metric.GAUGE,
 				JMXAttr:    "attr=records-consumed-rate",
 			},
 		},
@@ -42,12 +42,12 @@ var consumerMetricDefs = []*JMXMetricSet{
 		MetricDefs: []*MetricDefinition{
 			{
 				Name:       "consumer.offsetKafkaCommitsPerSecond",
-				SourceType: metric.RATE,
+				SourceType: metric.GAUGE,
 				JMXAttr:    "name=KafkaCommitsPerSec,clientId=" + consumerHolder + "attr=Count",
 			},
 			{
 				Name:       "consumer.offsetZooKeeperCommitsPerSecond",
-				SourceType: metric.RATE,
+				SourceType: metric.GAUGE,
 				JMXAttr:    "name=ZooKeeperCommitsPerSec,clientId=" + consumerHolder + "attr=Count",
 			},
 		},
@@ -72,7 +72,7 @@ var ConsumerTopicMetricDefs = []*JMXMetricSet{
 			},
 			{
 				Name:       "consumer.avgRecordConsumedPerTopicPerSecond",
-				SourceType: metric.RATE,
+				SourceType: metric.GAUGE,
 				JMXAttr:    "attr=records-consumed-rate",
 			},
 			{

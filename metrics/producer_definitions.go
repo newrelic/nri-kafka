@@ -36,12 +36,12 @@ var producerMetricDefs = []*JMXMetricSet{
 			},
 			{
 				Name:       "producer.avgRecordsSentPerSecond",
-				SourceType: metric.RATE,
+				SourceType: metric.GAUGE,
 				JMXAttr:    "client-id=" + producerHolder + ",attr=record-send-rate",
 			},
 			{
 				Name:       "producer.avgRequestLatencyPerSecond",
-				SourceType: metric.RATE,
+				SourceType: metric.GAUGE,
 				JMXAttr:    "client-id=" + producerHolder + ",attr=request-latency-avg",
 			},
 			{
@@ -56,7 +56,7 @@ var producerMetricDefs = []*JMXMetricSet{
 			},
 			{
 				Name:       "producer.bytesOutPerSecond",
-				SourceType: metric.RATE,
+				SourceType: metric.GAUGE,
 				JMXAttr:    "client-id=" + producerHolder + ",attr=outgoing-byte-rate",
 			},
 			{
@@ -86,7 +86,7 @@ var producerMetricDefs = []*JMXMetricSet{
 			},
 			{
 				Name:       "producer.requestPerSecond",
-				SourceType: metric.RATE,
+				SourceType: metric.GAUGE,
 				JMXAttr:    "client-id=" + producerHolder + ",attr=request-rate",
 			},
 			{
@@ -96,7 +96,7 @@ var producerMetricDefs = []*JMXMetricSet{
 			},
 			{
 				Name:       "producer.responsePerSecond",
-				SourceType: metric.RATE,
+				SourceType: metric.GAUGE,
 				JMXAttr:    "client-id=" + producerHolder + ",attr=response-rate",
 			},
 			{
@@ -122,7 +122,7 @@ var producerMetricDefs = []*JMXMetricSet{
 		MetricDefs: []*MetricDefinition{
 			{
 				Name:       "producer.messageRatePerSecond",
-				SourceType: metric.RATE,
+				SourceType: metric.GAUGE,
 				JMXAttr:    "client-id=" + producerHolder + ",attr=Count",
 			},
 		},
@@ -144,7 +144,7 @@ var ProducerTopicMetricDefs = []*JMXMetricSet{
 		MetricDefs: []*MetricDefinition{
 			{
 				Name:       "producer.avgRecordsSentPerTopicPerSecond",
-				SourceType: metric.RATE,
+				SourceType: metric.GAUGE,
 				JMXAttr:    "attr=record-send-rate",
 			},
 		},
