@@ -8,8 +8,9 @@ import (
 
 	"github.com/newrelic/infra-integrations-sdk/data/metric"
 	"github.com/newrelic/infra-integrations-sdk/integration"
-	"github.com/newrelic/nri-kafka/logger"
-	"github.com/newrelic/nri-kafka/utils"
+	"github.com/newrelic/infra-integrations-sdk/log"
+	"github.com/newrelic/nri-kafka/args"
+	"github.com/newrelic/nri-kafka/jmxwrapper"
 )
 
 // GetBrokerMetrics collects all Broker JMX metrics and stores them in sample
@@ -63,10 +64,10 @@ func CollectMetricDefintions(sample *metric.Set, metricSets []*JMXMetricSet, bea
 		}
 
 		// Return all the results under a specific mBean
-		results, err := utils.JMXQuery(beanName, utils.KafkaArgs.Timeout)
+		results, err := jmxwrapper.JMXQuery(beanName, args.GlobalArgs.Timeout)
 		// If we fail we don't want a total failure as other metrics can be collected even if a single failure/timout occurs
 		if err != nil {
-			logger.Errorf("Unable to execute JMX query for MBean '%s': %s", beanName, err.Error())
+			log.Error("Unable to execute JMX query for MBean '%s': %s", beanName, err.Error())
 			continue
 		}
 
@@ -81,13 +82,13 @@ func CollectMetricDefintions(sample *metric.Set, metricSets []*JMXMetricSet, bea
 				notFoundMetrics = append(notFoundMetrics, metricDef.Name)
 			} else {
 				if err := sample.SetMetric(metricDef.Name, value, metricDef.SourceType); err != nil {
-					logger.Errorf("Error setting value: %s", err)
+					log.Error("Error setting value: %s", err)
 				}
 			}
 		}
 	}
 
 	if len(notFoundMetrics) > 0 {
-		logger.Debugf("Can't find raw metrics in results for keys: %v", notFoundMetrics)
+		log.Debug("Can't find raw metrics in results for keys: %v", notFoundMetrics)
 	}
 }

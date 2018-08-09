@@ -9,8 +9,8 @@ import (
 
 	"github.com/newrelic/infra-integrations-sdk/data/metric"
 	"github.com/newrelic/infra-integrations-sdk/integration"
+	"github.com/newrelic/nri-kafka/jmxwrapper"
 	"github.com/newrelic/nri-kafka/testutils"
-	"github.com/newrelic/nri-kafka/utils"
 )
 
 func TestGetBrokerMetrics(t *testing.T) {
@@ -19,7 +19,7 @@ func TestGetBrokerMetrics(t *testing.T) {
 		"event_type":           "testMetrics",
 	}
 
-	utils.JMXQuery = func(query string, timeout int) (map[string]interface{}, error) {
+	jmxwrapper.JMXQuery = func(query string, timeout int) (map[string]interface{}, error) {
 		result := map[string]interface{}{
 			"kafka.network:type=RequestMetrics,name=TotalTimeMs,request=Fetch,attr=Mean": 24,
 		}
@@ -58,7 +58,7 @@ func TestGetConsumerMetrics(t *testing.T) {
 
 	consumerName := "consumer"
 
-	utils.JMXQuery = func(query string, timeout int) (map[string]interface{}, error) {
+	jmxwrapper.JMXQuery = func(query string, timeout int) (map[string]interface{}, error) {
 		result := map[string]interface{}{
 			"kafka.consumer:type=consumer-fetch-manager-metrics,client-id=" + consumerName + ",attr=records-lag-max": 24,
 		}
@@ -97,7 +97,7 @@ func TestGetProducerMetrics(t *testing.T) {
 
 	producerName := "producer"
 
-	utils.JMXQuery = func(query string, timeout int) (map[string]interface{}, error) {
+	jmxwrapper.JMXQuery = func(query string, timeout int) (map[string]interface{}, error) {
 		result := map[string]interface{}{
 			"kafka.producer:type=producer-metrics,client-id=" + producerName + ",attr=metadata-age": 24,
 		}
@@ -132,7 +132,7 @@ func TestCollectMetricDefinitions_QueryError(t *testing.T) {
 	testutils.SetupTestArgs()
 	errString := "this is an error"
 
-	utils.JMXQuery = func(query string, timeout int) (map[string]interface{}, error) {
+	jmxwrapper.JMXQuery = func(query string, timeout int) (map[string]interface{}, error) {
 		return nil, errors.New(errString)
 	}
 
@@ -163,7 +163,7 @@ func TestCollectMetricDefinitions_MetricError(t *testing.T) {
 		"event_type": "testMetrics",
 	}
 
-	utils.JMXQuery = func(query string, timeout int) (map[string]interface{}, error) {
+	jmxwrapper.JMXQuery = func(query string, timeout int) (map[string]interface{}, error) {
 		result := map[string]interface{}{
 			"kafka.network:type=RequestMetrics,name=TotalTimeMs,request=Fetch,attr=Mean": "stuff",
 		}
@@ -210,7 +210,7 @@ func TestCollectMetricDefinitions_BeanModifier(t *testing.T) {
 
 	expectedBean := "kafka.network:replace=Replaced"
 
-	utils.JMXQuery = func(query string, timeout int) (map[string]interface{}, error) {
+	jmxwrapper.JMXQuery = func(query string, timeout int) (map[string]interface{}, error) {
 		if query != expectedBean {
 			return nil, fmt.Errorf("Expected bean '%s' got '%s'", expectedBean, query)
 		}

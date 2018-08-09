@@ -12,8 +12,8 @@ import (
 	"github.com/newrelic/infra-integrations-sdk/data/inventory"
 	"github.com/newrelic/infra-integrations-sdk/data/metric"
 	"github.com/newrelic/infra-integrations-sdk/integration"
+	"github.com/newrelic/nri-kafka/jmxwrapper"
 	"github.com/newrelic/nri-kafka/testutils"
-	"github.com/newrelic/nri-kafka/utils"
 	"github.com/newrelic/nri-kafka/zookeeper"
 )
 
@@ -42,37 +42,6 @@ func TestStartBrokerPool(t *testing.T) {
 	case <-time.After(10 * time.Millisecond):
 		t.Error("Wait group did not exit in a reasonable amount of time")
 	}
-}
-
-func TestFeedBrokerPool_NoError(t *testing.T) {
-	testutils.SetupTestArgs()
-	zkConn := zookeeper.MockConnection{}
-	brokerChan := make(chan int, 10)
-
-	defer func() {
-		if r := recover(); r != nil {
-			t.Error("FeedBrokerPool paniced")
-		}
-	}()
-	FeedBrokerPool(&zkConn, brokerChan)
-
-	brokerID := <-brokerChan
-	if brokerID != 0 {
-		t.Errorf("Expected broker ID 0, got %d", brokerID)
-	}
-}
-
-func TestFeedBrokerPool_Error(t *testing.T) {
-	testutils.SetupTestArgs()
-	zkConn := zookeeper.MockConnection{ReturnChildrenError: true}
-	brokerChan := make(chan int, 10)
-
-	defer func() {
-		if r := recover(); r == nil {
-			t.Error("FeedBrokerPool did not panic")
-		}
-	}()
-	FeedBrokerPool(&zkConn, brokerChan)
 }
 
 func TestBrokerWorker(t *testing.T) {
@@ -179,7 +148,7 @@ func TestPopulateBrokerMetrics_JMXOpenError(t *testing.T) {
 	testutils.SetupJmxTesting()
 	errorText := "jmx error"
 
-	utils.JMXOpen = func(hostname, port, username, password string) error { return errors.New(errorText) }
+	jmxwrapper.JMXOpen = func(hostname, port, username, password string) error { return errors.New(errorText) }
 	testBroker := &broker{
 		Host:      "kafkabroker",
 		JMXPort:   9999,
@@ -283,7 +252,7 @@ func TestCollectBrokerTopicMetrics(t *testing.T) {
 	testutils.SetupTestArgs()
 	testutils.SetupJmxTesting()
 
-	utils.JMXQuery = func(query string, timeout int) (map[string]interface{}, error) {
+	jmxwrapper.JMXQuery = func(query string, timeout int) (map[string]interface{}, error) {
 		result := map[string]interface{}{
 			"kafka.server:type=BrokerTopicMetrics,name=BytesInPerSec,topic=topic,attr=Count": 24,
 		}

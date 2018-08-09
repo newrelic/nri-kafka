@@ -13,7 +13,6 @@ import (
 	"github.com/newrelic/infra-integrations-sdk/integration"
 	"github.com/newrelic/nri-kafka/args"
 	"github.com/newrelic/nri-kafka/testutils"
-	"github.com/newrelic/nri-kafka/utils"
 	"github.com/newrelic/nri-kafka/zookeeper"
 )
 
@@ -32,7 +31,7 @@ func TestGetTopics(t *testing.T) {
 	zkConn := &zookeeper.MockConnection{}
 
 	for _, tc := range testCases {
-		utils.KafkaArgs = &args.KafkaArguments{
+		args.GlobalArgs = &args.KafkaArguments{
 			TopicMode: tc.topicMode,
 			TopicList: tc.topicNames,
 		}
@@ -61,7 +60,7 @@ func TestGetTopics_zkErr(t *testing.T) {
 	zkConn := &zookeeper.MockConnection{ReturnChildrenError: true}
 
 	for _, tc := range testCases {
-		utils.KafkaArgs = &args.KafkaArguments{
+		args.GlobalArgs = &args.KafkaArguments{
 			TopicMode: tc.topicMode,
 			TopicList: tc.topicNames,
 		}
@@ -77,7 +76,7 @@ func TestGetTopics_zkErr(t *testing.T) {
 }
 
 func TestGetTopics_zkNil(t *testing.T) {
-	utils.KafkaArgs = &args.KafkaArguments{
+	args.GlobalArgs = &args.KafkaArguments{
 		TopicMode: "All",
 	}
 
@@ -109,7 +108,7 @@ func TestStartTopicPool(t *testing.T) {
 
 func TestFeedTopicPool(t *testing.T) {
 	testutils.SetupTestArgs()
-	utils.KafkaArgs.TopicMode = "All"
+	args.GlobalArgs.TopicMode = "All"
 
 	i, err := integration.New("kafka", "1.0.0")
 	if err != nil {
@@ -150,7 +149,7 @@ func TestTopicWorker(t *testing.T) {
 	zkConn := zookeeper.MockConnection{}
 
 	testutils.SetupTestArgs()
-	utils.KafkaArgs.Metrics = false
+	args.GlobalArgs.Metrics = false
 
 	i, err := integration.New("kafka", "1.0.0")
 	if err != nil {

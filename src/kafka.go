@@ -1,15 +1,14 @@
 package main
 
 import (
+	"os"
 	"sync"
 
 	"github.com/newrelic/infra-integrations-sdk/integration"
 	"github.com/newrelic/nri-kafka/args"
 	bc "github.com/newrelic/nri-kafka/brokercollect"
-	"github.com/newrelic/nri-kafka/logger"
 	pcc "github.com/newrelic/nri-kafka/prodconcollect"
 	tc "github.com/newrelic/nri-kafka/topiccollect"
-	"github.com/newrelic/nri-kafka/utils"
 	"github.com/newrelic/nri-kafka/zookeeper"
 )
 
@@ -22,22 +21,19 @@ func main() {
 	var argList args.ArgumentList
 	// Create Integration
 	kafkaIntegration, err := integration.New(integrationName, integrationVersion, integration.Args(&argList))
-	utils.PanicOnErr(err)
-
-	// Needs to be after integration creation for args to be set
-	logger.SetLogger(kafkaIntegration.Logger())
+	ExitOnErr(err)
 
 	// Parse args into structs
 	// This has to be after integration creation for defaults to be populated
-	utils.KafkaArgs, err = args.ParseArgs(argList)
-	utils.PanicOnErr(err)
+	args.GlobalArgs, err = args.ParseArgs(argList)
+	ExitOnErr(err)
 
-	zkConn, err := zookeeper.NewConnection(utils.KafkaArgs)
-	utils.PanicOnErr(err)
+	zkConn, err := zookeeper.NewConnection(args.GlobalArgs)
+	ExitOnErr(err)
 
 	// Get topic list
 	collectedTopics, err := tc.GetTopics(zkConn)
-	utils.PanicOnErr(err)
+	ExitOnErr(err)
 
 	// Setup wait group
 	var wg sync.WaitGroup
@@ -54,10 +50,17 @@ func main() {
 	// Run all of theses in their own Go Routine to maximize concurrency
 	go bc.FeedBrokerPool(zkConn, brokerChan)
 	go tc.FeedTopicPool(topicChan, kafkaIntegration, collectedTopics)
-	go pcc.FeedWorkerPool(consumerChan, utils.KafkaArgs.Consumers)
-	go pcc.FeedWorkerPool(producerChan, utils.KafkaArgs.Producers)
+	go pcc.FeedWorkerPool(consumerChan, args.GlobalArgs.Consumers)
+	go pcc.FeedWorkerPool(producerChan, args.GlobalArgs.Producers)
 
 	wg.Wait()
 
-	utils.PanicOnErr(kafkaIntegration.Publish())
+	ExitOnErr(kafkaIntegration.Publish())
+}
+
+// ExitOnErr will exit with a -1 if the error is non-nil
+func ExitOnErr(err error) {
+	if err != nil {
+		os.Exit(-1)
+	}
 }

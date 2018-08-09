@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/newrelic/infra-integrations-sdk/log"
 	"github.com/newrelic/nri-kafka/args"
 	"github.com/samuel/go-zookeeper/zk"
 )
@@ -35,11 +36,13 @@ func NewConnection(kafkaArgs *args.KafkaArguments) (Connection, error) {
 	// Create connection and add authentication if provided
 	zkConn, _, err := zk.Connect(zkHosts, time.Second)
 	if err != nil {
+		log.Error("Failed to connect to Zookeeper: %s", err.Error())
 		return nil, err
 	}
 
 	if kafkaArgs.ZookeeperAuthScheme != "" {
 		if err = zkConn.AddAuth(kafkaArgs.ZookeeperAuthScheme, []byte(kafkaArgs.ZookeeperAuthSecret)); err != nil {
+			log.Error("Failed to Authenticate to Zookeeper: %s", err.Error())
 			return nil, err
 		}
 	}
