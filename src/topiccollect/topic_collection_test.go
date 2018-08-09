@@ -11,9 +11,9 @@ import (
 	"github.com/newrelic/infra-integrations-sdk/data/inventory"
 	"github.com/newrelic/infra-integrations-sdk/data/metric"
 	"github.com/newrelic/infra-integrations-sdk/integration"
-	"github.com/newrelic/nri-kafka/args"
-	"github.com/newrelic/nri-kafka/testutils"
-	"github.com/newrelic/nri-kafka/zookeeper"
+	"github.com/newrelic/nri-kafka/src/args"
+	"github.com/newrelic/nri-kafka/src/testutils"
+	"github.com/newrelic/nri-kafka/src/zookeeper"
 )
 
 func TestGetTopics(t *testing.T) {

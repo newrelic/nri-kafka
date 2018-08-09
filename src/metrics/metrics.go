@@ -9,8 +9,8 @@ import (
 	"github.com/newrelic/infra-integrations-sdk/data/metric"
 	"github.com/newrelic/infra-integrations-sdk/integration"
 	"github.com/newrelic/infra-integrations-sdk/log"
-	"github.com/newrelic/nri-kafka/args"
-	"github.com/newrelic/nri-kafka/jmxwrapper"
+	"github.com/newrelic/nri-kafka/src/args"
+	"github.com/newrelic/nri-kafka/src/jmxwrapper"
 )
 
 // GetBrokerMetrics collects all Broker JMX metrics and stores them in sample

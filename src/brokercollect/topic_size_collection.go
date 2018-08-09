@@ -5,9 +5,9 @@ import (
 
 	"github.com/newrelic/infra-integrations-sdk/data/metric"
 	"github.com/newrelic/infra-integrations-sdk/log"
-	"github.com/newrelic/nri-kafka/args"
-	"github.com/newrelic/nri-kafka/jmxwrapper"
-	"github.com/newrelic/nri-kafka/metrics"
+	"github.com/newrelic/nri-kafka/src/args"
+	"github.com/newrelic/nri-kafka/src/jmxwrapper"
+	"github.com/newrelic/nri-kafka/src/metrics"
 )
 
 func gatherTopicSizes(b *broker, topicSampleLookup map[string]*metric.Set) {

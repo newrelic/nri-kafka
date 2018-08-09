@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/newrelic/infra-integrations-sdk/log"
-	"github.com/newrelic/nri-kafka/args"
+	"github.com/newrelic/nri-kafka/src/args"
 	"github.com/samuel/go-zookeeper/zk"
 )
 

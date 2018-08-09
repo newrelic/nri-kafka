@@ -6,7 +6,7 @@ import (
 	"sync"
 
 	"github.com/newrelic/infra-integrations-sdk/log"
-	"github.com/newrelic/nri-kafka/zookeeper"
+	"github.com/newrelic/nri-kafka/src/zookeeper"
 )
 
 // partition is a storage struct for information about partitions
