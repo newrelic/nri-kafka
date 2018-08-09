@@ -7,10 +7,10 @@ import (
 
 	"github.com/newrelic/infra-integrations-sdk/data/metric"
 	"github.com/newrelic/infra-integrations-sdk/integration"
+	"github.com/newrelic/infra-integrations-sdk/log"
 	"github.com/newrelic/nri-kafka/args"
-	"github.com/newrelic/nri-kafka/logger"
+	"github.com/newrelic/nri-kafka/jmxwrapper"
 	"github.com/newrelic/nri-kafka/metrics"
-	"github.com/newrelic/nri-kafka/utils"
 )
 
 // StartWorkerPool starts a pool of workers to handle collecting data for wither Consumer or producer entities.
@@ -51,20 +51,20 @@ func ConsumerWorker(consumerChan <-chan *args.JMXHost, wg *sync.WaitGroup, i *in
 		// Create an entity for the consumer
 		consumerEntity, err := i.Entity(jmxInfo.Name, "consumer")
 		if err != nil {
-			logger.Errorf("Unable to create entity for Consumer %s: %s", jmxInfo.Name, err.Error())
+			log.Error("Unable to create entity for Consumer %s: %s", jmxInfo.Name, err.Error())
 			continue
 		}
 
 		// Gather Metrics for consumer
-		if utils.KafkaArgs.All() || utils.KafkaArgs.Metrics {
+		if args.GlobalArgs.All() || args.GlobalArgs.Metrics {
 			// Lock since we can only make a single JMX connection at a time.
-			utils.JMXLock.Lock()
+			jmxwrapper.JMXLock.Lock()
 
 			// Open a JMX connection to the consumer
-			if err := utils.JMXOpen(jmxInfo.Host, strconv.Itoa(jmxInfo.Port), jmxInfo.User, jmxInfo.Password); err != nil {
-				logger.Errorf("Unable to make JMX connection for Consumer '%s': %s", consumerEntity.Metadata.Name, err.Error())
-				utils.JMXClose() // Close needs to be called even on a failed open to clear out any set variables
-				utils.JMXLock.Unlock()
+			if err := jmxwrapper.JMXOpen(jmxInfo.Host, strconv.Itoa(jmxInfo.Port), jmxInfo.User, jmxInfo.Password); err != nil {
+				log.Error("Unable to make JMX connection for Consumer '%s': %s", consumerEntity.Metadata.Name, err.Error())
+				jmxwrapper.JMXClose() // Close needs to be called even on a failed open to clear out any set variables
+				jmxwrapper.JMXLock.Unlock()
 				continue
 			}
 
@@ -76,7 +76,7 @@ func ConsumerWorker(consumerChan <-chan *args.JMXHost, wg *sync.WaitGroup, i *in
 			)
 
 			// Collect the consumer metrics and populate the sample with them
-			logger.Debugf("Collecting metrics for Consumer '%s'", consumerEntity.Metadata.Name)
+			log.Debug("Collecting metrics for Consumer '%s'", consumerEntity.Metadata.Name)
 			metrics.GetConsumerMetrics(consumerEntity.Metadata.Name, sample)
 
 			// Collect metrics that are topic-specific per Consumer
@@ -84,8 +84,8 @@ func ConsumerWorker(consumerChan <-chan *args.JMXHost, wg *sync.WaitGroup, i *in
 				collectedTopics, metrics.ApplyConsumerTopicName)
 
 			// Close connection and release lock so another process can make JMX Connections
-			utils.JMXClose()
-			utils.JMXLock.Unlock()
+			jmxwrapper.JMXClose()
+			jmxwrapper.JMXLock.Unlock()
 		}
 	}
 }
@@ -102,20 +102,20 @@ func ProducerWorker(producerChan <-chan *args.JMXHost, wg *sync.WaitGroup, i *in
 		// Create the producer entity
 		producerEntity, err := i.Entity(jmxInfo.Name, "producer")
 		if err != nil {
-			logger.Errorf("Unable to create entity for Producer %s: %s", jmxInfo.Name, err.Error())
+			log.Error("Unable to create entity for Producer %s: %s", jmxInfo.Name, err.Error())
 			continue
 		}
 
 		// Gather Metrics for producer
-		if utils.KafkaArgs.All() || utils.KafkaArgs.Metrics {
+		if args.GlobalArgs.All() || args.GlobalArgs.Metrics {
 			// Lock since we can only make a single JMX connection at a time.
-			utils.JMXLock.Lock()
+			jmxwrapper.JMXLock.Lock()
 
 			// Open a JMX connection to the producer
-			if err := utils.JMXOpen(jmxInfo.Host, strconv.Itoa(jmxInfo.Port), jmxInfo.User, jmxInfo.Password); err != nil {
-				logger.Errorf("Unable to make JMX connection for Producer '%s': %s", producerEntity.Metadata.Name, err.Error())
-				utils.JMXClose() // Close needs to be called even on a failed open to clear out any set variables
-				utils.JMXLock.Unlock()
+			if err := jmxwrapper.JMXOpen(jmxInfo.Host, strconv.Itoa(jmxInfo.Port), jmxInfo.User, jmxInfo.Password); err != nil {
+				log.Error("Unable to make JMX connection for Producer '%s': %s", producerEntity.Metadata.Name, err.Error())
+				jmxwrapper.JMXClose() // Close needs to be called even on a failed open to clear out any set variables
+				jmxwrapper.JMXLock.Unlock()
 				continue
 			}
 
@@ -127,7 +127,7 @@ func ProducerWorker(producerChan <-chan *args.JMXHost, wg *sync.WaitGroup, i *in
 			)
 
 			// Collect producer metrics and populate the metric set with them
-			logger.Debugf("Collecting metrics for Producer '%s'", producerEntity.Metadata.Name)
+			log.Debug("Collecting metrics for Producer '%s'", producerEntity.Metadata.Name)
 			metrics.GetProducerMetrics(producerEntity.Metadata.Name, sample)
 
 			// Collect metrics that are topic specific per Producer
@@ -135,8 +135,8 @@ func ProducerWorker(producerChan <-chan *args.JMXHost, wg *sync.WaitGroup, i *in
 				collectedTopics, metrics.ApplyProducerTopicName)
 
 			// Close connection and release lock so another process can make JMX Connections
-			utils.JMXClose()
-			utils.JMXLock.Unlock()
+			jmxwrapper.JMXClose()
+			jmxwrapper.JMXLock.Unlock()
 		}
 	}
 }

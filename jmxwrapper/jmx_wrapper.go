@@ -1,5 +1,6 @@
-// Package utils contains common utilities used across the integration
-package utils
+// Package jmxwrapper contains varaibles for using github.com/newrelic/infra-integrations-sdk/jmx package
+// while allowing everything to be mocked for testing.
+package jmxwrapper
 
 import (
 	"sync"

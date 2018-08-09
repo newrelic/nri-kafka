@@ -5,8 +5,11 @@ import (
 	"errors"
 
 	sdkArgs "github.com/newrelic/infra-integrations-sdk/args"
-	"github.com/newrelic/nri-kafka/logger"
+	"github.com/newrelic/infra-integrations-sdk/log"
 )
+
+// GlobalArgs represents the global arguments that were passed in
+var GlobalArgs *KafkaArguments
 
 // KafkaArguments is an special version of the config arguments that has advanced parsing
 // to allow arguments to be consumed easier.
@@ -49,7 +52,7 @@ func ParseArgs(a ArgumentList) (*KafkaArguments, error) {
 	var zookeeperHosts []*ZookeeperHost
 	err := json.Unmarshal([]byte(a.ZookeeperHosts), &zookeeperHosts)
 	if err != nil {
-		logger.Errorf("Failed to parse zookeepers from json")
+		log.Error("Failed to parse zookeepers from json")
 		return nil, err
 	}
 
@@ -63,21 +66,21 @@ func ParseArgs(a ArgumentList) (*KafkaArguments, error) {
 	// Parse consumers
 	consumers, err := unmarshalJMXHosts([]byte(a.Consumers), &a)
 	if err != nil {
-		logger.Errorf("Failed to parse consumers from json")
+		log.Error("Failed to parse consumers from json")
 		return nil, err
 	}
 
 	// Parse producers
 	producers, err := unmarshalJMXHosts([]byte(a.Producers), &a)
 	if err != nil {
-		logger.Errorf("Failed to parse producers from json")
+		log.Error("Failed to parse producers from json")
 		return nil, err
 	}
 
 	// Parse topics
 	var topics []string
 	if err = json.Unmarshal([]byte(a.TopicList), &topics); err != nil {
-		logger.Errorf("Failed to parse topics from json")
+		log.Error("Failed to parse topics from json")
 		return nil, err
 	}
 

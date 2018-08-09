@@ -10,9 +10,9 @@ import (
 	"github.com/Shopify/sarama"
 	"github.com/newrelic/infra-integrations-sdk/data/metric"
 	"github.com/newrelic/infra-integrations-sdk/integration"
+	"github.com/newrelic/infra-integrations-sdk/log"
+	"github.com/newrelic/nri-kafka/args"
 	bc "github.com/newrelic/nri-kafka/brokercollect"
-	"github.com/newrelic/nri-kafka/logger"
-	"github.com/newrelic/nri-kafka/utils"
 	"github.com/newrelic/nri-kafka/zookeeper"
 )
 
@@ -31,7 +31,7 @@ type Topic struct {
 func StartTopicPool(poolSize int, wg *sync.WaitGroup, zkConn zookeeper.Connection) chan *Topic {
 	topicChan := make(chan *Topic)
 
-	if utils.KafkaArgs.CollectBrokerTopicData && zkConn != nil {
+	if args.GlobalArgs.CollectBrokerTopicData && zkConn != nil {
 		for i := 0; i < poolSize; i++ {
 			wg.Add(1)
 			go topicWorker(topicChan, wg, zkConn)
@@ -43,11 +43,11 @@ func StartTopicPool(poolSize int, wg *sync.WaitGroup, zkConn zookeeper.Connectio
 
 // GetTopics retrieves the list of topics to collect based on the user-provided configuration
 func GetTopics(zkConn zookeeper.Connection) ([]string, error) {
-	switch utils.KafkaArgs.TopicMode {
+	switch args.GlobalArgs.TopicMode {
 	case "None":
 		return []string{}, nil
 	case "Specific":
-		return utils.KafkaArgs.TopicList, nil
+		return args.GlobalArgs.TopicList, nil
 	case "All":
 		if zkConn == nil {
 			return nil, errors.New("zookeeper connection must not be nil for 'All' mode")
@@ -56,13 +56,13 @@ func GetTopics(zkConn zookeeper.Connection) ([]string, error) {
 		// If they want all topics, ask Zookeeper for the list of topics
 		collectedTopics, _, err := zkConn.Children("/brokers/topics")
 		if err != nil {
-			logger.Errorf("Unable to get list of topics from Zookeeper with error: %s", err)
+			log.Error("Unable to get list of topics from Zookeeper with error: %s", err)
 			return nil, err
 		}
 		return collectedTopics, nil
 	default:
-		logger.Errorf("Invalid topic mode %s", utils.KafkaArgs.TopicMode)
-		return nil, fmt.Errorf("invalid topic_mode '%s'", utils.KafkaArgs.TopicMode)
+		log.Error("Invalid topic mode %s", args.GlobalArgs.TopicMode)
+		return nil, fmt.Errorf("invalid topic_mode '%s'", args.GlobalArgs.TopicMode)
 	}
 }
 
@@ -70,12 +70,12 @@ func GetTopics(zkConn zookeeper.Connection) ([]string, error) {
 func FeedTopicPool(topicChan chan<- *Topic, integration *integration.Integration, collectedTopics []string) {
 	defer close(topicChan)
 
-	if utils.KafkaArgs.CollectBrokerTopicData {
+	if args.GlobalArgs.CollectBrokerTopicData {
 		for _, topicName := range collectedTopics {
 			// create topic entity
 			topicEntity, err := integration.Entity(topicName, "topic")
 			if err != nil {
-				logger.Errorf("Unable to create an entity for topic %s", topicName)
+				log.Error("Unable to create an entity for topic %s", topicName)
 			}
 
 			topicChan <- &Topic{
@@ -98,21 +98,21 @@ func topicWorker(topicChan <-chan *Topic, wg *sync.WaitGroup, zkConn zookeeper.C
 
 		// Finish populating topic struct
 		if err := setTopicInfo(topic, zkConn); err != nil {
-			logger.Errorf("Unable to set topic data for topic %s with error: %s", topic.Name, err)
+			log.Error("Unable to set topic data for topic %s with error: %s", topic.Name, err)
 			continue
 		}
 
 		// Collect and populate inventory with topic configuration
-		if utils.KafkaArgs.All() || utils.KafkaArgs.Inventory {
+		if args.GlobalArgs.All() || args.GlobalArgs.Inventory {
 			errors := populateTopicInventory(topic)
 			if len(errors) != 0 {
-				logger.Errorf("Failed to populate inventory with %d errors", len(errors))
+				log.Error("Failed to populate inventory with %d errors", len(errors))
 			}
 
 		}
 
 		// Collect topic metrics
-		if utils.KafkaArgs.All() || utils.KafkaArgs.Metrics {
+		if args.GlobalArgs.All() || args.GlobalArgs.Metrics {
 			// Create metric set for topic
 			sample := topic.Entity.NewMetricSet("KafkaTopicSample",
 				metric.Attribute{Key: "displayName", Value: topic.Name},
@@ -121,7 +121,7 @@ func topicWorker(topicChan <-chan *Topic, wg *sync.WaitGroup, zkConn zookeeper.C
 
 			// Collect metrics and populate metric set with them
 			if err := populateTopicMetrics(topic, sample, zkConn); err != nil {
-				logger.Errorf("Error collecting metrics from Topic '%s': %s", topic.Name, err.Error())
+				log.Error("Error collecting metrics from Topic '%s': %s", topic.Name, err.Error())
 			}
 		}
 	}

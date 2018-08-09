@@ -4,9 +4,10 @@ import (
 	"fmt"
 
 	"github.com/newrelic/infra-integrations-sdk/data/metric"
-	"github.com/newrelic/nri-kafka/logger"
+	"github.com/newrelic/infra-integrations-sdk/log"
+	"github.com/newrelic/nri-kafka/args"
+	"github.com/newrelic/nri-kafka/jmxwrapper"
 	"github.com/newrelic/nri-kafka/metrics"
-	"github.com/newrelic/nri-kafka/utils"
 )
 
 func gatherTopicSizes(b *broker, topicSampleLookup map[string]*metric.Set) {
@@ -14,9 +15,9 @@ func gatherTopicSizes(b *broker, topicSampleLookup map[string]*metric.Set) {
 		beanModifier := metrics.ApplyTopicName(topicName)
 
 		beanName := beanModifier(metrics.TopicSizeMetricDef.MBean)
-		results, err := utils.JMXQuery(beanName, utils.KafkaArgs.Timeout)
+		results, err := jmxwrapper.JMXQuery(beanName, args.GlobalArgs.Timeout)
 		if err != nil {
-			logger.Errorf("Broker '%s' failed to make JMX Query: %s", b.Host, err.Error())
+			log.Error("Broker '%s' failed to make JMX Query: %s", b.Host, err.Error())
 			continue
 		} else if len(results) == 0 {
 			continue
@@ -24,12 +25,12 @@ func gatherTopicSizes(b *broker, topicSampleLookup map[string]*metric.Set) {
 
 		topicSize, err := aggregateTopicSize(results)
 		if err != nil {
-			logger.Errorf("Unable to calculate size for Topic %s: %s", topicName, err.Error())
+			log.Error("Unable to calculate size for Topic %s: %s", topicName, err.Error())
 			continue
 		}
 
 		if err := sample.SetMetric("topic.diskSize", topicSize, metric.GAUGE); err != nil {
-			logger.Errorf("Unable to collect topic size for Topic %s on Broker %s: %s", topicName, b.Entity.Metadata.Name, err.Error())
+			log.Error("Unable to collect topic size for Topic %s on Broker %s: %s", topicName, b.Entity.Metadata.Name, err.Error())
 		}
 	}
 	return

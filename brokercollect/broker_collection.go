@@ -3,14 +3,16 @@ package brokercollect
 
 import (
 	"encoding/json"
+	"os"
 	"strconv"
 	"sync"
 
 	"github.com/newrelic/infra-integrations-sdk/data/metric"
 	"github.com/newrelic/infra-integrations-sdk/integration"
-	"github.com/newrelic/nri-kafka/logger"
+	"github.com/newrelic/infra-integrations-sdk/log"
+	"github.com/newrelic/nri-kafka/args"
+	"github.com/newrelic/nri-kafka/jmxwrapper"
 	"github.com/newrelic/nri-kafka/metrics"
-	"github.com/newrelic/nri-kafka/utils"
 	"github.com/newrelic/nri-kafka/zookeeper"
 )
 
@@ -31,7 +33,7 @@ func StartBrokerPool(poolSize int, wg *sync.WaitGroup, zkConn zookeeper.Connecti
 	brokerChan := make(chan int)
 
 	// Only spin off brokerWorkers if signaled
-	if utils.KafkaArgs.CollectBrokerTopicData && zkConn != nil {
+	if args.GlobalArgs.CollectBrokerTopicData && zkConn != nil {
 		for i := 0; i < poolSize; i++ {
 			wg.Add(1)
 			go brokerWorker(brokerChan, collectedTopics, wg, zkConn, integration)
@@ -47,14 +49,17 @@ func FeedBrokerPool(zkConn zookeeper.Connection, brokerChan chan<- int) {
 	defer close(brokerChan) // close the broker channel when done feeding
 
 	// Don't make API calls or feed down channel if we don't want to collect brokers
-	if utils.KafkaArgs.CollectBrokerTopicData && zkConn != nil {
+	if args.GlobalArgs.CollectBrokerTopicData && zkConn != nil {
 		brokerIDs, _, err := zkConn.Children("/brokers/ids")
-		utils.PanicOnErr(err) // If unable to collect a list of brokerIDs, panic
+		if err != nil {
+			log.Error("Unable to collect Broker IDs from Zookeeper: %s", err.Error())
+			os.Exit(-1)
+		}
 
 		for _, id := range brokerIDs {
 			intID, err := strconv.Atoi(id)
 			if err != nil {
-				logger.Errorf("Unable to parse integer broker ID from %s", id)
+				log.Error("Unable to parse integer broker ID from %s", id)
 				continue
 			}
 			brokerChan <- intID
@@ -83,14 +88,14 @@ func brokerWorker(brokerChan <-chan int, collectedTopics []string, wg *sync.Wait
 		}
 
 		// Populate inventory for broker
-		if utils.KafkaArgs.All() || utils.KafkaArgs.Inventory {
+		if args.GlobalArgs.All() || args.GlobalArgs.Inventory {
 			if err := populateBrokerInventory(b); err != nil {
 				continue
 			}
 		}
 
 		// Populate metrics for broker
-		if utils.KafkaArgs.All() || utils.KafkaArgs.Metrics {
+		if args.GlobalArgs.All() || args.GlobalArgs.Metrics {
 			if err := collectBrokerMetrics(b, collectedTopics); err != nil {
 				continue
 			}
@@ -105,21 +110,21 @@ func createBroker(brokerID int, zkConn zookeeper.Connection, i *integration.Inte
 	// Collect broker connection information from ZooKeeper
 	host, jmxPort, kafkaPort, err := GetBrokerConnectionInfo(brokerID, zkConn)
 	if err != nil {
-		logger.Errorf("Unable to get broker JMX information for broker id %s: %s", host, err)
+		log.Error("Unable to get broker JMX information for broker id %s: %s", host, err)
 		return nil, err
 	}
 
 	// Create broker entity
 	brokerEntity, err := i.Entity(host, "broker")
 	if err != nil {
-		logger.Errorf("Unable to create entity for broker ID %d: %s", brokerID, err)
+		log.Error("Unable to create entity for broker ID %d: %s", brokerID, err)
 		return nil, err
 	}
 
 	// Gather broker configuration from ZooKeeper
 	brokerConfig, err := getBrokerConfig(brokerID, zkConn)
 	if err != nil {
-		logger.Errorf("Unable to get broker configuration information for broker id %d: %s", brokerID, err)
+		log.Error("Unable to get broker configuration information for broker id %d: %s", brokerID, err)
 	}
 
 	newBroker := &broker{
@@ -138,19 +143,19 @@ func createBroker(brokerID int, zkConn zookeeper.Connection, i *integration.Inte
 func populateBrokerInventory(b *broker) error {
 	// Populate connection information
 	if err := b.Entity.SetInventoryItem("broker.hostname", "value", b.Host); err != nil {
-		logger.Errorf("Unable to set Hostinventory item for broker %d: %s", b.ID, err)
+		log.Error("Unable to set Hostinventory item for broker %d: %s", b.ID, err)
 	}
 	if err := b.Entity.SetInventoryItem("broker.jmxPort", "value", b.JMXPort); err != nil {
-		logger.Errorf("Unable to set JMX Port inventory item for broker %d: %s", b.ID, err)
+		log.Error("Unable to set JMX Port inventory item for broker %d: %s", b.ID, err)
 	}
 	if err := b.Entity.SetInventoryItem("broker.kafkaPort", "value", b.KafkaPort); err != nil {
-		logger.Errorf("Unable to set Kafka Port inventory item for broker %d: %s", b.ID, err)
+		log.Error("Unable to set Kafka Port inventory item for broker %d: %s", b.ID, err)
 	}
 
 	// Populate configuration information
 	for key, value := range b.Config {
 		if err := b.Entity.SetInventoryItem("broker."+key, "value", value); err != nil {
-			logger.Errorf("Unable to set inventory item for broker %d: %s", b.ID, err)
+			log.Error("Unable to set inventory item for broker %d: %s", b.ID, err)
 		}
 	}
 
@@ -159,13 +164,13 @@ func populateBrokerInventory(b *broker) error {
 
 func collectBrokerMetrics(b *broker, collectedTopics []string) error {
 	// Lock since we can only make a single JMX connection at a time.
-	utils.JMXLock.Lock()
+	jmxwrapper.JMXLock.Lock()
 
 	// Open JMX connection
-	if err := utils.JMXOpen(b.Host, strconv.Itoa(b.JMXPort), utils.KafkaArgs.DefaultJMXUser, utils.KafkaArgs.DefaultJMXPassword); err != nil {
-		logger.Errorf("Unable to make JMX connection for Broker '%s': %s", b.Host, err.Error())
-		utils.JMXClose() // Close needs to be called even on a failed open to clear out any set variables
-		utils.JMXLock.Unlock()
+	if err := jmxwrapper.JMXOpen(b.Host, strconv.Itoa(b.JMXPort), args.GlobalArgs.DefaultJMXUser, args.GlobalArgs.DefaultJMXPassword); err != nil {
+		log.Error("Unable to make JMX connection for Broker '%s': %s", b.Host, err.Error())
+		jmxwrapper.JMXClose() // Close needs to be called even on a failed open to clear out any set variables
+		jmxwrapper.JMXLock.Unlock()
 		return err
 	}
 
@@ -176,13 +181,13 @@ func collectBrokerMetrics(b *broker, collectedTopics []string) error {
 	topicSampleLookup := collectBrokerTopicMetrics(b, collectedTopics)
 
 	// If enabled collect topic sizes
-	if utils.KafkaArgs.CollectTopicSize {
+	if args.GlobalArgs.CollectTopicSize {
 		gatherTopicSizes(b, topicSampleLookup)
 	}
 
 	// Close connection and release lock so another process can make JMX Connections
-	utils.JMXClose()
-	utils.JMXLock.Unlock()
+	jmxwrapper.JMXClose()
+	jmxwrapper.JMXLock.Unlock()
 	return nil
 }
 
@@ -195,7 +200,7 @@ func populateBrokerMetrics(b *broker) {
 	)
 
 	// Populate metrics set with broker metrics
-	logger.Debugf("Collecting metrics for Broker '%s'", b.Entity.Metadata.Name)
+	log.Debug("Collecting metrics for Broker '%s'", b.Entity.Metadata.Name)
 	metrics.GetBrokerMetrics(sample)
 }
 

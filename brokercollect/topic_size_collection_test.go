@@ -7,8 +7,8 @@ import (
 
 	"github.com/newrelic/infra-integrations-sdk/data/metric"
 	"github.com/newrelic/infra-integrations-sdk/integration"
+	"github.com/newrelic/nri-kafka/jmxwrapper"
 	"github.com/newrelic/nri-kafka/testutils"
-	"github.com/newrelic/nri-kafka/utils"
 )
 
 func TestGatherTopicSize_Single(t *testing.T) {
@@ -27,7 +27,7 @@ func TestGatherTopicSize_Single(t *testing.T) {
 		t.FailNow()
 	}
 
-	utils.JMXQuery = func(query string, timeout int) (map[string]interface{}, error) {
+	jmxwrapper.JMXQuery = func(query string, timeout int) (map[string]interface{}, error) {
 		return map[string]interface{}{
 			"one":   float64(1),
 			"two":   float64(2),
@@ -82,7 +82,7 @@ func TestGatherTopicSize_QueryError(t *testing.T) {
 		t.FailNow()
 	}
 
-	utils.JMXQuery = func(query string, timeout int) (map[string]interface{}, error) { return nil, errors.New("error") }
+	jmxwrapper.JMXQuery = func(query string, timeout int) (map[string]interface{}, error) { return nil, errors.New("error") }
 
 	collectedTopics := map[string]*metric.Set{
 		"topic": e.NewMetricSet("KafkaBrokerSample",
@@ -121,7 +121,7 @@ func TestGatherTopicSize_QueryBlank(t *testing.T) {
 		t.FailNow()
 	}
 
-	utils.JMXQuery = func(query string, timeout int) (map[string]interface{}, error) {
+	jmxwrapper.JMXQuery = func(query string, timeout int) (map[string]interface{}, error) {
 		return make(map[string]interface{}), nil
 	}
 
@@ -162,7 +162,7 @@ func TestGatherTopicSize_AggregateError(t *testing.T) {
 		t.FailNow()
 	}
 
-	utils.JMXQuery = func(query string, timeout int) (map[string]interface{}, error) {
+	jmxwrapper.JMXQuery = func(query string, timeout int) (map[string]interface{}, error) {
 		return map[string]interface{}{
 			"one":  "nope",
 			"four": float64(4),

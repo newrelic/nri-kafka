@@ -5,7 +5,7 @@ import (
 	"strconv"
 	"sync"
 
-	"github.com/newrelic/nri-kafka/logger"
+	"github.com/newrelic/infra-integrations-sdk/log"
 	"github.com/newrelic/nri-kafka/zookeeper"
 )
 
@@ -48,7 +48,7 @@ func feedPartitionPool(partitionInChan chan<- *partitionSender, topicName string
 	// Collect the partition replication info from the topic configuration in Zookeeper
 	partitionInfo, _, err := zkConn.Get("/brokers/topics/" + topicName)
 	if err != nil {
-		logger.Errorf("Unable to collect partition info: %s", err)
+		log.Error("Unable to collect partition info: %s", err)
 		return
 	}
 
@@ -58,7 +58,7 @@ func feedPartitionPool(partitionInChan chan<- *partitionSender, topicName string
 	}
 	var decodedPartitionInfo partitionInfoDecoder
 	if err := json.Unmarshal([]byte(partitionInfo), &decodedPartitionInfo); err != nil {
-		logger.Errorf("Unable to collect topic partition configuration: %s", err)
+		log.Error("Unable to collect topic partition configuration: %s", err)
 		return
 	}
 
@@ -66,7 +66,7 @@ func feedPartitionPool(partitionInChan chan<- *partitionSender, topicName string
 	for partitionID := range decodedPartitionInfo.Partitions {
 		intID, err := strconv.Atoi(partitionID)
 		if err != nil {
-			logger.Errorf("Unable to parse id %s to int", partitionID)
+			log.Error("Unable to parse id %s to int", partitionID)
 			continue
 		}
 		newSender := &partitionSender{
@@ -110,7 +110,7 @@ func collectPartitions(partitionOutChans []chan interface{}) []*partition {
 				// If it's an error log it, if it's a partition, push it onto partitionCollectChan
 				switch p.(type) {
 				case error:
-					logger.Errorf("Unable to create partition: %s", p.(error))
+					log.Error("Unable to create partition: %s", p.(error))
 				case *partition:
 					partitionCollectChan <- p.(*partition)
 				}
