@@ -5,6 +5,7 @@ import (
 	"sync"
 
 	"github.com/newrelic/infra-integrations-sdk/integration"
+	"github.com/newrelic/infra-integrations-sdk/log"
 	"github.com/newrelic/nri-kafka/args"
 	bc "github.com/newrelic/nri-kafka/brokercollect"
 	pcc "github.com/newrelic/nri-kafka/prodconcollect"
@@ -22,6 +23,9 @@ func main() {
 	// Create Integration
 	kafkaIntegration, err := integration.New(integrationName, integrationVersion, integration.Args(&argList))
 	ExitOnErr(err)
+
+	// Setup logging with verbose
+	log.SetupLogging(argList.Verbose)
 
 	// Parse args into structs
 	// This has to be after integration creation for defaults to be populated
