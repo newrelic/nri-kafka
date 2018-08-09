@@ -11,9 +11,9 @@ import (
 	"github.com/newrelic/infra-integrations-sdk/data/metric"
 	"github.com/newrelic/infra-integrations-sdk/integration"
 	"github.com/newrelic/infra-integrations-sdk/log"
-	"github.com/newrelic/nri-kafka/args"
-	bc "github.com/newrelic/nri-kafka/brokercollect"
-	"github.com/newrelic/nri-kafka/zookeeper"
+	"github.com/newrelic/nri-kafka/src/args"
+	bc "github.com/newrelic/nri-kafka/src/brokercollect"
+	"github.com/newrelic/nri-kafka/src/zookeeper"
 )
 
 // Topic is a storage struct for information about topics

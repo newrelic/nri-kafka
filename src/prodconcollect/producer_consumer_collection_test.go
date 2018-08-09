@@ -7,9 +7,9 @@ import (
 	"time"
 
 	"github.com/newrelic/infra-integrations-sdk/integration"
-	"github.com/newrelic/nri-kafka/args"
-	"github.com/newrelic/nri-kafka/jmxwrapper"
-	"github.com/newrelic/nri-kafka/testutils"
+	"github.com/newrelic/nri-kafka/src/args"
+	"github.com/newrelic/nri-kafka/src/jmxwrapper"
+	"github.com/newrelic/nri-kafka/src/testutils"
 )
 
 func TestStartWorkerPool(t *testing.T) {

@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/newrelic/nri-kafka/zookeeper"
+	"github.com/newrelic/nri-kafka/src/zookeeper"
 )
 
 func TestCollectPartitions(t *testing.T) {

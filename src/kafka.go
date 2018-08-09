@@ -6,11 +6,11 @@ import (
 
 	"github.com/newrelic/infra-integrations-sdk/integration"
 	"github.com/newrelic/infra-integrations-sdk/log"
-	"github.com/newrelic/nri-kafka/args"
-	bc "github.com/newrelic/nri-kafka/brokercollect"
-	pcc "github.com/newrelic/nri-kafka/prodconcollect"
-	tc "github.com/newrelic/nri-kafka/topiccollect"
-	"github.com/newrelic/nri-kafka/zookeeper"
+	"github.com/newrelic/nri-kafka/src/args"
+	bc "github.com/newrelic/nri-kafka/src/brokercollect"
+	pcc "github.com/newrelic/nri-kafka/src/prodconcollect"
+	tc "github.com/newrelic/nri-kafka/src/topiccollect"
+	"github.com/newrelic/nri-kafka/src/zookeeper"
 )
 
 const (
