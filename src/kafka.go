@@ -59,7 +59,10 @@ func main() {
 
 	wg.Wait()
 
-	ExitOnErr(kafkaIntegration.Publish())
+	if err := kafkaIntegration.Publish(); err != nil {
+		log.Error("Failed to publish data: %s", err.Error())
+		os.Exit(-1)
+	}
 }
 
 // ExitOnErr will exit with a -1 if the error is non-nil
