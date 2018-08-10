@@ -65,7 +65,7 @@ func main() {
 	}
 }
 
-// ExitOnErr will exit with a -1 if the error is non-nil
+// ExitOnErr will exit with a 1 if the error is non-nil
 func ExitOnErr(err error) {
 	if err != nil {
 		os.Exit(1)
