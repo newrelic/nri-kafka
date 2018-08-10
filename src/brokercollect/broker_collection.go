@@ -53,7 +53,7 @@ func FeedBrokerPool(zkConn zookeeper.Connection, brokerChan chan<- int) {
 		brokerIDs, _, err := zkConn.Children("/brokers/ids")
 		if err != nil {
 			log.Error("Unable to collect Broker IDs from Zookeeper: %s", err.Error())
-			os.Exit(-1)
+			os.Exit(1)
 		}
 
 		for _, id := range brokerIDs {

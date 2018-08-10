@@ -61,13 +61,13 @@ func main() {
 
 	if err := kafkaIntegration.Publish(); err != nil {
 		log.Error("Failed to publish data: %s", err.Error())
-		os.Exit(-1)
+		os.Exit(1)
 	}
 }
 
 // ExitOnErr will exit with a -1 if the error is non-nil
 func ExitOnErr(err error) {
 	if err != nil {
-		os.Exit(-1)
+		os.Exit(1)
 	}
 }
