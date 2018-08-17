@@ -82,12 +82,12 @@ var brokerMetricDefs = []*JMXMetricSet{
 		MetricPrefix: "kafka.network:type=RequestMetrics,name=TotalTimeMs,request=Produce,",
 		MetricDefs: []*MetricDefinition{
 			{
-				Name:       "requests.avgTimeProduceRequest",
+				Name:       "request.avgTimeProduceRequest",
 				SourceType: metric.GAUGE,
 				JMXAttr:    "attr=Mean",
 			},
 			{
-				Name:       "requests.produceTime99Percentile",
+				Name:       "request.produceTime99Percentile",
 				SourceType: metric.GAUGE,
 				JMXAttr:    "attr=99thPercentile",
 			},
@@ -148,7 +148,7 @@ var brokerMetricDefs = []*JMXMetricSet{
 				JMXAttr:    "name=BytesOutPerSec,attr=Count",
 			},
 			{
-				Name:       "messagesInPerSecond",
+				Name:       "broker.messagesInPerSecond",
 				SourceType: metric.GAUGE,
 				JMXAttr:    "name=MessagesInPerSec,attr=Count",
 			},
@@ -158,12 +158,12 @@ var brokerMetricDefs = []*JMXMetricSet{
 				JMXAttr:    "name=BytesRejectedPerSec,attr=Count",
 			},
 			{
-				Name:       "requests.clientFetchesFailedPerSecond",
+				Name:       "request.clientFetchesFailedPerSecond",
 				SourceType: metric.GAUGE,
 				JMXAttr:    "name=FailedFetchRequestsPerSec,attr=Count",
 			},
 			{
-				Name:       "requests.produceRequestsFailedPerSecond",
+				Name:       "request.produceRequestsFailedPerSecond",
 				SourceType: metric.GAUGE,
 				JMXAttr:    "name=FailedProduceRequestsPerSec,attr=Count",
 			},
@@ -175,7 +175,7 @@ var brokerMetricDefs = []*JMXMetricSet{
 		MetricPrefix: "kafka.log:type=LogFlushStats,",
 		MetricDefs: []*MetricDefinition{
 			{
-				Name:       "logFlushPerSecond",
+				Name:       "broker.logFlushPerSecond",
 				SourceType: metric.GAUGE,
 				JMXAttr:    "name=LogFlushRateAndTimeMs,attr=Count",
 			},
