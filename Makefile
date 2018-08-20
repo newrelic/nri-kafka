@@ -1,5 +1,6 @@
 WORKDIR      := $(shell pwd)
 TARGET       := target
+TARGET_DIR    = $(WORKDIR)/$(TARGET)
 NATIVEOS	 := $(shell go version | awk -F '[ /]' '{print $$4}')
 NATIVEARCH	 := $(shell go version | awk -F '[ /]' '{print $$5}')
 INTEGRATION  := kafka
