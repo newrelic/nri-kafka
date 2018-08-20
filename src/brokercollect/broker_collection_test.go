@@ -49,6 +49,7 @@ func TestBrokerWorker(t *testing.T) {
 	var wg sync.WaitGroup
 	brokerChan := make(chan int, 10)
 	i, _ := integration.New("kafka", "1.0.0")
+	testutils.SetupJmxTesting()
 	testutils.SetupTestArgs()
 
 	wg.Add(1)
