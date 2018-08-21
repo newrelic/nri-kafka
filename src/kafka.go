@@ -71,6 +71,7 @@ func main() {
 }
 
 // ExitOnErr will exit with a 1 if the error is non-nil
+// All errors should be logged before calling this.
 func ExitOnErr(err error) {
 	if err != nil {
 		os.Exit(1)
