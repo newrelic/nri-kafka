@@ -7,6 +7,8 @@ import (
 	"strconv"
 	"sync"
 
+	"github.com/samuel/go-zookeeper/zk"
+
 	"github.com/newrelic/infra-integrations-sdk/data/metric"
 	"github.com/newrelic/infra-integrations-sdk/integration"
 	"github.com/newrelic/infra-integrations-sdk/log"
@@ -255,7 +257,7 @@ func getBrokerConfig(brokerID int, zkConn zookeeper.Connection) (map[string]stri
 	// Query Zookeeper for broker configuration
 	rawBrokerConfig, _, err := zkConn.Get("/config/brokers/" + strconv.Itoa(brokerID))
 	if err != nil {
-		if err.Error() == "zk: node does not exist" {
+		if err == zk.ErrNoNode {
 			return map[string]string{}, nil
 		}
 		return nil, err

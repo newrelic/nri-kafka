@@ -42,7 +42,7 @@ func (m MockConnection) Get(s string) ([]byte, *zk.Stat, error) {
 		outstat := new(zk.Stat)
 		return outbytes, outstat, nil
 	} else if matched, _ := regexp.Match("/config/brokers/10", []byte(s)); matched {
-		return nil, nil, errors.New("zk: node does not exist")
+		return nil, nil, zk.ErrNoNode
 	} else if matched, _ := regexp.Match("/config/brokers/[0-9]", []byte(s)); matched {
 		outbytes := []byte(`{"version":1,"config":{"leader.replication.throttled.replicas":"10000"}}`)
 		outstat := new(zk.Stat)
