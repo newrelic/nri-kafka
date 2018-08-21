@@ -17,7 +17,7 @@ type MockConnection struct {
 // Get function of the Connection interface
 func (m MockConnection) Get(s string) ([]byte, *zk.Stat, error) {
 	if m.ReturnGetError {
-		return nil, nil, errors.New("This is a test error")
+		return nil, nil, errors.New("this is a test error")
 	}
 
 	// Mock responses from the Zookeeper connection
@@ -49,13 +49,13 @@ func (m MockConnection) Get(s string) ([]byte, *zk.Stat, error) {
 		return outbytes, outstat, nil
 	}
 
-	return nil, nil, errors.New("The endpoint " + s + " is not defined in the mock connection interface.")
+	return nil, nil, errors.New("the endpoint " + s + " is not defined in the mock connection interface.")
 }
 
 // Children method of the Connection interface
 func (m MockConnection) Children(s string) ([]string, *zk.Stat, error) {
 	if m.ReturnChildrenError {
-		return nil, nil, errors.New("This is a test error")
+		return nil, nil, errors.New("this is a test error")
 	}
 
 	// Mock responses from the Zookeeper connection
@@ -72,5 +72,5 @@ func (m MockConnection) Children(s string) ([]string, *zk.Stat, error) {
 		outstat := new(zk.Stat)
 		return outstrings, outstat, nil
 	}
-	return nil, nil, errors.New("The endpoint " + s + " is not defined in the tests")
+	return nil, nil, errors.New("the endpoint " + s + " is not defined in the tests")
 }
