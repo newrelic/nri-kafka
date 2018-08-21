@@ -54,7 +54,7 @@ func main() {
 	// Run all of theses in their own Go Routine to maximize concurrency
 	go func() {
 		if err := bc.FeedBrokerPool(zkConn, brokerChan); err != nil {
-			os.Exit(1)
+			log.Error("Unable to collect Brokers: %s", err.Error())
 		}
 	}()
 

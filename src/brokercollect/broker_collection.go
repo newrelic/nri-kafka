@@ -3,6 +3,7 @@ package brokercollect
 
 import (
 	"encoding/json"
+	"fmt"
 	"strconv"
 	"sync"
 
@@ -45,7 +46,7 @@ func StartBrokerPool(poolSize int, wg *sync.WaitGroup, zkConn zookeeper.Connecti
 }
 
 // FeedBrokerPool collects a list of brokerIDs from ZooKeeper and feeds them into a
-// channel to be read by a broker worker pool
+// channel to be read by a broker worker pool.
 func FeedBrokerPool(zkConn zookeeper.Connection, brokerChan chan<- int) error {
 	defer close(brokerChan) // close the broker channel when done feeding
 
@@ -53,8 +54,7 @@ func FeedBrokerPool(zkConn zookeeper.Connection, brokerChan chan<- int) error {
 	if args.GlobalArgs.CollectBrokerTopicData && zkConn != nil {
 		brokerIDs, _, err := zkConn.Children("/brokers/ids")
 		if err != nil {
-			log.Error("Unable to collect Broker IDs from Zookeeper: %s", err.Error())
-			return err
+			return fmt.Errorf("unable to get broker ID from Zookeeper: %s", err.Error())
 		}
 
 		for _, id := range brokerIDs {
