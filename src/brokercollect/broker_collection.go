@@ -228,7 +228,7 @@ func collectBrokerTopicMetrics(b *broker, collectedTopics []string) map[string]*
 }
 
 // GetBrokerConnectionInfo Collects Broker connection info from Zookeeper
-func GetBrokerConnectionInfo(brokerID int, zkConn zookeeper.Connection) (string, int, int, error) {
+func GetBrokerConnectionInfo(brokerID int, zkConn zookeeper.Connection) (brokerHost string, jmxPort int, brokerPort int, err error) {
 
 	// Query Zookeeper for broker information
 	rawBrokerJSON, _, err := zkConn.Get("/brokers/ids/" + strconv.Itoa(brokerID))

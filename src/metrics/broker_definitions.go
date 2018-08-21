@@ -234,7 +234,7 @@ var TopicSizeMetricDef = &JMXMetricSet{
 }
 
 // ApplyTopicName to modified bean name for Topic
-func ApplyTopicName(topicName string) func(string) string {
+func ApplyTopicName(topicName string) BeanModifier {
 	return func(beanName string) string {
 		return strings.Replace(beanName, topicHolder, topicName, -1)
 	}

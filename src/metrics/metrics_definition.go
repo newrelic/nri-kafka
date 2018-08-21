@@ -6,6 +6,9 @@ import (
 
 const topicHolder = "%TOPIC%"
 
+// BeanModifier is a function that takes in an MBean and modifies any place holders
+type BeanModifier func(string) string
+
 // MetricDefinition defines a single Infrastructure metric
 type MetricDefinition struct {
 	Name       string

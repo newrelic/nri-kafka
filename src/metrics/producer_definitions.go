@@ -130,7 +130,7 @@ var producerMetricDefs = []*JMXMetricSet{
 }
 
 // applyProducerName to be used when passed to CollectMetricDefinitions to modified bean name for Producer
-func applyProducerName(producerName string) func(string) string {
+func applyProducerName(producerName string) BeanModifier {
 	return func(beanName string) string {
 		return strings.Replace(beanName, producerHolder, producerName, -1)
 	}
@@ -153,7 +153,7 @@ var ProducerTopicMetricDefs = []*JMXMetricSet{
 
 // ApplyProducerTopicName to be used when passed to collectMetricDefinitions to modified bean name
 // for Producer and Topic
-func ApplyProducerTopicName(producerName, topicName string) func(string) string {
+func ApplyProducerTopicName(producerName, topicName string) BeanModifier {
 	return func(beanName string) string {
 		modifiedBeanName := strings.Replace(beanName, producerHolder, producerName, -1)
 		return strings.Replace(modifiedBeanName, topicHolder, topicName, -1)

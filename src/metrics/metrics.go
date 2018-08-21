@@ -36,7 +36,7 @@ func GetProducerMetrics(producerName string, sample *metric.Set) {
 // and Topic names for a given MBean
 func CollectTopicSubMetrics(entity *integration.Entity, entityType string,
 	metricSets []*JMXMetricSet, topicList []string,
-	beanModifier func(string, string) func(string) string) {
+	beanModifier func(string, string) BeanModifier) {
 
 	// need to title case the type so it matches the metric set of the parent entity
 	titleEntityType := strings.Title(entity.Metadata.Namespace)
@@ -53,7 +53,7 @@ func CollectTopicSubMetrics(entity *integration.Entity, entityType string,
 }
 
 // CollectMetricDefintions collects the set of metrics from the current open JMX connection and add them to the sample
-func CollectMetricDefintions(sample *metric.Set, metricSets []*JMXMetricSet, beanModifier func(string) string) {
+func CollectMetricDefintions(sample *metric.Set, metricSets []*JMXMetricSet, beanModifier BeanModifier) {
 	notFoundMetrics := make([]string, 0)
 
 	for _, metricSet := range metricSets {
