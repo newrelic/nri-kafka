@@ -3,9 +3,11 @@ package brokercollect
 
 import (
 	"encoding/json"
-	"os"
+	"fmt"
 	"strconv"
 	"sync"
+
+	"github.com/samuel/go-zookeeper/zk"
 
 	"github.com/newrelic/infra-integrations-sdk/data/metric"
 	"github.com/newrelic/infra-integrations-sdk/integration"
@@ -44,16 +46,15 @@ func StartBrokerPool(poolSize int, wg *sync.WaitGroup, zkConn zookeeper.Connecti
 }
 
 // FeedBrokerPool collects a list of brokerIDs from ZooKeeper and feeds them into a
-// channel to be read by a broker worker pool
-func FeedBrokerPool(zkConn zookeeper.Connection, brokerChan chan<- int) {
+// channel to be read by a broker worker pool.
+func FeedBrokerPool(zkConn zookeeper.Connection, brokerChan chan<- int) error {
 	defer close(brokerChan) // close the broker channel when done feeding
 
 	// Don't make API calls or feed down channel if we don't want to collect brokers
 	if args.GlobalArgs.CollectBrokerTopicData && zkConn != nil {
 		brokerIDs, _, err := zkConn.Children("/brokers/ids")
 		if err != nil {
-			log.Error("Unable to collect Broker IDs from Zookeeper: %s", err.Error())
-			os.Exit(1)
+			return fmt.Errorf("unable to get broker ID from Zookeeper: %s", err.Error())
 		}
 
 		for _, id := range brokerIDs {
@@ -65,6 +66,8 @@ func FeedBrokerPool(zkConn zookeeper.Connection, brokerChan chan<- int) {
 			brokerChan <- intID
 		}
 	}
+
+	return nil
 }
 
 // Reads brokerIDs from a channel, creates an entity for each broker, and collects
@@ -226,7 +229,7 @@ func collectBrokerTopicMetrics(b *broker, collectedTopics []string) map[string]*
 }
 
 // GetBrokerConnectionInfo Collects Broker connection info from Zookeeper
-func GetBrokerConnectionInfo(brokerID int, zkConn zookeeper.Connection) (string, int, int, error) {
+func GetBrokerConnectionInfo(brokerID int, zkConn zookeeper.Connection) (brokerHost string, jmxPort int, brokerPort int, err error) {
 
 	// Query Zookeeper for broker information
 	rawBrokerJSON, _, err := zkConn.Get("/brokers/ids/" + strconv.Itoa(brokerID))
@@ -255,7 +258,7 @@ func getBrokerConfig(brokerID int, zkConn zookeeper.Connection) (map[string]stri
 	// Query Zookeeper for broker configuration
 	rawBrokerConfig, _, err := zkConn.Get("/config/brokers/" + strconv.Itoa(brokerID))
 	if err != nil {
-		if err.Error() == "zk: node does not exist" {
+		if err == zk.ErrNoNode {
 			return map[string]string{}, nil
 		}
 		return nil, err

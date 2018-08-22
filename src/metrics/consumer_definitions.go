@@ -85,7 +85,7 @@ var ConsumerTopicMetricDefs = []*JMXMetricSet{
 }
 
 // applyConsumerName to be used when passed to CollectMetricDefinitions to modified bean name for Consumer
-func applyConsumerName(consumerName string) func(string) string {
+func applyConsumerName(consumerName string) BeanModifier {
 	return func(beanName string) string {
 		return strings.Replace(beanName, consumerHolder, consumerName, -1)
 	}
@@ -93,7 +93,7 @@ func applyConsumerName(consumerName string) func(string) string {
 
 // ApplyConsumerTopicName to be used when passed to CollectMetricDefinitions to modified bean name
 // for Consumer and Topic
-func ApplyConsumerTopicName(consumerName, topicName string) func(string) string {
+func ApplyConsumerTopicName(consumerName, topicName string) BeanModifier {
 	return func(beanName string) string {
 		modifiedBeanName := strings.Replace(beanName, consumerHolder, consumerName, -1)
 		return strings.Replace(modifiedBeanName, topicHolder, topicName, -1)

@@ -212,7 +212,7 @@ func TestCollectMetricDefinitions_BeanModifier(t *testing.T) {
 
 	jmxwrapper.JMXQuery = func(query string, timeout int) (map[string]interface{}, error) {
 		if query != expectedBean {
-			return nil, fmt.Errorf("Expected bean '%s' got '%s'", expectedBean, query)
+			return nil, fmt.Errorf("expected bean '%s' got '%s'", expectedBean, query)
 		}
 
 		result := map[string]interface{}{

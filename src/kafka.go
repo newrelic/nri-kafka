@@ -52,7 +52,12 @@ func main() {
 	// It is important to not start feeding any pool until all are created
 	// so that a race condition does not exist between creating all pools and waiting.
 	// Run all of theses in their own Go Routine to maximize concurrency
-	go bc.FeedBrokerPool(zkConn, brokerChan)
+	go func() {
+		if err := bc.FeedBrokerPool(zkConn, brokerChan); err != nil {
+			log.Error("Unable to collect Brokers: %s", err.Error())
+		}
+	}()
+
 	go tc.FeedTopicPool(topicChan, kafkaIntegration, collectedTopics)
 	go pcc.FeedWorkerPool(consumerChan, args.GlobalArgs.Consumers)
 	go pcc.FeedWorkerPool(producerChan, args.GlobalArgs.Producers)
@@ -66,6 +71,7 @@ func main() {
 }
 
 // ExitOnErr will exit with a 1 if the error is non-nil
+// All errors should be logged before calling this.
 func ExitOnErr(err error) {
 	if err != nil {
 		os.Exit(1)
