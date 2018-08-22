@@ -114,6 +114,11 @@ var producerMetricDefs = []*JMXMetricSet{
 				SourceType: metric.GAUGE,
 				JMXAttr:    "client-id=" + producerHolder + ",attr=request-size-max",
 			},
+			{
+				Name:       "producer.avgRecordAccumulatorsInMiliseconds",
+				SourceType: metric.GAUGE,
+				JMXAttr:    "client-id=" + producerHolder + ",attr=record-queue-time-avg",
+			},
 		},
 	},
 	{
