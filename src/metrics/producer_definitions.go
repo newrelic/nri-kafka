@@ -114,6 +114,11 @@ var producerMetricDefs = []*JMXMetricSet{
 				SourceType: metric.GAUGE,
 				JMXAttr:    "client-id=" + producerHolder + ",attr=request-size-max",
 			},
+			{
+				Name:       "producer.avgRecordAccumulatorsInMilliseconds",
+				SourceType: metric.GAUGE,
+				JMXAttr:    "client-id=" + producerHolder + ",attr=record-queue-time-avg",
+			},
 		},
 	},
 	{
@@ -146,6 +151,11 @@ var ProducerTopicMetricDefs = []*JMXMetricSet{
 				Name:       "producer.avgRecordsSentPerTopicPerSecond",
 				SourceType: metric.GAUGE,
 				JMXAttr:    "attr=record-send-rate",
+			},
+			{
+				Name:       "producer.avgCompressionRateRecordBatches",
+				SourceType: metric.GAUGE,
+				JMXAttr:    "attr=compression-rate",
 			},
 		},
 	},

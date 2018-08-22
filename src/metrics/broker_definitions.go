@@ -48,12 +48,12 @@ var brokerMetricDefs = []*JMXMetricSet{
 		MetricPrefix: "kafka.network:type=RequestMetrics,name=TotalTimeMs,request=Offsets,",
 		MetricDefs: []*MetricDefinition{
 			{
-				Name:       "request.avgTimeUpdateMetadata",
+				Name:       "request.avgTimeOffset",
 				SourceType: metric.GAUGE,
 				JMXAttr:    "attr=Mean",
 			},
 			{
-				Name:       "request.avgTimeUpdateMetadata99Percentile",
+				Name:       "request.avgTimeOffset99Percentile",
 				SourceType: metric.GAUGE,
 				JMXAttr:    "attr=99thPercentile",
 			},
