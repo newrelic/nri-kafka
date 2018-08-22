@@ -147,6 +147,11 @@ var ProducerTopicMetricDefs = []*JMXMetricSet{
 				SourceType: metric.GAUGE,
 				JMXAttr:    "attr=record-send-rate",
 			},
+			{
+				Name:       "producer.avgCompressionRateRecordBatches",
+				SourceType: metric.GAUGE,
+				JMXAttr:    "attr=compression-rate",
+			},
 		},
 	},
 }
