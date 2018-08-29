@@ -1,0 +1,67 @@
+integration,metric_name,metric_type,metric_enabled,metric_description
+Kafka,broker.IOInPerSecond,Gauge,true,Network IO into brokers in the cluster
+Kafka,broker.IOOutPerSecond,Gauge,true,Network IO out of brokers in the cluster
+Kafka,consumer.bytesInPerSecond,Gauge,true,Consumer bytes in rate
+Kafka,consumer.fetchPerSecond,Gauge,true,The minimum rate at which the consumer sends fetch requests to a broker
+Kafka,consumer.maxLag,Gauge,true,Maximum consumer lag
+Kafka,consumer.messageConsumptionPerSecond,Gauge,true,Rate of consumer message consumption
+Kafka,consumer.offsetKafkaCommitsPerSecond,Gauge,true,Rate of offset commits to Kafka
+Kafka,consumer.requestsExpiredPerSecond,Gauge,true,Rate of delayed consumer request expiration
+Kafka,consumer.avgFetchSizeInBytes,Gauge,true,Average number of bytes fetched per request for a specific topic
+Kafka,consumer.maxFetchSizeInBytes,Gauge,true,Maximum number of bytes fetched per request for a specific topic
+Kafka,consumer.offsetZooKeeperCommitsPerSecond,Gauge,true,Rate of offset commits to ZooKeeper
+Kafka,consumer.avgRecordConsumedPerTopicPerSecond,Gauge,true,Average number of records consumed per second for a specific topic
+Kafka,consumer.avgRecordConsumedPerTopic,Gauge,true,Average number of records in each request for a specific topic
+Kafka,follower.requestExpirationPerSecond,Gauge,true,Rate of request expiration on followers
+Kafka,broker.logFlushPerSecond,Gauge,true,Log flush rate
+Kafka,broker.messagesInPerSecond,Gauge,true,Incoming message rate
+Kafka,net.bytesRejectedPerSecond,Gauge,true,Rejected byte rate
+Kafka,producer.ageMetadataUsedInMiliseconds,Gauge,true,Age in seconds of the current producer metadata being used
+Kafka,producer.availableBufferInBytes,Gauge,true,"Total amount of buffer memory that is not being used"
+Kafka,producer.avgBytesSentPerRequestInBytes,Gauge,true,Average number of bytes sent per partition per-request
+Kafka,producer.avgCompressionRateRecordBatches,Gauge,true,Average compression rate of record batches
+Kafka,producer.avgRecordAccumulatorsInMiliseconds,Gauge,true,Average time in ms record batches spent in the record accumulator
+Kafka,producer.avgRecordSizeInBytes,Gauge,true,Average record size
+Kafka,producer.avgRecordsSentPerSecond,Gauge,true,Average number of records sent per second
+Kafka,producer.avgRecordsSentPerTopicPerSecond,Gauge,true,"Average number of records sent per second for a topic"
+Kafka,producer.avgRequestLatencyPerSecond,Gauge,true,Producer average request latency
+Kafka,producer.avgThrottleTime,Gauge,true,Average time in ms a request was throttled by a broker
+Kafka,producer.bufferMemoryAvailableInBytes,Gauge,true,Maximum amount of buffer memory the client can use (whether or not it is currently used)
+Kafka,producer.bufferpoolWaitTime,Gauge,true,Faction of time an appender waits for space allocation
+Kafka,producer.bytesOutPerSecond,Gauge,true,Producer bytes out rate
+Kafka,producer.compressionRateRecordBatches,Gauge,true,"Average compression rate of record batches for a topic"
+Kafka,producer.iOWaitTime,Gauge,true,Producer I/O wait time
+Kafka,producer.maxBytesSentPerRequestInBytes,Gauge,true,Max number of bytes sent per partition per-request
+Kafka,producer.maxRecordAccumulatorsInMiliseconds,Gauge,true,Maximum time in miliseconds that record batches spent in the record accumulator
+Kafka,producer.maxRecordSizeInBytes,Gauge,true,Maximum record size
+Kafka,producer.maxRequestLatencyInMiliseconds,Gauge,true,Maximum request latency in ms
+Kafka,producer.maxThrottleTime,Gauge,true,Maximum time in ms a request was throttled by a broker
+Kafka,producer.messageRatePerSecond,Gauge,true,Producer message rate
+Kafka,producer.requestPerSecond,Gauge,true,Number of producer requests per second
+Kafka,producer.requestsWaitingResponse,Gauge,true,Current number of in-flight requests awaiting a response
+Kafka,producer.responsePerSecond,Gauge,true,Number of producer responses per second
+Kafka,producer.threadsWaiting,Gauge,true,Number of user threads blocked waiting for buffer memory to enqueue their records
+Kafka,replication.isrExpandsPerSecond,Gauge,true,Rate of replicas joining the ISR pool
+Kafka,replication.isrShrinksPerSecond,Gauge,true,Rate of replicas leaving the ISR pool
+Kafka,replication.leaderElectionPerSecond,Gauge,true,Leader election rate
+Kafka,replication.uncleanLeaderElectionPerSecond,Gauge,true,Unclean leader election rate
+Kafka,replication.unreplicatedPartitions,Gauge,true,Number of unreplicated partitions
+Kafka,request.avgTimeFetch,Gauge,true,Average time per fetch request
+Kafka,request.avgTimeMetadata,Gauge,true,Average time for metadata request
+Kafka,request.avgTimeMetadata99Percentile,Gauge,true,Time for metadata requests for 99th percentile
+Kafka,request.avgTimeOffset,Gauge,true,Average time for an offset request
+Kafka,request.avgTimeOffset99Percentile,Gauge,true,Time for offset requests for 99th percentile
+Kafka,request.avgTimeUpdateMetadata,Gauge,true,Average time for a request to update metadata
+Kafka,request.avgTimeUpdateMetadata99Percentile,Gauge,true,Time for update metadata requests for 99th percentile
+Kafka,request.fetchTime99Percentile,Gauge,true,Time for fetch requests for 99th percentile
+Kafka,request.handlerIdle,Gauge,true,Average fraction of time the request handler threads are idle
+Kafka,request.avgTimeProduceRequest,Gauge,true,Average time for a produce request
+Kafka,request.clientFetchesFailedPerSecond,Gauge,true,Rate of client fetch request failures per second
+Kafka,request.produceRequestsFailedPerSecond,Gauge,true,Rate of failed produce requests per second
+Kafka,request.produceTime99Percentile,Gauge,true,Time for produce requests for 99th percentile
+Kafka,topic.bytesWritten,Gauge,true,How many bytes are being written by each partition in Bytes
+Kafka,topic.respondsToMetadataRequests,Gauge,true,Number of topics responding to meta data requests
+Kafka,topic.retentionSizeOrTime,Gauge,true,"Whether a partition is retained by size or time, where 0 = time and 1 = size"
+Kafka,topic.underReplicatedPartitions,Gauge,true,Number of topics under replicated where 0 = No and 1 = Yes
+Kafka,topic.partitionsWithNonPreferredLeader,Gauge,true,"Which topics are being led by their prefered replica, where 0 = No and 1 = Yes"
+Kafka,topic.diskSize,Gauge,true,Current Topic Disk Size per broker
