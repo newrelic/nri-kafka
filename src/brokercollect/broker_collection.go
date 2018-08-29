@@ -52,7 +52,7 @@ func FeedBrokerPool(zkConn zookeeper.Connection, brokerChan chan<- int) error {
 
 	// Don't make API calls or feed down channel if we don't want to collect brokers
 	if args.GlobalArgs.CollectBrokerTopicData && zkConn != nil {
-		brokerIDs, _, err := zkConn.Children("/brokers/ids")
+		brokerIDs, _, err := zkConn.Children(zookeeper.Path("/brokers/ids"))
 		if err != nil {
 			return fmt.Errorf("unable to get broker ID from Zookeeper: %s", err.Error())
 		}
@@ -232,7 +232,7 @@ func collectBrokerTopicMetrics(b *broker, collectedTopics []string) map[string]*
 func GetBrokerConnectionInfo(brokerID int, zkConn zookeeper.Connection) (brokerHost string, jmxPort int, brokerPort int, err error) {
 
 	// Query Zookeeper for broker information
-	rawBrokerJSON, _, err := zkConn.Get("/brokers/ids/" + strconv.Itoa(brokerID))
+	rawBrokerJSON, _, err := zkConn.Get(zookeeper.Path("/brokers/ids/" + strconv.Itoa(brokerID)))
 	if err != nil {
 		return "", 0, 0, err
 	}
@@ -256,7 +256,7 @@ func GetBrokerConnectionInfo(brokerID int, zkConn zookeeper.Connection) (brokerH
 func getBrokerConfig(brokerID int, zkConn zookeeper.Connection) (map[string]string, error) {
 
 	// Query Zookeeper for broker configuration
-	rawBrokerConfig, _, err := zkConn.Get("/config/brokers/" + strconv.Itoa(brokerID))
+	rawBrokerConfig, _, err := zkConn.Get(zookeeper.Path("/config/brokers/" + strconv.Itoa(brokerID)))
 	if err != nil {
 		if err == zk.ErrNoNode {
 			return map[string]string{}, nil
