@@ -18,6 +18,7 @@ type KafkaArguments struct {
 	ZookeeperHosts         []*ZookeeperHost
 	ZookeeperAuthScheme    string
 	ZookeeperAuthSecret    string
+	ZookeeperPath          string
 	DefaultJMXUser         string
 	DefaultJMXPassword     string
 	CollectBrokerTopicData bool
@@ -89,6 +90,7 @@ func ParseArgs(a ArgumentList) (*KafkaArguments, error) {
 		ZookeeperHosts:         zookeeperHosts,
 		ZookeeperAuthScheme:    a.ZookeeperAuthScheme,
 		ZookeeperAuthSecret:    a.ZookeeperAuthSecret,
+		ZookeeperPath:          a.ZookeeperPath,
 		DefaultJMXUser:         a.DefaultJMXUser,
 		DefaultJMXPassword:     a.DefaultJMXPassword,
 		CollectBrokerTopicData: a.CollectBrokerTopicData,

@@ -54,7 +54,7 @@ func GetTopics(zkConn zookeeper.Connection) ([]string, error) {
 		}
 
 		// If they want all topics, ask Zookeeper for the list of topics
-		collectedTopics, _, err := zkConn.Children("/brokers/topics")
+		collectedTopics, _, err := zkConn.Children(zookeeper.Path("/brokers/topics"))
 		if err != nil {
 			log.Error("Unable to get list of topics from Zookeeper with error: %s", err)
 			return nil, err
@@ -209,7 +209,7 @@ func topicRespondsToMetadata(t *Topic, zkConn zookeeper.Connection) int {
 func setTopicInfo(t *Topic, zkConn zookeeper.Connection) error {
 
 	// Collect topic configuration from Zookeeper
-	config, _, err := zkConn.Get("/config/topics/" + t.Name)
+	config, _, err := zkConn.Get(zookeeper.Path("/config/topics/" + t.Name))
 	if err != nil {
 		return err
 	}

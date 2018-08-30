@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/newrelic/nri-kafka/src/testutils"
 	"github.com/newrelic/nri-kafka/src/zookeeper"
 )
 
@@ -49,6 +50,7 @@ func TestCollectPartitions(t *testing.T) {
 }
 
 func TestPartitionWorker(t *testing.T) {
+	testutils.SetupTestArgs()
 	partitionInChan := make(chan *partitionSender, 10)
 	partitionOutChan := make(chan interface{}, 10)
 	var wg sync.WaitGroup

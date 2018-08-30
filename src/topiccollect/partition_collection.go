@@ -46,7 +46,7 @@ func feedPartitionPool(partitionInChan chan<- *partitionSender, topicName string
 	defer close(partitionInChan)
 
 	// Collect the partition replication info from the topic configuration in Zookeeper
-	partitionInfo, _, err := zkConn.Get("/brokers/topics/" + topicName)
+	partitionInfo, _, err := zkConn.Get(zookeeper.Path("/brokers/topics/" + topicName))
 	if err != nil {
 		log.Error("Unable to collect partition info: %s", err)
 		return
@@ -151,7 +151,7 @@ func partitionWorker(partitionInChan chan *partitionSender, partitionOutChan cha
 		}
 
 		// Collect partition information from Zookeeper
-		partitionJSON, _, err := c.Get("/brokers/topics/" + in.TopicName + "/partitions/" + strconv.Itoa(in.ID) + "/state")
+		partitionJSON, _, err := c.Get(zookeeper.Path("/brokers/topics/" + in.TopicName + "/partitions/" + strconv.Itoa(in.ID) + "/state"))
 		if err != nil {
 			partitionOutChan <- err
 		}
