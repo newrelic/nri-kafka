@@ -5,6 +5,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 0.1.2 - 2018-08-30
+### Added
+- Fixed topic_mode argument to parse `List` as a mode rather than `Specific` to match documentation
+
 ## 0.1.1 - 2018-08-29
 ### Added
 - Added zookeeper_path argument

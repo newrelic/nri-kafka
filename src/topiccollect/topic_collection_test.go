@@ -25,7 +25,7 @@ func TestGetTopics(t *testing.T) {
 	}{
 		{"None", []string{}, []string{}, false},
 		{"All", []string{}, []string{"test1", "test2", "test3"}, false},
-		{"Specific", []string{"test1", "test2"}, []string{"test1", "test2"}, false},
+		{"List", []string{"test1", "test2"}, []string{"test1", "test2"}, false},
 		{"FakeMode", []string{"test1", "test2"}, nil, true},
 	}
 	zkConn := &zookeeper.MockConnection{}
@@ -54,7 +54,7 @@ func TestGetTopics_zkErr(t *testing.T) {
 	}{
 		{"None", []string{}, []string{}, false},
 		{"All", []string{}, []string{"test1", "test2", "test3"}, true},
-		{"Specific", []string{"test1", "test2"}, []string{"test1", "test2"}, false},
+		{"List", []string{"test1", "test2"}, []string{"test1", "test2"}, false},
 		{"FakeMode", []string{"test1", "test2"}, nil, true},
 	}
 	zkConn := &zookeeper.MockConnection{ReturnChildrenError: true}
