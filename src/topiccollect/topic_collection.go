@@ -46,7 +46,7 @@ func GetTopics(zkConn zookeeper.Connection) ([]string, error) {
 	switch args.GlobalArgs.TopicMode {
 	case "None":
 		return []string{}, nil
-	case "Specific":
+	case "List":
 		return args.GlobalArgs.TopicList, nil
 	case "All":
 		if zkConn == nil {
