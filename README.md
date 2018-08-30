@@ -20,13 +20,13 @@ Information on configuring JMX can be found [here](https://docs.oracle.com/javas
 - download an archive file for the `Kafka` Integration
 - extract `kafka-definition.yml` and `/bin` directory into `/var/db/newrelic-infra/newrelic-integrations`
 - add execute permissions for the binary file `nr-kafka` (if required)
-- extract `kafka-config.yml.sample` into `/etc/newrelic-infra/integrations.d`
+- extract `kafka-config.yml.template` into `/etc/newrelic-infra/integrations.d`
 
 ## Usage
 
 This is the description about how to run the Kafka Integration with New Relic Infrastructure agent, so it is required to have the agent installed (see [agent installation](https://docs.newrelic.com/docs/infrastructure/new-relic-infrastructure/installation/install-infrastructure-linux)).
 
-In order to use the Kafka Integration it is required to configure `kafka-config.yml.sample` file. Firstly, rename the file to `kafka-config.yml`. Then, depending on your needs, specify all instances that you want to monitor. Once this is done, restart the Infrastructure agent.
+In order to use the Kafka Integration it is required to configure `kafka-config.yml.template` file. Firstly, rename the file to `kafka-config.yml`. Then, depending on your needs, specify all instances that you want to monitor. Once this is done, restart the Infrastructure agent.
 
 You can view your data in Insights by creating your own custom NRQL queries. To do so use the **KafkaBrokerSample**, **KafkaTopicSample**, **KafkaProducerSample**, or **KafkaConsumerSample** event type.
 
