@@ -35,7 +35,7 @@ prep-pkg-env:
 	@chmod 755 $(SOURCE_DIR)/var/db/newrelic-infra/newrelic-integrations/bin/*
 	@cp ./*.yml $(SOURCE_DIR)/var/db/newrelic-infra/newrelic-integrations/
 	@chmod 644 $(SOURCE_DIR)/var/db/newrelic-infra/newrelic-integrations/*.yml
-	@cp ./*.sample $(SOURCE_DIR)/etc/newrelic-infra/integrations.d/
+	@cp ./*.template $(SOURCE_DIR)/etc/newrelic-infra/integrations.d/
 	@chmod 644 $(SOURCE_DIR)/etc/newrelic-infra/integrations.d/*.template
 
 deb: prep-pkg-env
