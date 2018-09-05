@@ -34,3 +34,15 @@ instances:
     labels:
       env: production
       role: kafka
+
+  - name: kafka-consumer-offsets
+    command: consumer_offset
+    arguments:
+      zookeeper_hosts: <JSON Array of Zookeeper Hosts of the form [{"host": "zookeeper_host", "port" 2181}]>
+      zookeeper_auth_scheme: <Auth Scheme for Zookeeper>
+      zookeeper_auth_secret: <Auth string for Zookeeper>
+      zookeeper_path: <Root path of Kafka nodes in Zookeeper>
+      consumer_groups: <JSON Array whitelist of consumer groups to their topics and topics to their partitions, in which to collect consumer offsets for. Example form [{"group_1":[{"topic_1":["partition_1","partition_2"]}]}]>
+    labels:
+      env: production
+      role: kafka
