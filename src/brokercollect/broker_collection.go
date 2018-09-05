@@ -52,9 +52,9 @@ func FeedBrokerPool(zkConn zookeeper.Connection, brokerChan chan<- int) error {
 
 	// Don't make API calls or feed down channel if we don't want to collect brokers
 	if args.GlobalArgs.CollectBrokerTopicData && zkConn != nil {
-		brokerIDs, _, err := zkConn.Children(zookeeper.Path("/brokers/ids"))
+		brokerIDs, err := GetBrokerIDs(zkConn)
 		if err != nil {
-			return fmt.Errorf("unable to get broker ID from Zookeeper: %s", err.Error())
+			return err
 		}
 
 		for _, id := range brokerIDs {
@@ -226,6 +226,16 @@ func collectBrokerTopicMetrics(b *broker, collectedTopics []string) map[string]*
 	}
 
 	return topicSampleLookup
+}
+
+// GetBrokerIDs retrieves the broker ids from Zookeeper
+func GetBrokerIDs(zkConn zookeeper.Connection) ([]string, error) {
+	brokerIDs, _, err := zkConn.Children(zookeeper.Path("/brokers/ids"))
+	if err != nil {
+		return nil, fmt.Errorf("unable to get broker ID from Zookeeper: %s", err.Error())
+	}
+
+	return brokerIDs, nil
 }
 
 // GetBrokerConnectionInfo Collects Broker connection info from Zookeeper

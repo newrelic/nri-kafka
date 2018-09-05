@@ -148,28 +148,20 @@ func Test_unmarshalConsumerGroups_All(t *testing.T) {
 }
 
 func Test_unmarshalConsumerGroups(t *testing.T) {
-	input := `[
-		{
-			"group_1": [
-				{
-					"topic_1": [
-						"partition_1",
-						"partition_2"
-					]
-				}
+	input := `{
+		"group_1": {
+			"topic_1": [
+				1,
+				2
 			]
 		}
-	]`
+	}`
 
 	expected := ConsumerGroups{
-		map[string][]TopicPartitions{
-			"group_1": {
-				{
-					"topic_1": []string{
-						"partition_1",
-						"partition_2",
-					},
-				},
+		"group_1": {
+			"topic_1": []int32{
+				int32(1),
+				int32(2),
 			},
 		},
 	}

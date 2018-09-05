@@ -196,6 +196,12 @@ func topicRespondsToMetadata(t *Topic, zkConn zookeeper.Connection) int {
 		return 0
 	}
 
+	defer func() {
+		if err := broker.Close(); err != nil {
+			log.Debug("Error closing broker connection: %s", err.Error())
+		}
+	}()
+
 	// Attempt to collect metadata and determine whether it errors out
 	_, err = broker.GetMetadata(&sarama.MetadataRequest{Version: 0, Topics: []string{t.Name}, AllowAutoTopicCreation: false})
 	if err != nil {

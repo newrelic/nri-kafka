@@ -35,6 +35,20 @@ func main() {
 	zkConn, err := zookeeper.NewConnection(args.GlobalArgs)
 	ExitOnErr(err)
 
+	if !args.GlobalArgs.ConsumerOffset {
+		coreCollection(zkConn, kafkaIntegration)
+	} else {
+
+	}
+
+	if err := kafkaIntegration.Publish(); err != nil {
+		log.Error("Failed to publish data: %s", err.Error())
+		os.Exit(1)
+	}
+}
+
+// coreCollection is the main integration collection. Does not handle consumerOffset collection
+func coreCollection(zkConn zookeeper.Connection, kafkaIntegration *integration.Integration) {
 	// Get topic list
 	collectedTopics, err := tc.GetTopics(zkConn)
 	ExitOnErr(err)
@@ -63,11 +77,6 @@ func main() {
 	go pcc.FeedWorkerPool(producerChan, args.GlobalArgs.Producers)
 
 	wg.Wait()
-
-	if err := kafkaIntegration.Publish(); err != nil {
-		log.Error("Failed to publish data: %s", err.Error())
-		os.Exit(1)
-	}
 }
 
 // ExitOnErr will exit with a 1 if the error is non-nil

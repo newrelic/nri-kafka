@@ -21,5 +21,7 @@ commands:
     consumer_offset:
       - ./bin/nr-kafka
       - --consumer_offset
+      - --inventory=false
+      - --metrics=false
     prefix: config/kafka
     interval: 15
