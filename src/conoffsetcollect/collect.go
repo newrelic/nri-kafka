@@ -6,6 +6,7 @@ import (
 	"strconv"
 
 	"github.com/Shopify/sarama"
+	"github.com/newrelic/infra-integrations-sdk/data/metric"
 	"github.com/newrelic/infra-integrations-sdk/integration"
 	"github.com/newrelic/infra-integrations-sdk/log"
 	"github.com/newrelic/nri-kafka/src/args"
@@ -13,14 +14,19 @@ import (
 	"github.com/newrelic/nri-kafka/src/zookeeper"
 )
 
-type consumerOffset struct {
+var (
+	allBrokers []*sarama.Broker
+	allTopics  []string
+)
+
+type partitionOffsets struct {
 	Topic          string `metric_name:"topic" source_type:"attribute"`
 	Partition      string `metric_name:"partition" source_type:"attribute"`
 	ConsumerOffset int64  `metric_name:"kafka.consumerOffset" source_type:"gauge"`
 }
 
 // Collect collects offset data per consumer group specified in the arguments
-func Collect(zkConn zookeeper.Connection, kafakIntegration *integration.Integration) error {
+func Collect(zkConn zookeeper.Connection, kafkaIntegration *integration.Integration) error {
 	client, err := createClient(zkConn)
 	if err != nil {
 		return err
@@ -32,12 +38,20 @@ func Collect(zkConn zookeeper.Connection, kafakIntegration *integration.Integrat
 		}
 	}()
 
-	// cache this so we don't have to look it up everytime
-	allBrokers := client.Brokers()
+	// collect cache for topics and brokers
+	allBrokers = client.Brokers()
+	allTopics, err = client.Topics()
+	if err != nil {
+		log.Warn("Unable to get list of topics from Kafka: %s", err.Error())
+		// fill out a blank list to avoid nil checks everywhere this is used
+		allTopics = make([]string, 0)
+	}
 
 	for consumerGroup, topicPartitions := range args.GlobalArgs.ConsumerGroups {
-		// TODO use offsets
-		processConsumerGroup(client, consumerGroup, topicPartitions, allBrokers)
+		offsetData := getKafkaConsumerOffsets(client, consumerGroup, topicPartitions)
+		if err := setMetrics(consumerGroup, offsetData, kafkaIntegration); err != nil {
+			log.Error("Error setting metrics for consumer group '%s': %s", consumerGroup, err.Error())
+		}
 	}
 
 	return nil
@@ -70,7 +84,7 @@ func createClient(zkConn zookeeper.Connection) (sarama.Client, error) {
 	return sarama.NewClient(brokers, sarama.NewConfig())
 }
 
-func processConsumerGroup(client sarama.Client, groupName string, topicPartitions args.TopicPartitions, allBrokers []*sarama.Broker) []*consumerOffset {
+func getKafkaConsumerOffsets(client sarama.Client, groupName string, topicPartitions args.TopicPartitions) []*partitionOffsets {
 	// refresh coordinator cache (suggested by sarama to do so)
 	if err := client.RefreshCoordinator(groupName); err != nil {
 		log.Debug("Unable to refresh coordinator for group '%s'", groupName)
@@ -87,16 +101,19 @@ func processConsumerGroup(client sarama.Client, groupName string, topicPartition
 		brokers = append(brokers, coordinator)
 	}
 
+	// Fille out any missing
+	topicPartitions = fillOutTopicPartitionsFromKafka(client, topicPartitions)
+
 	return getConsumerOffsets(groupName, topicPartitions, brokers)
 }
 
-func getConsumerOffsets(groupName string, topicPartitions args.TopicPartitions, brokers []*sarama.Broker) []*consumerOffset {
+func getConsumerOffsets(groupName string, topicPartitions args.TopicPartitions, brokers []*sarama.Broker) []*partitionOffsets {
 	request := &sarama.OffsetFetchRequest{
 		ConsumerGroup: groupName,
 		Version:       int16(1),
 	}
 
-	consumerOffsets := make([]*consumerOffset, 0)
+	consumerOffsets := make([]*partitionOffsets, 0)
 	for _, broker := range brokers {
 		resp, err := broker.FetchOffset(request)
 		if err != nil {
@@ -105,9 +122,14 @@ func getConsumerOffsets(groupName string, topicPartitions args.TopicPartitions, 
 		}
 
 		for topic, partitions := range topicPartitions {
+			// case if partitions could not be collected from Kafka
+			if partitions == nil {
+				continue
+			}
+
 			for _, partition := range partitions {
 				if block := resp.GetBlock(topic, partition); block != nil && block.Err == sarama.ErrNoError {
-					offsetData := &consumerOffset{
+					offsetData := &partitionOffsets{
 						Topic:          topic,
 						Partition:      strconv.Itoa(int(partition)),
 						ConsumerOffset: block.Offset,
@@ -120,4 +142,51 @@ func getConsumerOffsets(groupName string, topicPartitions args.TopicPartitions, 
 	}
 
 	return consumerOffsets
+}
+
+// fillOutTopicPartitionsFromKafka checks all topics for the consumer group if no topics are list then all topics
+// will be added for the consumer group. If a topic has no partition then all partitions of a topic will be added.
+// all calls will query Kafka rather than Zookeeper
+func fillOutTopicPartitionsFromKafka(client sarama.Client, topicPartitions args.TopicPartitions) args.TopicPartitions {
+	if len(topicPartitions) == 0 {
+		topicPartitions = make(args.TopicPartitions)
+		for _, topic := range allTopics {
+			topicPartitions[topic] = make([]int32, 0)
+		}
+	}
+
+	for topic, partitions := range topicPartitions {
+		if partitions == nil || len(partitions) == 0 {
+			var err error
+			partitions, err = client.Partitions(topic)
+			if err != nil {
+				log.Warn("Unable to gather partitions for topic '%s': %s", topic, err.Error())
+				continue
+			}
+		}
+
+		topicPartitions[topic] = partitions
+	}
+
+	return topicPartitions
+}
+
+func setMetrics(consumerGroup string, offsetData []*partitionOffsets, kafkaIntegration *integration.Integration) error {
+	groupEntity, err := kafkaIntegration.Entity(consumerGroup, "consumerGroup")
+	if err != nil {
+		return err
+	}
+
+	for _, offsetData := range offsetData {
+		metricSet := groupEntity.NewMetricSet("ConsumerGroupOffsetSample",
+			metric.Attribute{Key: "displayName", Value: groupEntity.Metadata.Name},
+			metric.Attribute{Key: "entityName", Value: "consumerGroup:" + groupEntity.Metadata.Name})
+
+		if err := metricSet.MarshalMetrics(offsetData); err != nil {
+			log.Error("Error Marshaling offset metrics for consumer group '%s': %s", consumerGroup, err.Error())
+			continue
+		}
+	}
+
+	return nil
 }

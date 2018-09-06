@@ -33,5 +33,5 @@ type ArgumentList struct {
 
 	// Consumer offset arguments
 	ConsumerOffset bool   `default:"false" help:"Public consumer offset data"`
-	ConsumerGroups string `default:"[]" help:"JSON Array whitelist of consumer groups to their topics and topics to their partitions, in which to collect consumer offsets for."`
+	ConsumerGroups string `default:"[]" help:"JSON Object whitelist of consumer groups to their topics and topics to their partitions, in which to collect consumer offsets for."`
 }
