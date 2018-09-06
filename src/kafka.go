@@ -8,6 +8,7 @@ import (
 	"github.com/newrelic/infra-integrations-sdk/log"
 	"github.com/newrelic/nri-kafka/src/args"
 	bc "github.com/newrelic/nri-kafka/src/brokercollect"
+	offc "github.com/newrelic/nri-kafka/src/conoffsetcollect"
 	pcc "github.com/newrelic/nri-kafka/src/prodconcollect"
 	tc "github.com/newrelic/nri-kafka/src/topiccollect"
 	"github.com/newrelic/nri-kafka/src/zookeeper"
@@ -38,7 +39,10 @@ func main() {
 	if !args.GlobalArgs.ConsumerOffset {
 		coreCollection(zkConn, kafkaIntegration)
 	} else {
-
+		if err := offc.Collect(zkConn, kafkaIntegration); err != nil {
+			log.Error("Failed collecting consumer offset data: %s", err.Error())
+			os.Exit(1)
+		}
 	}
 
 	if err := kafkaIntegration.Publish(); err != nil {
