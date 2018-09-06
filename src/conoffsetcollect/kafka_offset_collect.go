@@ -48,15 +48,12 @@ func getKafkaConsumerOffsets(client sarama.Client, groupName string, topicPartit
 	// Fill out any missing
 	topicPartitions = fillOutTopicPartitionsFromKafka(client, topicPartitions)
 
-	return getConsumerOffsetsFromBroker(groupName, topicPartitions, brokers)
+	return getConsumerOffsetsFromBroker(groupName, topicPartitions, allBrokers)
 }
 
 // getConsumerOffsetsFromBroker collects a consumer groups offsets from the given brokers
 func getConsumerOffsetsFromBroker(groupName string, topicPartitions args.TopicPartitions, brokers []*sarama.Broker) []*partitionOffsets {
-	request := &sarama.OffsetFetchRequest{
-		ConsumerGroup: groupName,
-		Version:       int16(1),
-	}
+	request := createFetchRequest(groupName, topicPartitions)
 
 	offsets := make([]*partitionOffsets, 0)
 	for _, broker := range brokers {
@@ -68,7 +65,7 @@ func getConsumerOffsetsFromBroker(groupName string, topicPartitions args.TopicPa
 
 		if len(resp.Blocks) == 0 {
 			log.Debug("No offset data found for consumer gorup '%s'", groupName)
-			return offsets
+			continue
 		}
 
 		for topic, partitions := range topicPartitions {
@@ -78,8 +75,7 @@ func getConsumerOffsetsFromBroker(groupName string, topicPartitions args.TopicPa
 			}
 
 			for _, partition := range partitions {
-				block := resp.GetBlock(topic, partition)
-				if block != nil && block.Err == sarama.ErrNoError {
+				if block := resp.GetBlock(topic, partition); block != nil && block.Err == sarama.ErrNoError {
 					offsetData := &partitionOffsets{
 						Topic:          topic,
 						Partition:      strconv.Itoa(int(partition)),
@@ -119,4 +115,25 @@ func fillOutTopicPartitionsFromKafka(client sarama.Client, topicPartitions args.
 	}
 
 	return topicPartitions
+}
+
+func createFetchRequest(groupName string, topicPartitions args.TopicPartitions) *sarama.OffsetFetchRequest {
+	request := &sarama.OffsetFetchRequest{
+		ConsumerGroup: groupName,
+		Version:       int16(1),
+	}
+
+	// add partitions to request
+	for topic, partitions := range topicPartitions {
+		// case if partitions could not be collected from Kafka
+		if partitions == nil {
+			continue
+		}
+
+		for _, partition := range partitions {
+			request.AddPartition(topic, partition)
+		}
+	}
+
+	return request
 }
