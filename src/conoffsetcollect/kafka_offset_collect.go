@@ -45,7 +45,7 @@ func getKafkaConsumerOffsets(client sarama.Client, groupName string, topicPartit
 		brokers = append(brokers, coordinator)
 	}
 
-	// Fille out any missing
+	// Fill out any missing
 	topicPartitions = fillOutTopicPartitionsFromKafka(client, topicPartitions)
 
 	return getConsumerOffsetsFromBroker(groupName, topicPartitions, brokers)
@@ -58,12 +58,17 @@ func getConsumerOffsetsFromBroker(groupName string, topicPartitions args.TopicPa
 		Version:       int16(1),
 	}
 
-	consumerOffsets := make([]*partitionOffsets, 0)
+	offsets := make([]*partitionOffsets, 0)
 	for _, broker := range brokers {
 		resp, err := broker.FetchOffset(request)
 		if err != nil {
 			log.Debug("Error fetching offset requests for group '%s' from broker with id '%d': %s", groupName, broker.ID(), err.Error())
 			continue
+		}
+
+		if len(resp.Blocks) == 0 {
+			log.Debug("No offset data found for consumer gorup '%s'", groupName)
+			return offsets
 		}
 
 		for topic, partitions := range topicPartitions {
@@ -73,20 +78,21 @@ func getConsumerOffsetsFromBroker(groupName string, topicPartitions args.TopicPa
 			}
 
 			for _, partition := range partitions {
-				if block := resp.GetBlock(topic, partition); block != nil && block.Err == sarama.ErrNoError {
+				block := resp.GetBlock(topic, partition)
+				if block != nil && block.Err == sarama.ErrNoError {
 					offsetData := &partitionOffsets{
 						Topic:          topic,
 						Partition:      strconv.Itoa(int(partition)),
 						ConsumerOffset: block.Offset,
 					}
 
-					consumerOffsets = append(consumerOffsets, offsetData)
+					offsets = append(offsets, offsetData)
 				}
 			}
 		}
 	}
 
-	return consumerOffsets
+	return offsets
 }
 
 // fillOutTopicPartitionsFromKafka checks all topics for the consumer group if no topics are list then all topics
@@ -94,7 +100,6 @@ func getConsumerOffsetsFromBroker(groupName string, topicPartitions args.TopicPa
 // all calls will query Kafka rather than Zookeeper
 func fillOutTopicPartitionsFromKafka(client sarama.Client, topicPartitions args.TopicPartitions) args.TopicPartitions {
 	if len(topicPartitions) == 0 {
-		topicPartitions = make(args.TopicPartitions)
 		for _, topic := range allTopics {
 			topicPartitions[topic] = make([]int32, 0)
 		}

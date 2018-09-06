@@ -38,6 +38,7 @@ func Collect(zkConn zookeeper.Connection, kafkaIntegration *integration.Integrat
 
 	for consumerGroup, topicPartitions := range args.GlobalArgs.ConsumerGroups {
 		offsetData := getKafkaConsumerOffsets(client, consumerGroup, topicPartitions)
+
 		if err := setMetrics(consumerGroup, offsetData, kafkaIntegration); err != nil {
 			log.Error("Error setting metrics for consumer group '%s': %s", consumerGroup, err.Error())
 		}
@@ -64,7 +65,8 @@ func createClient(zkConn zookeeper.Connection) (sarama.Client, error) {
 		// get broker connection info
 		host, _, port, err := bc.GetBrokerConnectionInfo(intID, zkConn)
 		if err != nil {
-			return nil, err
+			log.Warn("Unable to get connection information for broker with ID '%d'. Will not collect offest data for consumer groups on this broker.", intID)
+			continue
 		}
 
 		brokers = append(brokers, fmt.Sprintf("%s:%d", host, port))
