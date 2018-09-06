@@ -92,16 +92,20 @@ func brokerWorker(brokerChan <-chan int, collectedTopics []string, wg *sync.Wait
 
 		// Populate inventory for broker
 		if args.GlobalArgs.All() || args.GlobalArgs.Inventory {
+			log.Debug("Collecting inventory for broker %s", b.Entity.Metadata.Name)
 			if err := populateBrokerInventory(b); err != nil {
 				continue
 			}
+			log.Debug("Done Collecting inventory for broker %s", b.Entity.Metadata.Name)
 		}
 
 		// Populate metrics for broker
 		if args.GlobalArgs.All() || args.GlobalArgs.Metrics {
+			log.Debug("Collecting metrics for broker %s", b.Entity.Metadata.Name)
 			if err := collectBrokerMetrics(b, collectedTopics); err != nil {
 				continue
 			}
+			log.Debug("Done Collecting metrics for broker %s", b.Entity.Metadata.Name)
 		}
 	}
 }

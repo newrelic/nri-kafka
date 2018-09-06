@@ -59,6 +59,7 @@ func ConsumerWorker(consumerChan <-chan *args.JMXHost, wg *sync.WaitGroup, i *in
 		if args.GlobalArgs.All() || args.GlobalArgs.Metrics {
 			// Lock since we can only make a single JMX connection at a time.
 			jmxwrapper.JMXLock.Lock()
+			log.Debug("Collecting metrics for consumer %s", consumerEntity.Metadata.Name)
 
 			// Open a JMX connection to the consumer
 			if err := jmxwrapper.JMXOpen(jmxInfo.Host, strconv.Itoa(jmxInfo.Port), jmxInfo.User, jmxInfo.Password); err != nil {
@@ -82,6 +83,8 @@ func ConsumerWorker(consumerChan <-chan *args.JMXHost, wg *sync.WaitGroup, i *in
 			// Collect metrics that are topic-specific per Consumer
 			metrics.CollectTopicSubMetrics(consumerEntity, "consumer", metrics.ConsumerTopicMetricDefs,
 				collectedTopics, metrics.ApplyConsumerTopicName)
+
+			log.Debug("Collecting metrics for consumer %s", consumerEntity.Metadata.Name)
 
 			// Close connection and release lock so another process can make JMX Connections
 			jmxwrapper.JMXClose()
@@ -110,6 +113,7 @@ func ProducerWorker(producerChan <-chan *args.JMXHost, wg *sync.WaitGroup, i *in
 		if args.GlobalArgs.All() || args.GlobalArgs.Metrics {
 			// Lock since we can only make a single JMX connection at a time.
 			jmxwrapper.JMXLock.Lock()
+			log.Debug("Collecting metrics for producer %s", producerEntity.Metadata.Name)
 
 			// Open a JMX connection to the producer
 			if err := jmxwrapper.JMXOpen(jmxInfo.Host, strconv.Itoa(jmxInfo.Port), jmxInfo.User, jmxInfo.Password); err != nil {
@@ -133,6 +137,8 @@ func ProducerWorker(producerChan <-chan *args.JMXHost, wg *sync.WaitGroup, i *in
 			// Collect metrics that are topic specific per Producer
 			metrics.CollectTopicSubMetrics(producerEntity, "producer", metrics.ProducerTopicMetricDefs,
 				collectedTopics, metrics.ApplyProducerTopicName)
+
+			log.Debug("Done Collecting metrics for producer %s", producerEntity.Metadata.Name)
 
 			// Close connection and release lock so another process can make JMX Connections
 			jmxwrapper.JMXClose()
