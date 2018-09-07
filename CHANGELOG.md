@@ -5,6 +5,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 0.1.3 - 2018-09-06
+### Added
+- Added additional debug logging statements to assist in debugging a customers environment
+
 ## 0.1.2 - 2018-08-30
 ### Added
 - Fixed topic_mode argument to parse `List` as a mode rather than `Specific` to match documentation
