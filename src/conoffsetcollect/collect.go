@@ -18,6 +18,7 @@ type partitionOffsets struct {
 	Topic          string `metric_name:"topic" source_type:"attribute"`
 	Partition      string `metric_name:"partition" source_type:"attribute"`
 	ConsumerOffset int64  `metric_name:"kafka.consumerOffset" source_type:"gauge"`
+	ConsumerLag    int64  `metric_name:"kafka.consumerLag" source_type:"gauge"`
 }
 
 // Collect collects offset data per consumer group specified in the arguments
