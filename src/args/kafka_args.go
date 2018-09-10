@@ -92,7 +92,7 @@ func ParseArgs(a ArgumentList) (*KafkaArguments, error) {
 	// Parse consumser offset args
 	consumerGroups, err := unmarshalConsumerGroups(a.ConsumerOffset, a.ConsumerGroups)
 	if err != nil {
-		log.Error("Failed to parse consumser groups from json")
+		log.Error("Failed to parse consumer groups from json")
 		return nil, err
 	}
 

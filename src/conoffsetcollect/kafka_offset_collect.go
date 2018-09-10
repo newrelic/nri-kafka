@@ -64,7 +64,7 @@ func getConsumerOffsetsFromBroker(groupName string, topicPartitions args.TopicPa
 		}
 
 		if len(resp.Blocks) == 0 {
-			log.Debug("No offset data found for consumer gorup '%s'", groupName)
+			log.Debug("No offset data found for consumer group '%s'", groupName)
 			continue
 		}
 

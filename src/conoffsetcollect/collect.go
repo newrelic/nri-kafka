@@ -65,7 +65,7 @@ func createClient(zkConn zookeeper.Connection) (sarama.Client, error) {
 		// get broker connection info
 		host, _, port, err := bc.GetBrokerConnectionInfo(intID, zkConn)
 		if err != nil {
-			log.Warn("Unable to get connection information for broker with ID '%d'. Will not collect offest data for consumer groups on this broker.", intID)
+			log.Warn("Unable to get connection information for broker with ID '%d'. Will not collect offset data for consumer groups on this broker.", intID)
 			continue
 		}
 
