@@ -18,8 +18,12 @@ type partitionOffsets struct {
 	Topic          string `metric_name:"topic" source_type:"attribute"`
 	Partition      string `metric_name:"partition" source_type:"attribute"`
 	ConsumerOffset int64  `metric_name:"kafka.consumerOffset" source_type:"gauge"`
+	HighWaterMark  int64  `metric_name:"kafka.highWaterMark" source_type:"gauge"`
 	ConsumerLag    int64  `metric_name:"kafka.consumerLag" source_type:"gauge"`
 }
+
+// TopicPartitions is the substructure within the consumer group structure
+type TopicPartitions map[string][]int32
 
 // Collect collects offset data per consumer group specified in the arguments
 func Collect(zkConn zookeeper.Connection, kafkaIntegration *integration.Integration) error {
@@ -37,14 +41,32 @@ func Collect(zkConn zookeeper.Connection, kafkaIntegration *integration.Integrat
 	// this step may only be needed if collecting from kafka rather than Zookeeper
 	fillKafkaCaches(client)
 
-	for consumerGroup, topicPartitions := range args.GlobalArgs.ConsumerGroups {
-		offsetData := getKafkaConsumerOffsets(client, consumerGroup, topicPartitions)
-
-		if err := setMetrics(consumerGroup, offsetData, kafkaIntegration); err != nil {
-			log.Error("Error setting metrics for consumer group '%s': %s", consumerGroup, err.Error())
+	// only when hidden "all" variable is used
+	if args.GlobalArgs.ConsumerGroups == nil {
+		args.GlobalArgs.ConsumerGroups, err = getAllConsumerGroupsFromKafka(client)
+		if err != nil {
+			log.Info("Failed to get consumer groups")
 		}
 	}
 
+	// We retrieve the offsets for each group before calculating the high water mark
+	// so that the lag is never negative
+	for consumerGroup, topics := range args.GlobalArgs.ConsumerGroups {
+		topicPartitions := getTopicPartitions(topics, client)
+
+		offsetData := getKafkaConsumerOffsets(consumerGroup, topicPartitions, client)
+		highWaterMarks, err := getHighWaterMarks(topicPartitions, client)
+		if err != nil {
+			log.Info("Failed to collect highWaterMarks")
+		}
+
+		offsetStructs := populateOffsetStructs(offsetData, highWaterMarks)
+
+		if err := setMetrics(consumerGroup, offsetStructs, kafkaIntegration); err != nil {
+			log.Error("Error setting metrics for consumer group '%s': %s", consumerGroup, err.Error())
+		}
+
+	}
 	return nil
 }
 

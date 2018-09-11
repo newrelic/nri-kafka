@@ -232,6 +232,7 @@ func collectBrokerTopicMetrics(b *broker, collectedTopics []string) map[string]*
 func GetBrokerIDs(zkConn zookeeper.Connection) ([]string, error) {
 	brokerIDs, _, err := zkConn.Children(zookeeper.Path("/brokers/ids"))
 	if err != nil {
+		log.Info(zookeeper.Path("/brokers/ids"))
 		return nil, fmt.Errorf("unable to get broker ID from Zookeeper: %s", err.Error())
 	}
 

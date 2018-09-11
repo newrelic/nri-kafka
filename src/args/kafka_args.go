@@ -152,17 +152,14 @@ func unmarshalJMXHosts(data []byte, a *ArgumentList) ([]*JMXHost, error) {
 
 // ConsumerGroups is the structure to represent the whitelist for
 // consumer_groups argument
-type ConsumerGroups map[string]TopicPartitions
-
-// TopicPartitions is the substructure within the consumer group structure
-type TopicPartitions map[string][]int32
+type ConsumerGroups map[string][]string
 
 func unmarshalConsumerGroups(consumerOffset bool, consumerGroupsArg string) (ConsumerGroups, error) {
 	// not in consumer offset mode so don't bother to unmarshal
 	if !consumerOffset {
 		return nil, nil
 	} else if consumerGroupsArg == "all" { // case for secret all mode
-		return make(ConsumerGroups, 0), nil
+		return nil, nil
 	}
 
 	data := []byte(consumerGroupsArg)
