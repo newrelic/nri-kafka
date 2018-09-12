@@ -104,15 +104,17 @@ func topicWorker(topicChan <-chan *Topic, wg *sync.WaitGroup, zkConn zookeeper.C
 
 		// Collect and populate inventory with topic configuration
 		if args.GlobalArgs.All() || args.GlobalArgs.Inventory {
+			log.Debug("Collecting inventory for topic %s", topic)
 			errors := populateTopicInventory(topic)
 			if len(errors) != 0 {
 				log.Error("Failed to populate inventory with %d errors", len(errors))
 			}
-
+			log.Debug("Done Collecting inventory for topic %s", topic)
 		}
 
 		// Collect topic metrics
 		if args.GlobalArgs.All() || args.GlobalArgs.Metrics {
+			log.Debug("Collecting metrics for topic %s", topic)
 			// Create metric set for topic
 			sample := topic.Entity.NewMetricSet("KafkaTopicSample",
 				metric.Attribute{Key: "displayName", Value: topic.Name},
@@ -123,6 +125,8 @@ func topicWorker(topicChan <-chan *Topic, wg *sync.WaitGroup, zkConn zookeeper.C
 			if err := populateTopicMetrics(topic, sample, zkConn); err != nil {
 				log.Error("Error collecting metrics from Topic '%s': %s", topic.Name, err.Error())
 			}
+
+			log.Debug("Done Collecting metrics for topic %s", topic)
 		}
 	}
 }
