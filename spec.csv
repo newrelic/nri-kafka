@@ -16,11 +16,11 @@ Kafka,follower.requestExpirationPerSecond,Gauge,true,Rate of request expiration 
 Kafka,broker.logFlushPerSecond,Gauge,true,Log flush rate
 Kafka,broker.messagesInPerSecond,Gauge,true,Incoming message rate
 Kafka,net.bytesRejectedPerSecond,Gauge,true,Rejected byte rate
-Kafka,producer.ageMetadataUsedInMiliseconds,Gauge,true,Age in seconds of the current producer metadata being used
+Kafka,producer.ageMetadataUsedInMilliseconds,Gauge,true,Age in seconds of the current producer metadata being used
 Kafka,producer.availableBufferInBytes,Gauge,true,"Total amount of buffer memory that is not being used"
 Kafka,producer.avgBytesSentPerRequestInBytes,Gauge,true,Average number of bytes sent per partition per-request
 Kafka,producer.avgCompressionRateRecordBatches,Gauge,true,Average compression rate of record batches
-Kafka,producer.avgRecordAccumulatorsInMiliseconds,Gauge,true,Average time in ms record batches spent in the record accumulator
+Kafka,producer.avgRecordAccumulatorsInMilliseconds,Gauge,true,Average time in ms record batches spent in the record accumulator
 Kafka,producer.avgRecordSizeInBytes,Gauge,true,Average record size
 Kafka,producer.avgRecordsSentPerSecond,Gauge,true,Average number of records sent per second
 Kafka,producer.avgRecordsSentPerTopicPerSecond,Gauge,true,"Average number of records sent per second for a topic"
@@ -32,9 +32,9 @@ Kafka,producer.bytesOutPerSecond,Gauge,true,Producer bytes out rate
 Kafka,producer.compressionRateRecordBatches,Gauge,true,"Average compression rate of record batches for a topic"
 Kafka,producer.iOWaitTime,Gauge,true,Producer I/O wait time
 Kafka,producer.maxBytesSentPerRequestInBytes,Gauge,true,Max number of bytes sent per partition per-request
-Kafka,producer.maxRecordAccumulatorsInMiliseconds,Gauge,true,Maximum time in miliseconds that record batches spent in the record accumulator
+Kafka,producer.maxRecordAccumulatorsInMilliseconds,Gauge,true,Maximum time in milliseconds that record batches spent in the record accumulator
 Kafka,producer.maxRecordSizeInBytes,Gauge,true,Maximum record size
-Kafka,producer.maxRequestLatencyInMiliseconds,Gauge,true,Maximum request latency in ms
+Kafka,producer.maxRequestLatencyInMilliseconds,Gauge,true,Maximum request latency in ms
 Kafka,producer.maxThrottleTime,Gauge,true,Maximum time in ms a request was throttled by a broker
 Kafka,producer.messageRatePerSecond,Gauge,true,Producer message rate
 Kafka,producer.requestPerSecond,Gauge,true,Number of producer requests per second

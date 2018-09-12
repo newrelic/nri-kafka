@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 0.1.5 - 2018-09-12
+### Added
+- Renamed kafka-config.yml.template to kafka-config.yml.sample
+- Added comments to kafka-config.yml.sample file
+- Fixed spellings in spec.csv file
+
 ## 0.1.4 - 2018-09-10
 ### Added
 - Added nrjmx dependency when installing the package
