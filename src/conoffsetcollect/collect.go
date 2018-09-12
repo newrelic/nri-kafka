@@ -25,6 +25,7 @@ type partitionOffsets struct {
 // TopicPartitions is the substructure within the consumer group structure
 type TopicPartitions map[string][]int32
 
+// Client is an interface for mocking
 type Client interface {
 	Brokers() []*sarama.Broker
 	Topics() ([]string, error)
@@ -36,6 +37,7 @@ type Client interface {
 	GetOffset(string, int32, int64) (int64, error)
 }
 
+// Broker is an interface for mocking
 type Broker interface {
 	Connected() (bool, error)
 	Open(*sarama.Config) error
