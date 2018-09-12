@@ -63,7 +63,8 @@ func Collect(zkConn zookeeper.Connection, kafkaIntegration *integration.Integrat
 	if args.GlobalArgs.ConsumerGroups == nil {
 		args.GlobalArgs.ConsumerGroups, err = getAllConsumerGroupsFromKafka(client)
 		if err != nil {
-			log.Info("Failed to get consumer groups")
+			log.Error("Failed to get consumer groups")
+			return err
 		}
 	}
 
@@ -76,6 +77,7 @@ func Collect(zkConn zookeeper.Connection, kafkaIntegration *integration.Integrat
 		if err != nil {
 			log.Info("Failed to collect consumerOffsets for group %s: %v", consumerGroup, err)
 		}
+
 		highWaterMarks, err := getHighWaterMarks(topicPartitions, client)
 		if err != nil {
 			log.Info("Failed to collect highWaterMarks for group %s: %v", consumerGroup, err)

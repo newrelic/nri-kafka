@@ -62,6 +62,7 @@ func getConsumerOffsetsFromBroker(groupName string, topicPartitions TopicPartiti
 				return nil, err
 			}
 		}
+
 		resp, err := broker.FetchOffset(offsetRequest)
 		if err != nil {
 			log.Debug("Error fetching offset requests for group '%s' from broker with id '%d': %s", groupName, broker.ID(), err.Error())
@@ -97,16 +98,14 @@ type groupOffsets map[string]topicOffsets
 
 type topicOffsets map[int32]int64
 
+// getHighWaterMarkFromBrokers retrieves the high water mark for every partition in topicPartitions.
+// To do this, it first must determine which broker is the leader for a partition because a request
+// can only be made to the leader of a partition.
+// Next, for each broker, it creates a fetch request that fetches a block per partition that that broker
+// is the leader for. This is more complicated than it sounds, see createFetchRequest for details.
+// Finally, it makes the request, and for each partition in the request, it inserts the highWaterMarkOffset
+// from the partition-associated block into the hwms map to be returned.
 func getHighWaterMarks(topicPartitions TopicPartitions, client Client) (groupOffsets, error) {
-	// Explanation of this function:
-	// getHighWaterMarkFromBrokers retrieves the high water mark for every partition in topicPartitions.
-	// To do this, it first must determine which broker is the leader for a partition because a request
-	// can only be made to the leader of a partition.
-	// Next, for each broker, it creates a fetch request that fetches a block per partition that that broker
-	// is the leader for. This is more complicated than it sounds, see createFetchRequest for details.
-	// Finally, it makes the request, and for each partition in the request, it inserts the highWaterMarkOffset
-	// from the partition-associated block into the hwms map to be returned.
-
 	// Determine which broker is the leader for each partition
 	brokerLeaderMap := make(map[*sarama.Broker]TopicPartitions)
 	for topic, partitions := range topicPartitions {
@@ -171,9 +170,9 @@ func getHighWaterMarks(topicPartitions TopicPartitions, client Client) (groupOff
 
 }
 
-// fillOutTopicPartitionsFromKafka checks all topics for the consumer group if no topics are list then all topics
+// fillOutTopicPartitionsFromKafka checks all topics for the consumer group if no topics are listed then all topics
 // will be added for the consumer group. If a topic has no partition then all partitions of a topic will be added.
-// all calls will query Kafka rather than Zookeeper
+// All calls will query Kafka rather than Zookeeper
 func fillTopicPartition(groupID string, topicPartitions TopicPartitions, client Client) TopicPartitions {
 	// If no topics, request the list of topics for a group
 	if len(topicPartitions) == 0 {
@@ -204,6 +203,7 @@ func fillTopicPartition(groupID string, topicPartitions TopicPartitions, client 
 			if err != nil {
 				continue
 			}
+
 			for _, topic := range metadata.Topics {
 				if _, ok := topicPartitions[topic]; !ok {
 					topicPartitions[topic] = make([]int32, 0)
