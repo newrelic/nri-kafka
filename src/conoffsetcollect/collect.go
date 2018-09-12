@@ -25,6 +25,22 @@ type partitionOffsets struct {
 // TopicPartitions is the substructure within the consumer group structure
 type TopicPartitions map[string][]int32
 
+type Client interface {
+	Brokers() []*sarama.Broker
+	Topics() ([]string, error)
+	Partitions(string) ([]int32, error)
+	RefreshCoordinator(string) error
+	Coordinator(string) (*sarama.Broker, error)
+	Leader(string, int32) (*sarama.Broker, error)
+	Close() error
+	GetOffset(string, int32, int64) (int64, error)
+}
+
+type Broker interface {
+	Connected() (bool, error)
+	Open(*sarama.Config) error
+}
+
 // Collect collects offset data per consumer group specified in the arguments
 func Collect(zkConn zookeeper.Connection, kafkaIntegration *integration.Integration) error {
 	client, err := createClient(zkConn)
@@ -52,12 +68,15 @@ func Collect(zkConn zookeeper.Connection, kafkaIntegration *integration.Integrat
 	// We retrieve the offsets for each group before calculating the high water mark
 	// so that the lag is never negative
 	for consumerGroup, topics := range args.GlobalArgs.ConsumerGroups {
-		topicPartitions := getTopicPartitions(topics, client)
+		topicPartitions := fillTopicPartition(consumerGroup, topics, client)
 
-		offsetData := getKafkaConsumerOffsets(consumerGroup, topicPartitions, client)
+		offsetData, err := getConsumerOffsets(consumerGroup, topicPartitions, client)
+		if err != nil {
+			log.Info("Failed to collect consumerOffsets for group %s: %v", consumerGroup, err)
+		}
 		highWaterMarks, err := getHighWaterMarks(topicPartitions, client)
 		if err != nil {
-			log.Info("Failed to collect highWaterMarks")
+			log.Info("Failed to collect highWaterMarks for group %s: %v", consumerGroup, err)
 		}
 
 		offsetStructs := populateOffsetStructs(offsetData, highWaterMarks)
@@ -70,7 +89,7 @@ func Collect(zkConn zookeeper.Connection, kafkaIntegration *integration.Integrat
 	return nil
 }
 
-func createClient(zkConn zookeeper.Connection) (sarama.Client, error) {
+func createClient(zkConn zookeeper.Connection) (Client, error) {
 	brokerIDs, err := bc.GetBrokerIDs(zkConn)
 	if err != nil {
 		return nil, err

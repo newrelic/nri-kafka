@@ -136,7 +136,7 @@ func TestDefaultArgs(t *testing.T) {
 func Test_unmarshalConsumerGroups_All(t *testing.T) {
 	expected := make(ConsumerGroups, 0)
 
-	out, err := unmarshalConsumerGroups(true, "all")
+	out, err := unmarshalConsumerGroups(true, "{}")
 	if err != nil {
 		t.Errorf("Unexpected error: %s", err.Error())
 		t.FailNow()
