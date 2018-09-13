@@ -61,7 +61,7 @@ instances:
 
       # Below are the fields used to fine tune/toggle topic metric collection.
       # In order to collect topics the "topic_mode" field must be set to "All" or "List". If the field is set to "All"
-      # A Zookeeper connection is required, at least the "zookeeper_hosts" field is required, as topics are looked up via Zookeeper.
+      # a Zookeeper connection is required, at least the "zookeeper_hosts" field is required, as topics are looked up via Zookeeper.
       #
       # It is recommended to use the "List" option to monitor a specific set of topics. If using "List" mode the "topic_list"
       # field should be filled out. The "topic_list" is a JSON array of topic names to be monitored.
@@ -90,6 +90,7 @@ instances:
 
       # Below are the fields used to fine tune/toggle topic inventory collection.
       # In order to collect topics the "topic_mode" field must be set to "All" or "List". If the field is set to "All"
+      # a Zookeeper connection is required, at least the "zookeeper_hosts" field is required, as topics are looked up via Zookeeper.
       #
       # It is recommended to use the "List" option to monitor a specific set of topics. If using "List" mode the "topic_list"
       # field should be filled out. The "topic_list" is a JSON array of topic names to be monitored.
