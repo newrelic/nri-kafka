@@ -8,6 +8,12 @@ import (
 
 	"github.com/newrelic/nri-kafka/src/testutils"
 	"github.com/newrelic/nri-kafka/src/zookeeper"
+	"github.com/samuel/go-zookeeper/zk"
+)
+
+var (
+	partitionState = []byte(`{"controller_epoch":9,"leader":2,"version":1,"leader_epoch":0,"isr":[2,0,1]}`)
+	topicState     = []byte(`{"version":1,"partitions":{"0":[1,2,0]}}`)
 )
 
 func TestCollectPartitions(t *testing.T) {
@@ -55,6 +61,8 @@ func TestPartitionWorker(t *testing.T) {
 	partitionOutChan := make(chan interface{}, 10)
 	var wg sync.WaitGroup
 	zkConn := zookeeper.MockConnection{}
+	zkConn.On("Get", "/brokers/topics/test/partitions/0/state").Return(partitionState, new(zk.Stat), nil)
+
 	expectedPartition := &partition{
 		ID:             0,
 		Leader:         2,
@@ -97,6 +105,8 @@ func TestFeedPartitionPool(t *testing.T) {
 	}
 
 	zkConn := zookeeper.MockConnection{}
+	zkConn.On("Get", "/brokers/topics/test1").Return(topicState, new(zk.Stat), nil)
+	zkConn.On("Get", "/brokers/topics/test/partitions/0/state").Return(partitionState, new(zk.Stat), nil)
 
 	partitionInChan := make(chan *partitionSender)
 	go feedPartitionPool(partitionInChan, "test1", &zkConn)

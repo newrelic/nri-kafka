@@ -2,15 +2,10 @@
 package conoffsetcollect
 
 import (
-	"fmt"
-	"strconv"
-
-	"github.com/Shopify/sarama"
 	"github.com/newrelic/infra-integrations-sdk/data/metric"
 	"github.com/newrelic/infra-integrations-sdk/integration"
 	"github.com/newrelic/infra-integrations-sdk/log"
 	"github.com/newrelic/nri-kafka/src/args"
-	bc "github.com/newrelic/nri-kafka/src/brokercollect"
 	"github.com/newrelic/nri-kafka/src/zookeeper"
 )
 
@@ -25,27 +20,9 @@ type partitionOffsets struct {
 // TopicPartitions is the substructure within the consumer group structure
 type TopicPartitions map[string][]int32
 
-// Client is an interface for mocking
-type Client interface {
-	Brokers() []*sarama.Broker
-	Topics() ([]string, error)
-	Partitions(string) ([]int32, error)
-	RefreshCoordinator(string) error
-	Coordinator(string) (*sarama.Broker, error)
-	Leader(string, int32) (*sarama.Broker, error)
-	Close() error
-	GetOffset(string, int32, int64) (int64, error)
-}
-
-// Broker is an interface for mocking
-type Broker interface {
-	Connected() (bool, error)
-	Open(*sarama.Config) error
-}
-
 // Collect collects offset data per consumer group specified in the arguments
 func Collect(zkConn zookeeper.Connection, kafkaIntegration *integration.Integration) error {
-	client, err := createClient(zkConn)
+	client, err := zkConn.CreateClient()
 	if err != nil {
 		return err
 	}
@@ -63,8 +40,7 @@ func Collect(zkConn zookeeper.Connection, kafkaIntegration *integration.Integrat
 	if args.GlobalArgs.ConsumerGroups == nil {
 		args.GlobalArgs.ConsumerGroups, err = getAllConsumerGroupsFromKafka(client)
 		if err != nil {
-			log.Error("Failed to get consumer groups")
-			return err
+			log.Info("Failed to get consumer groups")
 		}
 	}
 
@@ -77,7 +53,6 @@ func Collect(zkConn zookeeper.Connection, kafkaIntegration *integration.Integrat
 		if err != nil {
 			log.Info("Failed to collect consumerOffsets for group %s: %v", consumerGroup, err)
 		}
-
 		highWaterMarks, err := getHighWaterMarks(topicPartitions, client)
 		if err != nil {
 			log.Info("Failed to collect highWaterMarks for group %s: %v", consumerGroup, err)
@@ -91,34 +66,6 @@ func Collect(zkConn zookeeper.Connection, kafkaIntegration *integration.Integrat
 
 	}
 	return nil
-}
-
-func createClient(zkConn zookeeper.Connection) (Client, error) {
-	brokerIDs, err := bc.GetBrokerIDs(zkConn)
-	if err != nil {
-		return nil, err
-	}
-
-	brokers := make([]string, 0, len(brokerIDs))
-	for _, brokerID := range brokerIDs {
-		// convert to int id
-		intID, err := strconv.Atoi(brokerID)
-		if err != nil {
-			log.Warn("Unable to parse integer broker ID from %s", brokerID)
-			continue
-		}
-
-		// get broker connection info
-		host, _, port, err := bc.GetBrokerConnectionInfo(intID, zkConn)
-		if err != nil {
-			log.Warn("Unable to get connection information for broker with ID '%d'. Will not collect offset data for consumer groups on this broker.", intID)
-			continue
-		}
-
-		brokers = append(brokers, fmt.Sprintf("%s:%d", host, port))
-	}
-
-	return sarama.NewClient(brokers, sarama.NewConfig())
 }
 
 func setMetrics(consumerGroup string, offsetData []*partitionOffsets, kafkaIntegration *integration.Integration) error {

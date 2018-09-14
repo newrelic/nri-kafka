@@ -12,7 +12,6 @@ import (
 	"github.com/newrelic/infra-integrations-sdk/integration"
 	"github.com/newrelic/infra-integrations-sdk/log"
 	"github.com/newrelic/nri-kafka/src/args"
-	bc "github.com/newrelic/nri-kafka/src/brokercollect"
 	"github.com/newrelic/nri-kafka/src/zookeeper"
 )
 
@@ -187,7 +186,7 @@ func calculateUnderReplicatedCount(partitions []*partition, sample *metric.Set) 
 func topicRespondsToMetadata(t *Topic, zkConn zookeeper.Connection) int {
 
 	// Get connection information for a broker
-	host, _, port, err := bc.GetBrokerConnectionInfo(0, zkConn)
+	host, _, port, err := zookeeper.GetBrokerConnectionInfo(0, zkConn)
 	if err != nil {
 		return 0
 	}
