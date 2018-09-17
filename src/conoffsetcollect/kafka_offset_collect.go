@@ -272,7 +272,7 @@ func createFetchRequest(topicPartitions TopicPartitions, client connection.Clien
 		for _, partition := range partitions {
 			offset, err := client.GetOffset(topic, partition, sarama.OffsetOldest)
 			if err != nil {
-				log.Info("Failed to get offset for partition")
+				log.Error("Failed to get offset for partition %d", partition)
 			}
 			request.AddBlock(topic, partition, offset, 10000)
 		}
@@ -339,14 +339,14 @@ func getAllConsumerGroupsFromKafka(client connection.Client) (args.ConsumerGroup
 func populateOffsetStructs(offsets, hwms groupOffsets) []*partitionOffsets {
 
 	var poffsets []*partitionOffsets
-	for topic, partitions := range offsets {
-		for partition, offset := range partitions {
+	for topic, partitions := range hwms {
+		for partition, hwm := range partitions {
 			poffset := &partitionOffsets{
 				Topic:          topic,
 				Partition:      strconv.Itoa(int(partition)),
-				ConsumerOffset: offset,
-				HighWaterMark:  hwms[topic][partition],
-				ConsumerLag:    hwms[topic][partition] - offset,
+				ConsumerOffset: offsets[topic][partition],
+				HighWaterMark:  hwm,
+				ConsumerLag:    hwm - offsets[topic][partition],
 			}
 
 			poffsets = append(poffsets, poffset)

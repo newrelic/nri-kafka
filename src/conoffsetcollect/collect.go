@@ -35,7 +35,6 @@ func Collect(zkConn zookeeper.Connection, kafkaIntegration *integration.Integrat
 		}
 	}()
 
-	// this step may only be needed if collecting from kafka rather than Zookeeper
 	fillKafkaCaches(client)
 
 	// only when hidden "all" variable is used

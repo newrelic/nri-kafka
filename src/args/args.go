@@ -32,6 +32,6 @@ type ArgumentList struct {
 	Timeout                int    `default:"2000" help:"Timeout in milliseconds per single JMX query."`
 
 	// Consumer offset arguments
-	ConsumerOffset bool   `default:"false" help:"Public consumer offset data"`
+	ConsumerOffset bool   `default:"false" help:"Populate consumer offset data"`
 	ConsumerGroups string `default:"{}" help:"JSON Object whitelist of consumer groups to their topics and topics to their partitions, in which to collect consumer offsets for."`
 }
