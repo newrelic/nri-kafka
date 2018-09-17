@@ -113,7 +113,7 @@ func topicWorker(topicChan <-chan *Topic, wg *sync.WaitGroup, zkConn zookeeper.C
 
 		// Collect topic metrics
 		if args.GlobalArgs.All() || args.GlobalArgs.Metrics {
-			log.Debug("Collecting metrics for topic %s", topic)
+			log.Debug("Collecting metrics for topic %s", topic.Name)
 			// Create metric set for topic
 			sample := topic.Entity.NewMetricSet("KafkaTopicSample",
 				metric.Attribute{Key: "displayName", Value: topic.Name},
@@ -125,7 +125,7 @@ func topicWorker(topicChan <-chan *Topic, wg *sync.WaitGroup, zkConn zookeeper.C
 				log.Error("Error collecting metrics from Topic '%s': %s", topic.Name, err.Error())
 			}
 
-			log.Debug("Done Collecting metrics for topic %s", topic)
+			log.Debug("Done Collecting metrics for topic %s", topic.Name)
 		}
 	}
 }

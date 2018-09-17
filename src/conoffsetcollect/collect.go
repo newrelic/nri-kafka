@@ -79,7 +79,7 @@ func setMetrics(consumerGroup string, offsetData []*partitionOffsets, kafkaInteg
 	}
 
 	for _, offsetData := range offsetData {
-		metricSet := groupEntity.NewMetricSet("ConsumerGroupOffsetSample",
+		metricSet := groupEntity.NewMetricSet("KafkaOffsetSample",
 			metric.Attribute{Key: "displayName", Value: groupEntity.Metadata.Name},
 			metric.Attribute{Key: "entityName", Value: "consumerGroup:" + groupEntity.Metadata.Name})
 
