@@ -2,6 +2,8 @@
 package conoffsetcollect
 
 import (
+	"os"
+
 	"github.com/newrelic/infra-integrations-sdk/data/metric"
 	"github.com/newrelic/infra-integrations-sdk/integration"
 	"github.com/newrelic/infra-integrations-sdk/log"
@@ -40,7 +42,8 @@ func Collect(zkConn zookeeper.Connection, kafkaIntegration *integration.Integrat
 	if args.GlobalArgs.ConsumerGroups == nil {
 		args.GlobalArgs.ConsumerGroups, err = getAllConsumerGroupsFromKafka(client)
 		if err != nil {
-			log.Info("Failed to get consumer groups")
+			log.Error("Failed to get all consumer groups: %s", err)
+			os.Exit(1)
 		}
 	}
 
@@ -68,6 +71,7 @@ func Collect(zkConn zookeeper.Connection, kafkaIntegration *integration.Integrat
 	return nil
 }
 
+// setMetrics adds the metrics from an array of partitionOffsets to the integration
 func setMetrics(consumerGroup string, offsetData []*partitionOffsets, kafkaIntegration *integration.Integration) error {
 	groupEntity, err := kafkaIntegration.Entity(consumerGroup, "consumerGroup")
 	if err != nil {

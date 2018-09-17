@@ -73,8 +73,8 @@ func Test_setMetrics(t *testing.T) {
 	err := setMetrics("testGroup", offsetData, i)
 
 	assert.Nil(t, err)
-	result_entity, err := i.Entity("testGroup", "consumerGroup")
+	resultEntity, err := i.Entity("testGroup", "consumerGroup")
 	assert.Nil(t, err)
-	assert.Equal(t, 8, len(result_entity.Metrics[0].Metrics))
+	assert.Equal(t, 8, len(resultEntity.Metrics[0].Metrics))
 
 }

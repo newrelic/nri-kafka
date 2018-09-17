@@ -16,6 +16,7 @@ var (
 	allTopics  []string
 )
 
+// fillKafkaCaches pre-retrieves the brokers and topics for quicker lookup in future requests
 func fillKafkaCaches(client connection.Client) {
 	var err error
 
@@ -175,6 +176,7 @@ func getHighWaterMarks(topicPartitions TopicPartitions, client connection.Client
 // will be added for the consumer group. If a topic has no partition then all partitions of a topic will be added.
 // All calls will query Kafka rather than Zookeeper
 func fillTopicPartition(groupID string, topicPartitions TopicPartitions, client connection.Client) TopicPartitions {
+
 	// If no topics, request the list of topics for a group
 	if len(topicPartitions) == 0 {
 		groupDescribeReq := sarama.DescribeGroupsRequest{}
@@ -213,11 +215,11 @@ func fillTopicPartition(groupID string, topicPartitions TopicPartitions, client 
 		}
 	}
 
+	// For each topic, if it has no partitions, collect all partitions
 	for topic, partitions := range topicPartitions {
 		if len(partitions) == 0 {
 			var err error
-			partitions, err = client.Partitions(topic)
-			if err != nil {
+			if partitions, err = client.Partitions(topic); err != nil {
 				log.Warn("Unable to gather partitions for topic '%s': %s", topic, err.Error())
 				continue
 			}
@@ -229,13 +231,14 @@ func fillTopicPartition(groupID string, topicPartitions TopicPartitions, client 
 	return topicPartitions
 }
 
+// createOffsetFetchRequest creates an offsetFetchRequest for the partitions in topicPartitions
 func createOffsetFetchRequest(groupName string, topicPartitions TopicPartitions) *sarama.OffsetFetchRequest {
 	request := &sarama.OffsetFetchRequest{
 		ConsumerGroup: groupName,
 		Version:       int16(1),
 	}
 
-	// add partitions to request
+	// Add partitions to request
 	for topic, partitions := range topicPartitions {
 		// case if partitions could not be collected from Kafka
 		if partitions == nil {
@@ -281,6 +284,8 @@ func createFetchRequest(topicPartitions TopicPartitions, client connection.Clien
 // getAllConsumerGroupsFromKafka gets a list of all consumer groups, and populates
 // it with a list of all topics belonging to those consumer groups.
 func getAllConsumerGroupsFromKafka(client connection.Client) (args.ConsumerGroups, error) {
+
+	// Create a broker with an API v9.0 connection
 	broker := client.Brokers()[0]
 	conf := sarama.NewConfig()
 	conf.Version = sarama.V0_9_0_0
@@ -290,11 +295,14 @@ func getAllConsumerGroupsFromKafka(client connection.Client) (args.ConsumerGroup
 	if err := broker.Open(conf); err != nil {
 		return nil, err
 	}
+
+	// Get a list of all groups
 	groupListResp, err := broker.ListGroups(&sarama.ListGroupsRequest{})
 	if err != nil {
 		return nil, err
 	}
 
+	// Add each group to the request
 	groupDescribeReq := sarama.DescribeGroupsRequest{}
 	for group, t := range groupListResp.Groups {
 		if t == "consumer" {
@@ -306,6 +314,7 @@ func getAllConsumerGroupsFromKafka(client connection.Client) (args.ConsumerGroup
 		return nil, err
 	}
 
+	// For each group, get its topics
 	consumerGroups := make(args.ConsumerGroups)
 	for _, groupDescription := range groupDescribeResp.Groups {
 		consumerGroups[groupDescription.GroupId] = make(map[string][]int32)
