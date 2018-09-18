@@ -64,9 +64,9 @@ func Test_setMetrics(t *testing.T) {
 		{
 			Topic:          "testTopic",
 			Partition:      "0",
-			ConsumerOffset: 123,
-			HighWaterMark:  125,
-			ConsumerLag:    2,
+			ConsumerOffset: func() *int64 { i := int64(123); return &i }(),
+			HighWaterMark:  func() *int64 { i := int64(125); return &i }(),
+			ConsumerLag:    func() *int64 { i := int64(2); return &i }(),
 		},
 	}
 

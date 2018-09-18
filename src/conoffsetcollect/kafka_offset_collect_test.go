@@ -161,8 +161,8 @@ func Test_populateOffsetStructs(t *testing.T) {
 
 	partitionOffsets := populateOffsetStructs(inputOffsets, inputHwms)
 	assert.Equal(t, 1, len(partitionOffsets))
-	assert.Equal(t, int64(12), partitionOffsets[0].ConsumerOffset)
-	assert.Equal(t, int64(13), partitionOffsets[0].HighWaterMark)
-	assert.Equal(t, int64(1), partitionOffsets[0].ConsumerLag)
+	assert.Equal(t, int64(12), *partitionOffsets[0].ConsumerOffset)
+	assert.Equal(t, int64(13), *partitionOffsets[0].HighWaterMark)
+	assert.Equal(t, int64(1), *partitionOffsets[0].ConsumerLag)
 
 }
