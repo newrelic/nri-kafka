@@ -14,9 +14,9 @@ import (
 type partitionOffsets struct {
 	Topic          string `metric_name:"topic" source_type:"attribute"`
 	Partition      string `metric_name:"partition" source_type:"attribute"`
-	ConsumerOffset int64  `metric_name:"kafka.consumerOffset" source_type:"gauge"`
-	HighWaterMark  int64  `metric_name:"kafka.highWaterMark" source_type:"gauge"`
-	ConsumerLag    int64  `metric_name:"kafka.consumerLag" source_type:"gauge"`
+	ConsumerOffset *int64 `metric_name:"kafka.consumerOffset" source_type:"gauge"`
+	HighWaterMark  *int64 `metric_name:"kafka.highWaterMark" source_type:"gauge"`
+	ConsumerLag    *int64 `metric_name:"kafka.consumerLag" source_type:"gauge"`
 }
 
 // TopicPartitions is the substructure within the consumer group structure
