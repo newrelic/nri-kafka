@@ -23,7 +23,7 @@ type SaramaClient struct {
 
 // Brokers wraps the sarama Brokers function
 func (c SaramaClient) Brokers() []Broker {
-	saramaBrokers := c.Brokers()
+	saramaBrokers := c.Client.Brokers()
 	brokers := make([]Broker, len(saramaBrokers))
 	for i, saramaBroker := range saramaBrokers {
 		brokers[i] = saramaBroker
@@ -34,12 +34,12 @@ func (c SaramaClient) Brokers() []Broker {
 
 // Coordinator wraps the sarama.Client.Coordinator() function
 func (c SaramaClient) Coordinator(groupID string) (Broker, error) {
-	return c.Coordinator(groupID)
+	return c.Client.Coordinator(groupID)
 }
 
 // Leader wraps the sarama.Client.Leader() function
 func (c SaramaClient) Leader(topic string, partition int32) (Broker, error) {
-	return c.Leader(topic, partition)
+	return c.Client.Leader(topic, partition)
 }
 
 // Broker is an interface for mocking

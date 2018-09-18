@@ -340,13 +340,25 @@ func populateOffsetStructs(offsets, hwms groupOffsets) []*partitionOffsets {
 
 	var poffsets []*partitionOffsets
 	for topic, partitions := range hwms {
+		topicOffsets, ok := offsets[topic]
+		if !ok {
+			log.Error("Offsets not collected for topic %s")
+			continue
+		}
+
 		for partition, hwm := range partitions {
+			offset, ok := topicOffsets[partition]
+			if !ok {
+				log.Error("Offset not collected for topic %s, partition %d", topic, partition)
+				continue
+			}
+
 			poffset := &partitionOffsets{
 				Topic:          topic,
 				Partition:      strconv.Itoa(int(partition)),
-				ConsumerOffset: offsets[topic][partition],
+				ConsumerOffset: offset,
 				HighWaterMark:  hwm,
-				ConsumerLag:    hwm - offsets[topic][partition],
+				ConsumerLag:    hwm - offset,
 			}
 
 			poffsets = append(poffsets, poffset)
