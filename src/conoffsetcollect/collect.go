@@ -49,7 +49,7 @@ func Collect(zkConn zookeeper.Connection, kafkaIntegration *integration.Integrat
 	// We retrieve the offsets for each group before calculating the high water mark
 	// so that the lag is never negative
 	for consumerGroup, topics := range args.GlobalArgs.ConsumerGroups {
-		topicPartitions := fillTopicPartition(consumerGroup, topics, client)
+		topicPartitions := fillTopicPartitions(consumerGroup, topics, client)
 
 		offsetData, err := getConsumerOffsets(consumerGroup, topicPartitions, client)
 		if err != nil {

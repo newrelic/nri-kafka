@@ -108,10 +108,10 @@ func Test_getHighWaterMarks_ClosedErr(t *testing.T) {
 
 	_, err := getHighWaterMarks(topicPartitions, fakeClient)
 
-	assert.Equal(t, true, err != nil)
+	assert.Nil(t, err, "Expected an error, but it was nil")
 }
 
-func Test_fillTopicPartition(t *testing.T) {
+func Test_fillTopicPartitions(t *testing.T) {
 	groupID := "testGroup"
 	topicPartitions := map[string][]int32{}
 	fakeClient := new(connection.MockClient)
@@ -126,7 +126,7 @@ func Test_fillTopicPartition(t *testing.T) {
 	fakeBroker.On("DescribeGroups", mock.Anything).Return(fakeResponse, nil)
 	fakeBroker.On("Open", mock.Anything).Return(nil)
 
-	newTopicPartitions := fillTopicPartition(groupID, topicPartitions, fakeClient)
+	newTopicPartitions := fillTopicPartitions(groupID, topicPartitions, fakeClient)
 
 	assert.Equal(t, 0, len(newTopicPartitions["testTopic"]))
 }

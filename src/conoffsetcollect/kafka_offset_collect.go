@@ -58,11 +58,9 @@ func getConsumerOffsetsFromBroker(groupName string, topicPartitions TopicPartiti
 
 	offsets := make(groupOffsets)
 	for _, broker := range brokers {
-		if yes, _ := broker.Connected(); !yes {
-			err := broker.Open(sarama.NewConfig())
-			if err != nil {
-				return nil, err
-			}
+		err := resetBrokerConnection(broker)
+		if err != nil {
+			return nil, err
 		}
 
 		resp, err := broker.FetchOffset(offsetRequest)
@@ -96,6 +94,16 @@ func getConsumerOffsetsFromBroker(groupName string, topicPartitions TopicPartiti
 	return offsets, nil
 }
 
+func resetBrokerConnection(broker connection.Broker) error {
+	if yes, _ := broker.Connected(); !yes {
+		if err := broker.Open(sarama.NewConfig()); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 type groupOffsets map[string]topicOffsets
 
 type topicOffsets map[int32]int64
@@ -109,40 +117,17 @@ type topicOffsets map[int32]int64
 // from the partition-associated block into the hwms map to be returned.
 func getHighWaterMarks(topicPartitions TopicPartitions, client connection.Client) (groupOffsets, error) {
 	// Determine which broker is the leader for each partition
-	brokerLeaderMap := make(map[connection.Broker]TopicPartitions)
-	for topic, partitions := range topicPartitions {
-		for _, partition := range partitions {
-			leader, err := client.Leader(topic, partition)
-			if err != nil {
-				return nil, fmt.Errorf("cannot determine leader for partition %v", partition)
-
-			}
-
-			if _, ok := brokerLeaderMap[leader]; !ok {
-				brokerLeaderMap[leader] = make(TopicPartitions)
-			}
-			brokerLeaderMap[leader][topic] = append(brokerLeaderMap[leader][topic], partition)
-		}
+	brokerLeaderMap, err := getBrokerLeaderMap(topicPartitions, client)
+	if err != nil {
+		return nil, err
 	}
 
 	hwms := make(groupOffsets)
 	for broker, tps := range brokerLeaderMap {
 
-		// Open the connection if necessary
-		if connected, _ := broker.Connected(); !connected {
-			err := broker.Open(sarama.NewConfig())
-			if err != nil {
-				return nil, err
-			}
-		}
-
-		// Create the fetch request for the correct partitions
-		fetchRequest := createFetchRequest(tps, client)
-
-		// Run the request
-		resp, err := broker.Fetch(fetchRequest)
+		resp, err := fetchHighWaterMarkResponse(broker, tps, client)
 		if err != nil {
-			log.Debug("Error fetching high water mark from broker: %s", err.Error())
+			log.Error("Failed to collect high water marks for topics %v", tps)
 			continue
 		}
 
@@ -172,46 +157,55 @@ func getHighWaterMarks(topicPartitions TopicPartitions, client connection.Client
 
 }
 
+func fetchHighWaterMarkResponse(broker connection.Broker, tps TopicPartitions, client connection.Client) (*sarama.FetchResponse, error) {
+	// Open the connection if necessary
+	if connected, _ := broker.Connected(); !connected {
+		err := broker.Open(sarama.NewConfig())
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	// Create the fetch request for the correct partitions
+	fetchRequest := createFetchRequest(tps, client)
+
+	// Run the request
+	resp, err := broker.Fetch(fetchRequest)
+
+	return resp, err
+
+}
+
+func getBrokerLeaderMap(topicPartitions TopicPartitions, client connection.Client) (map[connection.Broker]TopicPartitions, error) {
+	brokerLeaderMap := make(map[connection.Broker]TopicPartitions)
+	for topic, partitions := range topicPartitions {
+		for _, partition := range partitions {
+			leader, err := client.Leader(topic, partition)
+			if err != nil {
+				return nil, fmt.Errorf("cannot determine leader for partition %v", partition)
+			}
+
+			if _, ok := brokerLeaderMap[leader]; !ok {
+				brokerLeaderMap[leader] = make(TopicPartitions)
+			}
+			brokerLeaderMap[leader][topic] = append(brokerLeaderMap[leader][topic], partition)
+		}
+	}
+
+	return brokerLeaderMap, nil
+}
+
 // fillOutTopicPartitionsFromKafka checks all topics for the consumer group if no topics are listed then all topics
 // will be added for the consumer group. If a topic has no partition then all partitions of a topic will be added.
 // All calls will query Kafka rather than Zookeeper
-func fillTopicPartition(groupID string, topicPartitions TopicPartitions, client connection.Client) TopicPartitions {
+func fillTopicPartitions(groupID string, topicPartitions TopicPartitions, client connection.Client) TopicPartitions {
 
 	// If no topics, request the list of topics for a group
 	if len(topicPartitions) == 0 {
-		groupDescribeReq := sarama.DescribeGroupsRequest{}
-		groupDescribeReq.AddGroup(groupID)
-		broker := client.Brokers()[0]
-		config := sarama.NewConfig()
-		config.Version = sarama.V0_9_0_0
-		err := broker.Open(config)
+		err := fillTopics(groupID, topicPartitions, client)
 		if err != nil {
-			log.Error("Failed to open broker connection")
+			log.Error("Unable to collect all topic partitions: %v", err)
 			return nil
-		}
-
-		groupDescribeResp, err := client.Brokers()[0].DescribeGroups(&groupDescribeReq)
-		if err != nil {
-			log.Error("Failed to collect list of topics from groups: %v", err)
-			return nil
-		}
-
-		if len(groupDescribeResp.Groups) != 1 {
-			log.Error("Failed to collect topics from groups")
-			return nil
-		}
-
-		for _, memberDescription := range groupDescribeResp.Groups[0].Members {
-			metadata, err := memberDescription.GetMemberMetadata()
-			if err != nil {
-				continue
-			}
-
-			for _, topic := range metadata.Topics {
-				if _, ok := topicPartitions[topic]; !ok {
-					topicPartitions[topic] = make([]int32, 0)
-				}
-			}
 		}
 	}
 
@@ -229,6 +223,45 @@ func fillTopicPartition(groupID string, topicPartitions TopicPartitions, client 
 	}
 
 	return topicPartitions
+}
+
+func fillTopics(groupID string, topicPartitions TopicPartitions, client connection.Client) error {
+	groupDescribeReq := sarama.DescribeGroupsRequest{}
+	groupDescribeReq.AddGroup(groupID)
+	broker := client.Brokers()[0]
+	config := sarama.NewConfig()
+	config.Version = sarama.V0_9_0_0
+	err := broker.Open(config)
+	if err != nil {
+		log.Error("Failed to open broker connection")
+		return nil
+	}
+
+	groupDescribeResp, err := client.Brokers()[0].DescribeGroups(&groupDescribeReq)
+	if err != nil {
+		log.Error("Failed to collect list of topics from groups: %v", err)
+		return nil
+	}
+
+	if len(groupDescribeResp.Groups) != 1 {
+		log.Error("Failed to collect topics from groups")
+		return nil
+	}
+
+	for _, memberDescription := range groupDescribeResp.Groups[0].Members {
+		metadata, err := memberDescription.GetMemberMetadata()
+		if err != nil {
+			continue
+		}
+
+		for _, topic := range metadata.Topics {
+			if _, ok := topicPartitions[topic]; !ok {
+				topicPartitions[topic] = make([]int32, 0)
+			}
+		}
+	}
+
+	return nil
 }
 
 // createOffsetFetchRequest creates an offsetFetchRequest for the partitions in topicPartitions
@@ -304,10 +337,8 @@ func getAllConsumerGroupsFromKafka(client connection.Client) (args.ConsumerGroup
 
 	// Add each group to the request
 	groupDescribeReq := sarama.DescribeGroupsRequest{}
-	for group, t := range groupListResp.Groups {
-		if t == "consumer" {
-			groupDescribeReq.AddGroup(group)
-		}
+	for group := range groupListResp.Groups {
+		groupDescribeReq.AddGroup(group)
 	}
 	groupDescribeResp, err := broker.DescribeGroups(&groupDescribeReq)
 	if err != nil {
