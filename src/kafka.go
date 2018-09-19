@@ -8,6 +8,7 @@ import (
 	"github.com/newrelic/infra-integrations-sdk/log"
 	"github.com/newrelic/nri-kafka/src/args"
 	bc "github.com/newrelic/nri-kafka/src/brokercollect"
+	offc "github.com/newrelic/nri-kafka/src/conoffsetcollect"
 	pcc "github.com/newrelic/nri-kafka/src/prodconcollect"
 	tc "github.com/newrelic/nri-kafka/src/topiccollect"
 	"github.com/newrelic/nri-kafka/src/zookeeper"
@@ -15,7 +16,7 @@ import (
 
 const (
 	integrationName    = "com.newrelic.kafka"
-	integrationVersion = "0.1.5"
+	integrationVersion = "0.2.0"
 )
 
 func main() {
@@ -35,6 +36,23 @@ func main() {
 	zkConn, err := zookeeper.NewConnection(args.GlobalArgs)
 	ExitOnErr(err)
 
+	if !args.GlobalArgs.ConsumerOffset {
+		coreCollection(zkConn, kafkaIntegration)
+	} else {
+		if err := offc.Collect(zkConn, kafkaIntegration); err != nil {
+			log.Error("Failed collecting consumer offset data: %s", err.Error())
+			os.Exit(1)
+		}
+	}
+
+	if err := kafkaIntegration.Publish(); err != nil {
+		log.Error("Failed to publish data: %s", err.Error())
+		os.Exit(1)
+	}
+}
+
+// coreCollection is the main integration collection. Does not handle consumerOffset collection
+func coreCollection(zkConn zookeeper.Connection, kafkaIntegration *integration.Integration) {
 	// Get topic list
 	collectedTopics, err := tc.GetTopics(zkConn)
 	ExitOnErr(err)
@@ -63,11 +81,6 @@ func main() {
 	go pcc.FeedWorkerPool(producerChan, args.GlobalArgs.Producers)
 
 	wg.Wait()
-
-	if err := kafkaIntegration.Publish(); err != nil {
-		log.Error("Failed to publish data: %s", err.Error())
-		os.Exit(1)
-	}
 }
 
 // ExitOnErr will exit with a 1 if the error is non-nil

@@ -28,6 +28,10 @@ type KafkaArguments struct {
 	TopicList              []string
 	Timeout                int
 	CollectTopicSize       bool
+
+	// Consumer offset arguments
+	ConsumerOffset bool
+	ConsumerGroups ConsumerGroups
 }
 
 // ZookeeperHost is a storage struct for ZooKeeper connection information
@@ -85,6 +89,13 @@ func ParseArgs(a ArgumentList) (*KafkaArguments, error) {
 		return nil, err
 	}
 
+	// Parse consumser offset args
+	consumerGroups, err := unmarshalConsumerGroups(a.ConsumerOffset, a.ConsumerGroups)
+	if err != nil {
+		log.Error("Failed to parse consumer groups from json")
+		return nil, err
+	}
+
 	parsedArgs := &KafkaArguments{
 		DefaultArgumentList:    a.DefaultArgumentList,
 		ZookeeperHosts:         zookeeperHosts,
@@ -100,6 +111,8 @@ func ParseArgs(a ArgumentList) (*KafkaArguments, error) {
 		TopicList:              topics,
 		Timeout:                a.Timeout,
 		CollectTopicSize:       a.CollectTopicSize,
+		ConsumerOffset:         a.ConsumerOffset,
+		ConsumerGroups:         consumerGroups,
 	}
 
 	return parsedArgs, nil
@@ -135,4 +148,23 @@ func unmarshalJMXHosts(data []byte, a *ArgumentList) ([]*JMXHost, error) {
 	}
 
 	return v, nil
+}
+
+// ConsumerGroups is the structure to represent the whitelist for
+// consumer_groups argument
+type ConsumerGroups map[string]map[string][]int32
+
+func unmarshalConsumerGroups(consumerOffset bool, consumerGroupsArg string) (ConsumerGroups, error) {
+	// not in consumer offset mode so don't bother to unmarshal
+	if !consumerOffset || consumerGroupsArg == "all" { // case for secret all mode
+		return nil, nil
+	}
+
+	data := []byte(consumerGroupsArg)
+	var consumerGroups ConsumerGroups
+	if err := json.Unmarshal(data, &consumerGroups); err != nil {
+		return nil, err
+	}
+
+	return consumerGroups, nil
 }

@@ -3,7 +3,6 @@ package brokercollect
 
 import (
 	"encoding/json"
-	"fmt"
 	"strconv"
 	"sync"
 
@@ -52,9 +51,9 @@ func FeedBrokerPool(zkConn zookeeper.Connection, brokerChan chan<- int) error {
 
 	// Don't make API calls or feed down channel if we don't want to collect brokers
 	if args.GlobalArgs.CollectBrokerTopicData && zkConn != nil {
-		brokerIDs, _, err := zkConn.Children(zookeeper.Path("/brokers/ids"))
+		brokerIDs, err := zookeeper.GetBrokerIDs(zkConn)
 		if err != nil {
-			return fmt.Errorf("unable to get broker ID from Zookeeper: %s", err.Error())
+			return err
 		}
 
 		for _, id := range brokerIDs {
@@ -115,7 +114,7 @@ func brokerWorker(brokerChan <-chan int, collectedTopics []string, wg *sync.Wait
 func createBroker(brokerID int, zkConn zookeeper.Connection, i *integration.Integration) (*broker, error) {
 
 	// Collect broker connection information from ZooKeeper
-	host, jmxPort, kafkaPort, err := GetBrokerConnectionInfo(brokerID, zkConn)
+	host, jmxPort, kafkaPort, err := zookeeper.GetBrokerConnectionInfo(brokerID, zkConn)
 	if err != nil {
 		log.Error("Unable to get broker JMX information for broker id %s: %s", host, err)
 		return nil, err
@@ -230,30 +229,6 @@ func collectBrokerTopicMetrics(b *broker, collectedTopics []string) map[string]*
 	}
 
 	return topicSampleLookup
-}
-
-// GetBrokerConnectionInfo Collects Broker connection info from Zookeeper
-func GetBrokerConnectionInfo(brokerID int, zkConn zookeeper.Connection) (brokerHost string, jmxPort int, brokerPort int, err error) {
-
-	// Query Zookeeper for broker information
-	rawBrokerJSON, _, err := zkConn.Get(zookeeper.Path("/brokers/ids/" + strconv.Itoa(brokerID)))
-	if err != nil {
-		return "", 0, 0, err
-	}
-
-	// Parse the JSON returned by Zookeeper
-	type brokerJSONDecoder struct {
-		Host    string `json:"host"`
-		JmxPort int    `json:"jmx_port"`
-		Port    int    `json:"port"`
-	}
-	var brokerDecoded brokerJSONDecoder
-	err = json.Unmarshal(rawBrokerJSON, &brokerDecoded)
-	if err != nil {
-		return "", 0, 0, err
-	}
-
-	return brokerDecoded.Host, brokerDecoded.JmxPort, brokerDecoded.Port, nil
 }
 
 // Collect broker configuration from Zookeeper

@@ -32,6 +32,8 @@ func TestParseArgs(t *testing.T) {
 		TopicMode:              "Specific",
 		TopicList:              `["test1", "test2", "test3"]`,
 		Timeout:                1000,
+		ConsumerOffset:         false,
+		ConsumerGroups:         "[]",
 	}
 
 	expectedArgs := &KafkaArguments{
@@ -74,10 +76,12 @@ func TestParseArgs(t *testing.T) {
 				Password: "admin2",
 			},
 		},
-		Consumers: []*JMXHost{},
-		TopicMode: "Specific",
-		TopicList: []string{"test1", "test2", "test3"},
-		Timeout:   1000,
+		Consumers:      []*JMXHost{},
+		TopicMode:      "Specific",
+		TopicList:      []string{"test1", "test2", "test3"},
+		Timeout:        1000,
+		ConsumerOffset: false,
+		ConsumerGroups: nil,
 	}
 	parsedArgs, err := ParseArgs(a)
 	if err != nil {
@@ -114,6 +118,8 @@ func TestDefaultArgs(t *testing.T) {
 		TopicList:              []string{},
 		Timeout:                2000,
 		CollectTopicSize:       false,
+		ConsumerOffset:         false,
+		ConsumerGroups:         nil,
 	}
 
 	parsedArgs, err := ParseArgs(a)
@@ -125,4 +131,48 @@ func TestDefaultArgs(t *testing.T) {
 		t.Errorf("Argument parsing did not return expected results. %v", pretty.Diff(parsedArgs, expectedArgs))
 	}
 
+}
+
+func Test_unmarshalConsumerGroups_All(t *testing.T) {
+	expected := make(ConsumerGroups, 0)
+
+	out, err := unmarshalConsumerGroups(true, "{}")
+	if err != nil {
+		t.Errorf("Unexpected error: %s", err.Error())
+		t.FailNow()
+	}
+
+	if !reflect.DeepEqual(out, expected) {
+		t.Errorf("Expected %+v got %+v", expected, out)
+	}
+}
+
+func Test_unmarshalConsumerGroups(t *testing.T) {
+	input := `{
+		"group_1": {
+			"topic_1": [
+				1,
+				2
+			]
+		}
+	}`
+
+	expected := ConsumerGroups{
+		"group_1": {
+			"topic_1": []int32{
+				int32(1),
+				int32(2),
+			},
+		},
+	}
+
+	out, err := unmarshalConsumerGroups(true, input)
+	if err != nil {
+		t.Errorf("Unexpected error: %s", err.Error())
+		t.FailNow()
+	}
+
+	if !reflect.DeepEqual(out, expected) {
+		t.Errorf("Expected %+v got %+v", expected, out)
+	}
 }

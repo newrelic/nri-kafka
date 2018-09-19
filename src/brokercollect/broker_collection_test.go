@@ -15,6 +15,14 @@ import (
 	"github.com/newrelic/nri-kafka/src/jmxwrapper"
 	"github.com/newrelic/nri-kafka/src/testutils"
 	"github.com/newrelic/nri-kafka/src/zookeeper"
+	"github.com/samuel/go-zookeeper/zk"
+	"github.com/stretchr/testify/assert"
+)
+
+var (
+	brokerConnectionBytes = []byte(`{"listener_security_protocol_map":{"PLAINTEXT":"PLAINTEXT"},"endpoints":["PLAINTEXT://kafkabroker:9092"],"jmx_port":9999,"host":"kafkabroker","timestamp":"1530886155628","port":9092,"version":4}`)
+	brokerConfigBytes     = []byte(`{"version":1,"config":{"flush.messages":"12345"}}`)
+	brokerConfigBytes2    = []byte(`{"version":1,"config":{"leader.replication.throttled.replicas":"10000"}}`)
 )
 
 func TestStartBrokerPool(t *testing.T) {
@@ -46,6 +54,9 @@ func TestStartBrokerPool(t *testing.T) {
 
 func TestBrokerWorker(t *testing.T) {
 	zkConn := &zookeeper.MockConnection{}
+	zkConn.On("Get", "/brokers/ids/0").Return(brokerConnectionBytes, new(zk.Stat), nil)
+	zkConn.On("Get", "/config/brokers/0").Return(brokerConfigBytes, new(zk.Stat), nil)
+
 	var wg sync.WaitGroup
 	brokerChan := make(chan int, 10)
 	i, _ := integration.New("kafka", "1.0.0")
@@ -53,16 +64,16 @@ func TestBrokerWorker(t *testing.T) {
 	testutils.SetupTestArgs()
 
 	wg.Add(1)
-	go brokerWorker(brokerChan, []string{}, &wg, zkConn, i)
-
 	brokerChan <- 0
 	close(brokerChan)
+	brokerWorker(brokerChan, []string{}, &wg, zkConn, i)
 
 	wg.Wait()
 }
 
 func TestCreateBroker_ZKError(t *testing.T) {
-	brokerID, zkConn := 0, &zookeeper.MockConnection{ReturnGetError: true}
+	brokerID, zkConn := 0, &zookeeper.MockConnection{}
+	zkConn.On("Get", "/brokers/ids/0").Return([]byte{}, new(zk.Stat), errors.New("this is a test error"))
 	i, _ := integration.New("kafka", "1.0.0")
 
 	_, err := createBroker(brokerID, zkConn, i)
@@ -73,6 +84,8 @@ func TestCreateBroker_ZKError(t *testing.T) {
 
 func TestCreateBroker_Normal(t *testing.T) {
 	brokerID, zkConn := 0, &zookeeper.MockConnection{}
+	zkConn.On("Get", "/brokers/ids/0").Return(brokerConnectionBytes, new(zk.Stat), nil)
+	zkConn.On("Get", "/config/brokers/0").Return(brokerConfigBytes, new(zk.Stat), nil)
 	i, _ := integration.New("kafka", "1.0.0")
 
 	b, err := createBroker(brokerID, zkConn, i)
@@ -206,8 +219,9 @@ func TestPopulateBrokerMetrics_Normal(t *testing.T) {
 func TestGetBrokerJMX(t *testing.T) {
 	brokerID := 0
 	zkConn := zookeeper.MockConnection{}
+	zkConn.On("Get", "/brokers/ids/0").Return(brokerConnectionBytes, new(zk.Stat), nil)
 
-	host, jmxPort, kafkaPort, err := GetBrokerConnectionInfo(brokerID, &zkConn)
+	host, jmxPort, kafkaPort, err := zookeeper.GetBrokerConnectionInfo(brokerID, &zkConn)
 	if err != nil {
 		t.Error(err)
 	}
@@ -224,26 +238,28 @@ func TestGetBrokerJMX(t *testing.T) {
 }
 
 func TestGetBrokerConfig(t *testing.T) {
-	zkConn := zookeeper.MockConnection{}
 
 	testCases := []struct {
 		brokerID       int
 		expectedConfig map[string]string
+		expectedError  bool
 	}{
-		{0, map[string]string{"leader.replication.throttled.replicas": "10000"}},
-		{10, map[string]string{}},
+		{0, map[string]string{"leader.replication.throttled.replicas": "10000"}, false},
+		{1, nil, true},
 	}
 
 	for _, tc := range testCases {
+		zkConn := zookeeper.MockConnection{}
+		zkConn.On("Get", "/config/brokers/0").Return(brokerConfigBytes2, new(zk.Stat), nil)
+		zkConn.On("Get", "/config/brokers/1").Return([]byte{}, new(zk.Stat), errors.New("this is a test error"))
+
 		brokerConfig, err := getBrokerConfig(tc.brokerID, &zkConn)
-		if err != nil {
+		if (err != nil) != tc.expectedError {
 			t.Error(err)
 			t.FailNow()
 		}
 
-		if !reflect.DeepEqual(tc.expectedConfig, brokerConfig) {
-			t.Errorf("Expected broker config %s, got %s", tc.expectedConfig, brokerConfig)
-		}
+		assert.Equal(t, tc.expectedConfig, brokerConfig)
 	}
 
 	return

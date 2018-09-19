@@ -12,7 +12,6 @@ import (
 	"github.com/newrelic/infra-integrations-sdk/integration"
 	"github.com/newrelic/infra-integrations-sdk/log"
 	"github.com/newrelic/nri-kafka/src/args"
-	bc "github.com/newrelic/nri-kafka/src/brokercollect"
 	"github.com/newrelic/nri-kafka/src/zookeeper"
 )
 
@@ -114,7 +113,7 @@ func topicWorker(topicChan <-chan *Topic, wg *sync.WaitGroup, zkConn zookeeper.C
 
 		// Collect topic metrics
 		if args.GlobalArgs.All() || args.GlobalArgs.Metrics {
-			log.Debug("Collecting metrics for topic %s", topic)
+			log.Debug("Collecting metrics for topic %s", topic.Name)
 			// Create metric set for topic
 			sample := topic.Entity.NewMetricSet("KafkaTopicSample",
 				metric.Attribute{Key: "displayName", Value: topic.Name},
@@ -126,7 +125,7 @@ func topicWorker(topicChan <-chan *Topic, wg *sync.WaitGroup, zkConn zookeeper.C
 				log.Error("Error collecting metrics from Topic '%s': %s", topic.Name, err.Error())
 			}
 
-			log.Debug("Done Collecting metrics for topic %s", topic)
+			log.Debug("Done Collecting metrics for topic %s", topic.Name)
 		}
 	}
 }
@@ -187,7 +186,7 @@ func calculateUnderReplicatedCount(partitions []*partition, sample *metric.Set) 
 func topicRespondsToMetadata(t *Topic, zkConn zookeeper.Connection) int {
 
 	// Get connection information for a broker
-	host, _, port, err := bc.GetBrokerConnectionInfo(0, zkConn)
+	host, _, port, err := zookeeper.GetBrokerConnectionInfo(0, zkConn)
 	if err != nil {
 		return 0
 	}
@@ -199,6 +198,12 @@ func topicRespondsToMetadata(t *Topic, zkConn zookeeper.Connection) int {
 	if err != nil {
 		return 0
 	}
+
+	defer func() {
+		if err := broker.Close(); err != nil {
+			log.Debug("Error closing broker connection: %s", err.Error())
+		}
+	}()
 
 	// Attempt to collect metadata and determine whether it errors out
 	_, err = broker.GetMetadata(&sarama.MetadataRequest{Version: 0, Topics: []string{t.Name}, AllowAutoTopicCreation: false})

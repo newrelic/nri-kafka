@@ -30,4 +30,8 @@ type ArgumentList struct {
 	Producers              string `default:"[]" help:"JSON array of producer key:value maps with the keys 'name', 'host', 'port', 'user', 'password'. The 'name' key is required, the others default to the specified defaults in the default_jmx_* options.  "`
 	Consumers              string `default:"[]" help:"JSON array of consumer key:value maps with the keys 'name', 'host', 'port', 'user', 'password'. The 'name' key is required, the others default to the specified defaults in the default_jmx_* options.  "`
 	Timeout                int    `default:"2000" help:"Timeout in milliseconds per single JMX query."`
+
+	// Consumer offset arguments
+	ConsumerOffset bool   `default:"false" help:"Populate consumer offset data"`
+	ConsumerGroups string `default:"{}" help:"JSON Object whitelist of consumer groups to their topics and topics to their partitions, in which to collect consumer offsets for."`
 }

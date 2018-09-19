@@ -1,6 +1,7 @@
 package topiccollect
 
 import (
+	"errors"
 	"fmt"
 	"reflect"
 	"sync"
@@ -14,6 +15,12 @@ import (
 	"github.com/newrelic/nri-kafka/src/args"
 	"github.com/newrelic/nri-kafka/src/testutils"
 	"github.com/newrelic/nri-kafka/src/zookeeper"
+	"github.com/samuel/go-zookeeper/zk"
+	"github.com/stretchr/testify/assert"
+)
+
+var (
+	brokerConnectionBytes = []byte(`{"listener_security_protocol_map":{"PLAINTEXT":"PLAINTEXT"},"endpoints":["PLAINTEXT://kafkabroker:9092"],"jmx_port":9999,"host":"kafkabroker","timestamp":"1530886155628","port":9092,"version":4}`)
 )
 
 func TestGetTopics(t *testing.T) {
@@ -28,9 +35,10 @@ func TestGetTopics(t *testing.T) {
 		{"List", []string{"test1", "test2"}, []string{"test1", "test2"}, false},
 		{"FakeMode", []string{"test1", "test2"}, nil, true},
 	}
-	zkConn := &zookeeper.MockConnection{}
 
 	for _, tc := range testCases {
+		zkConn := &zookeeper.MockConnection{}
+		zkConn.On("Children", "/brokers/topics").Return([]string{"test1", "test2", "test3"}, new(zk.Stat), nil)
 		args.GlobalArgs = &args.KafkaArguments{
 			TopicMode: tc.topicMode,
 			TopicList: tc.topicNames,
@@ -45,33 +53,31 @@ func TestGetTopics(t *testing.T) {
 		}
 	}
 }
+
 func TestGetTopics_zkErr(t *testing.T) {
 	testCases := []struct {
 		topicMode     string
 		topicNames    []string
 		expectedNames []string
-		expectedErr   bool
+		expectedErr   error
 	}{
-		{"None", []string{}, []string{}, false},
-		{"All", []string{}, []string{"test1", "test2", "test3"}, true},
-		{"List", []string{"test1", "test2"}, []string{"test1", "test2"}, false},
-		{"FakeMode", []string{"test1", "test2"}, nil, true},
+		{"None", []string{}, []string{}, nil},
+		{"All", []string{}, []string{"test1", "test2", "test3"}, nil},
+		{"List", []string{"test1", "test2"}, []string{"test1", "test2"}, nil},
+		{"FakeMode", []string{"test1", "test2"}, nil, errors.New("invalid topic_mode 'FakeMode'")},
 	}
-	zkConn := &zookeeper.MockConnection{ReturnChildrenError: true}
 
 	for _, tc := range testCases {
+		zkConn := &zookeeper.MockConnection{}
+		zkConn.On("Children", "/brokers/topics").Return([]string{"test1", "test2", "test3"}, new(zk.Stat), nil)
 		args.GlobalArgs = &args.KafkaArguments{
 			TopicMode: tc.topicMode,
 			TopicList: tc.topicNames,
 		}
 
 		topicNames, err := GetTopics(zkConn)
-		if (err != nil) != tc.expectedErr {
-			t.Error("Incorrect error state returned.")
-		}
-		if !reflect.DeepEqual(topicNames, tc.expectedNames) && (err != nil) != tc.expectedErr {
-			t.Errorf("For topicMode %s, expected topic names %s, got %s", tc.topicMode, tc.expectedNames, topicNames)
-		}
+		assert.Equal(t, tc.expectedErr, err)
+		assert.Equal(t, tc.expectedNames, topicNames)
 	}
 }
 
@@ -115,6 +121,8 @@ func TestFeedTopicPool(t *testing.T) {
 		t.Error("Failed to create integration")
 	}
 	zkConn := zookeeper.MockConnection{}
+	zkConn.On("Children", "/brokers/topics").Return([]string{"test1", "test2", "test3"}, new(zk.Stat), nil)
+
 	topicChan := make(chan *Topic, 10)
 
 	collectedTopics, err := GetTopics(zkConn)
@@ -147,6 +155,12 @@ func TestTopicWorker(t *testing.T) {
 	topicChan := make(chan *Topic)
 	var wg sync.WaitGroup
 	zkConn := zookeeper.MockConnection{}
+	zkConn.On("Get", "/config/topics/test").Return([]byte(`{"version":1,"config":{"flush.messages":"12345"}}`), new(zk.Stat), nil)
+	zkConn.On("Get", "/brokers/topics/test").Return([]byte(`{"version":1,"partitions":{"2":[1,2,0],"1":[0,1,2],"0":[2,0,1]}}`), new(zk.Stat), nil)
+	zkConn.On("Get", "/brokers/topics/test/partitions/0/state").Return(partitionState, new(zk.Stat), nil)
+	zkConn.On("Get", "/brokers/topics/test/partitions/1/state").Return(partitionState, new(zk.Stat), nil)
+	zkConn.On("Get", "/brokers/topics/test/partitions/2/state").Return(partitionState, new(zk.Stat), nil)
+	zkConn.On("Get", "/brokers/ids/0").Return(brokerConnectionBytes, new(zk.Stat), nil)
 
 	testutils.SetupTestArgs()
 	args.GlobalArgs.Metrics = false
@@ -240,6 +254,12 @@ func TestPopulateTopicInventory(t *testing.T) {
 
 func TestPopulateTopicMetrics(t *testing.T) {
 	zkConn := &zookeeper.MockConnection{}
+	zkConn.On("Get", "/config/topics/test").Return([]byte(`{"version":1,"config":{"flush.messages":"12345"}}`), new(zk.Stat), nil)
+	zkConn.On("Get", "/brokers/topics/test").Return([]byte(`{"version":1,"partitions":{"2":[1,2,0],"1":[0,1,2],"0":[2,0,1]}}`), new(zk.Stat), nil)
+	zkConn.On("Get", "/brokers/topics/test/partitions/0/state").Return(partitionState, new(zk.Stat), nil)
+	zkConn.On("Get", "/brokers/topics/test/partitions/1/state").Return(partitionState, new(zk.Stat), nil)
+	zkConn.On("Get", "/brokers/topics/test/partitions/2/state").Return(partitionState, new(zk.Stat), nil)
+	zkConn.On("Get", "/brokers/ids/0").Return(brokerConnectionBytes, new(zk.Stat), nil)
 
 	testTopic := &Topic{
 		Name: "test",
