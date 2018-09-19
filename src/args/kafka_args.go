@@ -156,9 +156,7 @@ type ConsumerGroups map[string]map[string][]int32
 
 func unmarshalConsumerGroups(consumerOffset bool, consumerGroupsArg string) (ConsumerGroups, error) {
 	// not in consumer offset mode so don't bother to unmarshal
-	if !consumerOffset {
-		return nil, nil
-	} else if consumerGroupsArg == "all" { // case for secret all mode
+	if !consumerOffset || consumerGroupsArg == "all" { // case for secret all mode
 		return nil, nil
 	}
 
