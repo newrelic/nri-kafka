@@ -29,7 +29,7 @@ type ArgumentList struct {
 	CollectTopicSize       bool   `default:"false" help:"Enablement of on disk Topic size metric collection. This metric can be very resource intensive to collect especially against many topics."`
 	Producers              string `default:"[]" help:"JSON array of producer key:value maps with the keys 'name', 'host', 'port', 'user', 'password'. The 'name' key is required, the others default to the specified defaults in the default_jmx_* options.  "`
 	Consumers              string `default:"[]" help:"JSON array of consumer key:value maps with the keys 'name', 'host', 'port', 'user', 'password'. The 'name' key is required, the others default to the specified defaults in the default_jmx_* options.  "`
-	Timeout                int    `default:"2000" help:"Timeout in milliseconds per single JMX query."`
+	Timeout                int    `default:"15000" help:"Timeout in milliseconds per single JMX query."`
 
 	// Consumer offset arguments
 	ConsumerOffset bool   `default:"false" help:"Populate consumer offset data"`

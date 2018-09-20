@@ -8,7 +8,7 @@ commands:
     command:
       - ./bin/nr-kafka
       - --metrics
-    interval: 15
+    interval: 60
 
   inventory:
     command:
