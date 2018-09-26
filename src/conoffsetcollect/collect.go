@@ -2,8 +2,6 @@
 package conoffsetcollect
 
 import (
-	"os"
-
 	"github.com/newrelic/infra-integrations-sdk/data/metric"
 	"github.com/newrelic/infra-integrations-sdk/integration"
 	"github.com/newrelic/infra-integrations-sdk/log"
@@ -33,23 +31,21 @@ func Collect(zkConn zookeeper.Connection, kafkaIntegration *integration.Integrat
 		if err := client.Close(); err != nil {
 			log.Debug("Error closing client connection: %s", err.Error())
 		}
+
+		// Close all connections
+		closeBrokerConnections()
 	}()
 
 	fillKafkaCaches(client)
-
-	// only when hidden "all" variable is used
-	if args.GlobalArgs.ConsumerGroups == nil {
-		args.GlobalArgs.ConsumerGroups, err = getAllConsumerGroupsFromKafka(client)
-		if err != nil {
-			log.Error("Failed to get all consumer groups: %s", err)
-			os.Exit(1)
-		}
-	}
 
 	// We retrieve the offsets for each group before calculating the high water mark
 	// so that the lag is never negative
 	for consumerGroup, topics := range args.GlobalArgs.ConsumerGroups {
 		topicPartitions := fillTopicPartitions(consumerGroup, topics, client)
+		if len(topicPartitions) == 0 {
+			log.Error("No topics specified for consumer group '%s'", consumerGroup)
+			continue
+		}
 
 		offsetData, err := getConsumerOffsets(consumerGroup, topicPartitions, client)
 		if err != nil {
@@ -67,6 +63,7 @@ func Collect(zkConn zookeeper.Connection, kafkaIntegration *integration.Integrat
 		}
 
 	}
+
 	return nil
 }
 

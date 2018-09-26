@@ -3,6 +3,7 @@ package args
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 
 	sdkArgs "github.com/newrelic/infra-integrations-sdk/args"
 	"github.com/newrelic/infra-integrations-sdk/log"
@@ -92,7 +93,7 @@ func ParseArgs(a ArgumentList) (*KafkaArguments, error) {
 	// Parse consumser offset args
 	consumerGroups, err := unmarshalConsumerGroups(a.ConsumerOffset, a.ConsumerGroups)
 	if err != nil {
-		log.Error("Failed to parse consumer groups from json")
+		log.Error("Error with Consumer Group configuration: %s", err.Error())
 		return nil, err
 	}
 
@@ -156,7 +157,7 @@ type ConsumerGroups map[string]map[string][]int32
 
 func unmarshalConsumerGroups(consumerOffset bool, consumerGroupsArg string) (ConsumerGroups, error) {
 	// not in consumer offset mode so don't bother to unmarshal
-	if !consumerOffset || consumerGroupsArg == "all" { // case for secret all mode
+	if !consumerOffset {
 		return nil, nil
 	}
 
@@ -166,5 +167,15 @@ func unmarshalConsumerGroups(consumerOffset bool, consumerGroupsArg string) (Con
 		return nil, err
 	}
 
-	return consumerGroups, nil
+	return consumerGroups, validateConsumerGroups(consumerGroups)
+}
+
+func validateConsumerGroups(groups ConsumerGroups) error {
+	for groupName, topics := range groups {
+		if len(topics) == 0 {
+			return fmt.Errorf("consumer group '%s' contains no topics, at least one topic must be specified", groupName)
+		}
+	}
+
+	return nil
 }
