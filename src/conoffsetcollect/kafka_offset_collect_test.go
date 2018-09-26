@@ -42,6 +42,8 @@ func Test_getConsumerOffsets(t *testing.T) {
 	fakeClient.On("Coordinator", groupName).Return(fakeBroker, nil)
 	fakeBroker.On("Connected").Return(true, nil)
 	fakeBroker.On("FetchOffset", mock.Anything).Return(fetchOffsetResponse, nil)
+	fakeBroker.On("Close").Return(nil)
+	fakeBroker.On("Open", mock.Anything).Return(nil)
 
 	offsets, err := getConsumerOffsets(groupName, topicPartitions, fakeClient)
 
@@ -63,6 +65,8 @@ func Test_getHighWaterMarks(t *testing.T) {
 	fakeBroker.On("Connected").Return(true, nil)
 	fakeClient.On("GetOffset", "testTopic", int32(0), int64(-2)).Return(int64(20), nil)
 	fakeBroker.On("Fetch", mock.Anything).Return(fakeFetchResponse, nil)
+	fakeBroker.On("Close").Return(nil)
+	fakeBroker.On("Open", mock.Anything).Return(nil)
 
 	hwms, err := getHighWaterMarks(topicPartitions, fakeClient)
 
@@ -83,6 +87,8 @@ func Test_getHighWaterMarks_FetchErr(t *testing.T) {
 	fakeBroker.On("Connected").Return(true, nil)
 	fakeClient.On("GetOffset", "testTopic", int32(0), int64(-2)).Return(int64(20), nil)
 	fakeBroker.On("Fetch", mock.Anything).Return(&sarama.FetchResponse{}, errors.New("this is a test error"))
+	fakeBroker.On("Close").Return(nil)
+	fakeBroker.On("Open", mock.Anything).Return(nil)
 
 	hwms, err := getHighWaterMarks(topicPartitions, fakeClient)
 
@@ -122,9 +128,11 @@ func Test_fillTopicPartitions(t *testing.T) {
 		},
 	}
 
-	fakeClient.On("Brokers").Return([]connection.Broker{fakeBroker})
+	allBrokers = []connection.Broker{fakeBroker}
 	fakeBroker.On("DescribeGroups", mock.Anything).Return(fakeResponse, nil)
 	fakeBroker.On("Open", mock.Anything).Return(nil)
+	fakeBroker.On("Connected").Return(true, nil)
+	fakeBroker.On("Close").Return(nil)
 
 	newTopicPartitions := fillTopicPartitions(groupID, topicPartitions, fakeClient)
 
@@ -143,11 +151,13 @@ func Test_getAllConsumerGroupsFromKafka(t *testing.T) {
 		},
 	}
 
-	fakeClient.On("Brokers").Return([]connection.Broker{fakeBroker})
+	allBrokers = []connection.Broker{fakeBroker}
 	fakeBroker.On("Close").Return(nil)
 	fakeBroker.On("Open", mock.Anything).Return(nil)
 	fakeBroker.On("ListGroups", mock.Anything).Return(fakeListResponse, nil)
 	fakeBroker.On("DescribeGroups", mock.Anything).Return(fakeDescribeResponse, nil)
+	fakeBroker.On("Connected").Return(true, nil)
+	fakeBroker.On("Close").Return(nil)
 
 	consumerGroups, err := getAllConsumerGroupsFromKafka(fakeClient)
 

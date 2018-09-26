@@ -16,6 +16,17 @@ var (
 	allTopics  []string
 )
 
+// closeBrokerConnections close all broker connections
+func closeBrokerConnections() {
+	for _, broker := range allBrokers {
+		if yes, _ := broker.Connected(); yes {
+			if err := broker.Close(); err != nil {
+				log.Warn("Unable to close connection to broker: %s", err.Error())
+			}
+		}
+	}
+}
+
 // fillKafkaCaches pre-retrieves the brokers and topics for quicker lookup in future requests
 func fillKafkaCaches(client connection.Client) {
 	var err error
@@ -58,7 +69,7 @@ func getConsumerOffsetsFromBroker(groupName string, topicPartitions TopicPartiti
 
 	offsets := make(groupOffsets)
 	for _, broker := range brokers {
-		err := resetBrokerConnection(broker)
+		err := resetBrokerConnection(broker, sarama.NewConfig())
 		if err != nil {
 			return nil, err
 		}
@@ -94,11 +105,15 @@ func getConsumerOffsetsFromBroker(groupName string, topicPartitions TopicPartiti
 	return offsets, nil
 }
 
-func resetBrokerConnection(broker connection.Broker) error {
-	if yes, _ := broker.Connected(); !yes {
-		if err := broker.Open(sarama.NewConfig()); err != nil {
+func resetBrokerConnection(broker connection.Broker, config *sarama.Config) error {
+	if yes, _ := broker.Connected(); yes {
+		if err := broker.Close(); err != nil {
 			return err
 		}
+	}
+
+	if err := broker.Open(config); err != nil {
+		return err
 	}
 
 	return nil
@@ -159,11 +174,8 @@ func getHighWaterMarks(topicPartitions TopicPartitions, client connection.Client
 
 func fetchHighWaterMarkResponse(broker connection.Broker, tps TopicPartitions, client connection.Client) (*sarama.FetchResponse, error) {
 	// Open the connection if necessary
-	if connected, _ := broker.Connected(); !connected {
-		err := broker.Open(sarama.NewConfig())
-		if err != nil {
-			return nil, err
-		}
+	if err := resetBrokerConnection(broker, sarama.NewConfig()); err != nil {
+		return nil, err
 	}
 
 	// Create the fetch request for the correct partitions
@@ -228,16 +240,15 @@ func fillTopicPartitions(groupID string, topicPartitions TopicPartitions, client
 func fillTopics(groupID string, topicPartitions TopicPartitions, client connection.Client) error {
 	groupDescribeReq := sarama.DescribeGroupsRequest{}
 	groupDescribeReq.AddGroup(groupID)
-	broker := client.Brokers()[0]
+	broker := allBrokers[0]
+
 	config := sarama.NewConfig()
 	config.Version = sarama.V0_9_0_0
-	err := broker.Open(config)
-	if err != nil {
-		log.Error("Failed to open broker connection")
-		return nil
+	if err := resetBrokerConnection(broker, config); err != nil {
+		return err
 	}
 
-	groupDescribeResp, err := client.Brokers()[0].DescribeGroups(&groupDescribeReq)
+	groupDescribeResp, err := broker.DescribeGroups(&groupDescribeReq)
 	if err != nil {
 		log.Error("Failed to collect list of topics from groups: %v", err)
 		return nil
@@ -319,13 +330,10 @@ func createFetchRequest(topicPartitions TopicPartitions, client connection.Clien
 func getAllConsumerGroupsFromKafka(client connection.Client) (args.ConsumerGroups, error) {
 
 	// Create a broker with an API v9.0 connection
-	broker := client.Brokers()[0]
-	conf := sarama.NewConfig()
-	conf.Version = sarama.V0_9_0_0
-	if err := broker.Close(); err != nil {
-		return nil, err
-	}
-	if err := broker.Open(conf); err != nil {
+	broker := allBrokers[0]
+	config := sarama.NewConfig()
+	config.Version = sarama.V0_9_0_0
+	if err := resetBrokerConnection(broker, config); err != nil {
 		return nil, err
 	}
 

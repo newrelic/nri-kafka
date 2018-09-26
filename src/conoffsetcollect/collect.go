@@ -67,6 +67,9 @@ func Collect(zkConn zookeeper.Connection, kafkaIntegration *integration.Integrat
 		}
 
 	}
+
+	// Close all connections
+	closeBrokerConnections()
 	return nil
 }
 
