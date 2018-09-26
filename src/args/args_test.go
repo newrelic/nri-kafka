@@ -176,3 +176,15 @@ func Test_unmarshalConsumerGroups(t *testing.T) {
 		t.Errorf("Expected %+v got %+v", expected, out)
 	}
 }
+
+func Test_unmarshalConsumerGroups_NoTopics(t *testing.T) {
+	input := `{
+		"group_1": {
+		}
+	}`
+
+	_, err := unmarshalConsumerGroups(true, input)
+	if err == nil {
+		t.Error("Expected error")
+	}
+}

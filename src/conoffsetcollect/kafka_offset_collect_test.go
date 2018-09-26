@@ -139,32 +139,6 @@ func Test_fillTopicPartitions(t *testing.T) {
 	assert.Equal(t, 0, len(newTopicPartitions["testTopic"]))
 }
 
-func Test_getAllConsumerGroupsFromKafka(t *testing.T) {
-	fakeClient := new(connection.MockClient)
-	fakeBroker := new(connection.MockBroker)
-	fakeListResponse := &sarama.ListGroupsResponse{
-		Groups: map[string]string{"testGroup": "consumer"},
-	}
-	fakeDescribeResponse := &sarama.DescribeGroupsResponse{
-		Groups: []*sarama.GroupDescription{
-			{GroupId: "testGroup"},
-		},
-	}
-
-	allBrokers = []connection.Broker{fakeBroker}
-	fakeBroker.On("Close").Return(nil)
-	fakeBroker.On("Open", mock.Anything).Return(nil)
-	fakeBroker.On("ListGroups", mock.Anything).Return(fakeListResponse, nil)
-	fakeBroker.On("DescribeGroups", mock.Anything).Return(fakeDescribeResponse, nil)
-	fakeBroker.On("Connected").Return(true, nil)
-	fakeBroker.On("Close").Return(nil)
-
-	consumerGroups, err := getAllConsumerGroupsFromKafka(fakeClient)
-
-	assert.Nil(t, err)
-	assert.Equal(t, 0, len(consumerGroups["testGroup"]))
-}
-
 func Test_populateOffsetStructs(t *testing.T) {
 	inputOffsets := groupOffsets{"testTopic": {0: 12}}
 	inputHwms := groupOffsets{"testTopic": {0: 13}}

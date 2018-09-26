@@ -6,7 +6,6 @@ import (
 
 	"github.com/Shopify/sarama"
 	"github.com/newrelic/infra-integrations-sdk/log"
-	"github.com/newrelic/nri-kafka/src/args"
 	"github.com/newrelic/nri-kafka/src/connection"
 )
 
@@ -212,13 +211,9 @@ func getBrokerLeaderMap(topicPartitions TopicPartitions, client connection.Clien
 // All calls will query Kafka rather than Zookeeper
 func fillTopicPartitions(groupID string, topicPartitions TopicPartitions, client connection.Client) TopicPartitions {
 
-	// If no topics, request the list of topics for a group
+	// If no topics return error
 	if len(topicPartitions) == 0 {
-		err := fillTopics(groupID, topicPartitions, client)
-		if err != nil {
-			log.Error("Unable to collect all topic partitions: %v", err)
-			return nil
-		}
+		return nil
 	}
 
 	// For each topic, if it has no partitions, collect all partitions
@@ -235,44 +230,6 @@ func fillTopicPartitions(groupID string, topicPartitions TopicPartitions, client
 	}
 
 	return topicPartitions
-}
-
-func fillTopics(groupID string, topicPartitions TopicPartitions, client connection.Client) error {
-	groupDescribeReq := sarama.DescribeGroupsRequest{}
-	groupDescribeReq.AddGroup(groupID)
-	broker := allBrokers[0]
-
-	config := sarama.NewConfig()
-	config.Version = sarama.V0_9_0_0
-	if err := resetBrokerConnection(broker, config); err != nil {
-		return err
-	}
-
-	groupDescribeResp, err := broker.DescribeGroups(&groupDescribeReq)
-	if err != nil {
-		log.Error("Failed to collect list of topics from groups: %v", err)
-		return nil
-	}
-
-	if len(groupDescribeResp.Groups) != 1 {
-		log.Error("Failed to collect topics from groups")
-		return nil
-	}
-
-	for _, memberDescription := range groupDescribeResp.Groups[0].Members {
-		metadata, err := memberDescription.GetMemberMetadata()
-		if err != nil {
-			continue
-		}
-
-		for _, topic := range metadata.Topics {
-			if _, ok := topicPartitions[topic]; !ok {
-				topicPartitions[topic] = make([]int32, 0)
-			}
-		}
-	}
-
-	return nil
 }
 
 // createOffsetFetchRequest creates an offsetFetchRequest for the partitions in topicPartitions
@@ -323,53 +280,6 @@ func createFetchRequest(topicPartitions TopicPartitions, client connection.Clien
 	}
 
 	return request
-}
-
-// getAllConsumerGroupsFromKafka gets a list of all consumer groups, and populates
-// it with a list of all topics belonging to those consumer groups.
-func getAllConsumerGroupsFromKafka(client connection.Client) (args.ConsumerGroups, error) {
-
-	// Create a broker with an API v9.0 connection
-	broker := allBrokers[0]
-	config := sarama.NewConfig()
-	config.Version = sarama.V0_9_0_0
-	if err := resetBrokerConnection(broker, config); err != nil {
-		return nil, err
-	}
-
-	// Get a list of all groups
-	groupListResp, err := broker.ListGroups(&sarama.ListGroupsRequest{})
-	if err != nil {
-		return nil, err
-	}
-
-	// Add each group to the request
-	groupDescribeReq := sarama.DescribeGroupsRequest{}
-	for group := range groupListResp.Groups {
-		groupDescribeReq.AddGroup(group)
-	}
-	groupDescribeResp, err := broker.DescribeGroups(&groupDescribeReq)
-	if err != nil {
-		return nil, err
-	}
-
-	// For each group, get its topics
-	consumerGroups := make(args.ConsumerGroups)
-	for _, groupDescription := range groupDescribeResp.Groups {
-		consumerGroups[groupDescription.GroupId] = make(map[string][]int32)
-		for _, memberDescription := range groupDescription.Members {
-			metadata, err := memberDescription.GetMemberMetadata()
-			if err != nil {
-				continue
-			}
-			for _, topic := range metadata.Topics {
-				consumerGroups[groupDescription.GroupId][topic] = make([]int32, 0)
-			}
-		}
-	}
-
-	return consumerGroups, nil
-
 }
 
 // populateOffsetStructs takes a map of offsets and high water marks and
