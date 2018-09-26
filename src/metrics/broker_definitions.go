@@ -100,12 +100,12 @@ var brokerMetricDefs = []*JMXMetricSet{
 		MetricDefs: []*MetricDefinition{
 			{
 				Name:       "replication.isrExpandsPerSecond",
-				SourceType: metric.GAUGE,
+				SourceType: metric.RATE,
 				JMXAttr:    "name=IsrExpandsPerSec,attr=Count",
 			},
 			{
 				Name:       "replication.isrShrinksPerSecond",
-				SourceType: metric.GAUGE,
+				SourceType: metric.RATE,
 				JMXAttr:    "name=IsrShrinksPerSec,attr=Count",
 			},
 			{
@@ -122,12 +122,12 @@ var brokerMetricDefs = []*JMXMetricSet{
 		MetricDefs: []*MetricDefinition{
 			{
 				Name:       "replication.leaderElectionPerSecond",
-				SourceType: metric.GAUGE,
+				SourceType: metric.RATE,
 				JMXAttr:    "name=LeaderElectionRateAndTimeMs,attr=Count",
 			},
 			{
 				Name:       "replication.uncleanLeaderElectionPerSecond",
-				SourceType: metric.GAUGE,
+				SourceType: metric.RATE,
 				JMXAttr:    "name=UncleanLeaderElectionsPerSec,attr=Count",
 			},
 		},
@@ -139,32 +139,32 @@ var brokerMetricDefs = []*JMXMetricSet{
 		MetricDefs: []*MetricDefinition{
 			{
 				Name:       "broker.IOInPerSecond",
-				SourceType: metric.GAUGE,
+				SourceType: metric.RATE,
 				JMXAttr:    "name=BytesInPerSec,attr=Count",
 			},
 			{
 				Name:       "broker.IOOutPerSecond",
-				SourceType: metric.GAUGE,
+				SourceType: metric.RATE,
 				JMXAttr:    "name=BytesOutPerSec,attr=Count",
 			},
 			{
 				Name:       "broker.messagesInPerSecond",
-				SourceType: metric.GAUGE,
+				SourceType: metric.RATE,
 				JMXAttr:    "name=MessagesInPerSec,attr=Count",
 			},
 			{
 				Name:       "net.bytesRejectedPerSecond",
-				SourceType: metric.GAUGE,
+				SourceType: metric.RATE,
 				JMXAttr:    "name=BytesRejectedPerSec,attr=Count",
 			},
 			{
 				Name:       "request.clientFetchesFailedPerSecond",
-				SourceType: metric.GAUGE,
+				SourceType: metric.RATE,
 				JMXAttr:    "name=FailedFetchRequestsPerSec,attr=Count",
 			},
 			{
 				Name:       "request.produceRequestsFailedPerSecond",
-				SourceType: metric.GAUGE,
+				SourceType: metric.RATE,
 				JMXAttr:    "name=FailedProduceRequestsPerSec,attr=Count",
 			},
 		},
@@ -176,7 +176,7 @@ var brokerMetricDefs = []*JMXMetricSet{
 		MetricDefs: []*MetricDefinition{
 			{
 				Name:       "broker.logFlushPerSecond",
-				SourceType: metric.GAUGE,
+				SourceType: metric.RATE,
 				JMXAttr:    "name=LogFlushRateAndTimeMs,attr=Count",
 			},
 		},
@@ -200,12 +200,12 @@ var brokerMetricDefs = []*JMXMetricSet{
 		MetricDefs: []*MetricDefinition{
 			{
 				Name:       "consumer.requestsExpiredPerSecond",
-				SourceType: metric.GAUGE,
+				SourceType: metric.RATE,
 				JMXAttr:    "fetcherType=consumer,attr=Count",
 			},
 			{
 				Name:       "follower.requestExpirationPerSecond",
-				SourceType: metric.GAUGE,
+				SourceType: metric.RATE,
 				JMXAttr:    "fetcherType=follower,attr=Count",
 			},
 		},
@@ -220,7 +220,7 @@ var BrokerTopicMetricDefs = []*JMXMetricSet{
 		MetricDefs: []*MetricDefinition{
 			{
 				Name:       "topic.bytesWritten",
-				SourceType: metric.GAUGE,
+				SourceType: metric.RATE,
 				JMXAttr:    "attr=Count",
 			},
 		},

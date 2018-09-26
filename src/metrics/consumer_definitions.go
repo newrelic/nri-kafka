@@ -42,12 +42,12 @@ var consumerMetricDefs = []*JMXMetricSet{
 		MetricDefs: []*MetricDefinition{
 			{
 				Name:       "consumer.offsetKafkaCommitsPerSecond",
-				SourceType: metric.GAUGE,
+				SourceType: metric.RATE,
 				JMXAttr:    "name=KafkaCommitsPerSec,clientId=" + consumerHolder + "attr=Count",
 			},
 			{
 				Name:       "consumer.offsetZooKeeperCommitsPerSecond",
-				SourceType: metric.GAUGE,
+				SourceType: metric.RATE,
 				JMXAttr:    "name=ZooKeeperCommitsPerSec,clientId=" + consumerHolder + "attr=Count",
 			},
 		},
