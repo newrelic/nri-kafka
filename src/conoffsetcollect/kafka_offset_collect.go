@@ -206,8 +206,8 @@ func getBrokerLeaderMap(topicPartitions TopicPartitions, client connection.Clien
 	return brokerLeaderMap, nil
 }
 
-// fillOutTopicPartitionsFromKafka checks all topics for the consumer group if no topics are listed then all topics
-// will be added for the consumer group. If a topic has no partition then all partitions of a topic will be added.
+// fillOutTopicPartitionsFromKafka checks all topics for the consumer group.
+// If a topic has no partition then all partitions of a topic will be added.
 // All calls will query Kafka rather than Zookeeper
 func fillTopicPartitions(groupID string, topicPartitions TopicPartitions, client connection.Client) TopicPartitions {
 
