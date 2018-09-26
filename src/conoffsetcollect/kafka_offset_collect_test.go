@@ -121,18 +121,6 @@ func Test_fillTopicPartitions(t *testing.T) {
 	groupID := "testGroup"
 	topicPartitions := map[string][]int32{}
 	fakeClient := new(connection.MockClient)
-	fakeBroker := new(connection.MockBroker)
-	fakeResponse := &sarama.DescribeGroupsResponse{
-		Groups: []*sarama.GroupDescription{
-			{GroupId: groupID},
-		},
-	}
-
-	allBrokers = []connection.Broker{fakeBroker}
-	fakeBroker.On("DescribeGroups", mock.Anything).Return(fakeResponse, nil)
-	fakeBroker.On("Open", mock.Anything).Return(nil)
-	fakeBroker.On("Connected").Return(true, nil)
-	fakeBroker.On("Close").Return(nil)
 
 	newTopicPartitions := fillTopicPartitions(groupID, topicPartitions, fakeClient)
 
