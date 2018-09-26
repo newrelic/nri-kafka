@@ -142,7 +142,7 @@ func getHighWaterMarks(topicPartitions TopicPartitions, client connection.Client
 
 		resp, err := fetchHighWaterMarkResponse(broker, tps, client)
 		if err != nil {
-			log.Error("Failed to collect high water marks for topics %v", tps)
+			log.Error("Failed to collect high water marks for topics %v: %s", tps, err.Error())
 			continue
 		}
 
@@ -316,7 +316,7 @@ func createFetchRequest(topicPartitions TopicPartitions, client connection.Clien
 		for _, partition := range partitions {
 			offset, err := client.GetOffset(topic, partition, sarama.OffsetOldest)
 			if err != nil {
-				log.Error("Failed to get offset for partition %d", partition)
+				log.Error("Failed to get offset for partition %d: %s", partition, err.Error())
 			}
 			request.AddBlock(topic, partition, offset, 10000)
 		}
