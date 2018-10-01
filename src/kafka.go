@@ -16,7 +16,7 @@ import (
 
 const (
 	integrationName    = "com.newrelic.kafka"
-	integrationVersion = "0.2.1"
+	integrationVersion = "0.2.2"
 )
 
 func main() {
@@ -57,6 +57,9 @@ func coreCollection(zkConn zookeeper.Connection, kafkaIntegration *integration.I
 	collectedTopics, err := tc.GetTopics(zkConn)
 	ExitOnErr(err)
 
+	// Enforce hard limits on Topics
+	collectedTopics = enforceTopicLimit(collectedTopics)
+
 	// Setup wait group
 	var wg sync.WaitGroup
 
@@ -89,4 +92,18 @@ func ExitOnErr(err error) {
 	if err != nil {
 		os.Exit(1)
 	}
+}
+
+// maxTopics is the maximum amount of Topics that can be collect.
+// If there are more than this number of Topics then collection of
+// Topics will fail.
+const maxTopics = 300
+
+func enforceTopicLimit(collectedTopics []string) []string {
+	if length := len(collectedTopics); length > maxTopics {
+		log.Error("There are %d topics in collection, the maximum amount of topics to collect is %d. Use the topic whitelist configuration parameter to limit collection size.", length, maxTopics)
+		return make([]string, 0)
+	}
+
+	return collectedTopics
 }
