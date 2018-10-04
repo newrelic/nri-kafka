@@ -40,10 +40,10 @@ func benchCoreCollection(b *testing.B, numBrokers, numTopics, numPartitions int)
 		}
 	}
 	returnBrokers := make([]string, numBrokers, numBrokers)
-	brokerConnectionBytes := []byte(`{"listener_security_protocol_map":{"PLAINTEXT":"PLAINTEXT"},"endpoints":["PLAINTEXT://kafkabroker:9092"],"jmx_port":9999,"host":"kafkabroker","timestamp":"1530886155628","port":9092,"version":4}`)
 	brokerConfigBytes := []byte(`{"version":1,"config":{"flush.messages":"12345"}}`)
 	for i := 0; i < numBrokers; i++ {
 		returnBrokers[i] = strconv.Itoa(i)
+		brokerConnectionBytes := []byte(`{"listener_security_protocol_map":{"PLAINTEXT":"PLAINTEXT"},"endpoints":["PLAINTEXT://kafkabroker:9092"],"jmx_port":9999,"host":"kafkabroker` + strconv.Itoa(i) + `","timestamp":"1530886155628","port":9092,"version":4}`)
 		zkConn.On("Get", "/brokers/ids/"+strconv.Itoa(i)).Return(brokerConnectionBytes, &zk.Stat{}, nil)
 		zkConn.On("Get", "/config/brokers/"+strconv.Itoa(i)).Return(brokerConfigBytes, &zk.Stat{}, nil)
 	}
@@ -54,7 +54,7 @@ func benchCoreCollection(b *testing.B, numBrokers, numTopics, numPartitions int)
 
 	b.StartTimer()
 	for n := 0; n < b.N; n++ {
-		integration, _ := integration.New("test", "test")
+		integration, _ := integration.New("test"+strconv.Itoa(n), "test")
 		coreCollection(zkConn, integration)
 	}
 
