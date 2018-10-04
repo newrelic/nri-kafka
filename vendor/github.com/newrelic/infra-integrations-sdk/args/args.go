@@ -19,6 +19,7 @@ type DefaultArgumentList struct {
 	Metrics   bool `default:"false" help:"Publish metrics data."`
 	Inventory bool `default:"false" help:"Publish inventory data."`
 	Events    bool `default:"false" help:"Publish events data."`
+	Metadata  bool `default:"false" help:"Add customer defined key-value attributes to the samples."`
 }
 
 // All returns if all data should be published
