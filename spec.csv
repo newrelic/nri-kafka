@@ -65,3 +65,6 @@ Kafka,topic.retentionSizeOrTime,Gauge,true,"Whether a partition is retained by s
 Kafka,topic.underReplicatedPartitions,Gauge,true,Number of topics under replicated where 0 = No and 1 = Yes
 Kafka,topic.partitionsWithNonPreferredLeader,Gauge,true,"Which topics are being led by their prefered replica, where 0 = No and 1 = Yes"
 Kafka,topic.diskSize,Gauge,true,Current Topic Disk Size per broker
+Kafka,kafka.consumerOffset,Gauge,true,The current offset of a Consumer Group for a given Topic and Partition
+Kafka,kafka.highWaterMark,Gauge,true,The current log position of a Broker for a given Topic and Partition
+Kafka,kafka.consumerLag,Gauge,true,The current difference between a consumer offset and high water mark for a given Topic and Partition

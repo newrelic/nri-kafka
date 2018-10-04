@@ -116,7 +116,7 @@ func TestDefaultArgs(t *testing.T) {
 		Consumers:              []*JMXHost{},
 		TopicMode:              "None",
 		TopicList:              []string{},
-		Timeout:                2000,
+		Timeout:                15000,
 		CollectTopicSize:       false,
 		ConsumerOffset:         false,
 		ConsumerGroups:         nil,
@@ -174,5 +174,17 @@ func Test_unmarshalConsumerGroups(t *testing.T) {
 
 	if !reflect.DeepEqual(out, expected) {
 		t.Errorf("Expected %+v got %+v", expected, out)
+	}
+}
+
+func Test_unmarshalConsumerGroups_NoTopics(t *testing.T) {
+	input := `{
+		"group_1": {
+		}
+	}`
+
+	_, err := unmarshalConsumerGroups(true, input)
+	if err == nil {
+		t.Error("Expected error")
 	}
 }

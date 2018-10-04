@@ -127,7 +127,7 @@ var producerMetricDefs = []*JMXMetricSet{
 		MetricDefs: []*MetricDefinition{
 			{
 				Name:       "producer.messageRatePerSecond",
-				SourceType: metric.GAUGE,
+				SourceType: metric.RATE,
 				JMXAttr:    "client-id=" + producerHolder + ",attr=Count",
 			},
 		},

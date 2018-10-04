@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 0.2.2 - 2018-10-01
+### Added
+- Hardcoded limit for topic collection
+
+## 0.2.1 - 2018-09-25
+### Changed
+- Source Type on all metrics with `attr=Count` to `Rate`
+### Removed
+- Dynamic lookup of Consumer Groups and Topics on Consumer Offset mode. The dynamic lookup would only correctly work in very specific set of circumstances.
+
 ## 0.2.0 - 2018-09-17
 ### Added
 - Consumer offsets and lag

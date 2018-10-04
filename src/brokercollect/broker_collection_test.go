@@ -302,7 +302,7 @@ func TestCollectBrokerTopicMetrics(t *testing.T) {
 		metric.Attribute{Key: "entityName", Value: "broker:testEntity"},
 		metric.Attribute{Key: "topic", Value: "topic"})
 
-	sample.SetMetric("topic.bytesWritten", float64(24), metric.GAUGE)
+	sample.SetMetric("topic.bytesWritten", float64(0), metric.GAUGE)
 
 	expected := map[string]*metric.Set{
 		"topic": sample,
