@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"strings"
 	"sync"
 
 	"github.com/Shopify/sarama"
@@ -42,12 +43,12 @@ func StartTopicPool(poolSize int, wg *sync.WaitGroup, zkConn zookeeper.Connectio
 
 // GetTopics retrieves the list of topics to collect based on the user-provided configuration
 func GetTopics(zkConn zookeeper.Connection) ([]string, error) {
-	switch args.GlobalArgs.TopicMode {
-	case "None":
+	switch strings.ToLower(args.GlobalArgs.TopicMode) {
+	case "none":
 		return []string{}, nil
-	case "List":
+	case "list":
 		return args.GlobalArgs.TopicList, nil
-	case "All":
+	case "all":
 		if zkConn == nil {
 			return nil, errors.New("zookeeper connection must not be nil for 'All' mode")
 		}
