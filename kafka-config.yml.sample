@@ -60,19 +60,19 @@ instances:
       collect_broker_topic_data: <true or false>
 
       # Below are the fields used to fine tune/toggle topic metric collection.
-      # In order to collect topics the "topic_mode" field must be set to "All" or "List". If the field is set to "All"
+      # In order to collect topics the "topic_mode" field must be set to "all" or "list". If the field is set to "all"
       # a Zookeeper connection is required, at least the "zookeeper_hosts" field is required, as topics are looked up via Zookeeper.
       #
       # It is recommended to use the "List" option to monitor a specific set of topics. If using "List" mode the "topic_list"
       # field should be filled out. The "topic_list" is a JSON array of topic names to be monitored.
       # Example of topic_list: '["topic1", "topic2"]'
       #
-      # If monitoring topics via the "All" or "List" option for "topic_mode", the topic size can be collected from zookeeper by setting 
+      # If monitoring topics via the "all" or "list" option for "topic_mode", the topic size can be collected from zookeeper by setting 
       # "collect_topic_size" to true. This operation is intensive and can take a while to collect for a larger number of topics. 
       # It is recommended to only enable this feature if using a small "topic_list".
       # If the field is omitted it will default to false.
-      topic_mode: <All, None, or List. All mode requires a zookeeper_host to be specified>
-      topic_list: <JSON Array of Topics to monitor. Ignored if topic_mode is not List>
+      topic_mode: <all, none, or list. All mode requires a zookeeper_host to be specified>
+      topic_list: <JSON Array of Topics to monitor. Ignored if topic_mode is not list>
       collect_topic_size: <true or false. Indicate if topic size should be collected as it is a very resource intensive metric to collect>
     labels:
       env: production
