@@ -219,7 +219,7 @@ var BrokerTopicMetricDefs = []*JMXMetricSet{
 		MetricPrefix: "kafka.server:type=BrokerTopicMetrics,name=BytesInPerSec,topic=" + topicHolder + ",",
 		MetricDefs: []*MetricDefinition{
 			{
-				Name:       "topic.bytesWritten",
+				Name:       "broker.bytesWrittenToTopicPerSecond",
 				SourceType: metric.RATE,
 				JMXAttr:    "attr=Count",
 			},
