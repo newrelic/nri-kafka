@@ -59,7 +59,7 @@ Kafka,request.avgTimeProduceRequest,Gauge,true,Average time for a produce reques
 Kafka,request.clientFetchesFailedPerSecond,Gauge,true,Rate of client fetch request failures per second
 Kafka,request.produceRequestsFailedPerSecond,Gauge,true,Rate of failed produce requests per second
 Kafka,request.produceTime99Percentile,Gauge,true,Time for produce requests for 99th percentile
-Kafka,topic.bytesWritten,Gauge,true,How many bytes are being written by each partition in Bytes
+Kafka,broker.bytesWrittenToTopicPerSecond,Gauge,true,How many bytes are being written by each partition in Bytes
 Kafka,topic.respondsToMetadataRequests,Gauge,true,Number of topics responding to meta data requests
 Kafka,topic.retentionSizeOrTime,Gauge,true,"Whether a partition is retained by size or time, where 0 = time and 1 = size"
 Kafka,topic.underReplicatedPartitions,Gauge,true,Number of topics under replicated where 0 = No and 1 = Yes

@@ -111,15 +111,14 @@ instances:
 
       # Whitelist of consumer groups to collect offset data for. This feature is only avaiable in Kafka 0.8.2.2 and above.
       # The value should be a JSON object with the follow structure:
-      # Consumer Group Name mapped to a mapping of topics.
-      # Those topics them map to a JSON array of partition numbers
+      # Consumer Group Name mapped to a map of topic names.
+      # Those topics then map to a JSON array of partition numbers
       #
       # Say we wanted to monitor two consumer groups "consumer_group_1" and "consumer_group_2".
       # "consumer_group_1" we want to monitor "topic_1" with partitions 1, 2, and 3. We also want to monitor
       # "topic_2" within that same group, but want to monitor all partitions within that topic, so we'll give it a blank
-      # set of partitions. For "consumer_group_2" we want to monitor all topics and all partitions so we give it a blank
-      # JSON object for it's topic set. Below is an example of the value for "consumer_group" field to achieve our desired configuration.
-      # {"consumer_group_1": {"topic_1": [1,2,3], "topic_2":[]}, "consumer_group_2":{}}
+      # set of partitions. Below is an example of the value for "consumer_group" field to achieve our desired configuration.
+      # {"consumer_group_1": {"topic_1": [1,2,3], "topic_2":[]}}
       consumer_groups: <JSON Object whitelist of consumer groups to their topics and topics to their partitions, in which to collect consumer offsets for. Example form {"group_1":{"topic_1":[1,2]}}>
     labels:
       env: production
