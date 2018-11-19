@@ -2,8 +2,11 @@
 package zookeeper
 
 import (
+	"errors"
 	"fmt"
+	"net/url"
 	"strconv"
+	"strings"
 	"time"
 
 	"encoding/json"
@@ -126,9 +129,8 @@ func GetBrokerConnectionInfo(brokerID int, zkConn Connection) (brokerHost string
 
 	// Parse the JSON returned by Zookeeper
 	type brokerJSONDecoder struct {
-		Host    string `json:"host"`
-		JmxPort int    `json:"jmx_port"`
-		Port    int    `json:"port"`
+		JmxPort   int      `json:"jmx_port"`
+		Endpoints []string `json:"endpoints"`
 	}
 	var brokerDecoded brokerJSONDecoder
 	err = json.Unmarshal(rawBrokerJSON, &brokerDecoded)
@@ -136,5 +138,32 @@ func GetBrokerConnectionInfo(brokerID int, zkConn Connection) (brokerHost string
 		return "", 0, 0, err
 	}
 
-	return brokerDecoded.Host, brokerDecoded.JmxPort, brokerDecoded.Port, nil
+	// We only want the URL if it's SSL or PLAINTEXT
+	brokerURLString, err := func() (string, error) {
+		for _, urlString := range brokerDecoded.Endpoints {
+			if strings.HasPrefix(urlString, "SSL") || strings.HasPrefix(urlString, "PLAINTEXT") {
+				return urlString, nil
+			}
+		}
+
+		return "", errors.New("host could not be found for broker")
+	}()
+
+	if err != nil {
+		return "", 0, 0, err
+	}
+
+	brokerURL, err := url.Parse(brokerURLString)
+	if err != nil {
+		return "", 0, 0, err
+	}
+
+	host, portString := brokerURL.Hostname(), brokerURL.Port()
+
+	port, err := strconv.Atoi(portString)
+	if err != nil {
+		return "", 0, 0, err
+	}
+
+	return host, brokerDecoded.JmxPort, port, nil
 }
