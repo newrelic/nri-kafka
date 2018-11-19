@@ -2,14 +2,14 @@
 package zookeeper
 
 import (
+	"crypto/tls"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/url"
 	"strconv"
 	"strings"
 	"time"
-
-	"encoding/json"
 
 	"github.com/Shopify/sarama"
 	"github.com/newrelic/infra-integrations-sdk/log"
@@ -44,6 +44,7 @@ func (z zookeeperConnection) CreateClient() (connection.Client, error) {
 	}
 
 	brokers := make([]string, 0, len(brokerIDs))
+	isTLS := false
 	for _, brokerID := range brokerIDs {
 		// convert to int id
 		intID, err := strconv.Atoi(brokerID)
@@ -53,23 +54,37 @@ func (z zookeeperConnection) CreateClient() (connection.Client, error) {
 		}
 
 		// get broker connection info
-		host, _, port, err := GetBrokerConnectionInfo(intID, z)
+		scheme, host, _, port, err := GetBrokerConnectionInfo(intID, z)
 		if err != nil {
 			log.Warn("Unable to get connection information for broker with ID '%d'. Will not collect offset data for consumer groups on this broker.", intID)
 			continue
 		}
 
+		if !isTLS && scheme == "https" {
+			isTLS = true
+		}
+
 		brokers = append(brokers, fmt.Sprintf("%s:%d", host, port))
 	}
 
-	c, err := sarama.NewClient(brokers, sarama.NewConfig())
+	c, err := sarama.NewClient(brokers, createConfig(isTLS))
 	if err != nil {
 		return nil, err
 	}
 
-	newClient := connection.SaramaClient{c}
+	return connection.SaramaClient{c}, nil
+}
 
-	return newClient, nil
+func createConfig(isTLS bool) *sarama.Config {
+	config := sarama.NewConfig()
+	if isTLS {
+		config.Net.TLS.Enable = true
+		config.Net.TLS.Config = &tls.Config{
+			InsecureSkipVerify: true,
+		}
+	}
+
+	return config
 }
 
 // NewConnection creates a new Connection with the given arguments.
@@ -118,13 +133,13 @@ func GetBrokerIDs(zkConn Connection) ([]string, error) {
 }
 
 // GetBrokerConnectionInfo Collects Broker connection info from Zookeeper
-func GetBrokerConnectionInfo(brokerID int, zkConn Connection) (brokerHost string, jmxPort int, brokerPort int, err error) {
+func GetBrokerConnectionInfo(brokerID int, zkConn Connection) (scheme, brokerHost string, jmxPort int, brokerPort int, err error) {
 
 	// Query Zookeeper for broker information
 	path := Path("/brokers/ids/" + strconv.Itoa(brokerID))
 	rawBrokerJSON, _, err := zkConn.Get(path)
 	if err != nil {
-		return "", 0, 0, err
+		return
 	}
 
 	// Parse the JSON returned by Zookeeper
@@ -135,35 +150,41 @@ func GetBrokerConnectionInfo(brokerID int, zkConn Connection) (brokerHost string
 	var brokerDecoded brokerJSONDecoder
 	err = json.Unmarshal(rawBrokerJSON, &brokerDecoded)
 	if err != nil {
-		return "", 0, 0, err
+		return
 	}
 
 	// We only want the URL if it's SSL or PLAINTEXT
-	brokerURLString, err := func() (string, error) {
+	scheme, brokerURLString, err := func() (scheme, brokerURLString string, err error) {
 		for _, urlString := range brokerDecoded.Endpoints {
-			if strings.HasPrefix(urlString, "SSL") || strings.HasPrefix(urlString, "PLAINTEXT") {
-				return urlString, nil
+			if strings.HasPrefix(urlString, "SSL") {
+				brokerURLString = urlString
+				scheme = "https"
+				return
+			} else if strings.HasPrefix(urlString, "PLAINTEXT") {
+				brokerURLString = urlString
+				scheme = "http"
+				return
 			}
 		}
 
-		return "", errors.New("host could not be found for broker")
+		return "", "", errors.New("host could not be found for broker")
 	}()
 
 	if err != nil {
-		return "", 0, 0, err
+		return
 	}
 
 	brokerURL, err := url.Parse(brokerURLString)
 	if err != nil {
-		return "", 0, 0, err
+		return
 	}
 
 	host, portString := brokerURL.Hostname(), brokerURL.Port()
 
 	port, err := strconv.Atoi(portString)
 	if err != nil {
-		return "", 0, 0, err
+		return
 	}
 
-	return host, brokerDecoded.JmxPort, port, nil
+	return scheme, host, brokerDecoded.JmxPort, port, nil
 }

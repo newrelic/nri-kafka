@@ -187,7 +187,7 @@ func calculateUnderReplicatedCount(partitions []*partition, sample *metric.Set) 
 func topicRespondsToMetadata(t *Topic, zkConn zookeeper.Connection) int {
 
 	// Get connection information for a broker
-	host, _, port, err := zookeeper.GetBrokerConnectionInfo(0, zkConn)
+	_, host, _, port, err := zookeeper.GetBrokerConnectionInfo(0, zkConn)
 	if err != nil {
 		return 0
 	}
