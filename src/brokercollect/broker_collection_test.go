@@ -217,15 +217,20 @@ func TestPopulateBrokerMetrics_Normal(t *testing.T) {
 }
 
 func TestGetBrokerJMX(t *testing.T) {
+	testutils.SetupTestArgs()
+
 	brokerID := 0
 	zkConn := zookeeper.MockConnection{}
 	zkConn.On("Get", "/brokers/ids/0").Return(brokerConnectionBytes, new(zk.Stat), nil)
 
-	host, jmxPort, kafkaPort, err := zookeeper.GetBrokerConnectionInfo(brokerID, &zkConn)
+	scheme, host, jmxPort, kafkaPort, err := zookeeper.GetBrokerConnectionInfo(brokerID, &zkConn)
 	if err != nil {
 		t.Error(err)
 	}
 
+	if scheme != "http" {
+		t.Errorf("Expected scheme http, got %s", scheme)
+	}
 	if host != "kafkabroker" {
 		t.Errorf("Expected host kafkabroker, got %s", host)
 	}
