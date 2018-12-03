@@ -114,7 +114,7 @@ func brokerWorker(brokerChan <-chan int, collectedTopics []string, wg *sync.Wait
 func createBroker(brokerID int, zkConn zookeeper.Connection, i *integration.Integration) (*broker, error) {
 
 	// Collect broker connection information from ZooKeeper
-	host, jmxPort, kafkaPort, err := zookeeper.GetBrokerConnectionInfo(brokerID, zkConn)
+	_, host, jmxPort, kafkaPort, err := zookeeper.GetBrokerConnectionInfo(brokerID, zkConn)
 	if err != nil {
 		log.Error("Unable to get broker JMX information for broker id %s: %s", host, err)
 		return nil, err
