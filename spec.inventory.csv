@@ -1,0 +1,10 @@
+entity type,inventory source,inventory path
+consumer,,
+producer,,
+broker,conf/kafka,broker.
+broker,conf/kafka,broker.hostname
+broker,conf/kafka,broker.jmxPort
+broker,conf/kafka,broker.kafkaPort
+broker,,
+topic,conf/kafka,topic.
+topic,conf/kafka,topic.partitionScheme
