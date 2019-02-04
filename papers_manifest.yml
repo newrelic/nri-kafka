@@ -1,0 +1,129 @@
+golang:
+  github.com/newrelic/nri-kafka/src/args:
+    license: MIT
+    license_url: github.com/newrelic/nri-kafka/LICENSE
+    project_url: github.com/newrelic/nri-kafka/src/args
+  github.com/newrelic/nri-kafka/src/brokercollect:
+    license: MIT
+    license_url: github.com/newrelic/nri-kafka/LICENSE
+    project_url: github.com/newrelic/nri-kafka/src/brokercollect
+  github.com/newrelic/nri-kafka/src/connection:
+    license: MIT
+    license_url: github.com/newrelic/nri-kafka/LICENSE
+    project_url: github.com/newrelic/nri-kafka/src/connection
+  github.com/newrelic/nri-kafka/src/conoffsetcollect:
+    license: MIT
+    license_url: github.com/newrelic/nri-kafka/LICENSE
+    project_url: github.com/newrelic/nri-kafka/src/conoffsetcollect
+  github.com/newrelic/nri-kafka/src/jmxwrapper:
+    license: MIT
+    license_url: github.com/newrelic/nri-kafka/LICENSE
+    project_url: github.com/newrelic/nri-kafka/src/jmxwrapper
+  github.com/newrelic/nri-kafka/src/metrics:
+    license: MIT
+    license_url: github.com/newrelic/nri-kafka/LICENSE
+    project_url: github.com/newrelic/nri-kafka/src/metrics
+  github.com/newrelic/nri-kafka/src/prodconcollect:
+    license: MIT
+    license_url: github.com/newrelic/nri-kafka/LICENSE
+    project_url: github.com/newrelic/nri-kafka/src/prodconcollect
+  github.com/newrelic/nri-kafka/src/topiccollect:
+    license: MIT
+    license_url: github.com/newrelic/nri-kafka/LICENSE
+    project_url: github.com/newrelic/nri-kafka/src/topiccollect
+  github.com/newrelic/nri-kafka/src/zookeeper:
+    license: MIT
+    license_url: github.com/newrelic/nri-kafka/LICENSE
+    project_url: github.com/newrelic/nri-kafka/src/zookeeper
+  github.com/newrelic/nri-kafka/vendor/github.com/Shopify/sarama:
+    license: MIT
+    license_url: github.com/newrelic/nri-kafka/vendor/github.com/Shopify/sarama/LICENSE
+    project_url: github.com/newrelic/nri-kafka/vendor/github.com/Shopify/sarama
+  github.com/newrelic/nri-kafka/vendor/github.com/davecgh/go-spew/spew:
+    license: ISC
+    license_url: github.com/newrelic/nri-kafka/vendor/github.com/davecgh/go-spew/LICENSE
+    project_url: github.com/newrelic/nri-kafka/vendor/github.com/davecgh/go-spew/spew
+  github.com/newrelic/nri-kafka/vendor/github.com/eapache/go-resiliency/breaker:
+    license: MIT
+    license_url: github.com/newrelic/nri-kafka/vendor/github.com/eapache/go-resiliency/LICENSE
+    project_url: github.com/newrelic/nri-kafka/vendor/github.com/eapache/go-resiliency/breaker
+  github.com/newrelic/nri-kafka/vendor/github.com/eapache/go-xerial-snappy:
+    license: MIT
+    license_url: github.com/newrelic/nri-kafka/vendor/github.com/eapache/go-xerial-snappy/LICENSE
+    project_url: github.com/newrelic/nri-kafka/vendor/github.com/eapache/go-xerial-snappy
+  github.com/newrelic/nri-kafka/vendor/github.com/eapache/queue:
+    license: MIT
+    license_url: github.com/newrelic/nri-kafka/vendor/github.com/eapache/queue/LICENSE
+    project_url: github.com/newrelic/nri-kafka/vendor/github.com/eapache/queue
+  github.com/newrelic/nri-kafka/vendor/github.com/golang/snappy:
+    license: BSD-3-Clause
+    license_url: github.com/newrelic/nri-kafka/vendor/github.com/golang/snappy/LICENSE
+    project_url: github.com/newrelic/nri-kafka/vendor/github.com/golang/snappy
+  github.com/newrelic/nri-kafka/vendor/github.com/newrelic/infra-integrations-sdk/args:
+    license: Unknown
+    license_url: github.com/newrelic/nri-kafka/vendor/github.com/newrelic/infra-integrations-sdk/LICENSE
+    project_url: github.com/newrelic/nri-kafka/vendor/github.com/newrelic/infra-integrations-sdk/args
+  github.com/newrelic/nri-kafka/vendor/github.com/newrelic/infra-integrations-sdk/data/event:
+    license: Unknown
+    license_url: github.com/newrelic/nri-kafka/vendor/github.com/newrelic/infra-integrations-sdk/LICENSE
+    project_url: github.com/newrelic/nri-kafka/vendor/github.com/newrelic/infra-integrations-sdk/data/event
+  github.com/newrelic/nri-kafka/vendor/github.com/newrelic/infra-integrations-sdk/data/inventory:
+    license: Unknown
+    license_url: github.com/newrelic/nri-kafka/vendor/github.com/newrelic/infra-integrations-sdk/LICENSE
+    project_url: github.com/newrelic/nri-kafka/vendor/github.com/newrelic/infra-integrations-sdk/data/inventory
+  github.com/newrelic/nri-kafka/vendor/github.com/newrelic/infra-integrations-sdk/data/metric:
+    license: Unknown
+    license_url: github.com/newrelic/nri-kafka/vendor/github.com/newrelic/infra-integrations-sdk/LICENSE
+    project_url: github.com/newrelic/nri-kafka/vendor/github.com/newrelic/infra-integrations-sdk/data/metric
+  github.com/newrelic/nri-kafka/vendor/github.com/newrelic/infra-integrations-sdk/integration:
+    license: Unknown
+    license_url: github.com/newrelic/nri-kafka/vendor/github.com/newrelic/infra-integrations-sdk/LICENSE
+    project_url: github.com/newrelic/nri-kafka/vendor/github.com/newrelic/infra-integrations-sdk/integration
+  github.com/newrelic/nri-kafka/vendor/github.com/newrelic/infra-integrations-sdk/jmx:
+    license: Unknown
+    license_url: github.com/newrelic/nri-kafka/vendor/github.com/newrelic/infra-integrations-sdk/LICENSE
+    project_url: github.com/newrelic/nri-kafka/vendor/github.com/newrelic/infra-integrations-sdk/jmx
+  github.com/newrelic/nri-kafka/vendor/github.com/newrelic/infra-integrations-sdk/log:
+    license: Unknown
+    license_url: github.com/newrelic/nri-kafka/vendor/github.com/newrelic/infra-integrations-sdk/LICENSE
+    project_url: github.com/newrelic/nri-kafka/vendor/github.com/newrelic/infra-integrations-sdk/log
+  github.com/newrelic/nri-kafka/vendor/github.com/newrelic/infra-integrations-sdk/persist:
+    license: Unknown
+    license_url: github.com/newrelic/nri-kafka/vendor/github.com/newrelic/infra-integrations-sdk/LICENSE
+    project_url: github.com/newrelic/nri-kafka/vendor/github.com/newrelic/infra-integrations-sdk/persist
+  github.com/newrelic/nri-kafka/vendor/github.com/pierrec/lz4:
+    license: BSD-3-Clause
+    license_url: github.com/newrelic/nri-kafka/vendor/github.com/pierrec/lz4/LICENSE
+    project_url: github.com/newrelic/nri-kafka/vendor/github.com/pierrec/lz4
+  github.com/newrelic/nri-kafka/vendor/github.com/pierrec/lz4/internal/xxh32:
+    license: BSD-3-Clause
+    license_url: github.com/newrelic/nri-kafka/vendor/github.com/pierrec/lz4/LICENSE
+    project_url: github.com/newrelic/nri-kafka/vendor/github.com/pierrec/lz4/internal/xxh32
+  github.com/newrelic/nri-kafka/vendor/github.com/pkg/errors:
+    license: BSD-2-Clause
+    license_url: github.com/newrelic/nri-kafka/vendor/github.com/pkg/errors/LICENSE
+    project_url: github.com/newrelic/nri-kafka/vendor/github.com/pkg/errors
+  github.com/newrelic/nri-kafka/vendor/github.com/pmezard/go-difflib/difflib:
+    license: BSD-3-Clause
+    license_url: github.com/newrelic/nri-kafka/vendor/github.com/pmezard/go-difflib/LICENSE
+    project_url: github.com/newrelic/nri-kafka/vendor/github.com/pmezard/go-difflib/difflib
+  github.com/newrelic/nri-kafka/vendor/github.com/rcrowley/go-metrics:
+    license: BSD-2-Clause-FreeBSD
+    license_url: github.com/newrelic/nri-kafka/vendor/github.com/rcrowley/go-metrics/LICENSE
+    project_url: github.com/newrelic/nri-kafka/vendor/github.com/rcrowley/go-metrics
+  github.com/newrelic/nri-kafka/vendor/github.com/samuel/go-zookeeper/zk:
+    license: BSD-3-Clause
+    license_url: github.com/newrelic/nri-kafka/vendor/github.com/samuel/go-zookeeper/LICENSE
+    project_url: github.com/newrelic/nri-kafka/vendor/github.com/samuel/go-zookeeper/zk
+  github.com/newrelic/nri-kafka/vendor/github.com/stretchr/objx:
+    license: MIT
+    license_url: github.com/newrelic/nri-kafka/vendor/github.com/stretchr/objx/LICENSE
+    project_url: github.com/newrelic/nri-kafka/vendor/github.com/stretchr/objx
+  github.com/newrelic/nri-kafka/vendor/github.com/stretchr/testify/assert:
+    license: MIT
+    license_url: github.com/newrelic/nri-kafka/vendor/github.com/stretchr/testify/LICENSE
+    project_url: github.com/newrelic/nri-kafka/vendor/github.com/stretchr/testify/assert
+  github.com/newrelic/nri-kafka/vendor/github.com/stretchr/testify/mock:
+    license: MIT
+    license_url: github.com/newrelic/nri-kafka/vendor/github.com/stretchr/testify/LICENSE
+    project_url: github.com/newrelic/nri-kafka/vendor/github.com/stretchr/testify/mock
