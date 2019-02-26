@@ -9,7 +9,7 @@ RUN git clone https://github.com/newrelic/nrjmx && \
     cd nrjmx && \
     mvn package -P \!deb,\!rpm 
 
-FROM cf-registry.nr-ops.net/rhervas/newrelic-infra:0.14
+FROM newrelic/infrastructure:latest
 COPY --from=builder-kafka /go/src/github.com/newrelic/nri-kafka/bin/nr-kafka /var/db/newrelic-infra/newrelic-integrations/bin/nr-kafka
 COPY --from=builder-kafka /go/src/github.com/newrelic/nri-kafka/kafka-definition.yml /var/db/newrelic-infra/newrelic-integrations/definition.yaml
 COPY --from=builder-jmx nrjmx/bin/nrjmx /usr/bin/nrjmx
