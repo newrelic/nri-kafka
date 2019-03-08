@@ -10,6 +10,8 @@ RUN git clone https://github.com/newrelic/nrjmx && \
     mvn package -P \!deb,\!rpm 
 
 FROM newrelic/infrastructure:latest
+ENV NRIA_IS_FORWARD_ONLY true
+ENV NRIA_K8S_INTEGRATION true
 COPY --from=builder-kafka /go/src/github.com/newrelic/nri-kafka/bin/nr-kafka /var/db/newrelic-infra/newrelic-integrations/bin/nr-kafka
 COPY --from=builder-kafka /go/src/github.com/newrelic/nri-kafka/kafka-definition.yml /var/db/newrelic-infra/newrelic-integrations/definition.yaml
 COPY --from=builder-jmx nrjmx/bin/nrjmx /usr/bin/nrjmx
