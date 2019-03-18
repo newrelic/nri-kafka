@@ -132,6 +132,33 @@ func GetBrokerIDs(zkConn Connection) ([]string, error) {
 	return brokerIDs, nil
 }
 
+func getURLStringAndSchemeFromEndpoints(endpoints []string, protocolMap map[string]string) (scheme string, brokerHost *url.URL, err error) {
+	for _, urlString := range endpoints {
+		scheme, brokerHost, err = getURLStringAndSchemeFromEndpoint(urlString, protocolMap)
+		if err == nil {
+			return
+		}
+	}
+	return "", nil, errors.New("host could not be found for broker")
+}
+
+func getURLStringAndSchemeFromEndpoint(urlString string, protocolMap map[string]string) (scheme string, brokerHost *url.URL, err error) {
+	prefix := strings.Split(urlString, "://")[0]
+	brokerHost, err = url.Parse(urlString)
+	if err != nil {
+		return
+	}
+	urlStringProtocol, hasProtocol := protocolMap[prefix]
+	if strings.HasPrefix(urlString, "SSL") || (hasProtocol && strings.HasPrefix(urlStringProtocol, "SSL")) {
+		scheme = "https"
+		return
+	} else if strings.HasPrefix(urlString, "PLAINTEXT") || (hasProtocol && strings.HasPrefix(urlStringProtocol, "PLAINTEXT")) {
+		scheme = "http"
+		return
+	}
+	return "", nil, errors.New("Protocol not found")
+}
+
 // GetBrokerConnectionInfo Collects Broker connection info from Zookeeper
 func GetBrokerConnectionInfo(brokerID int, zkConn Connection) (scheme, brokerHost string, jmxPort int, brokerPort int, err error) {
 
@@ -144,8 +171,9 @@ func GetBrokerConnectionInfo(brokerID int, zkConn Connection) (scheme, brokerHos
 
 	// Parse the JSON returned by Zookeeper
 	type brokerJSONDecoder struct {
-		JmxPort   int      `json:"jmx_port"`
-		Endpoints []string `json:"endpoints"`
+		ProtocolMap map[string]string `json:"listener_security_protocol_map"`
+		JmxPort     int               `json:"jmx_port"`
+		Endpoints   []string          `json:"endpoints"`
 	}
 	var brokerDecoded brokerJSONDecoder
 	err = json.Unmarshal(rawBrokerJSON, &brokerDecoded)
@@ -154,27 +182,8 @@ func GetBrokerConnectionInfo(brokerID int, zkConn Connection) (scheme, brokerHos
 	}
 
 	// We only want the URL if it's SSL or PLAINTEXT
-	scheme, brokerURLString, err := func() (scheme, brokerURLString string, err error) {
-		for _, urlString := range brokerDecoded.Endpoints {
-			if strings.HasPrefix(urlString, "SSL") {
-				brokerURLString = urlString
-				scheme = "https"
-				return
-			} else if strings.HasPrefix(urlString, "PLAINTEXT") {
-				brokerURLString = urlString
-				scheme = "http"
-				return
-			}
-		}
+	scheme, brokerURL, err := getURLStringAndSchemeFromEndpoints(brokerDecoded.Endpoints, brokerDecoded.ProtocolMap)
 
-		return "", "", errors.New("host could not be found for broker")
-	}()
-
-	if err != nil {
-		return
-	}
-
-	brokerURL, err := url.Parse(brokerURLString)
 	if err != nil {
 		return
 	}
