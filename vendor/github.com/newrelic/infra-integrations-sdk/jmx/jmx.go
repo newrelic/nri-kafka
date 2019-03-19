@@ -175,8 +175,10 @@ func Query(objectPattern string, timeout int) (map[string]interface{}, error) {
 
 // receiveResult checks for channels to receive result from nrjmx command.
 func receiveResult(lineCh chan []byte, queryErrors chan error, cancelFn context.CancelFunc, objectPattern string, timeout time.Duration) (result map[string]interface{}, err error) {
+	fmt.Println("Receiving result")
 	select {
 	case line := <-lineCh:
+		fmt.Println("GOt a linech")
 		if line == nil {
 			cancelFn()
 			Close()
@@ -189,9 +191,13 @@ func receiveResult(lineCh chan []byte, queryErrors chan error, cancelFn context.
 		if strings.HasPrefix(err.Error(), "WARNING") {
 			warnings = append(warnings, err.Error())
 		} else {
+			cancelFn()
+			Close()
+			fmt.Println("GOt a cmderr")
 			return nil, err
 		}
 	case err := <-queryErrors: // Will receive an error if we failed while reading query output
+		fmt.Println("GOt a queryerr")
 		return nil, err
 	case <-time.After(timeout):
 		// In case of timeout, we want to close the command to avoid mixing up results coming up latter
