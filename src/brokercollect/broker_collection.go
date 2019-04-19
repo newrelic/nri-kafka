@@ -121,7 +121,7 @@ func createBroker(brokerID int, zkConn zookeeper.Connection, i *integration.Inte
 	}
 
 	// Create broker entity
-	brokerEntity, err := i.Entity(host, "broker")
+	brokerEntity, err := i.Entity(host, "ka-broker")
 	if err != nil {
 		log.Error("Unable to create entity for broker ID %d: %s", brokerID, err)
 		return nil, err

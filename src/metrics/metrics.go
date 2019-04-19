@@ -39,12 +39,12 @@ func CollectTopicSubMetrics(entity *integration.Entity, entityType string,
 	beanModifier func(string, string) BeanModifier) {
 
 	// need to title case the type so it matches the metric set of the parent entity
-	titleEntityType := strings.Title(entity.Metadata.Namespace)
+	titleEntityType := strings.Title(strings.TrimPrefix(entity.Metadata.Namespace, "ka-"))
 
 	for _, topicName := range topicList {
 		topicSample := entity.NewMetricSet("Kafka"+titleEntityType+"Sample",
 			metric.Attribute{Key: "displayName", Value: entity.Metadata.Name},
-			metric.Attribute{Key: "entityName", Value: fmt.Sprintf("%s:%s", entity.Metadata.Namespace, entity.Metadata.Name)},
+			metric.Attribute{Key: "entityName", Value: fmt.Sprintf("%s:%s", strings.TrimPrefix(entity.Metadata.Namespace, "ka-"), entity.Metadata.Name)},
 			metric.Attribute{Key: "topic", Value: topicName},
 		)
 

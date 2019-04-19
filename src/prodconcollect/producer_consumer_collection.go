@@ -49,7 +49,7 @@ func ConsumerWorker(consumerChan <-chan *args.JMXHost, wg *sync.WaitGroup, i *in
 		}
 
 		// Create an entity for the consumer
-		consumerEntity, err := i.Entity(jmxInfo.Name, "consumer")
+		consumerEntity, err := i.Entity(jmxInfo.Name, "ka-consumer")
 		if err != nil {
 			log.Error("Unable to create entity for Consumer %s: %s", jmxInfo.Name, err.Error())
 			continue
@@ -103,7 +103,7 @@ func ProducerWorker(producerChan <-chan *args.JMXHost, wg *sync.WaitGroup, i *in
 		}
 
 		// Create the producer entity
-		producerEntity, err := i.Entity(jmxInfo.Name, "producer")
+		producerEntity, err := i.Entity(jmxInfo.Name, "ka-producer")
 		if err != nil {
 			log.Error("Unable to create entity for Producer %s: %s", jmxInfo.Name, err.Error())
 			continue

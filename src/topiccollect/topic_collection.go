@@ -73,7 +73,7 @@ func FeedTopicPool(topicChan chan<- *Topic, integration *integration.Integration
 	if args.GlobalArgs.CollectBrokerTopicData {
 		for _, topicName := range collectedTopics {
 			// create topic entity
-			topicEntity, err := integration.Entity(topicName, "topic")
+			topicEntity, err := integration.Entity(topicName, "ka-topic")
 			if err != nil {
 				log.Error("Unable to create an entity for topic %s", topicName)
 			}
