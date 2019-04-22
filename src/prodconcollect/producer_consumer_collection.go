@@ -49,7 +49,8 @@ func ConsumerWorker(consumerChan <-chan *args.JMXHost, wg *sync.WaitGroup, i *in
 		}
 
 		// Create an entity for the consumer
-		consumerEntity, err := i.Entity(jmxInfo.Name, "ka-consumer")
+		clusterIDAttr := integration.NewIDAttribute("clusterName", args.GlobalArgs.ClusterName)
+		consumerEntity, err := i.Entity(jmxInfo.Name, "ka-consumer", clusterIDAttr)
 		if err != nil {
 			log.Error("Unable to create entity for Consumer %s: %s", jmxInfo.Name, err.Error())
 			continue
