@@ -86,7 +86,9 @@ func TestConsumerWorker(t *testing.T) {
 
 func TestConsumerWorker_JmxOpenFuncErr(t *testing.T) {
 	testutils.SetupJmxTesting()
-	jmxwrapper.JMXOpen = func(hostname, port, username, password string, options ...jmx.Option) error { return errors.New("test") }
+	jmxwrapper.JMXOpen = func(hostname, port, username, password string, options ...jmx.Option) error {
+		return errors.New("test")
+	}
 	consumerChan := make(chan *args.JMXHost, 10)
 	var wg sync.WaitGroup
 	i, err := integration.New("kafka", "1.0.0")
@@ -136,7 +138,9 @@ func TestProducerWorker(t *testing.T) {
 
 func TestProducerWorker_JmxOpenFuncErr(t *testing.T) {
 	testutils.SetupJmxTesting()
-	jmxwrapper.JMXOpen = func(hostname, port, username, password string, options ...jmx.Option) error { return errors.New("test") }
+	jmxwrapper.JMXOpen = func(hostname, port, username, password string, options ...jmx.Option) error {
+		return errors.New("test")
+	}
 	producerChan := make(chan *args.JMXHost, 10)
 	var wg sync.WaitGroup
 	i, err := integration.New("kafka", "1.0.0")
