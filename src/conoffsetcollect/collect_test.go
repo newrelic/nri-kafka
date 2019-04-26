@@ -26,9 +26,9 @@ func TestCollect(t *testing.T) {
 	mockClient := connection.MockClient{}
 	mockBroker := connection.MockBroker{}
 
-  args.GlobalArgs = &args.KafkaArguments{
-    ClusterName: "testcluster",
-  }
+	args.GlobalArgs = &args.KafkaArguments{
+		ClusterName: "testcluster",
+	}
 	args.GlobalArgs.ConsumerGroups = map[string]map[string][]int32{
 		"testGroup": {
 			"testTopic": {
