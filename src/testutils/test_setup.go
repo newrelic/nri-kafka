@@ -2,6 +2,7 @@
 package testutils
 
 import (
+	"github.com/newrelic/infra-integrations-sdk/jmx"
 	"github.com/newrelic/nri-kafka/src/args"
 	"github.com/newrelic/nri-kafka/src/jmxwrapper"
 )
@@ -14,7 +15,7 @@ func SetupTestArgs() {
 
 // SetupJmxTesting sets all JMX wrapper variables to basic shells
 func SetupJmxTesting() {
-	jmxwrapper.JMXOpen = func(hostname, port, username, password string) error { return nil }
+	jmxwrapper.JMXOpen = func(hostname, port, username, password string, options ...jmx.Option) error { return nil }
 	jmxwrapper.JMXClose = func() {}
 	jmxwrapper.JMXQuery = func(query string, timeout int) (map[string]interface{}, error) { return map[string]interface{}{}, nil }
 }

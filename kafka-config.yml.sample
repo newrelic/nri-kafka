@@ -4,6 +4,9 @@ instances:
   - name: kafka-metrics
     command: metrics
     arguments:
+      # A cluster name is required to uniquely identify this collection result in Insights
+      cluster_name: "testcluster1"
+
       # In order to collect broker and topic metrics a Zookeeper connection needs to be specified.
       # The "zookeeper_hosts" field is a JSON array, each entry in the array connection information for a Zookeeper
       # node. 
@@ -81,7 +84,7 @@ instances:
   - name: kafka-inventory
     command: inventory
     arguments:
-
+      cluster_name: "testcluster2"
       # More information about the zookeeper connection can be found above
       zookeeper_hosts: <JSON Array of Zookeeper Hosts of the form '[{"host": "localhost", "port": 2181}]'>
       zookeeper_auth_scheme: <Auth scheme for Zookeeper>
@@ -103,6 +106,7 @@ instances:
   - name: kafka-consumer-offsets
     command: consumer_offset
     arguments:
+      cluster_name: "testcluster3"
       # More information about the zookeeper connection can be found above
       zookeeper_hosts: <JSON Array of Zookeeper Hosts of the form '[{"host": "localhost", "port": 2181}]'>
       zookeeper_auth_scheme: <Auth scheme for Zookeeper>

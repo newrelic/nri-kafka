@@ -12,6 +12,7 @@ import (
 	"github.com/newrelic/infra-integrations-sdk/data/inventory"
 	"github.com/newrelic/infra-integrations-sdk/data/metric"
 	"github.com/newrelic/infra-integrations-sdk/integration"
+	"github.com/newrelic/infra-integrations-sdk/jmx"
 	"github.com/newrelic/nri-kafka/src/jmxwrapper"
 	"github.com/newrelic/nri-kafka/src/testutils"
 	"github.com/newrelic/nri-kafka/src/zookeeper"
@@ -107,13 +108,13 @@ func TestCreateBroker_Normal(t *testing.T) {
 		t.Errorf("Expected JMX Port '%d' got '%d'", expectedBroker.JMXPort, b.JMXPort)
 	}
 	if expectedBroker.KafkaPort != b.KafkaPort {
-		t.Errorf("Expected JMX Port '%d' got '%d'", expectedBroker.KafkaPort, b.KafkaPort)
+		t.Errorf("Expected Kafka Port '%d' got '%d'", expectedBroker.KafkaPort, b.KafkaPort)
 	}
 	if b.Entity.Metadata.Name != b.Host {
-		t.Errorf("Expected entity name '%s' got '%s'", expectedBroker.Host, expectedBroker.Entity.Metadata.Name)
+		t.Errorf("Expected entity name '%s' got '%s'", expectedBroker.Host, b.Entity.Metadata.Name)
 	}
-	if b.Entity.Metadata.Namespace != "broker" {
-		t.Errorf("Expected entity name '%s' got '%s'", "broker", expectedBroker.Entity.Metadata.Name)
+	if b.Entity.Metadata.Namespace != "ka-broker" {
+		t.Errorf("Expected entity name '%s' got '%s'", "ka-broker", b.Entity.Metadata.Namespace)
 	}
 }
 
@@ -127,7 +128,7 @@ func TestPopulateBrokerInventory(t *testing.T) {
 	}
 	i, _ := integration.New("kafka", "1.0.0")
 
-	testBroker.Entity, _ = i.Entity("brokerHost", "broker")
+	testBroker.Entity, _ = i.Entity("brokerHost", "ka-broker")
 
 	if err := populateBrokerInventory(testBroker); err != nil {
 		t.Errorf("Unexpected error: %s", err.Error())
@@ -162,7 +163,9 @@ func TestPopulateBrokerMetrics_JMXOpenError(t *testing.T) {
 	testutils.SetupJmxTesting()
 	errorText := "jmx error"
 
-	jmxwrapper.JMXOpen = func(hostname, port, username, password string) error { return errors.New(errorText) }
+	jmxwrapper.JMXOpen = func(hostname, port, username, password string, options ...jmx.Option) error {
+		return errors.New(errorText)
+	}
 	testBroker := &broker{
 		Host:      "kafkabroker",
 		JMXPort:   9999,
@@ -171,7 +174,7 @@ func TestPopulateBrokerMetrics_JMXOpenError(t *testing.T) {
 	}
 	i, _ := integration.New("kafka", "1.0.0")
 
-	testBroker.Entity, _ = i.Entity(testBroker.Host, "broker")
+	testBroker.Entity, _ = i.Entity(testBroker.Host, "ka-broker")
 
 	err := collectBrokerMetrics(testBroker, []string{})
 	if err == nil {
@@ -193,7 +196,7 @@ func TestPopulateBrokerMetrics_Normal(t *testing.T) {
 	}
 	i, _ := integration.New("kafka", "1.0.0")
 
-	testBroker.Entity, _ = i.Entity(testBroker.Host, "broker")
+	testBroker.Entity, _ = i.Entity(testBroker.Host, "ka-broker")
 
 	populateBrokerMetrics(testBroker)
 

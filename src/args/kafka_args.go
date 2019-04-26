@@ -16,6 +16,7 @@ var GlobalArgs *KafkaArguments
 // to allow arguments to be consumed easier.
 type KafkaArguments struct {
 	sdkArgs.DefaultArgumentList
+	ClusterName            string
 	ZookeeperHosts         []*ZookeeperHost
 	ZookeeperAuthScheme    string
 	ZookeeperAuthSecret    string
@@ -99,6 +100,7 @@ func ParseArgs(a ArgumentList) (*KafkaArguments, error) {
 
 	parsedArgs := &KafkaArguments{
 		DefaultArgumentList:    a.DefaultArgumentList,
+		ClusterName:            a.ClusterName,
 		ZookeeperHosts:         zookeeperHosts,
 		ZookeeperAuthScheme:    a.ZookeeperAuthScheme,
 		ZookeeperAuthSecret:    a.ZookeeperAuthSecret,
