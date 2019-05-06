@@ -116,7 +116,7 @@ func createBroker(brokerID int, zkConn zookeeper.Connection, i *integration.Inte
 	// Collect broker connection information from ZooKeeper
 	_, host, jmxPort, kafkaPort, err := zookeeper.GetBrokerConnectionInfo(brokerID, zkConn)
 	if err != nil {
-		log.Error("Unable to get broker JMX information for broker id %s: %s", host, err)
+		log.Error("Unable to get broker JMX information for broker id %s: %s", brokerID, err)
 		return nil, err
 	}
 
