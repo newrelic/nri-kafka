@@ -122,7 +122,7 @@ instances:
       # "consumer_group_1" we want to monitor "topic_1" with partitions 1, 2, and 3. We also want to monitor
       # "topic_2" within that same group, but want to monitor all partitions within that topic, so we'll give it a blank
       # set of partitions. Below is an example of the value for "consumer_group" field to achieve our desired configuration.
-      # {"consumer_group_1": {"topic_1": [1,2,3], "topic_2":[]}}
+      # '{"consumer_group_1": {"topic_1": [1,2,3], "topic_2":[]}}'
       consumer_groups: <JSON Object whitelist of consumer groups to their topics and topics to their partitions, in which to collect consumer offsets for. Example form {"group_1":{"topic_1":[1,2]}}>
     labels:
       env: production
