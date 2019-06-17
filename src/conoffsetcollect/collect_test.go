@@ -26,7 +26,9 @@ func TestCollect(t *testing.T) {
 	mockClient := connection.MockClient{}
 	mockBroker := connection.MockBroker{}
 
-	args.GlobalArgs = &args.KafkaArguments{}
+	args.GlobalArgs = &args.KafkaArguments{
+		ClusterName: "testcluster",
+	}
 	args.GlobalArgs.ConsumerGroups = map[string]map[string][]int32{
 		"testGroup": {
 			"testTopic": {
@@ -73,7 +75,8 @@ func Test_setMetrics(t *testing.T) {
 	err := setMetrics("testGroup", offsetData, i)
 
 	assert.Nil(t, err)
-	resultEntity, err := i.Entity("testGroup", "consumerGroup")
+	clusterIDAttr := integration.NewIDAttribute("clusterName", "testcluster")
+	resultEntity, err := i.Entity("testGroup", "ka-consumerGroup", clusterIDAttr)
 	assert.Nil(t, err)
 	assert.Equal(t, 8, len(resultEntity.Metrics[0].Metrics))
 

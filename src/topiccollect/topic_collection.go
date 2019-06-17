@@ -67,13 +67,14 @@ func GetTopics(zkConn zookeeper.Connection) ([]string, error) {
 }
 
 // FeedTopicPool sends Topic structs down the topicChan for workers to collect and build Topic structs
-func FeedTopicPool(topicChan chan<- *Topic, integration *integration.Integration, collectedTopics []string) {
+func FeedTopicPool(topicChan chan<- *Topic, i *integration.Integration, collectedTopics []string) {
 	defer close(topicChan)
 
 	if args.GlobalArgs.CollectBrokerTopicData {
 		for _, topicName := range collectedTopics {
 			// create topic entity
-			topicEntity, err := integration.Entity(topicName, "topic")
+			clusterIDAttr := integration.NewIDAttribute("clusterName", args.GlobalArgs.ClusterName)
+			topicEntity, err := i.Entity(topicName, "ka-topic", clusterIDAttr)
 			if err != nil {
 				log.Error("Unable to create an entity for topic %s", topicName)
 			}
