@@ -11,6 +11,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"os"
 	"os/exec"
 	"strings"
@@ -22,25 +23,11 @@ var lock sync.Mutex
 var cmd *exec.Cmd
 var cancel context.CancelFunc
 var cmdOut io.ReadCloser
+var cmdError io.ReadCloser
 var cmdIn io.WriteCloser
-var cmdErr = make(chan error, 10)
+var cmdErr = make(chan error, 1)
 var done sync.WaitGroup
 var warnings []string
-
-type chanErrorWriter struct {
-	chanErr chan error
-}
-
-func newChanErrorWriter(c chan error) *chanErrorWriter {
-	return &chanErrorWriter{
-		chanErr: c,
-	}
-}
-
-func (rw *chanErrorWriter) Write(p []byte) (int, error) {
-	rw.chanErr <- fmt.Errorf(string(p))
-	return len(p), nil
-}
 
 var (
 	jmxCommand = "/usr/bin/nrjmx"
@@ -54,15 +41,17 @@ const (
 
 // connectionConfig is the configuration for the nrjmx command.
 type connectionConfig struct {
-	hostname           string
-	port               string
-	username           string
-	password           string
-	keyStore           string
-	keyStorePassword   string
-	trustStore         string
-	trustStorePassword string
-	remote             bool
+	hostname              string
+	port                  string
+	uriPath               string
+	username              string
+	password              string
+	keyStore              string
+	keyStorePassword      string
+	trustStore            string
+	trustStorePassword    string
+	remote                bool
+	remoteJBossStandalone bool
 }
 
 func (cfg *connectionConfig) isSSL() bool {
@@ -78,11 +67,17 @@ func (cfg *connectionConfig) command() []string {
 	}
 
 	c = append(c, "--hostname", cfg.hostname, "--port", cfg.port)
+	if cfg.uriPath != "" {
+		c = append(c, "--uriPath", cfg.uriPath)
+	}
 	if cfg.username != "" && cfg.password != "" {
 		c = append(c, "--username", cfg.username, "--password", cfg.password)
 	}
 	if cfg.remote {
 		c = append(c, "--remote")
+	}
+	if cfg.remoteJBossStandalone {
+		c = append(c, "--remoteJBossStandalone")
 	}
 	if cfg.isSSL() {
 		c = append(c, "--keyStore", cfg.keyStore, "--keyStorePassword", cfg.keyStorePassword, "--trustStore", cfg.trustStore, "--trustStorePassword", cfg.trustStorePassword)
@@ -110,6 +105,13 @@ func Open(hostname, port, username, password string, opts ...Option) error {
 // Option sets an option on integration level.
 type Option func(config *connectionConfig)
 
+//WithURIPath for specifying non standard(jmxrmi) path on jmx service uri
+func WithURIPath(uriPath string) Option {
+	return func(config *connectionConfig) {
+		config.uriPath = uriPath
+	}
+}
+
 // WithSSL for SSL connection configuration.
 func WithSSL(keyStore, keyStorePassword, trustStore, trustStorePassword string) Option {
 	return func(config *connectionConfig) {
@@ -120,10 +122,18 @@ func WithSSL(keyStore, keyStorePassword, trustStore, trustStorePassword string) 
 	}
 }
 
-// WithRemoteProtocol uses the remote JMX protocol URL.
+// WithRemoteProtocol uses the remote JMX protocol URL (by default on JBoss Domain-mode).
 func WithRemoteProtocol() Option {
 	return func(config *connectionConfig) {
 		config.remote = true
+	}
+}
+
+// WithRemoteStandAloneJBoss uses the remote JMX protocol URL on JBoss Standalone-mode.
+func WithRemoteStandAloneJBoss() Option {
+	return func(config *connectionConfig) {
+		config.remote = true
+		config.remoteJBossStandalone = true
 	}
 }
 
@@ -157,7 +167,9 @@ func openConnection(config *connectionConfig) error {
 		return err
 	}
 
-	cmd.Stderr = newChanErrorWriter(cmdErr)
+	if cmdError, err = cmd.StderrPipe(); err != nil {
+		return err
+	}
 
 	if err = cmd.Start(); err != nil {
 		return err
@@ -165,7 +177,8 @@ func openConnection(config *connectionConfig) error {
 
 	go func() {
 		if err = cmd.Wait(); err != nil {
-			cmdErr <- fmt.Errorf("JMX tool exited with error: %s [state: %s]", err, cmd.ProcessState)
+			stdErr, _ := ioutil.ReadAll(cmdError)
+			cmdErr <- fmt.Errorf("JMX tool exited with error: %s [state: %s] (%s)", err, cmd.ProcessState, string(stdErr))
 		}
 
 		lock.Lock()
@@ -190,6 +203,7 @@ func Close() {
 
 	cancel()
 	_ = cmdIn.Close()
+	_ = cmdError.Close()
 
 	lock.Unlock()
 
@@ -239,20 +253,6 @@ func Query(objectPattern string, timeout int) (map[string]interface{}, error) {
 	return receiveResult(lineCh, queryErrors, cancelFn, objectPattern, outTimeout)
 }
 
-func checkStdErr(err error) (error) {
-	select {
-	case stdErr := <-cmdErr:
-		if strings.HasPrefix(stdErr.Error(), "WARNING") {
-			warnings = append(warnings, stdErr.Error())
-		} else {
-			return fmt.Errorf("%v (%v)", err, stdErr)
-		}
-	default:
-	}
-
-	return err
-}
-
 // receiveResult checks for channels to receive result from nrjmx command.
 func receiveResult(lineCh chan []byte, queryErrors chan error, cancelFn context.CancelFunc, objectPattern string, timeout time.Duration) (result map[string]interface{}, err error) {
 	select {
@@ -260,10 +260,10 @@ func receiveResult(lineCh chan []byte, queryErrors chan error, cancelFn context.
 		if line == nil {
 			cancelFn()
 			Close()
-			return nil, checkStdErr(fmt.Errorf("got empty result for query: %s", objectPattern))
+			return nil, fmt.Errorf("got empty result for query: %s", objectPattern)
 		}
 		if err := json.Unmarshal(line, &result); err != nil {
-			return nil, checkStdErr(fmt.Errorf("invalid return value for query: %s, %s", objectPattern, err))
+			return nil, fmt.Errorf("invalid return value for query: %s, %s", objectPattern, err)
 		}
 	case err := <-cmdErr: // Will receive an error if the nrjmx tool exited prematurely
 		if strings.HasPrefix(err.Error(), "WARNING") {
@@ -272,12 +272,12 @@ func receiveResult(lineCh chan []byte, queryErrors chan error, cancelFn context.
 			return nil, err
 		}
 	case err := <-queryErrors: // Will receive an error if we failed while reading query output
-		return nil, checkStdErr(err)
+		return nil, err
 	case <-time.After(timeout):
 		// In case of timeout, we want to close the command to avoid mixing up results coming up latter
 		cancelFn()
 		Close()
-		return nil, checkStdErr(fmt.Errorf("timeout while waiting for query: %s", objectPattern))
+		return nil, fmt.Errorf("timeout while waiting for query: %s", objectPattern)
 	}
 	return result, nil
 }
