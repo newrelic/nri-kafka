@@ -7,6 +7,7 @@ import (
 
 	"github.com/newrelic/infra-integrations-sdk/data/metric"
 	"github.com/newrelic/infra-integrations-sdk/integration"
+	"github.com/newrelic/infra-integrations-sdk/jmx"
 	"github.com/newrelic/infra-integrations-sdk/log"
 	"github.com/newrelic/nri-kafka/src/args"
 	"github.com/newrelic/nri-kafka/src/jmxwrapper"
@@ -63,7 +64,13 @@ func ConsumerWorker(consumerChan <-chan *args.JMXHost, wg *sync.WaitGroup, i *in
 			log.Debug("Collecting metrics for consumer %s", consumerEntity.Metadata.Name)
 
 			// Open a JMX connection to the consumer
-			if err := jmxwrapper.JMXOpen(jmxInfo.Host, strconv.Itoa(jmxInfo.Port), jmxInfo.User, jmxInfo.Password); err != nil {
+			options := make([]jmx.Option, 0)
+			if args.GlobalArgs.KeyStore != "" && args.GlobalArgs.KeyStorePassword != "" && args.GlobalArgs.TrustStore != "" && args.GlobalArgs.TrustStorePassword != "" {
+				ssl := jmx.WithSSL(args.GlobalArgs.KeyStore, args.GlobalArgs.KeyStorePassword, args.GlobalArgs.TrustStore, args.GlobalArgs.TrustStorePassword)
+				options = append(options, ssl)
+			}
+
+			if err := jmxwrapper.JMXOpen(jmxInfo.Host, strconv.Itoa(jmxInfo.Port), jmxInfo.User, jmxInfo.Password, options...); err != nil {
 				log.Error("Unable to make JMX connection for Consumer '%s': %s", consumerEntity.Metadata.Name, err.Error())
 				jmxwrapper.JMXClose() // Close needs to be called even on a failed open to clear out any set variables
 				jmxwrapper.JMXLock.Unlock()
@@ -117,7 +124,13 @@ func ProducerWorker(producerChan <-chan *args.JMXHost, wg *sync.WaitGroup, i *in
 			log.Debug("Collecting metrics for producer %s", producerEntity.Metadata.Name)
 
 			// Open a JMX connection to the producer
-			if err := jmxwrapper.JMXOpen(jmxInfo.Host, strconv.Itoa(jmxInfo.Port), jmxInfo.User, jmxInfo.Password); err != nil {
+			options := make([]jmx.Option, 0)
+			if args.GlobalArgs.KeyStore != "" && args.GlobalArgs.KeyStorePassword != "" && args.GlobalArgs.TrustStore != "" && args.GlobalArgs.TrustStorePassword != "" {
+				ssl := jmx.WithSSL(args.GlobalArgs.KeyStore, args.GlobalArgs.KeyStorePassword, args.GlobalArgs.TrustStore, args.GlobalArgs.TrustStorePassword)
+				options = append(options, ssl)
+			}
+
+			if err := jmxwrapper.JMXOpen(jmxInfo.Host, strconv.Itoa(jmxInfo.Port), jmxInfo.User, jmxInfo.Password, options...); err != nil {
 				log.Error("Unable to make JMX connection for Producer '%s': %s", producerEntity.Metadata.Name, err.Error())
 				jmxwrapper.JMXClose() // Close needs to be called even on a failed open to clear out any set variables
 				jmxwrapper.JMXLock.Unlock()

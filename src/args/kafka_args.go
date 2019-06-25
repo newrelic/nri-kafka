@@ -31,6 +31,12 @@ type KafkaArguments struct {
 	Timeout                int
 	CollectTopicSize       bool
 
+	// SSL options
+	KeyStore           string
+	KeyStorePassword   string
+	TrustStore         string
+	TrustStorePassword string
+
 	// Consumer offset arguments
 	ConsumerOffset bool
 	ConsumerGroups ConsumerGroups
@@ -113,6 +119,10 @@ func ParseArgs(a ArgumentList) (*KafkaArguments, error) {
 		TopicMode:              a.TopicMode,
 		TopicList:              topics,
 		Timeout:                a.Timeout,
+		KeyStore:               a.KeyStore,
+		KeyStorePassword:       a.KeyStorePassword,
+		TrustStore:             a.TrustStore,
+		TrustStorePassword:     a.TrustStorePassword,
 		CollectTopicSize:       a.CollectTopicSize,
 		ConsumerOffset:         a.ConsumerOffset,
 		ConsumerGroups:         consumerGroups,

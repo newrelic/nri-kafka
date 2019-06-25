@@ -293,7 +293,7 @@ func populateOffsetStructs(offsets, hwms groupOffsets) []*partitionOffsets {
 			offsetPointer := func() *int64 {
 				topicOffsets, ok := offsets[topic]
 				if !ok || len(topicOffsets) == 0 {
-					log.Error("Offset not collected for topic %s, partition %d", topic, partition)
+					log.Error("Offset not collected for topic %s", topic, partition)
 					return nil
 				}
 

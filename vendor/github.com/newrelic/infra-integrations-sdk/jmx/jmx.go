@@ -41,15 +41,17 @@ const (
 
 // connectionConfig is the configuration for the nrjmx command.
 type connectionConfig struct {
-	hostname           string
-	port               string
-	username           string
-	password           string
-	keyStore           string
-	keyStorePassword   string
-	trustStore         string
-	trustStorePassword string
-	remote             bool
+	hostname              string
+	port                  string
+	uriPath               string
+	username              string
+	password              string
+	keyStore              string
+	keyStorePassword      string
+	trustStore            string
+	trustStorePassword    string
+	remote                bool
+	remoteJBossStandalone bool
 }
 
 func (cfg *connectionConfig) isSSL() bool {
@@ -65,11 +67,17 @@ func (cfg *connectionConfig) command() []string {
 	}
 
 	c = append(c, "--hostname", cfg.hostname, "--port", cfg.port)
+	if cfg.uriPath != "" {
+		c = append(c, "--uriPath", cfg.uriPath)
+	}
 	if cfg.username != "" && cfg.password != "" {
 		c = append(c, "--username", cfg.username, "--password", cfg.password)
 	}
 	if cfg.remote {
 		c = append(c, "--remote")
+	}
+	if cfg.remoteJBossStandalone {
+		c = append(c, "--remoteJBossStandalone")
 	}
 	if cfg.isSSL() {
 		c = append(c, "--keyStore", cfg.keyStore, "--keyStorePassword", cfg.keyStorePassword, "--trustStore", cfg.trustStore, "--trustStorePassword", cfg.trustStorePassword)
@@ -97,6 +105,13 @@ func Open(hostname, port, username, password string, opts ...Option) error {
 // Option sets an option on integration level.
 type Option func(config *connectionConfig)
 
+//WithURIPath for specifying non standard(jmxrmi) path on jmx service uri
+func WithURIPath(uriPath string) Option {
+	return func(config *connectionConfig) {
+		config.uriPath = uriPath
+	}
+}
+
 // WithSSL for SSL connection configuration.
 func WithSSL(keyStore, keyStorePassword, trustStore, trustStorePassword string) Option {
 	return func(config *connectionConfig) {
@@ -107,10 +122,18 @@ func WithSSL(keyStore, keyStorePassword, trustStore, trustStorePassword string) 
 	}
 }
 
-// WithRemoteProtocol uses the remote JMX protocol URL.
+// WithRemoteProtocol uses the remote JMX protocol URL (by default on JBoss Domain-mode).
 func WithRemoteProtocol() Option {
 	return func(config *connectionConfig) {
 		config.remote = true
+	}
+}
+
+// WithRemoteStandAloneJBoss uses the remote JMX protocol URL on JBoss Standalone-mode.
+func WithRemoteStandAloneJBoss() Option {
+	return func(config *connectionConfig) {
+		config.remote = true
+		config.remoteJBossStandalone = true
 	}
 }
 

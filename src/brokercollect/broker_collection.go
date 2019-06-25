@@ -10,6 +10,7 @@ import (
 
 	"github.com/newrelic/infra-integrations-sdk/data/metric"
 	"github.com/newrelic/infra-integrations-sdk/integration"
+	"github.com/newrelic/infra-integrations-sdk/jmx"
 	"github.com/newrelic/infra-integrations-sdk/log"
 	"github.com/newrelic/nri-kafka/src/args"
 	"github.com/newrelic/nri-kafka/src/jmxwrapper"
@@ -174,7 +175,13 @@ func collectBrokerMetrics(b *broker, collectedTopics []string) error {
 	jmxwrapper.JMXLock.Lock()
 
 	// Open JMX connection
-	if err := jmxwrapper.JMXOpen(b.Host, strconv.Itoa(b.JMXPort), args.GlobalArgs.DefaultJMXUser, args.GlobalArgs.DefaultJMXPassword); err != nil {
+	options := make([]jmx.Option, 0)
+	if args.GlobalArgs.KeyStore != "" && args.GlobalArgs.KeyStorePassword != "" && args.GlobalArgs.TrustStore != "" && args.GlobalArgs.TrustStorePassword != "" {
+		ssl := jmx.WithSSL(args.GlobalArgs.KeyStore, args.GlobalArgs.KeyStorePassword, args.GlobalArgs.TrustStore, args.GlobalArgs.TrustStorePassword)
+		options = append(options, ssl)
+	}
+
+	if err := jmxwrapper.JMXOpen(b.Host, strconv.Itoa(b.JMXPort), args.GlobalArgs.DefaultJMXUser, args.GlobalArgs.DefaultJMXPassword, options...); err != nil {
 		log.Error("Unable to make JMX connection for Broker '%s': %s", b.Host, err.Error())
 		jmxwrapper.JMXClose() // Close needs to be called even on a failed open to clear out any set variables
 		jmxwrapper.JMXLock.Unlock()
