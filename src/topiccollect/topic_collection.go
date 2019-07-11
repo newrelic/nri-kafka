@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-  "regexp"
+	"regexp"
 	"strings"
 	"sync"
 
@@ -54,14 +54,14 @@ func GetTopics(zkConn zookeeper.Connection) ([]string, error) {
 			return nil, errors.New("zookeeper connection must not be nil for 'All' mode")
 		}
 
-    if args.GlobalArgs.TopicRegex == "" {
-      return nil, errors.New("regex topic mode requires the topic_regex argument to be set")
-    }
+		if args.GlobalArgs.TopicRegex == "" {
+			return nil, errors.New("regex topic mode requires the topic_regex argument to be set")
+		}
 
-    pattern, err := regexp.Compile(args.GlobalArgs.TopicRegex)
-    if err != nil {
-      return nil, fmt.Errorf("failed to compile topic regex: %s", err)
-    }
+		pattern, err := regexp.Compile(args.GlobalArgs.TopicRegex)
+		if err != nil {
+			return nil, fmt.Errorf("failed to compile topic regex: %s", err)
+		}
 
 		// If they want all topics, ask Zookeeper for the list of topics
 		collectedTopics, _, err := zkConn.Children(zookeeper.Path("/brokers/topics"))
@@ -70,13 +70,12 @@ func GetTopics(zkConn zookeeper.Connection) ([]string, error) {
 			return nil, err
 		}
 
-    filteredTopics := make([]string, 0)
-    for _, topic := range collectedTopics {
-      if pattern.Match([]byte(topic)) {
-        filteredTopics = append(filteredTopics, topic)
-      }
-    }
-
+		filteredTopics := make([]string, 0)
+		for _, topic := range collectedTopics {
+			if pattern.Match([]byte(topic)) {
+				filteredTopics = append(filteredTopics, topic)
+			}
+		}
 
 		return filteredTopics, nil
 	case "all":
