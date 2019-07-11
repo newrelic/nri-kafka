@@ -2,6 +2,7 @@ package main
 
 import (
 	"os"
+  "strings"
 	"sync"
 
 	"github.com/newrelic/infra-integrations-sdk/integration"
@@ -56,6 +57,7 @@ func coreCollection(zkConn zookeeper.Connection, kafkaIntegration *integration.I
 	// Get topic list
 	collectedTopics, err := tc.GetTopics(zkConn)
 	ExitOnErr(err)
+  log.Debug("Collecting metrics for the following topics: %s", strings.Join(collectedTopics, ","))
 
 	// Enforce hard limits on Topics
 	collectedTopics = enforceTopicLimit(collectedTopics)
@@ -90,6 +92,7 @@ func coreCollection(zkConn zookeeper.Connection, kafkaIntegration *integration.I
 // All errors should be logged before calling this.
 func ExitOnErr(err error) {
 	if err != nil {
+    log.Error("Integration failed: %s", err)
 		os.Exit(1)
 	}
 }

@@ -28,6 +28,7 @@ type KafkaArguments struct {
 	Consumers              []*JMXHost
 	TopicMode              string
 	TopicList              []string
+	TopicRegex             string
 	Timeout                int
 	CollectTopicSize       bool
 
@@ -118,6 +119,7 @@ func ParseArgs(a ArgumentList) (*KafkaArguments, error) {
 		Consumers:              consumers,
 		TopicMode:              a.TopicMode,
 		TopicList:              topics,
+		TopicRegex:             a.TopicRegex,
 		Timeout:                a.Timeout,
 		KeyStore:               a.KeyStore,
 		KeyStorePassword:       a.KeyStorePassword,
