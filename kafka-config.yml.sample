@@ -74,8 +74,9 @@ instances:
       # "collect_topic_size" to true. This operation is intensive and can take a while to collect for a larger number of topics. 
       # It is recommended to only enable this feature if using a small "topic_list".
       # If the field is omitted it will default to false.
-      topic_mode: <all, none, or list. All mode requires a zookeeper_host to be specified>
+      topic_mode: <all, none, list or regex. All mode requires a zookeeper_host to be specified>
       topic_list: <JSON Array of Topics to monitor. Ignored if topic_mode is not list>
+      topic_regex: <Regex pattern that matches the topics to be collected. Ignored if topic_mode is not regex>
       collect_topic_size: <true or false. Indicate if topic size should be collected as it is a very resource intensive metric to collect>
     labels:
       env: production
