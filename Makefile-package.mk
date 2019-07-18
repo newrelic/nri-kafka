@@ -57,4 +57,14 @@ tarball: prep-pkg-env
 	@mkdir -p $(TARBALL_DIR)
 	tar -czf $(TARBALL_DIR)/$(FILENAME_TARBALL_LINUX) -C $(SOURCE_DIR) ./
 
+tarball-all:
+	@if [ ! -z "$(ARCHS)" ]; then \
+		for target_arch in $(ARCHS) ; do \
+			arch=$$(echo $$target_arch | cut -d '/' -f2) ;\
+			$(MAKE) tarball GOARCH=$$arch || exit 1 ;\
+		done \
+	else \
+		$(MAKE) tarball GOARCH=amd64 ;\
+	fi
+
 .PHONY: package create-bins prep-pkg-env $(PACKAGE_TYPES)
