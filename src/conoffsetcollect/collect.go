@@ -69,7 +69,8 @@ func Collect(zkConn zookeeper.Connection, kafkaIntegration *integration.Integrat
 
 // setMetrics adds the metrics from an array of partitionOffsets to the integration
 func setMetrics(consumerGroup string, offsetData []*partitionOffsets, kafkaIntegration *integration.Integration) error {
-	groupEntity, err := kafkaIntegration.Entity(consumerGroup, "consumerGroup")
+	clusterIDAttr := integration.NewIDAttribute("clusterName", args.GlobalArgs.ClusterName)
+	groupEntity, err := kafkaIntegration.Entity(consumerGroup, "ka-consumerGroup", clusterIDAttr)
 	if err != nil {
 		return err
 	}

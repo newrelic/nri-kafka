@@ -116,7 +116,7 @@ func TestDefaultArgs(t *testing.T) {
 		Consumers:              []*JMXHost{},
 		TopicMode:              "None",
 		TopicList:              []string{},
-		Timeout:                2000,
+		Timeout:                10000,
 		CollectTopicSize:       false,
 		ConsumerOffset:         false,
 		ConsumerGroups:         nil,

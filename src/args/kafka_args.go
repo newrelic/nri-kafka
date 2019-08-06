@@ -16,6 +16,7 @@ var GlobalArgs *KafkaArguments
 // to allow arguments to be consumed easier.
 type KafkaArguments struct {
 	sdkArgs.DefaultArgumentList
+	ClusterName            string
 	ZookeeperHosts         []*ZookeeperHost
 	ZookeeperAuthScheme    string
 	ZookeeperAuthSecret    string
@@ -27,8 +28,15 @@ type KafkaArguments struct {
 	Consumers              []*JMXHost
 	TopicMode              string
 	TopicList              []string
+	TopicRegex             string
 	Timeout                int
 	CollectTopicSize       bool
+
+	// SSL options
+	KeyStore           string
+	KeyStorePassword   string
+	TrustStore         string
+	TrustStorePassword string
 
 	// Consumer offset arguments
 	ConsumerOffset bool
@@ -99,6 +107,7 @@ func ParseArgs(a ArgumentList) (*KafkaArguments, error) {
 
 	parsedArgs := &KafkaArguments{
 		DefaultArgumentList:    a.DefaultArgumentList,
+		ClusterName:            a.ClusterName,
 		ZookeeperHosts:         zookeeperHosts,
 		ZookeeperAuthScheme:    a.ZookeeperAuthScheme,
 		ZookeeperAuthSecret:    a.ZookeeperAuthSecret,
@@ -110,7 +119,12 @@ func ParseArgs(a ArgumentList) (*KafkaArguments, error) {
 		Consumers:              consumers,
 		TopicMode:              a.TopicMode,
 		TopicList:              topics,
+		TopicRegex:             a.TopicRegex,
 		Timeout:                a.Timeout,
+		KeyStore:               a.KeyStore,
+		KeyStorePassword:       a.KeyStorePassword,
+		TrustStore:             a.TrustStore,
+		TrustStorePassword:     a.TrustStorePassword,
 		CollectTopicSize:       a.CollectTopicSize,
 		ConsumerOffset:         a.ConsumerOffset,
 		ConsumerGroups:         consumerGroups,

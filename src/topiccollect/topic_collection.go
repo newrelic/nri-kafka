@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"regexp"
 	"strings"
 	"sync"
 
@@ -48,6 +49,35 @@ func GetTopics(zkConn zookeeper.Connection) ([]string, error) {
 		return []string{}, nil
 	case "list":
 		return args.GlobalArgs.TopicList, nil
+	case "regex":
+		if zkConn == nil {
+			return nil, errors.New("zookeeper connection must not be nil for 'All' mode")
+		}
+
+		if args.GlobalArgs.TopicRegex == "" {
+			return nil, errors.New("regex topic mode requires the topic_regex argument to be set")
+		}
+
+		pattern, err := regexp.Compile(args.GlobalArgs.TopicRegex)
+		if err != nil {
+			return nil, fmt.Errorf("failed to compile topic regex: %s", err)
+		}
+
+		// If they want all topics, ask Zookeeper for the list of topics
+		collectedTopics, _, err := zkConn.Children(zookeeper.Path("/brokers/topics"))
+		if err != nil {
+			log.Error("Unable to get list of topics from Zookeeper with error: %s", err)
+			return nil, err
+		}
+
+		filteredTopics := make([]string, 0)
+		for _, topic := range collectedTopics {
+			if pattern.Match([]byte(topic)) {
+				filteredTopics = append(filteredTopics, topic)
+			}
+		}
+
+		return filteredTopics, nil
 	case "all":
 		if zkConn == nil {
 			return nil, errors.New("zookeeper connection must not be nil for 'All' mode")
@@ -67,13 +97,14 @@ func GetTopics(zkConn zookeeper.Connection) ([]string, error) {
 }
 
 // FeedTopicPool sends Topic structs down the topicChan for workers to collect and build Topic structs
-func FeedTopicPool(topicChan chan<- *Topic, integration *integration.Integration, collectedTopics []string) {
+func FeedTopicPool(topicChan chan<- *Topic, i *integration.Integration, collectedTopics []string) {
 	defer close(topicChan)
 
 	if args.GlobalArgs.CollectBrokerTopicData {
 		for _, topicName := range collectedTopics {
 			// create topic entity
-			topicEntity, err := integration.Entity(topicName, "topic")
+			clusterIDAttr := integration.NewIDAttribute("clusterName", args.GlobalArgs.ClusterName)
+			topicEntity, err := i.Entity(topicName, "ka-topic", clusterIDAttr)
 			if err != nil {
 				log.Error("Unable to create an entity for topic %s", topicName)
 			}
@@ -104,12 +135,12 @@ func topicWorker(topicChan <-chan *Topic, wg *sync.WaitGroup, zkConn zookeeper.C
 
 		// Collect and populate inventory with topic configuration
 		if args.GlobalArgs.All() || args.GlobalArgs.Inventory {
-			log.Debug("Collecting inventory for topic %s", topic)
+			log.Debug("Collecting inventory for topic %s", topic.Name)
 			errors := populateTopicInventory(topic)
 			if len(errors) != 0 {
 				log.Error("Failed to populate inventory with %d errors", len(errors))
 			}
-			log.Debug("Done Collecting inventory for topic %s", topic)
+			log.Debug("Done Collecting inventory for topic %s", topic.Name)
 		}
 
 		// Collect topic metrics
