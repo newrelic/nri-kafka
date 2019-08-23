@@ -12,8 +12,9 @@ RUN git clone https://github.com/newrelic/nrjmx && \
 FROM newrelic/infrastructure:latest
 ENV NRIA_IS_FORWARD_ONLY true
 ENV NRIA_K8S_INTEGRATION true
-COPY --from=builder-kafka /go/src/github.com/newrelic/nri-kafka/bin/nr-kafka /var/db/newrelic-infra/newrelic-integrations/bin/nr-kafka
-COPY --from=builder-kafka /go/src/github.com/newrelic/nri-kafka/kafka-definition.yml /var/db/newrelic-infra/newrelic-integrations/definition.yaml
+COPY --from=builder-kafka /go/src/github.com/newrelic/nri-kafka/bin/nr-kafka /nri-sidecar/newrelic-infra/newrelic-integrations/bin/nr-kafka
+COPY --from=builder-kafka /go/src/github.com/newrelic/nri-kafka/kafka-definition.yml /nri-sidecar/newrelic-infra/newrelic-integrations/definition.yaml
 COPY --from=builder-jmx nrjmx/bin/nrjmx /usr/bin/nrjmx
 COPY --from=builder-jmx nrjmx/target/nrjmx-*-jar-with-dependencies.jar /usr/lib/nrjmx/nrjmx.jar
 RUN apk update && apk add openjdk7-jre
+USER 1000
