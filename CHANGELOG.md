@@ -5,6 +5,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 2.3.1 - 2019-08-29
+### Fixed
+- Better log messages for failed hwm collection
+
 ## 2.3.0 - 2019-08-20
 ### Added
 - Support for PROTOCOL_MAP configuration in Zookeeper
