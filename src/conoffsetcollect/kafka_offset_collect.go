@@ -161,7 +161,7 @@ func getHighWaterMarks(topicPartitions TopicPartitions, client connection.Client
 				if block != nil && block.Err == sarama.ErrNoError {
 					hwms[topic][partition] = block.HighWaterMarkOffset
 				} else {
-					log.Error("Failed to collect hwm for partition %v", partition)
+          log.Error("Failed to collect hwm for partition %v: %s", partition, block.Err.Error())
 				}
 			}
 		}
