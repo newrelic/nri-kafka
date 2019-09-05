@@ -5,6 +5,8 @@ The New Relic Infrastructure Integration for Kafka captures critical performance
 
 Inventory data is obtained mainly from Zookeeper nodes and metrics are collected through JMX.
 
+See our [documentation web site](https://docs.newrelic.com/docs/integrations/host-integrations/host-integrations-list/kafka-monitoring-integration) for more details.
+
 ## Requirements
 
 JMX is required to be enabled on the following entities in order to be able to collect metrics:
