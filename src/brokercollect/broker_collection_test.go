@@ -110,7 +110,7 @@ func TestCreateBroker_Normal(t *testing.T) {
 	if expectedBroker.KafkaPort != b.KafkaPort {
 		t.Errorf("Expected Kafka Port '%d' got '%d'", expectedBroker.KafkaPort, b.KafkaPort)
 	}
-	if b.Entity.Metadata.Name != b.Host {
+	if b.Entity.Metadata.Name != "kafkabroker:9092" {
 		t.Errorf("Expected entity name '%s' got '%s'", expectedBroker.Host, b.Entity.Metadata.Name)
 	}
 	if b.Entity.Metadata.Namespace != "ka-broker" {

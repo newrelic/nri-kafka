@@ -3,6 +3,7 @@ package brokercollect
 
 import (
 	"encoding/json"
+	"fmt"
 	"strconv"
 	"sync"
 
@@ -123,7 +124,7 @@ func createBroker(brokerID int, zkConn zookeeper.Connection, i *integration.Inte
 
 	// Create broker entity
 	clusterIDAttr := integration.NewIDAttribute("clusterName", args.GlobalArgs.ClusterName)
-	brokerEntity, err := i.Entity(host, "ka-broker", clusterIDAttr)
+	brokerEntity, err := i.Entity(fmt.Sprintf("%s:%d", host, kafkaPort), "ka-broker", clusterIDAttr)
 	if err != nil {
 		log.Error("Unable to create entity for broker ID %d: %s", brokerID, err)
 		return nil, err
