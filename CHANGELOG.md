@@ -5,6 +5,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 2.3.2 - 2019-09-11
+### Fixed
+- Add port to broker entityName to increase uniqueness
+
 ## 2.3.1 - 2019-08-29
 ### Fixed
 - Better log messages for failed hwm collection
