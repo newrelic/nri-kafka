@@ -14,6 +14,7 @@ import (
 	"github.com/Shopify/sarama"
 	"github.com/newrelic/infra-integrations-sdk/log"
 	"github.com/newrelic/nri-kafka/src/args"
+	"github.com/newrelic/nri-kafka/src/connection"
 	"github.com/samuel/go-zookeeper/zk"
 )
 
@@ -21,7 +22,8 @@ import (
 type Connection interface {
 	Get(string) ([]byte, *zk.Stat, error)
 	Children(string) ([]string, *zk.Stat, error)
-	CreateClient() (sarama.Client, error)
+	CreateClient() (connection.Client, error)
+	CreateClusterAdmin() (sarama.ClusterAdmin, error)
 }
 
 type zookeeperConnection struct {
@@ -36,7 +38,7 @@ func (z zookeeperConnection) Get(s string) ([]byte, *zk.Stat, error) {
 	return z.inner.Get(s)
 }
 
-func (z zookeeperConnection) CreateClient() (sarama.Client, error) {
+func (z zookeeperConnection) CreateClient() (connection.Client, error) {
 	brokerIDs, _, err := z.Children(Path("/brokers/ids"))
 	if err != nil {
 		return nil, err
@@ -71,7 +73,45 @@ func (z zookeeperConnection) CreateClient() (sarama.Client, error) {
 		return nil, err
 	}
 
-	return c, nil
+	return connection.SaramaClient{c}, nil
+}
+
+func (z zookeeperConnection) CreateClusterAdmin() (sarama.ClusterAdmin, error) {
+	brokerIDs, _, err := z.Children(Path("/brokers/ids"))
+	if err != nil {
+		return nil, err
+	}
+
+	brokers := make([]string, 0, len(brokerIDs))
+	isTLS := false
+	for _, brokerID := range brokerIDs {
+		// convert to int id
+		intID, err := strconv.Atoi(brokerID)
+		if err != nil {
+			log.Warn("Unable to parse integer broker ID from %s", brokerID)
+			continue
+		}
+
+		// get broker connection info
+		scheme, host, _, port, err := GetBrokerConnectionInfo(intID, z)
+		if err != nil {
+			log.Warn("Unable to get connection information for broker with ID '%d'. Will not collect offset data for consumer groups on this broker.", intID)
+			continue
+		}
+
+		if !isTLS && scheme == "https" {
+			isTLS = true
+		}
+
+		brokers = append(brokers, fmt.Sprintf("%s:%d", host, port))
+	}
+
+	c, err := sarama.NewClusterAdmin(brokers, createConfig(isTLS))
+	if err != nil {
+		return nil, err
+	}
+
+  return c, nil
 }
 
 func createConfig(isTLS bool) *sarama.Config {

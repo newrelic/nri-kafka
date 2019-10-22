@@ -14,24 +14,23 @@ import (
 )
 
 // getConsumerOffsets collects consumer offsets from Kafka brokers rather than Zookeeper
-func getConsumerOffsets(groupName string, topicPartitions TopicPartitions, client sarama.Client) (groupOffsets, error) {
+func getConsumerOffsets(groupName string, topicPartitions TopicPartitions, client connection.Client) (groupOffsets, error) {
 
 	// refresh coordinator cache (suggested by sarama to do so)
 	if err := client.RefreshCoordinator(groupName); err != nil {
 		log.Debug("Unable to refresh coordinator for group '%s': %v", groupName, err)
 	}
 
-	// get coordinator broker if possible, if not look through all brokers
 	coordinator, err := client.Coordinator(groupName)
 	if err != nil {
 		return nil, fmt.Errorf("unable to get the coordinator broker for group %s", groupName)
 	}
 
-	return getConsumerOffsetsFromBroker(groupName, topicPartitions, []*sarama.Broker{coordinator})
+	return getConsumerOffsetsFromBroker(groupName, topicPartitions, []connection.Broker{coordinator})
 }
 
 // getConsumerOffsetsFromBroker collects a consumer groups offsets from the given brokers
-func getConsumerOffsetsFromBroker(groupName string, topicPartitions TopicPartitions, brokers []*sarama.Broker) (groupOffsets, error) {
+func getConsumerOffsetsFromBroker(groupName string, topicPartitions TopicPartitions, brokers []connection.Broker) (groupOffsets, error) {
 	offsetRequest := createOffsetFetchRequest(groupName, topicPartitions)
 
 	offsets := make(groupOffsets)
@@ -97,7 +96,7 @@ type topicOffsets map[int32]int64
 // is the leader for. This is more complicated than it sounds, see createFetchRequest for details.
 // Finally, it makes the request, and for each partition in the request, it inserts the highWaterMarkOffset
 // from the partition-associated block into the hwms map to be returned.
-func getHighWaterMarks(topicPartitions TopicPartitions, client sarama.Client) (groupOffsets, error) {
+func getHighWaterMarks(topicPartitions TopicPartitions, client connection.Client) (groupOffsets, error) {
 	// Determine which broker is the leader for each partition
 	brokerLeaderMap, err := getBrokerLeaderMap(topicPartitions, client)
 	if err != nil {
@@ -141,7 +140,7 @@ func getHighWaterMarks(topicPartitions TopicPartitions, client sarama.Client) (g
 
 }
 
-func fetchHighWaterMarkResponse(broker connection.Broker, tps TopicPartitions, client sarama.Client) (*sarama.FetchResponse, error) {
+func fetchHighWaterMarkResponse(broker connection.Broker, tps TopicPartitions, client connection.Client) (*sarama.FetchResponse, error) {
 	// Open the connection if necessary
 	if err := resetBrokerConnection(broker, sarama.NewConfig()); err != nil {
 		return nil, err
@@ -157,7 +156,7 @@ func fetchHighWaterMarkResponse(broker connection.Broker, tps TopicPartitions, c
 
 }
 
-func getBrokerLeaderMap(topicPartitions TopicPartitions, client sarama.Client) (map[connection.Broker]TopicPartitions, error) {
+func getBrokerLeaderMap(topicPartitions TopicPartitions, client connection.Client) (map[connection.Broker]TopicPartitions, error) {
 	brokerLeaderMap := make(map[connection.Broker]TopicPartitions)
 	for topic, partitions := range topicPartitions {
 		for _, partition := range partitions {
@@ -179,7 +178,7 @@ func getBrokerLeaderMap(topicPartitions TopicPartitions, client sarama.Client) (
 // fillOutTopicPartitionsFromKafka checks all topics for the consumer group.
 // If a topic has no partition then all partitions of a topic will be added.
 // All calls will query Kafka rather than Zookeeper
-func fillTopicPartitions(groupID string, topicPartitions TopicPartitions, client sarama.Client) TopicPartitions {
+func fillTopicPartitions(groupID string, topicPartitions TopicPartitions, client connection.Client) TopicPartitions {
 
 	// If no topics return error
 	if len(topicPartitions) == 0 {
@@ -224,7 +223,7 @@ func createOffsetFetchRequest(groupName string, topicPartitions TopicPartitions)
 	return request
 }
 
-func createFetchRequest(topicPartitions TopicPartitions, client sarama.Client) *sarama.FetchRequest {
+func createFetchRequest(topicPartitions TopicPartitions, client connection.Client) *sarama.FetchRequest {
 	// Explanation:
 	// To add a block, you have to specify an offset to start reading from. Unfortunately, unlike
 	// other parts of the library, this offset cannot use the standard enums OffsetOldest or OffsetNewest.
@@ -301,13 +300,8 @@ func populateOffsetStructs(offsets, hwms groupOffsets) []*partitionOffsets {
 
 }
 
-func collectOffsetsForConsumerGroup(client sarama.Client, consumerGroup string, members map[string]*sarama.GroupMemberDescription, kafkaIntegration *integration.Integration, wg *sync.WaitGroup) error {
+func collectOffsetsForConsumerGroup(client connection.Client, clusterAdmin sarama.ClusterAdmin, consumerGroup string, members map[string]*sarama.GroupMemberDescription, kafkaIntegration *integration.Integration, wg *sync.WaitGroup) error {
 	defer wg.Done()
-
-	clusterAdmin, err := sarama.NewClusterAdminFromClient(client)
-	if err != nil {
-		return fmt.Errorf("failed to create cluster admin from client: %s", err)
-	}
 
 	for memberName, description := range members {
 		assignment, err := description.GetMemberAssignment()

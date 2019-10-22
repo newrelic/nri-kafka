@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/Shopify/sarama"
 	"github.com/newrelic/infra-integrations-sdk/data/metric"
 	"github.com/newrelic/infra-integrations-sdk/integration"
 	"github.com/newrelic/infra-integrations-sdk/log"
@@ -31,16 +30,25 @@ func Collect(zkConn zookeeper.Connection, kafkaIntegration *integration.Integrat
 	if err != nil {
 		return err
 	}
-
 	defer func() {
 		if err := client.Close(); err != nil {
 			log.Debug("Error closing client connection: %s", err.Error())
 		}
 	}()
 
+	clusterAdmin, err := zkConn.CreateClusterAdmin()
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if err := clusterAdmin.Close(); err != nil {
+			log.Debug("Error closing clusterAdmin connection: %s", err.Error())
+		}
+	}()
+
+
 	// Use the more modern collection method if the configuration exists
 	if args.GlobalArgs.ConsumerGroupRegex != nil {
-		clusterAdmin, err := sarama.NewClusterAdminFromClient(client)
 		if err != nil {
 			return fmt.Errorf("failed to create cluster admin from client: %s", err)
 		}
@@ -64,7 +72,7 @@ func Collect(zkConn zookeeper.Connection, kafkaIntegration *integration.Integrat
 		for _, consumerGroup := range consumerGroups {
 			if args.GlobalArgs.ConsumerGroupRegex.MatchString(consumerGroup.GroupId) {
 				wg.Add(1)
-				go collectOffsetsForConsumerGroup(client, consumerGroup.GroupId, consumerGroup.Members, kafkaIntegration, &wg)
+				go collectOffsetsForConsumerGroup(client, clusterAdmin, consumerGroup.GroupId, consumerGroup.Members, kafkaIntegration, &wg)
 			} else {
 				unmatchedConsumerGroups = append(unmatchedConsumerGroups, consumerGroup.GroupId)
 			}

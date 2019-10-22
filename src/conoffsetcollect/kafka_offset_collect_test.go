@@ -10,18 +10,6 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-func Test_fillKafkaCaches(t *testing.T) {
-	fakeClient := new(connection.MockClient)
-	var fakeBroker connection.Broker
-	fakeBroker = new(connection.MockBroker)
-
-	fakeClient.On("Brokers").Return([]connection.Broker{fakeBroker})
-	fakeClient.On("Topics").Return([]string{"testtopic"}, nil)
-
-	fillKafkaCaches(fakeClient)
-
-}
-
 func Test_getConsumerOffsets(t *testing.T) {
 	groupName := "testGroup"
 	topicPartitions := TopicPartitions{"testTopic": {0}}
@@ -34,9 +22,6 @@ func Test_getConsumerOffsets(t *testing.T) {
 	fetchOffsetResponse.Blocks = map[string]map[int32]*sarama.OffsetFetchResponseBlock{
 		"testTopic": {0: offsetResponseBlock},
 	}
-
-	allBrokers = make([]connection.Broker, 0)
-	allTopics = make([]string, 0)
 
 	fakeClient.On("RefreshCoordinator", mock.Anything).Return(nil)
 	fakeClient.On("Coordinator", groupName).Return(fakeBroker, nil)
