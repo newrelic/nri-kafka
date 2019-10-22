@@ -42,5 +42,6 @@ type ArgumentList struct {
 
 	// Consumer offset arguments
 	ConsumerOffset bool   `default:"false" help:"Populate consumer offset data"`
-	ConsumerGroups string `default:"{}" help:"JSON Object whitelist of consumer groups to their topics and topics to their partitions, in which to collect consumer offsets for."`
+	ConsumerGroups string `default:"{}" help:"DEPRECATED -- JSON Object whitelist of consumer groups to their topics and topics to their partitions, in which to collect consumer offsets for."`
+  ConsumerGroupRegex string `default:"" help:"A regex pattern matching the consumer groups to collect"`
 }

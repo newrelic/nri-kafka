@@ -6,7 +6,7 @@ import (
 
 // Client is an interface for mocking
 type Client interface {
-	Brokers() []Broker
+	Brokers() []*sarama.Broker
 	Topics() ([]string, error)
 	Partitions(string) ([]int32, error)
 	RefreshCoordinator(string) error
@@ -22,14 +22,8 @@ type SaramaClient struct {
 }
 
 // Brokers wraps the sarama Brokers function
-func (c SaramaClient) Brokers() []Broker {
-	saramaBrokers := c.Client.Brokers()
-	brokers := make([]Broker, len(saramaBrokers))
-	for i, saramaBroker := range saramaBrokers {
-		brokers[i] = saramaBroker
-	}
-
-	return brokers
+func (c SaramaClient) Brokers() []*sarama.Broker {
+	return c.Client.Brokers()
 }
 
 // Coordinator wraps the sarama.Client.Coordinator() function
