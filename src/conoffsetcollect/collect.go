@@ -2,8 +2,9 @@
 package conoffsetcollect
 
 import (
-  "errors"
+	"errors"
 	"fmt"
+	"sync"
 
 	"github.com/Shopify/sarama"
 	"github.com/newrelic/infra-integrations-sdk/data/metric"
@@ -44,14 +45,14 @@ func Collect(zkConn zookeeper.Connection, kafkaIntegration *integration.Integrat
 			return fmt.Errorf("failed to create cluster admin from client: %s", err)
 		}
 
-    consumerGroupMap, err := clusterAdmin.ListConsumerGroups()
-    if err != nil {
-      return fmt.Errorf("failed to get list of consumer groups: %s", err)
-    }
-    consumerGroupList := make([]string, len(consumerGroupMap))
-    for consumerGroup := range consumerGroupMap {
-      consumerGroupList = append(consumerGroupList, consumerGroup)
-    }
+		consumerGroupMap, err := clusterAdmin.ListConsumerGroups()
+		if err != nil {
+			return fmt.Errorf("failed to get list of consumer groups: %s", err)
+		}
+		consumerGroupList := make([]string, len(consumerGroupMap))
+		for consumerGroup := range consumerGroupMap {
+			consumerGroupList = append(consumerGroupList, consumerGroup)
+		}
 
 		consumerGroups, err := clusterAdmin.DescribeConsumerGroups(consumerGroupList)
 		if err != nil {
@@ -59,9 +60,11 @@ func Collect(zkConn zookeeper.Connection, kafkaIntegration *integration.Integrat
 		}
 
 		var unmatchedConsumerGroups []string
+		var wg sync.WaitGroup
 		for _, consumerGroup := range consumerGroups {
 			if args.GlobalArgs.ConsumerGroupRegex.MatchString(consumerGroup.GroupId) {
-				collectOffsetsForConsumerGroup(client, consumerGroup.GroupId, consumerGroup.Members, kafkaIntegration)
+				wg.Add(1)
+				go collectOffsetsForConsumerGroup(client, consumerGroup.GroupId, consumerGroup.Members, kafkaIntegration, &wg)
 			} else {
 				unmatchedConsumerGroups = append(unmatchedConsumerGroups, consumerGroup.GroupId)
 			}
@@ -70,6 +73,8 @@ func Collect(zkConn zookeeper.Connection, kafkaIntegration *integration.Integrat
 		if len(unmatchedConsumerGroups) > 0 {
 			log.Debug("Skipped collecting consumer offsets for unmatched consumer groups %v", unmatchedConsumerGroups)
 		}
+
+		wg.Wait()
 	} else if len(args.GlobalArgs.ConsumerGroups) != 0 {
 		log.Warn("Argument 'consumer_groups' is deprecated and will be removed in a future version. Use 'consumer_group_regex' instead.")
 		// We retrieve the offsets for each group before calculating the high water mark
@@ -95,10 +100,10 @@ func Collect(zkConn zookeeper.Connection, kafkaIntegration *integration.Integrat
 			if err := setMetrics(consumerGroup, offsetStructs, kafkaIntegration); err != nil {
 				log.Error("Error setting metrics for consumer group '%s': %s", consumerGroup, err.Error())
 			}
-    }
-  } else {
-    return errors.New("if consumer_offset is set, either consumer_group_regex or consumer_groups (deprecated) must also be set")
-  }
+		}
+	} else {
+		return errors.New("if consumer_offset is set, either consumer_group_regex or consumer_groups (deprecated) must also be set")
+	}
 
 	return nil
 }

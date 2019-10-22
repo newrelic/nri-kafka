@@ -107,12 +107,11 @@ func ParseArgs(a ArgumentList) (*KafkaArguments, error) {
 		return nil, err
 	}
 
-  consumerGroupRegex, err := regexp.Compile(a.ConsumerGroupRegex)
-  if err != nil {
-    log.Error("Error parsing consumer_group_regex as a regex pattern")
-    return nil, err
-  }
-
+	consumerGroupRegex, err := regexp.Compile(a.ConsumerGroupRegex)
+	if err != nil {
+		log.Error("Error parsing consumer_group_regex as a regex pattern")
+		return nil, err
+	}
 
 	parsedArgs := &KafkaArguments{
 		DefaultArgumentList:    a.DefaultArgumentList,
@@ -137,7 +136,7 @@ func ParseArgs(a ArgumentList) (*KafkaArguments, error) {
 		CollectTopicSize:       a.CollectTopicSize,
 		ConsumerOffset:         a.ConsumerOffset,
 		ConsumerGroups:         consumerGroups,
-		ConsumerGroupRegex:         consumerGroupRegex,
+		ConsumerGroupRegex:     consumerGroupRegex,
 	}
 
 	return parsedArgs, nil

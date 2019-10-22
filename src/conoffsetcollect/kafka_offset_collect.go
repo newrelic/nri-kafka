@@ -3,13 +3,14 @@ package conoffsetcollect
 import (
 	"fmt"
 	"strconv"
+	"sync"
 
 	"github.com/Shopify/sarama"
-	"github.com/newrelic/infra-integrations-sdk/log"
-	"github.com/newrelic/infra-integrations-sdk/integration"
 	"github.com/newrelic/infra-integrations-sdk/data/metric"
-	"github.com/newrelic/nri-kafka/src/connection"
+	"github.com/newrelic/infra-integrations-sdk/integration"
+	"github.com/newrelic/infra-integrations-sdk/log"
 	"github.com/newrelic/nri-kafka/src/args"
+	"github.com/newrelic/nri-kafka/src/connection"
 )
 
 // getConsumerOffsets collects consumer offsets from Kafka brokers rather than Zookeeper
@@ -23,7 +24,7 @@ func getConsumerOffsets(groupName string, topicPartitions TopicPartitions, clien
 	// get coordinator broker if possible, if not look through all brokers
 	coordinator, err := client.Coordinator(groupName)
 	if err != nil {
-    return nil, fmt.Errorf("unable to get the coordinator broker for group %s", groupName)
+		return nil, fmt.Errorf("unable to get the coordinator broker for group %s", groupName)
 	}
 
 	return getConsumerOffsetsFromBroker(groupName, topicPartitions, []*sarama.Broker{coordinator})
@@ -300,60 +301,67 @@ func populateOffsetStructs(offsets, hwms groupOffsets) []*partitionOffsets {
 
 }
 
-func collectOffsetsForConsumerGroup(client sarama.Client, consumerGroup string, members map[string]*sarama.GroupMemberDescription, kafkaIntegration *integration.Integration) error {
-		clusterAdmin, err := sarama.NewClusterAdminFromClient(client)
+func collectOffsetsForConsumerGroup(client sarama.Client, consumerGroup string, members map[string]*sarama.GroupMemberDescription, kafkaIntegration *integration.Integration, wg *sync.WaitGroup) error {
+	defer wg.Done()
+
+	clusterAdmin, err := sarama.NewClusterAdminFromClient(client)
+	if err != nil {
+		return fmt.Errorf("failed to create cluster admin from client: %s", err)
+	}
+
+	for memberName, description := range members {
+		assignment, err := description.GetMemberAssignment()
 		if err != nil {
-			return fmt.Errorf("failed to create cluster admin from client: %s", err)
+			log.Error("Failed to get group member assignment for member %s: %s", memberName, err)
+			continue
 		}
 
-    for memberName, description := range members {
-      assignment, err := description.GetMemberAssignment()
-      if err != nil {
-        log.Error("Failed to get group member assignment for member %s: %s", memberName, err)
-        continue
-      }
+		listGroupsResponse, err := clusterAdmin.ListConsumerGroupOffsets(consumerGroup, assignment.Topics)
+		if err != nil {
+			log.Error("Failed to get consumer group offsets for member %s: %s", memberName, err)
+			continue
+		}
+		for topic, partitionMap := range listGroupsResponse.Blocks {
+			for partition, block := range partitionMap {
+				wg.Add(1)
+				go func(topic string, partition int32, wg *sync.WaitGroup) {
+					defer wg.Done()
 
-      listGroupsResponse, err := clusterAdmin.ListConsumerGroupOffsets(consumerGroup, assignment.Topics)
-      if err != nil {
-        log.Error("Failed to get consumer group offsets for member %s: %s", memberName, err)
-        continue
-      }
-      for topic, partitionMap := range listGroupsResponse.Blocks {
-        for partition, block := range partitionMap {
-          hwm, err := client.GetOffset(topic, partition, sarama.OffsetNewest)
-          if err != nil {
-            log.Error("Failed to get hwm for topic %s, partition %d: %s", topic, partition, err)
-            continue
-          }
+					hwm, err := client.GetOffset(topic, partition, sarama.OffsetNewest)
+					if err != nil {
+						log.Error("Failed to get hwm for topic %s, partition %d: %s", topic, partition, err)
+						return
+					}
 
-          lag := hwm - block.Offset
+					lag := hwm - block.Offset
 
-          clusterIDAttr := integration.NewIDAttribute("clusterName", args.GlobalArgs.ClusterName)
-          consumerGroupIDAttr := integration.NewIDAttribute("consumerGroup", consumerGroup)
-          topicIDAttr := integration.NewIDAttribute("topic", topic)
-          partitionIDAttr := integration.NewIDAttribute("partition", strconv.Itoa(int(partition)))
+					clusterIDAttr := integration.NewIDAttribute("clusterName", args.GlobalArgs.ClusterName)
+					consumerGroupIDAttr := integration.NewIDAttribute("consumerGroup", consumerGroup)
+					topicIDAttr := integration.NewIDAttribute("topic", topic)
+					partitionIDAttr := integration.NewIDAttribute("partition", strconv.Itoa(int(partition)))
 
-          partitionConsumerEntity, err := kafkaIntegration.Entity(strconv.Itoa(int(partition)), "ka-partition-consumer", clusterIDAttr, consumerGroupIDAttr, topicIDAttr, partitionIDAttr)
-          if err != nil {
-            log.Error("Failed to get entity for partition consumer")
-            continue
-          }
+					partitionConsumerEntity, err := kafkaIntegration.Entity(strconv.Itoa(int(partition)), "ka-partition-consumer", clusterIDAttr, consumerGroupIDAttr, topicIDAttr, partitionIDAttr)
+					if err != nil {
+						log.Error("Failed to get entity for partition consumer")
+						return
+					}
 
-          ms := partitionConsumerEntity.NewMetricSet("KafkaOffsetSample", 
-            metric.Attribute{ Key: "clusterName", Value: args.GlobalArgs.ClusterName },
-            metric.Attribute{ Key: "consumerGroup", Value: consumerGroup },
-            metric.Attribute{ Key: "topic", Value: topic },
-            metric.Attribute{ Key: "partition", Value: strconv.Itoa(int(partition)) },
-            metric.Attribute{ Key: "clientID", Value: description.ClientId },
-            metric.Attribute{ Key: "clientHost", Value: description.ClientHost },
-          )
+					ms := partitionConsumerEntity.NewMetricSet("KafkaOffsetSample",
+						metric.Attribute{Key: "clusterName", Value: args.GlobalArgs.ClusterName},
+						metric.Attribute{Key: "consumerGroup", Value: consumerGroup},
+						metric.Attribute{Key: "topic", Value: topic},
+						metric.Attribute{Key: "partition", Value: strconv.Itoa(int(partition))},
+						metric.Attribute{Key: "clientID", Value: description.ClientId},
+						metric.Attribute{Key: "clientHost", Value: description.ClientHost},
+					)
 
-          ms.SetMetric("consumer.lag", lag, metric.GAUGE)
-          ms.SetMetric("consumer.hwm", hwm, metric.GAUGE)
-          ms.SetMetric("consumer.offset", block.Offset, metric.GAUGE)
-        }
-      }
-    }
+					ms.SetMetric("consumer.lag", lag, metric.GAUGE)
+					ms.SetMetric("consumer.hwm", hwm, metric.GAUGE)
+					ms.SetMetric("consumer.offset", block.Offset, metric.GAUGE)
+				}(topic, partition, wg)
+			}
+		}
+	}
 
-    return nil
+	return nil
 }

@@ -71,7 +71,7 @@ func (z zookeeperConnection) CreateClient() (sarama.Client, error) {
 		return nil, err
 	}
 
-  return c, nil
+	return c, nil
 }
 
 func createConfig(isTLS bool) *sarama.Config {
@@ -83,7 +83,7 @@ func createConfig(isTLS bool) *sarama.Config {
 		}
 	}
 
-  config.Version = sarama.V2_0_0_0
+	config.Version = sarama.V2_0_0_0
 
 	return config
 }
