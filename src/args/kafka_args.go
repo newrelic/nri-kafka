@@ -107,14 +107,14 @@ func ParseArgs(a ArgumentList) (*KafkaArguments, error) {
 		return nil, err
 	}
 
-  var consumerGroupRegex *regexp.Regexp
-  if a.ConsumerGroupRegex != "" {
-    consumerGroupRegex, err = regexp.Compile(a.ConsumerGroupRegex)
-    if err != nil {
-      log.Error("Error parsing consumer_group_regex as a regex pattern")
-      return nil, err
-    }
-  }
+	var consumerGroupRegex *regexp.Regexp
+	if a.ConsumerGroupRegex != "" {
+		consumerGroupRegex, err = regexp.Compile(a.ConsumerGroupRegex)
+		if err != nil {
+			log.Error("Error parsing consumer_group_regex as a regex pattern")
+			return nil, err
+		}
+	}
 
 	parsedArgs := &KafkaArguments{
 		DefaultArgumentList:    a.DefaultArgumentList,

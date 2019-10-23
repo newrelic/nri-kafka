@@ -300,7 +300,7 @@ func populateOffsetStructs(offsets, hwms groupOffsets) []*partitionOffsets {
 
 }
 
-func collectOffsetsForConsumerGroup(client connection.Client, clusterAdmin sarama.ClusterAdmin, consumerGroup string, members map[string]*sarama.GroupMemberDescription, kafkaIntegration *integration.Integration, wg *sync.WaitGroup) error {
+func collectOffsetsForConsumerGroup(client connection.Client, clusterAdmin sarama.ClusterAdmin, consumerGroup string, members map[string]*sarama.GroupMemberDescription, kafkaIntegration *integration.Integration, wg *sync.WaitGroup) {
 	defer wg.Done()
 
 	for memberName, description := range members {
@@ -318,7 +318,7 @@ func collectOffsetsForConsumerGroup(client connection.Client, clusterAdmin saram
 		for topic, partitionMap := range listGroupsResponse.Blocks {
 			for partition, block := range partitionMap {
 				wg.Add(1)
-				go func(topic string, partition int32, wg *sync.WaitGroup) {
+				go func(topic string, partition int32, block *sarama.OffsetFetchResponseBlock, wg *sync.WaitGroup) {
 					defer wg.Done()
 
 					hwm, err := client.GetOffset(topic, partition, sarama.OffsetNewest)
@@ -349,13 +349,22 @@ func collectOffsetsForConsumerGroup(client connection.Client, clusterAdmin saram
 						metric.Attribute{Key: "clientHost", Value: description.ClientHost},
 					)
 
-					ms.SetMetric("consumer.lag", lag, metric.GAUGE)
-					ms.SetMetric("consumer.hwm", hwm, metric.GAUGE)
-					ms.SetMetric("consumer.offset", block.Offset, metric.GAUGE)
-				}(topic, partition, wg)
+					err = ms.SetMetric("consumer.lag", lag, metric.GAUGE)
+					if err != nil {
+						log.Error("Failed to set metric consumer.lag: %s", err)
+					}
+
+					err = ms.SetMetric("consumer.hwm", hwm, metric.GAUGE)
+					if err != nil {
+						log.Error("Failed to set metric consumer.lag: %s", err)
+					}
+
+					err = ms.SetMetric("consumer.offset", block.Offset, metric.GAUGE)
+					if err != nil {
+						log.Error("Failed to set metric consumer.lag: %s", err)
+					}
+				}(topic, partition, block, wg)
 			}
 		}
 	}
-
-	return nil
 }

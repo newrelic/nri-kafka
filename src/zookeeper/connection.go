@@ -111,7 +111,7 @@ func (z zookeeperConnection) CreateClusterAdmin() (sarama.ClusterAdmin, error) {
 		return nil, err
 	}
 
-  return c, nil
+	return c, nil
 }
 
 func createConfig(isTLS bool) *sarama.Config {

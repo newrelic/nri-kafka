@@ -23,8 +23,8 @@ func TestCollect(t *testing.T) {
 	mockZk := zookeeper.MockConnection{}
 	i, _ := integration.New("test", "test")
 	testutils.SetupTestArgs()
-  mockClient := connection.MockClient{}
-  mockClusterAdmin := connection.MockClusterAdmin{}
+	mockClient := connection.MockClient{}
+	mockClusterAdmin := connection.MockClusterAdmin{}
 	mockBroker := connection.MockBroker{}
 
 	args.GlobalArgs = &args.KafkaArguments{
@@ -56,7 +56,7 @@ func TestCollect(t *testing.T) {
 	mockClient.On("Coordinator", mock.Anything).Return(&mockBroker, nil)
 	mockClient.On("GetOffset", "testTopic", int32(0), int64(-2)).Return(int64(123), nil)
 	mockBroker.On("Fetch", mock.Anything).Return(&sarama.FetchResponse{}, nil)
-  mockClusterAdmin.On("Close").Return(nil)
+	mockClusterAdmin.On("Close").Return(nil)
 
 	err := Collect(mockZk, i)
 	assert.Nil(t, err)

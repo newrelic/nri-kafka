@@ -2,7 +2,7 @@ package args
 
 import (
 	"reflect"
-  "regexp"
+	"regexp"
 	"testing"
 
 	"github.com/kr/pretty"
@@ -35,7 +35,7 @@ func TestParseArgs(t *testing.T) {
 		Timeout:                1000,
 		ConsumerOffset:         false,
 		ConsumerGroups:         "[]",
-		ConsumerGroupRegex:         ".*",
+		ConsumerGroupRegex:     ".*",
 	}
 
 	expectedArgs := &KafkaArguments{
@@ -78,13 +78,13 @@ func TestParseArgs(t *testing.T) {
 				Password: "admin2",
 			},
 		},
-		Consumers:      []*JMXHost{},
-		TopicMode:      "Specific",
-		TopicList:      []string{"test1", "test2", "test3"},
-		Timeout:        1000,
-		ConsumerOffset: false,
-		ConsumerGroups: nil,
-    ConsumerGroupRegex: regexp.MustCompile(".*"),
+		Consumers:          []*JMXHost{},
+		TopicMode:          "Specific",
+		TopicList:          []string{"test1", "test2", "test3"},
+		Timeout:            1000,
+		ConsumerOffset:     false,
+		ConsumerGroups:     nil,
+		ConsumerGroupRegex: regexp.MustCompile(".*"),
 	}
 	parsedArgs, err := ParseArgs(a)
 	if err != nil {

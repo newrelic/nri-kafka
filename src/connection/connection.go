@@ -23,13 +23,13 @@ type SaramaClient struct {
 
 // Brokers wraps the sarama Brokers function
 func (c SaramaClient) Brokers() []Broker {
-  saramaBrokers := c.Client.Brokers()
-  brokers := make([]Broker, len(saramaBrokers))
-  for i, broker := range saramaBrokers {
-    saramaBrokers[i] = broker
-  }
+	saramaBrokers := c.Client.Brokers()
+	brokers := make([]Broker, len(saramaBrokers))
+	for i, broker := range saramaBrokers {
+		saramaBrokers[i] = broker
+	}
 
-  return brokers
+	return brokers
 }
 
 // Coordinator wraps the sarama.Client.Coordinator() function

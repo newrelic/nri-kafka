@@ -282,9 +282,9 @@ func TestPopulateTopicMetrics(t *testing.T) {
 	populateTopicMetrics(testTopic, sample, zkConn)
 
 	expectedMetrics := map[string]interface{}{
-		"event_type":                             "KafkaTopicSample",
-		"type":                                   "topic",
-		"name":                                   "test",
+		"event_type": "KafkaTopicSample",
+		"type":       "topic",
+		"name":       "test",
 		"topic.retentionBytesOrTime":             0.0,
 		"topic.partitionsWithNonPreferredLeader": 0.0,
 		"topic.underReplicatedPartitions":        0.0,

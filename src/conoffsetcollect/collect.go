@@ -46,7 +46,6 @@ func Collect(zkConn zookeeper.Connection, kafkaIntegration *integration.Integrat
 		}
 	}()
 
-
 	// Use the more modern collection method if the configuration exists
 	if args.GlobalArgs.ConsumerGroupRegex != nil {
 		if err != nil {
