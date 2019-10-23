@@ -1,6 +1,447 @@
 {
 	"comment": "",
 	"ignore": "test",
-	"package": [],
+	"package": [
+		{
+			"checksumSHA1": "sdIyHghzODicW5YnYriauKdtCKY=",
+			"path": "github.com/Shopify/sarama",
+			"revision": "1358e9c6e61694cd61b2daae79f5aa4b8073c976",
+			"revisionTime": "2019-10-09T14:47:57Z"
+		},
+		{
+			"checksumSHA1": "CSPbwbyzqA6sfORicn4HFtIhF/c=",
+			"path": "github.com/davecgh/go-spew/spew",
+			"revision": "d8f796af33cc11cb798c1aaeb27a4ebc5099927d",
+			"revisionTime": "2018-08-30T19:11:22Z"
+		},
+		{
+			"checksumSHA1": "y2Kh4iPlgCPXSGTCcFpzePYdzzg=",
+			"path": "github.com/eapache/go-resiliency/breaker",
+			"revision": "b98ce2825f7276cc41027348986a241ef5d62fd8",
+			"revisionTime": "2019-07-16T14:30:35Z"
+		},
+		{
+			"checksumSHA1": "w5itvm+eKlJJg3hGILnceM3sono=",
+			"path": "github.com/eapache/go-xerial-snappy",
+			"revision": "776d5712da21bc4762676d614db1d8a64f4238b0",
+			"revisionTime": "2018-08-14T17:44:37Z"
+		},
+		{
+			"checksumSHA1": "SJhV59StVXLFvLU0l9s0d00nV10=",
+			"path": "github.com/eapache/queue",
+			"revision": "093482f3f8ce946c05bcba64badd2c82369e084d",
+			"revisionTime": "2018-02-27T14:14:24Z"
+		},
+		{
+			"checksumSHA1": "4gKrTOaoNvbAgDCVfSLd6J77oPw=",
+			"path": "github.com/golang/snappy",
+			"revision": "ff6b7dc882cf4cfba7ee0b9f7dcc1ac096c554aa",
+			"revisionTime": "2019-09-04T06:34:54Z"
+		},
+		{
+			"checksumSHA1": "P86sNm3HVOHNqwoPXePlZ5/mZG0=",
+			"path": "github.com/hashicorp/go-uuid",
+			"revision": "f32f5fe8d6a86bfd2a4f58998002f7b0b91cf78f",
+			"revisionTime": "2019-10-01T23:12:23Z"
+		},
+		{
+			"checksumSHA1": "fPE6hs5I61ZEXc54kkSoFaafqOk=",
+			"path": "github.com/jcmturner/gofork/encoding/asn1",
+			"revision": "dc7c13fece037a4a36e2b3c69db4991498d30692",
+			"revisionTime": "2019-03-28T16:16:33Z"
+		},
+		{
+			"checksumSHA1": "jdBMz1QxC+2C2oeI8clgMKuWHt4=",
+			"path": "github.com/jcmturner/gofork/x/crypto/pbkdf2",
+			"revision": "dc7c13fece037a4a36e2b3c69db4991498d30692",
+			"revisionTime": "2019-03-28T16:16:33Z"
+		},
+		{
+			"checksumSHA1": "LiFdeSQOf+z92EN3FiRwLCzfQJA=",
+			"path": "github.com/klauspost/compress/fse",
+			"revision": "30993c63e1b02b47dd3878e74c8db50833706ecc",
+			"revisionTime": "2019-10-10T13:32:28Z"
+		},
+		{
+			"checksumSHA1": "6UlFJg7IrMnG8jdGi4GRz+fddTo=",
+			"path": "github.com/klauspost/compress/huff0",
+			"revision": "30993c63e1b02b47dd3878e74c8db50833706ecc",
+			"revisionTime": "2019-10-10T13:32:28Z"
+		},
+		{
+			"checksumSHA1": "tNh2IRye15m0ddyaEKsU2JrJWgI=",
+			"path": "github.com/klauspost/compress/snappy",
+			"revision": "30993c63e1b02b47dd3878e74c8db50833706ecc",
+			"revisionTime": "2019-10-10T13:32:28Z"
+		},
+		{
+			"checksumSHA1": "zrqH8BgxLy8rLJzo5i5iDk4go0U=",
+			"path": "github.com/klauspost/compress/zstd",
+			"revision": "30993c63e1b02b47dd3878e74c8db50833706ecc",
+			"revisionTime": "2019-10-10T13:32:28Z"
+		},
+		{
+			"checksumSHA1": "jjUmnvMxkPdb7hCrY8PG512EOmY=",
+			"path": "github.com/klauspost/compress/zstd/internal/xxhash",
+			"revision": "30993c63e1b02b47dd3878e74c8db50833706ecc",
+			"revisionTime": "2019-10-10T13:32:28Z"
+		},
+		{
+			"checksumSHA1": "3ohk4dFYrERZ6WTdKkIwnTA0HSI=",
+			"path": "github.com/kr/pretty",
+			"revision": "73f6ac0b30a98e433b289500d779f50c1a6f0712",
+			"revisionTime": "2018-05-06T08:33:45Z"
+		},
+		{
+			"checksumSHA1": "SbguDK5lY8uhaHNrmJmNbiWIGM0=",
+			"path": "github.com/kr/text",
+			"revision": "e2ffdb16a802fe2bb95e2e35ff34f0e53aeef34f",
+			"revisionTime": "2018-05-06T08:24:08Z"
+		},
+		{
+			"path": "github.com/newrelic/infra-integrations-sdk...",
+			"revision": ""
+		},
+		{
+			"checksumSHA1": "ZfId5ZYn7jmL0xTxooHcxrLlXoA=",
+			"path": "github.com/newrelic/infra-integrations-sdk/args",
+			"revision": "34c2ee2fcae25e47eb7ec7f76ea3e53904bab365",
+			"revisionTime": "2019-08-26T13:48:57Z"
+		},
+		{
+			"checksumSHA1": "yU9Wr91yeGkqhQqVhwgeQ3xQgJU=",
+			"path": "github.com/newrelic/infra-integrations-sdk/data/event",
+			"revision": "34c2ee2fcae25e47eb7ec7f76ea3e53904bab365",
+			"revisionTime": "2019-08-26T13:48:57Z"
+		},
+		{
+			"checksumSHA1": "EOoxXGqFDPkCvj7wec2S5kCXY2I=",
+			"path": "github.com/newrelic/infra-integrations-sdk/data/inventory",
+			"revision": "34c2ee2fcae25e47eb7ec7f76ea3e53904bab365",
+			"revisionTime": "2019-08-26T13:48:57Z"
+		},
+		{
+			"checksumSHA1": "pyalPjuL/fgXjdxXlwI92sLSG8M=",
+			"path": "github.com/newrelic/infra-integrations-sdk/data/metric",
+			"revision": "34c2ee2fcae25e47eb7ec7f76ea3e53904bab365",
+			"revisionTime": "2019-08-26T13:48:57Z"
+		},
+		{
+			"checksumSHA1": "DdUizp/J5c7mAFZg2hoz4rRPOYM=",
+			"path": "github.com/newrelic/infra-integrations-sdk/integration",
+			"revision": "34c2ee2fcae25e47eb7ec7f76ea3e53904bab365",
+			"revisionTime": "2019-08-26T13:48:57Z"
+		},
+		{
+			"checksumSHA1": "NL7wF0czz21/SF9jaf0BhrmYD+U=",
+			"path": "github.com/newrelic/infra-integrations-sdk/jmx",
+			"revision": "34c2ee2fcae25e47eb7ec7f76ea3e53904bab365",
+			"revisionTime": "2019-08-26T13:48:57Z"
+		},
+		{
+			"checksumSHA1": "6/DhD+/LhC/k3NaLgkpd6iE8b5E=",
+			"path": "github.com/newrelic/infra-integrations-sdk/log",
+			"revision": "34c2ee2fcae25e47eb7ec7f76ea3e53904bab365",
+			"revisionTime": "2019-08-26T13:48:57Z"
+		},
+		{
+			"checksumSHA1": "BsHp62Etporko0d+4GpVxrP2qtw=",
+			"path": "github.com/newrelic/infra-integrations-sdk/persist",
+			"revision": "34c2ee2fcae25e47eb7ec7f76ea3e53904bab365",
+			"revisionTime": "2019-08-26T13:48:57Z"
+		},
+		{
+			"checksumSHA1": "cGG67FHJBNt1JN/5OAJmWZuDGPA=",
+			"path": "github.com/pierrec/lz4",
+			"revision": "0554902aa74a6a41b367c6352ebcc922b26782b1",
+			"revisionTime": "2019-09-07T08:44:30Z"
+		},
+		{
+			"checksumSHA1": "XxQwMkOgl4p0iuaVClAr0KIDtLg=",
+			"path": "github.com/pierrec/lz4/internal/xxh32",
+			"revision": "0554902aa74a6a41b367c6352ebcc922b26782b1",
+			"revisionTime": "2019-09-07T08:44:30Z"
+		},
+		{
+			"checksumSHA1": "I7hloldMJZTqUx6hbVDp5nk9fZQ=",
+			"path": "github.com/pkg/errors",
+			"revision": "27936f6d90f9c8e1145f11ed52ffffbfdb9e0af7",
+			"revisionTime": "2019-02-27T00:00:51Z"
+		},
+		{
+			"checksumSHA1": "LuFv4/jlrmFNnDb/5SCSEPAM9vU=",
+			"path": "github.com/pmezard/go-difflib/difflib",
+			"revision": "5d4384ee4fb2527b0a1256a821ebfc92f91efefc",
+			"revisionTime": "2018-12-26T10:54:42Z"
+		},
+		{
+			"checksumSHA1": "+bQFFYUwDQtQYiznID7DlnEYRfU=",
+			"path": "github.com/rcrowley/go-metrics",
+			"revision": "cac0b30c2563378d434b5af411844adff8e32960",
+			"revisionTime": "2019-08-26T02:22:08Z"
+		},
+		{
+			"checksumSHA1": "Vdjr+0mTbBmbiKNC+T0n4IrnF6M=",
+			"path": "github.com/samuel/go-zookeeper/zk",
+			"revision": "2cc03de413da42869e2db7ce7965d3e978d917eb",
+			"revisionTime": "2019-09-23T20:27:52Z"
+		},
+		{
+			"checksumSHA1": "tLHFmMOC2eMcXYaPXfifUVj3wX4=",
+			"path": "github.com/stretchr/objx",
+			"revision": "35313a95ee26395aa17d366c71a2ccf788fa69b6",
+			"revisionTime": "2019-04-15T11:18:23Z"
+		},
+		{
+			"checksumSHA1": "QELcZ0cB4PrpjIoeESHQCGDpMsk=",
+			"path": "github.com/stretchr/testify/assert",
+			"revision": "85f2b59c4459e5bf57488796be8c3667cb8246d6",
+			"revisionTime": "2018-07-16T14:42:29Z"
+		},
+		{
+			"checksumSHA1": "bg70xAHEu6HRf2iFu8h5iJBjUfg=",
+			"path": "github.com/stretchr/testify/mock",
+			"revision": "85f2b59c4459e5bf57488796be8c3667cb8246d6",
+			"revisionTime": "2018-07-16T14:42:29Z"
+		},
+		{
+			"path": "github/kr/pretty",
+			"revision": ""
+		},
+		{
+			"checksumSHA1": "UDvj5huw3BaGehfVRCB1UGQAtP4=",
+			"path": "golang.org/x/crypto/md4",
+			"revision": "87dc89f01550277dc22b74ffcf4cd89fa2f40f4c",
+			"revisionTime": "2019-10-11T18:31:21Z"
+		},
+		{
+			"checksumSHA1": "1MGpGDQqnUoRpv7VEcQrXOBydXE=",
+			"path": "golang.org/x/crypto/pbkdf2",
+			"revision": "87dc89f01550277dc22b74ffcf4cd89fa2f40f4c",
+			"revisionTime": "2019-10-11T18:31:21Z"
+		},
+		{
+			"checksumSHA1": "eIoaD6Kj5iiWn4oxbJDeev/2YSA=",
+			"path": "golang.org/x/net/internal/socks",
+			"revision": "ec77196f6094c3492a8b61f2c11cf937f78992ae",
+			"revisionTime": "2019-10-21T13:46:03Z"
+		},
+		{
+			"checksumSHA1": "28Sn0XihdqNv3MysxyRalibC3Tg=",
+			"path": "golang.org/x/net/proxy",
+			"revision": "ec77196f6094c3492a8b61f2c11cf937f78992ae",
+			"revisionTime": "2019-10-21T13:46:03Z"
+		},
+		{
+			"checksumSHA1": "F+Irnk0yiBmKAsGWR2J2yvBFOZ8=",
+			"path": "gopkg.in/jcmturner/aescts.v1",
+			"revision": "f6abebb3171c4c1b1fea279cb7c7325020a26290",
+			"revisionTime": "2017-09-29T18:09:25Z"
+		},
+		{
+			"checksumSHA1": "kpLq6IZ79NmMyWXernPOy4+fGHE=",
+			"path": "gopkg.in/jcmturner/dnsutils.v1",
+			"revision": "13eeb8d49ffb74d7a75784c35e4d900607a3943c",
+			"revisionTime": "2017-12-07T21:26:23Z"
+		},
+		{
+			"checksumSHA1": "Uuwr2cH01D0aq0Gl5giJeAtWpnA=",
+			"path": "gopkg.in/jcmturner/gokrb5.v7/asn1tools",
+			"revision": "363118e62befa8a14ff01031c025026077fe5d6d",
+			"revisionTime": "2019-06-19T20:12:16Z"
+		},
+		{
+			"checksumSHA1": "R2MEO9HuVDcYQ7LmuiDr3dw1ocw=",
+			"path": "gopkg.in/jcmturner/gokrb5.v7/client",
+			"revision": "363118e62befa8a14ff01031c025026077fe5d6d",
+			"revisionTime": "2019-06-19T20:12:16Z"
+		},
+		{
+			"checksumSHA1": "6rTX7FfnsXEdXQ2rRfDNHKdJcFc=",
+			"path": "gopkg.in/jcmturner/gokrb5.v7/config",
+			"revision": "363118e62befa8a14ff01031c025026077fe5d6d",
+			"revisionTime": "2019-06-19T20:12:16Z"
+		},
+		{
+			"checksumSHA1": "LR9FEwfag+3acELa8ZNZcq1DfXg=",
+			"path": "gopkg.in/jcmturner/gokrb5.v7/credentials",
+			"revision": "363118e62befa8a14ff01031c025026077fe5d6d",
+			"revisionTime": "2019-06-19T20:12:16Z"
+		},
+		{
+			"checksumSHA1": "ZuOkj9s02YBLtes1AvkOpDVGs/U=",
+			"path": "gopkg.in/jcmturner/gokrb5.v7/crypto",
+			"revision": "363118e62befa8a14ff01031c025026077fe5d6d",
+			"revisionTime": "2019-06-19T20:12:16Z"
+		},
+		{
+			"checksumSHA1": "pSFrSD7w/jpi4+Gws+lc693ZOPA=",
+			"path": "gopkg.in/jcmturner/gokrb5.v7/crypto/common",
+			"revision": "363118e62befa8a14ff01031c025026077fe5d6d",
+			"revisionTime": "2019-06-19T20:12:16Z"
+		},
+		{
+			"checksumSHA1": "MkKryd01aVXIdIFkWmWNeJaj4a0=",
+			"path": "gopkg.in/jcmturner/gokrb5.v7/crypto/etype",
+			"revision": "363118e62befa8a14ff01031c025026077fe5d6d",
+			"revisionTime": "2019-06-19T20:12:16Z"
+		},
+		{
+			"checksumSHA1": "8gbnVCpAOIOGzvtG5MHKyhV44w8=",
+			"path": "gopkg.in/jcmturner/gokrb5.v7/crypto/rfc3961",
+			"revision": "363118e62befa8a14ff01031c025026077fe5d6d",
+			"revisionTime": "2019-06-19T20:12:16Z"
+		},
+		{
+			"checksumSHA1": "wgngoC64auRynoUWrXrU8Xl0/PQ=",
+			"path": "gopkg.in/jcmturner/gokrb5.v7/crypto/rfc3962",
+			"revision": "363118e62befa8a14ff01031c025026077fe5d6d",
+			"revisionTime": "2019-06-19T20:12:16Z"
+		},
+		{
+			"checksumSHA1": "E8JwK4/IVqMtHPOmbdMggi2mXr4=",
+			"path": "gopkg.in/jcmturner/gokrb5.v7/crypto/rfc4757",
+			"revision": "363118e62befa8a14ff01031c025026077fe5d6d",
+			"revisionTime": "2019-06-19T20:12:16Z"
+		},
+		{
+			"checksumSHA1": "2LZK7rQlMsCRqr9aDR928qPZxf8=",
+			"path": "gopkg.in/jcmturner/gokrb5.v7/crypto/rfc8009",
+			"revision": "363118e62befa8a14ff01031c025026077fe5d6d",
+			"revisionTime": "2019-06-19T20:12:16Z"
+		},
+		{
+			"checksumSHA1": "UdNU0Nbxp91z2B/OPMzxovzHk4g=",
+			"path": "gopkg.in/jcmturner/gokrb5.v7/gssapi",
+			"revision": "363118e62befa8a14ff01031c025026077fe5d6d",
+			"revisionTime": "2019-06-19T20:12:16Z"
+		},
+		{
+			"checksumSHA1": "FPN5n1+8jSEKuYAja+8pdXBvOY0=",
+			"path": "gopkg.in/jcmturner/gokrb5.v7/iana",
+			"revision": "363118e62befa8a14ff01031c025026077fe5d6d",
+			"revisionTime": "2019-06-19T20:12:16Z"
+		},
+		{
+			"checksumSHA1": "VGvdIIUbQnbjD34n0iIvK9IqR/c=",
+			"path": "gopkg.in/jcmturner/gokrb5.v7/iana/addrtype",
+			"revision": "363118e62befa8a14ff01031c025026077fe5d6d",
+			"revisionTime": "2019-06-19T20:12:16Z"
+		},
+		{
+			"checksumSHA1": "eSCgwe8KcJ+Qc8l5/iPj3d+AZMo=",
+			"path": "gopkg.in/jcmturner/gokrb5.v7/iana/adtype",
+			"revision": "363118e62befa8a14ff01031c025026077fe5d6d",
+			"revisionTime": "2019-06-19T20:12:16Z"
+		},
+		{
+			"checksumSHA1": "DSOjFrJRw8vWOq7yrWkJwjXYVuY=",
+			"path": "gopkg.in/jcmturner/gokrb5.v7/iana/asnAppTag",
+			"revision": "363118e62befa8a14ff01031c025026077fe5d6d",
+			"revisionTime": "2019-06-19T20:12:16Z"
+		},
+		{
+			"checksumSHA1": "Huf6Wp1LerUE5uThtf0NpNB4Nmo=",
+			"path": "gopkg.in/jcmturner/gokrb5.v7/iana/chksumtype",
+			"revision": "363118e62befa8a14ff01031c025026077fe5d6d",
+			"revisionTime": "2019-06-19T20:12:16Z"
+		},
+		{
+			"checksumSHA1": "ClzQM3VsBqq9GZHcEyoKoTTbVVM=",
+			"path": "gopkg.in/jcmturner/gokrb5.v7/iana/errorcode",
+			"revision": "363118e62befa8a14ff01031c025026077fe5d6d",
+			"revisionTime": "2019-06-19T20:12:16Z"
+		},
+		{
+			"checksumSHA1": "WRY3wrbI2eVnza55P7zkO7EerNw=",
+			"path": "gopkg.in/jcmturner/gokrb5.v7/iana/etypeID",
+			"revision": "363118e62befa8a14ff01031c025026077fe5d6d",
+			"revisionTime": "2019-06-19T20:12:16Z"
+		},
+		{
+			"checksumSHA1": "zCDf0s+ln8SYxmadl+sWaxAQnso=",
+			"path": "gopkg.in/jcmturner/gokrb5.v7/iana/flags",
+			"revision": "363118e62befa8a14ff01031c025026077fe5d6d",
+			"revisionTime": "2019-06-19T20:12:16Z"
+		},
+		{
+			"checksumSHA1": "+S0w9xx42wKoyBygBcEOUrNG/jE=",
+			"path": "gopkg.in/jcmturner/gokrb5.v7/iana/keyusage",
+			"revision": "363118e62befa8a14ff01031c025026077fe5d6d",
+			"revisionTime": "2019-06-19T20:12:16Z"
+		},
+		{
+			"checksumSHA1": "OPi/ZTOtb/9TEI1iwB0sFKe0o+0=",
+			"path": "gopkg.in/jcmturner/gokrb5.v7/iana/msgtype",
+			"revision": "363118e62befa8a14ff01031c025026077fe5d6d",
+			"revisionTime": "2019-06-19T20:12:16Z"
+		},
+		{
+			"checksumSHA1": "14gaT1595+oJb6qDi9Y+Iqny+lw=",
+			"path": "gopkg.in/jcmturner/gokrb5.v7/iana/nametype",
+			"revision": "363118e62befa8a14ff01031c025026077fe5d6d",
+			"revisionTime": "2019-06-19T20:12:16Z"
+		},
+		{
+			"checksumSHA1": "2CmQeNxb3m70Ot+n9E2OV8YhCqE=",
+			"path": "gopkg.in/jcmturner/gokrb5.v7/iana/patype",
+			"revision": "363118e62befa8a14ff01031c025026077fe5d6d",
+			"revisionTime": "2019-06-19T20:12:16Z"
+		},
+		{
+			"checksumSHA1": "32g/oJpR4H+GrJ0ZaCJZWMi2ovs=",
+			"path": "gopkg.in/jcmturner/gokrb5.v7/kadmin",
+			"revision": "363118e62befa8a14ff01031c025026077fe5d6d",
+			"revisionTime": "2019-06-19T20:12:16Z"
+		},
+		{
+			"checksumSHA1": "6PEjlx97yL9wrjgJ6nfF8QxK+5A=",
+			"path": "gopkg.in/jcmturner/gokrb5.v7/keytab",
+			"revision": "363118e62befa8a14ff01031c025026077fe5d6d",
+			"revisionTime": "2019-06-19T20:12:16Z"
+		},
+		{
+			"checksumSHA1": "Qio9pGLPgRZUTQuxIlpF2Lgy6ms=",
+			"path": "gopkg.in/jcmturner/gokrb5.v7/krberror",
+			"revision": "363118e62befa8a14ff01031c025026077fe5d6d",
+			"revisionTime": "2019-06-19T20:12:16Z"
+		},
+		{
+			"checksumSHA1": "+KW7iEa6vOpFTCEqA+iWBxq4iB8=",
+			"path": "gopkg.in/jcmturner/gokrb5.v7/messages",
+			"revision": "363118e62befa8a14ff01031c025026077fe5d6d",
+			"revisionTime": "2019-06-19T20:12:16Z"
+		},
+		{
+			"checksumSHA1": "CSBvso2BfxKarWPB6n1R+Ooixus=",
+			"path": "gopkg.in/jcmturner/gokrb5.v7/pac",
+			"revision": "363118e62befa8a14ff01031c025026077fe5d6d",
+			"revisionTime": "2019-06-19T20:12:16Z"
+		},
+		{
+			"checksumSHA1": "Rb6mLWorZojin6cBRP2B3nUUT14=",
+			"path": "gopkg.in/jcmturner/gokrb5.v7/types",
+			"revision": "363118e62befa8a14ff01031c025026077fe5d6d",
+			"revisionTime": "2019-06-19T20:12:16Z"
+		},
+		{
+			"checksumSHA1": "yFddxhhyhrcwdaXQ46OsoyNBx3A=",
+			"path": "gopkg.in/jcmturner/rpc.v1/mstypes",
+			"revision": "99a8ce2fbf8b8087b6ed12a37c61b10f04070043",
+			"revisionTime": "2018-08-26T21:10:00Z"
+		},
+		{
+			"checksumSHA1": "WdV2JpSQC+oO/boLNH0E91x0hvY=",
+			"path": "gopkg.in/jcmturner/rpc.v1/ndr",
+			"revision": "99a8ce2fbf8b8087b6ed12a37c61b10f04070043",
+			"revisionTime": "2018-08-26T21:10:00Z"
+		},
+		{
+			"checksumSHA1": "q7pfZZieFzr0mBeX1cBubsnISPw=",
+			"path": "gopkg.in/yaml.v2",
+			"revision": "f221b8435cfb71e54062f6c6e99e9ade30b124d5",
+			"revisionTime": "2019-10-02T18:33:36Z"
+		}
+	],
 	"rootPath": "github.com/newrelic/nri-kafka"
 }
