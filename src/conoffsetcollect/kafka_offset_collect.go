@@ -317,6 +317,9 @@ func collectOffsetsForConsumerGroup(client connection.Client, clusterAdmin saram
 		}
 		for topic, partitionMap := range listGroupsResponse.Blocks {
 			for partition, block := range partitionMap {
+				if block.Err != sarama.ErrNoError {
+					log.Error("Error in consumer group offset reponse for topic %s, partition %d: %s", block.Err.Error())
+				}
 				wg.Add(1)
 				go func(topic string, partition int32, block *sarama.OffsetFetchResponseBlock, wg *sync.WaitGroup) {
 					defer wg.Done()
