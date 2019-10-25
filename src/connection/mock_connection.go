@@ -5,56 +5,45 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-// MockClient is a mock implementation of the Client interface
+// MockClient is a mock client
 type MockClient struct {
 	mock.Mock
+	sarama.Client
 }
 
-// Brokers is a mocked implementation of the sarama.Client.Brokers() method
+// Brokers is for implementing sarama.Client
 func (m MockClient) Brokers() []Broker {
 	args := m.Called()
 	return args.Get(0).([]Broker)
 }
 
-// Topics is a mocked implementation of the sarama.Client.Topics() method
-func (m MockClient) Topics() ([]string, error) {
-	args := m.Called()
-	return args.Get(0).([]string), args.Error(1)
-}
-
-// Partitions is a mocked implementation of the sarama.Client.Partitions() method
-func (m MockClient) Partitions(topic string) ([]int32, error) {
+// Coordinator is for implementing sarama.Client
+func (m MockClient) Coordinator(topic string) (Broker, error) {
 	args := m.Called(topic)
-	return args.Get(0).([]int32), args.Error(1)
-}
-
-// RefreshCoordinator is a mocked implementation of the sarama.Client.RefreshCoordinator() method
-func (m MockClient) RefreshCoordinator(groupID string) error {
-	args := m.Called(groupID)
-	return args.Error(0)
-}
-
-// Coordinator is a mocked implementation of the sarama.Client.Coordinator() method
-func (m MockClient) Coordinator(groupID string) (Broker, error) {
-	args := m.Called(groupID)
 	return args.Get(0).(Broker), args.Error(1)
 }
 
-// Leader is a mocked implementation of the sarama.Client.Leader() method
+// RefreshCoordinator is for implementing sarama.Client
+func (m MockClient) RefreshCoordinator(topic string) error {
+	args := m.Called(topic)
+	return args.Error(0)
+}
+
+// Leader is for implementing sarama.Client
 func (m MockClient) Leader(topic string, partition int32) (Broker, error) {
 	args := m.Called(topic, partition)
 	return args.Get(0).(Broker), args.Error(1)
 }
 
-// Close is a mocked implementation of the sarama.Client.Close() method
+// Close is for implementing sarama.Client
 func (m MockClient) Close() error {
 	args := m.Called()
 	return args.Error(0)
 }
 
-// GetOffset is a mocked implementation of the sarama.Client.GetOffset() method
-func (m MockClient) GetOffset(topic string, partition int32, offset int64) (int64, error) {
-	args := m.Called(topic, partition, offset)
+// GetOffset is for implementing sarama.Client
+func (m MockClient) GetOffset(topic string, partitionID int32, time int64) (int64, error) {
+	args := m.Called(topic, partitionID, time)
 	return args.Get(0).(int64), args.Error(1)
 }
 
@@ -102,5 +91,112 @@ func (b MockBroker) ListGroups(request *sarama.ListGroupsRequest) (*sarama.ListG
 // Close is a mocked implementation of the sarama.Broker.Close() method
 func (b MockBroker) Close() error {
 	args := b.Called()
+	return args.Error(0)
+}
+
+// MockClusterAdmin is a mockable sarama.ClusterAdmin
+type MockClusterAdmin struct {
+	mock.Mock
+}
+
+// CreateTopic is for implementing sarama.ClusterAdmin
+func (c MockClusterAdmin) CreateTopic(topic string, detail *sarama.TopicDetail, validateOnly bool) error {
+	args := c.Called(topic, detail, validateOnly)
+	return args.Error(0)
+}
+
+// ListTopics is for implementing sarama.ClusterAdmin
+func (c MockClusterAdmin) ListTopics() (map[string]sarama.TopicDetail, error) {
+	args := c.Called()
+	return args.Get(0).(map[string]sarama.TopicDetail), args.Error(1)
+}
+
+// DescribeTopics is for implementing sarama.ClusterAdmin
+func (c MockClusterAdmin) DescribeTopics(topics []string) (metadata []*sarama.TopicMetadata, err error) {
+	args := c.Called(topics)
+	return args.Get(0).([]*sarama.TopicMetadata), args.Error(1)
+}
+
+// DeleteTopic is for implementing sarama.ClusterAdmin
+func (c MockClusterAdmin) DeleteTopic(topic string) error {
+	args := c.Called(topic)
+	return args.Error(0)
+}
+
+// CreatePartitions is for implementing sarama.ClusterAdmin
+func (c MockClusterAdmin) CreatePartitions(topic string, count int32, assignment [][]int32, validateOnly bool) error {
+	args := c.Called(topic, count, assignment, validateOnly)
+	return args.Error(0)
+}
+
+// DeleteRecords is for implementing sarama.ClusterAdmin
+func (c MockClusterAdmin) DeleteRecords(topic string, partitionOffsets map[int32]int64) error {
+	args := c.Called(topic, partitionOffsets)
+	return args.Error(0)
+}
+
+// DescribeConfig is for implementing sarama.ClusterAdmin
+func (c MockClusterAdmin) DescribeConfig(resource sarama.ConfigResource) ([]sarama.ConfigEntry, error) {
+	args := c.Called(resource)
+	return args.Get(0).([]sarama.ConfigEntry), args.Error(1)
+}
+
+// AlterConfig is for implementing sarama.ClusterAdmin
+func (c MockClusterAdmin) AlterConfig(resourceType sarama.ConfigResourceType, name string, entries map[string]*string, validateOnly bool) error {
+	args := c.Called(resourceType, name, entries, validateOnly)
+	return args.Error(0)
+}
+
+// CreateACL is for implementing sarama.ClusterAdmin
+func (c MockClusterAdmin) CreateACL(resource sarama.Resource, acl sarama.Acl) error {
+	args := c.Called(resource, acl)
+	return args.Error(0)
+}
+
+// ListAcls is for implementing sarama.ClusterAdmin
+func (c MockClusterAdmin) ListAcls(filter sarama.AclFilter) ([]sarama.ResourceAcls, error) {
+	args := c.Called(filter)
+	return args.Get(0).([]sarama.ResourceAcls), args.Error(1)
+}
+
+// DeleteACL is for implementing sarama.ClusterAdmin
+func (c MockClusterAdmin) DeleteACL(filter sarama.AclFilter, validateOnly bool) ([]sarama.MatchingAcl, error) {
+	args := c.Called(filter, validateOnly)
+	return args.Get(0).([]sarama.MatchingAcl), args.Error(1)
+}
+
+// ListConsumerGroups is for implementing sarama.ClusterAdmin
+func (c MockClusterAdmin) ListConsumerGroups() (map[string]string, error) {
+	args := c.Called()
+	return args.Get(0).(map[string]string), args.Error(1)
+}
+
+// DescribeConsumerGroups is for implementing sarama.ClusterAdmin
+func (c MockClusterAdmin) DescribeConsumerGroups(groups []string) ([]*sarama.GroupDescription, error) {
+	args := c.Called(groups)
+	return args.Get(0).([]*sarama.GroupDescription), args.Error(1)
+}
+
+// ListConsumerGroupOffsets is for implementing sarama.ClusterAdmin
+func (c MockClusterAdmin) ListConsumerGroupOffsets(group string, topicPartitions map[string][]int32) (*sarama.OffsetFetchResponse, error) {
+	args := c.Called(group, topicPartitions)
+	return args.Get(0).(*sarama.OffsetFetchResponse), args.Error(1)
+}
+
+// DeleteConsumerGroup is for implementing sarama.ClusterAdmin
+func (c MockClusterAdmin) DeleteConsumerGroup(group string) error {
+	args := c.Called(group)
+	return args.Error(0)
+}
+
+// DescribeCluster is for implementing sarama.ClusterAdmin
+func (c MockClusterAdmin) DescribeCluster() (brokers []*sarama.Broker, controllerID int32, err error) {
+	args := c.Called()
+	return args.Get(0).([]*sarama.Broker), args.Get(1).(int32), args.Error(2)
+}
+
+// Close is for implementing sarama.ClusterAdmin
+func (c MockClusterAdmin) Close() error {
+	args := c.Called()
 	return args.Error(0)
 }

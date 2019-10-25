@@ -24,6 +24,7 @@ func TestCollect(t *testing.T) {
 	i, _ := integration.New("test", "test")
 	testutils.SetupTestArgs()
 	mockClient := connection.MockClient{}
+	mockClusterAdmin := connection.MockClusterAdmin{}
 	mockBroker := connection.MockBroker{}
 
 	args.GlobalArgs = &args.KafkaArguments{
@@ -40,6 +41,7 @@ func TestCollect(t *testing.T) {
 	mockZk.On("Children", "/brokers/ids").Return([]string{"0"}, new(zk.Stat), nil)
 	mockZk.On("Get", "/brokers/ids/0").Return(brokerConnectionBytes, new(zk.Stat), nil)
 	mockZk.On("CreateClient").Return(&mockClient, nil)
+	mockZk.On("CreateClusterAdmin").Return(&mockClusterAdmin, nil)
 	mockClient.On("Close").Return(nil)
 	mockClient.On("Brokers").Return([]connection.Broker{&mockBroker})
 	mockClient.On("Topics").Return([]string{"testtopic"}, nil)
@@ -47,13 +49,14 @@ func TestCollect(t *testing.T) {
 	mockBroker.On("Open", mock.Anything).Return(nil)
 	mockBroker.On("ListGroups", mock.Anything).Return(&sarama.ListGroupsResponse{}, nil)
 	mockBroker.On("DescribeGroups", mock.Anything).Return(&sarama.DescribeGroupsResponse{}, nil)
-	mockClient.On("RefreshCoordinator", "testGroup").Return(nil)
-	mockClient.On("Coordinator", "testGroup").Return(&mockBroker, nil)
 	mockBroker.On("Connected").Return(true, nil)
 	mockBroker.On("FetchOffset", mock.Anything).Return(&sarama.OffsetFetchResponse{}, nil)
 	mockClient.On("Leader", "testTopic", int32(0)).Return(&mockBroker, nil)
+	mockClient.On("RefreshCoordinator", mock.Anything).Return(nil)
+	mockClient.On("Coordinator", mock.Anything).Return(&mockBroker, nil)
 	mockClient.On("GetOffset", "testTopic", int32(0), int64(-2)).Return(int64(123), nil)
 	mockBroker.On("Fetch", mock.Anything).Return(&sarama.FetchResponse{}, nil)
+	mockClusterAdmin.On("Close").Return(nil)
 
 	err := Collect(mockZk, i)
 	assert.Nil(t, err)

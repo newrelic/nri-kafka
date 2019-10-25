@@ -25,8 +25,8 @@ type SaramaClient struct {
 func (c SaramaClient) Brokers() []Broker {
 	saramaBrokers := c.Client.Brokers()
 	brokers := make([]Broker, len(saramaBrokers))
-	for i, saramaBroker := range saramaBrokers {
-		brokers[i] = saramaBroker
+	for i, broker := range saramaBrokers {
+		saramaBrokers[i] = broker
 	}
 
 	return brokers

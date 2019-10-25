@@ -1,6 +1,7 @@
 package zookeeper
 
 import (
+	"github.com/Shopify/sarama"
 	"github.com/newrelic/nri-kafka/src/connection"
 	"github.com/samuel/go-zookeeper/zk"
 	"github.com/stretchr/testify/mock"
@@ -27,4 +28,10 @@ func (m MockConnection) Children(s string) ([]string, *zk.Stat, error) {
 func (m MockConnection) CreateClient() (connection.Client, error) {
 	args := m.Called()
 	return args.Get(0).(connection.Client), args.Error(1)
+}
+
+// CreateClusterAdmin mocks the CreateClusterAdmin method
+func (m MockConnection) CreateClusterAdmin() (sarama.ClusterAdmin, error) {
+	args := m.Called()
+	return args.Get(0).(sarama.ClusterAdmin), args.Error(1)
 }

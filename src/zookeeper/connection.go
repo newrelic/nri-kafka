@@ -23,6 +23,7 @@ type Connection interface {
 	Get(string) ([]byte, *zk.Stat, error)
 	Children(string) ([]string, *zk.Stat, error)
 	CreateClient() (connection.Client, error)
+	CreateClusterAdmin() (sarama.ClusterAdmin, error)
 }
 
 type zookeeperConnection struct {
@@ -56,7 +57,7 @@ func (z zookeeperConnection) CreateClient() (connection.Client, error) {
 		// get broker connection info
 		scheme, host, _, port, err := GetBrokerConnectionInfo(intID, z)
 		if err != nil {
-			log.Warn("Unable to get connection information for broker with ID '%d'. Will not collect offset data for consumer groups on this broker.", intID)
+			log.Warn("Unable to get connection information for broker with ID '%d'. Will not collect offset data for consumer groups on this broker: %s", intID, err)
 			continue
 		}
 
@@ -75,6 +76,44 @@ func (z zookeeperConnection) CreateClient() (connection.Client, error) {
 	return connection.SaramaClient{c}, nil
 }
 
+func (z zookeeperConnection) CreateClusterAdmin() (sarama.ClusterAdmin, error) {
+	brokerIDs, _, err := z.Children(Path("/brokers/ids"))
+	if err != nil {
+		return nil, err
+	}
+
+	brokers := make([]string, 0, len(brokerIDs))
+	isTLS := false
+	for _, brokerID := range brokerIDs {
+		// convert to int id
+		intID, err := strconv.Atoi(brokerID)
+		if err != nil {
+			log.Warn("Unable to parse integer broker ID from %s", brokerID)
+			continue
+		}
+
+		// get broker connection info
+		scheme, host, _, port, err := GetBrokerConnectionInfo(intID, z)
+		if err != nil {
+			log.Warn("Unable to get connection information for broker with ID '%d'. Will not collect offset data for consumer groups on this broker: %s", intID, err)
+			continue
+		}
+
+		if !isTLS && scheme == "https" {
+			isTLS = true
+		}
+
+		brokers = append(brokers, fmt.Sprintf("%s:%d", host, port))
+	}
+
+	c, err := sarama.NewClusterAdmin(brokers, createConfig(isTLS))
+	if err != nil {
+		return nil, err
+	}
+
+	return c, nil
+}
+
 func createConfig(isTLS bool) *sarama.Config {
 	config := sarama.NewConfig()
 	if isTLS {
@@ -83,6 +122,8 @@ func createConfig(isTLS bool) *sarama.Config {
 			InsecureSkipVerify: true,
 		}
 	}
+
+	config.Version = sarama.V2_0_0_0
 
 	return config
 }
@@ -95,7 +136,7 @@ func createConfig(isTLS bool) *sarama.Config {
 func NewConnection(kafkaArgs *args.KafkaArguments) (Connection, error) {
 	// No Zookeeper hosts so can't make a connection
 	if len(kafkaArgs.ZookeeperHosts) == 0 {
-		return nil, nil
+		return nil, errors.New("no Zookeeper hosts specified")
 	}
 
 	// Create array of host:port strings for connecting
@@ -104,6 +145,7 @@ func NewConnection(kafkaArgs *args.KafkaArguments) (Connection, error) {
 		zkHosts = append(zkHosts, fmt.Sprintf("%s:%d", zkHost.Host, zkHost.Port))
 	}
 
+	// Create array of host:port strings for connecting
 	// Create connection and add authentication if provided
 	zkConn, _, err := zk.Connect(zkHosts, time.Second)
 	if err != nil {
@@ -138,6 +180,8 @@ func getURLStringAndSchemeFromEndpoints(endpoints []string, protocolMap map[stri
 		if err == nil {
 			return
 		}
+
+		log.Debug("Error getting host and schema from url list: %s", err)
 	}
 	return "", nil, errors.New("host could not be found for broker")
 }

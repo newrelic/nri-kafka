@@ -2,6 +2,10 @@
 package conoffsetcollect
 
 import (
+	"errors"
+	"fmt"
+	"sync"
+
 	"github.com/newrelic/infra-integrations-sdk/data/metric"
 	"github.com/newrelic/infra-integrations-sdk/integration"
 	"github.com/newrelic/infra-integrations-sdk/log"
@@ -26,42 +30,86 @@ func Collect(zkConn zookeeper.Connection, kafkaIntegration *integration.Integrat
 	if err != nil {
 		return err
 	}
-
 	defer func() {
 		if err := client.Close(); err != nil {
 			log.Debug("Error closing client connection: %s", err.Error())
 		}
-
-		// Close all connections
-		closeBrokerConnections()
 	}()
 
-	fillKafkaCaches(client)
-
-	// We retrieve the offsets for each group before calculating the high water mark
-	// so that the lag is never negative
-	for consumerGroup, topics := range args.GlobalArgs.ConsumerGroups {
-		topicPartitions := fillTopicPartitions(consumerGroup, topics, client)
-		if len(topicPartitions) == 0 {
-			log.Error("No topics specified for consumer group '%s'", consumerGroup)
-			continue
+	clusterAdmin, err := zkConn.CreateClusterAdmin()
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if err := clusterAdmin.Close(); err != nil {
+			log.Debug("Error closing clusterAdmin connection: %s", err.Error())
 		}
+	}()
 
-		offsetData, err := getConsumerOffsets(consumerGroup, topicPartitions, client)
+	// Use the more modern collection method if the configuration exists
+	if args.GlobalArgs.ConsumerGroupRegex != nil {
 		if err != nil {
-			log.Info("Failed to collect consumerOffsets for group %s: %v", consumerGroup, err)
+			return fmt.Errorf("failed to create cluster admin from client: %s", err)
 		}
-		highWaterMarks, err := getHighWaterMarks(topicPartitions, client)
+
+		consumerGroupMap, err := clusterAdmin.ListConsumerGroups()
 		if err != nil {
-			log.Info("Failed to collect highWaterMarks for group %s: %v", consumerGroup, err)
+			return fmt.Errorf("failed to get list of consumer groups: %s", err)
+		}
+		consumerGroupList := make([]string, len(consumerGroupMap))
+		for consumerGroup := range consumerGroupMap {
+			consumerGroupList = append(consumerGroupList, consumerGroup)
 		}
 
-		offsetStructs := populateOffsetStructs(offsetData, highWaterMarks)
-
-		if err := setMetrics(consumerGroup, offsetStructs, kafkaIntegration); err != nil {
-			log.Error("Error setting metrics for consumer group '%s': %s", consumerGroup, err.Error())
+		consumerGroups, err := clusterAdmin.DescribeConsumerGroups(consumerGroupList)
+		if err != nil {
+			return fmt.Errorf("failed to get consumer group descriptions: %s", err)
 		}
 
+		var unmatchedConsumerGroups []string
+		var wg sync.WaitGroup
+		for _, consumerGroup := range consumerGroups {
+			if args.GlobalArgs.ConsumerGroupRegex.MatchString(consumerGroup.GroupId) {
+				wg.Add(1)
+				go collectOffsetsForConsumerGroup(client, clusterAdmin, consumerGroup.GroupId, consumerGroup.Members, kafkaIntegration, &wg)
+			} else {
+				unmatchedConsumerGroups = append(unmatchedConsumerGroups, consumerGroup.GroupId)
+			}
+		}
+
+		if len(unmatchedConsumerGroups) > 0 {
+			log.Debug("Skipped collecting consumer offsets for unmatched consumer groups %v", unmatchedConsumerGroups)
+		}
+
+		wg.Wait()
+	} else if len(args.GlobalArgs.ConsumerGroups) != 0 {
+		log.Warn("Argument 'consumer_groups' is deprecated and will be removed in a future version. Use 'consumer_group_regex' instead.")
+		// We retrieve the offsets for each group before calculating the high water mark
+		// so that the lag is never negative
+		for consumerGroup, topics := range args.GlobalArgs.ConsumerGroups {
+			topicPartitions := fillTopicPartitions(consumerGroup, topics, client)
+			if len(topicPartitions) == 0 {
+				log.Error("No topics specified for consumer group '%s'", consumerGroup)
+				continue
+			}
+
+			offsetData, err := getConsumerOffsets(consumerGroup, topicPartitions, client)
+			if err != nil {
+				log.Info("Failed to collect consumerOffsets for group %s: %v", consumerGroup, err)
+			}
+			highWaterMarks, err := getHighWaterMarks(topicPartitions, client)
+			if err != nil {
+				log.Info("Failed to collect highWaterMarks for group %s: %v", consumerGroup, err)
+			}
+
+			offsetStructs := populateOffsetStructs(offsetData, highWaterMarks)
+
+			if err := setMetrics(consumerGroup, offsetStructs, kafkaIntegration); err != nil {
+				log.Error("Error setting metrics for consumer group '%s': %s", consumerGroup, err.Error())
+			}
+		}
+	} else {
+		return errors.New("if consumer_offset is set, either consumer_group_regex or consumer_groups (deprecated) must also be set")
 	}
 
 	return nil
