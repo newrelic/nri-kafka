@@ -93,20 +93,20 @@ func brokerWorker(brokerChan <-chan int, collectedTopics []string, wg *sync.Wait
 
 		// Populate inventory for broker
 		if args.GlobalArgs.All() || args.GlobalArgs.Inventory {
-			log.Debug("Collecting inventory for broker %s", b.Entity.Metadata.Name)
+			log.Debug("Collecting inventory for broker %q", b.Entity.Metadata.Name)
 			if err := populateBrokerInventory(b); err != nil {
 				continue
 			}
-			log.Debug("Done Collecting inventory for broker %s", b.Entity.Metadata.Name)
+			log.Debug("Done collecting inventory for broker %q", b.Entity.Metadata.Name)
 		}
 
 		// Populate metrics for broker
 		if args.GlobalArgs.All() || args.GlobalArgs.Metrics {
-			log.Debug("Collecting metrics for broker %s", b.Entity.Metadata.Name)
+			log.Debug("Collecting metrics for broker %q", b.Entity.Metadata.Name)
 			if err := collectBrokerMetrics(b, collectedTopics); err != nil {
 				continue
 			}
-			log.Debug("Done Collecting metrics for broker %s", b.Entity.Metadata.Name)
+			log.Debug("Done Collecting metrics for broker %q", b.Entity.Metadata.Name)
 		}
 	}
 }
@@ -118,7 +118,7 @@ func createBroker(brokerID int, zkConn zookeeper.Connection, i *integration.Inte
 	// Collect broker connection information from ZooKeeper
 	_, host, jmxPort, kafkaPort, err := zookeeper.GetBrokerConnectionInfo(brokerID, zkConn)
 	if err != nil {
-		log.Error("Unable to get broker JMX information for broker id %s: %s", brokerID, err)
+		log.Error("Unable to get broker JMX information for broker id %d: %s", brokerID, err)
 		return nil, err
 	}
 
@@ -215,7 +215,6 @@ func populateBrokerMetrics(b *broker) {
 	)
 
 	// Populate metrics set with broker metrics
-	log.Debug("Collecting metrics for Broker '%s'", b.Entity.Metadata.Name)
 	metrics.GetBrokerMetrics(sample)
 }
 

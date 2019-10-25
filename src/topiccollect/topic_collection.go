@@ -135,12 +135,12 @@ func topicWorker(topicChan <-chan *Topic, wg *sync.WaitGroup, zkConn zookeeper.C
 
 		// Collect and populate inventory with topic configuration
 		if args.GlobalArgs.All() || args.GlobalArgs.Inventory {
-			log.Debug("Collecting inventory for topic %s", topic.Name)
+			log.Debug("Collecting inventory for topic %q", topic.Name)
 			errors := populateTopicInventory(topic)
 			if len(errors) != 0 {
 				log.Error("Failed to populate inventory with %d errors", len(errors))
 			}
-			log.Debug("Done Collecting inventory for topic %s", topic.Name)
+			log.Debug("Done collecting inventory for topic %q", topic.Name)
 		}
 
 		// Collect topic metrics
@@ -154,10 +154,10 @@ func topicWorker(topicChan <-chan *Topic, wg *sync.WaitGroup, zkConn zookeeper.C
 
 			// Collect metrics and populate metric set with them
 			if err := populateTopicMetrics(topic, sample, zkConn); err != nil {
-				log.Error("Error collecting metrics from Topic '%s': %s", topic.Name, err.Error())
+				log.Error("Error collecting metrics from Topic %q: %s", topic.Name, err.Error())
 			}
 
-			log.Debug("Done Collecting metrics for topic %s", topic.Name)
+			log.Debug("Done collecting metrics for topic %q", topic.Name)
 		}
 	}
 }
