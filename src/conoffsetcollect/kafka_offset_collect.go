@@ -321,53 +321,60 @@ func collectOffsetsForConsumerGroup(client connection.Client, clusterAdmin saram
 					log.Error("Error in consumer group offset reponse for topic %s, partition %d: %s", block.Err.Error())
 				}
 				wg.Add(1)
-				go func(topic string, partition int32, block *sarama.OffsetFetchResponseBlock, wg *sync.WaitGroup) {
-					defer wg.Done()
-
-					hwm, err := client.GetOffset(topic, partition, sarama.OffsetNewest)
-					if err != nil {
-						log.Error("Failed to get hwm for topic %s, partition %d: %s", topic, partition, err)
-						return
-					}
-
-					lag := hwm - block.Offset
-
-					clusterIDAttr := integration.NewIDAttribute("clusterName", args.GlobalArgs.ClusterName)
-					consumerGroupIDAttr := integration.NewIDAttribute("consumerGroup", consumerGroup)
-					topicIDAttr := integration.NewIDAttribute("topic", topic)
-					partitionIDAttr := integration.NewIDAttribute("partition", strconv.Itoa(int(partition)))
-
-					partitionConsumerEntity, err := kafkaIntegration.Entity(strconv.Itoa(int(partition)), "ka-partition-consumer", clusterIDAttr, consumerGroupIDAttr, topicIDAttr, partitionIDAttr)
-					if err != nil {
-						log.Error("Failed to get entity for partition consumer")
-						return
-					}
-
-					ms := partitionConsumerEntity.NewMetricSet("KafkaOffsetSample",
-						metric.Attribute{Key: "clusterName", Value: args.GlobalArgs.ClusterName},
-						metric.Attribute{Key: "consumerGroup", Value: consumerGroup},
-						metric.Attribute{Key: "topic", Value: topic},
-						metric.Attribute{Key: "partition", Value: strconv.Itoa(int(partition))},
-						metric.Attribute{Key: "clientID", Value: description.ClientId},
-						metric.Attribute{Key: "clientHost", Value: description.ClientHost},
-					)
-
-					err = ms.SetMetric("consumer.lag", lag, metric.GAUGE)
-					if err != nil {
-						log.Error("Failed to set metric consumer.lag: %s", err)
-					}
-
-					err = ms.SetMetric("consumer.hwm", hwm, metric.GAUGE)
-					if err != nil {
-						log.Error("Failed to set metric consumer.lag: %s", err)
-					}
-
-					err = ms.SetMetric("consumer.offset", block.Offset, metric.GAUGE)
-					if err != nil {
-						log.Error("Failed to set metric consumer.lag: %s", err)
-					}
-				}(topic, partition, block, wg)
+				go collectPartitionOffsetMetrics(client, consumerGroup, description, topic, partition, block, wg, kafkaIntegration)
 			}
 		}
 	}
+}
+
+func collectPartitionOffsetMetrics(client connection.Client, consumerGroup string, memberDescription *sarama.GroupMemberDescription, topic string, partition int32, block *sarama.OffsetFetchResponseBlock, wg *sync.WaitGroup, kafkaIntegration *integration.Integration) {
+	defer wg.Done()
+
+	hwm, err := client.GetOffset(topic, partition, sarama.OffsetNewest)
+	if err != nil {
+		log.Error("Failed to get hwm for topic %s, partition %d: %s", topic, partition, err)
+		return
+	}
+
+	lag := hwm - block.Offset
+
+	clusterIDAttr := integration.NewIDAttribute("clusterName", args.GlobalArgs.ClusterName)
+	consumerGroupIDAttr := integration.NewIDAttribute("consumerGroup", consumerGroup)
+	topicIDAttr := integration.NewIDAttribute("topic", topic)
+	partitionIDAttr := integration.NewIDAttribute("partition", strconv.Itoa(int(partition)))
+
+	partitionConsumerEntity, err := kafkaIntegration.Entity(strconv.Itoa(int(partition)), "ka-partition-consumer", clusterIDAttr, consumerGroupIDAttr, topicIDAttr, partitionIDAttr)
+	if err != nil {
+		log.Error("Failed to get entity for partition consumer")
+		return
+	}
+
+	ms := partitionConsumerEntity.NewMetricSet("KafkaOffsetSample",
+		metric.Attribute{Key: "clusterName", Value: args.GlobalArgs.ClusterName},
+		metric.Attribute{Key: "consumerGroup", Value: consumerGroup},
+		metric.Attribute{Key: "topic", Value: topic},
+		metric.Attribute{Key: "partition", Value: strconv.Itoa(int(partition))},
+		metric.Attribute{Key: "clientID", Value: memberDescription.ClientId},
+		metric.Attribute{Key: "clientHost", Value: memberDescription.ClientHost},
+	)
+
+	if block.Offset == -1 {
+		log.Warn("Offset for topic %s, partition %d has expired (past retention period). Skipping offset and lag metrics", topic, partition)
+	} else {
+		err = ms.SetMetric("consumer.offset", block.Offset, metric.GAUGE)
+		if err != nil {
+			log.Error("Failed to set metric consumer.lag: %s", err)
+		}
+
+		err = ms.SetMetric("consumer.lag", lag, metric.GAUGE)
+		if err != nil {
+			log.Error("Failed to set metric consumer.lag: %s", err)
+		}
+	}
+
+	err = ms.SetMetric("consumer.hwm", hwm, metric.GAUGE)
+	if err != nil {
+		log.Error("Failed to set metric consumer.lag: %s", err)
+	}
+
 }

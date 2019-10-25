@@ -57,7 +57,7 @@ func (z zookeeperConnection) CreateClient() (connection.Client, error) {
 		// get broker connection info
 		scheme, host, _, port, err := GetBrokerConnectionInfo(intID, z)
 		if err != nil {
-			log.Warn("Unable to get connection information for broker with ID '%d'. Will not collect offset data for consumer groups on this broker.", intID)
+			log.Warn("Unable to get connection information for broker with ID '%d'. Will not collect offset data for consumer groups on this broker: %s", intID, err)
 			continue
 		}
 
@@ -95,7 +95,7 @@ func (z zookeeperConnection) CreateClusterAdmin() (sarama.ClusterAdmin, error) {
 		// get broker connection info
 		scheme, host, _, port, err := GetBrokerConnectionInfo(intID, z)
 		if err != nil {
-			log.Warn("Unable to get connection information for broker with ID '%d'. Will not collect offset data for consumer groups on this broker.", intID)
+			log.Warn("Unable to get connection information for broker with ID '%d'. Will not collect offset data for consumer groups on this broker: %s", intID, err)
 			continue
 		}
 
@@ -180,6 +180,8 @@ func getURLStringAndSchemeFromEndpoints(endpoints []string, protocolMap map[stri
 		if err == nil {
 			return
 		}
+
+		log.Debug("Error getting host and schema from url list: %s", err)
 	}
 	return "", nil, errors.New("host could not be found for broker")
 }
