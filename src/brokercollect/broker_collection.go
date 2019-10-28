@@ -86,47 +86,41 @@ func brokerWorker(brokerChan <-chan int, collectedTopics []string, wg *sync.Wait
 		}
 
 		// Create Broker
-		b, err := createBroker(brokerID, zkConn, i)
+		brokers, err := createBrokers(brokerID, zkConn, i)
 		if err != nil {
 			continue
 		}
 
-		// Populate inventory for broker
-		if args.GlobalArgs.All() || args.GlobalArgs.Inventory {
-			log.Debug("Collecting inventory for broker %q", b.Entity.Metadata.Name)
-			if err := populateBrokerInventory(b); err != nil {
-				continue
+		for _, broker := range brokers {
+			// Populate inventory for broker
+			if args.GlobalArgs.All() || args.GlobalArgs.Inventory {
+				log.Debug("Collecting inventory for broker %s", broker.Entity.Metadata.Name)
+				if err := populateBrokerInventory(broker); err != nil {
+					continue
+				}
+				log.Debug("Done Collecting inventory for broker %s", broker.Entity.Metadata.Name)
 			}
-			log.Debug("Done collecting inventory for broker %q", b.Entity.Metadata.Name)
-		}
 
-		// Populate metrics for broker
-		if args.GlobalArgs.All() || args.GlobalArgs.Metrics {
-			log.Debug("Collecting metrics for broker %q", b.Entity.Metadata.Name)
-			if err := collectBrokerMetrics(b, collectedTopics); err != nil {
-				continue
+			// Populate metrics for broker
+			if args.GlobalArgs.All() || args.GlobalArgs.Metrics {
+				log.Debug("Collecting metrics for broker %s", broker.Entity.Metadata.Name)
+				if err := collectBrokerMetrics(broker, collectedTopics); err != nil {
+					continue
+				}
+				log.Debug("Done Collecting metrics for broker %s", broker.Entity.Metadata.Name)
 			}
-			log.Debug("Done Collecting metrics for broker %q", b.Entity.Metadata.Name)
 		}
 	}
 }
 
-// Creates and populates a broker struct with all the information needed to
+// Creates and populates an array of broker structs with all the information needed to
 // populate inventory and metrics.
-func createBroker(brokerID int, zkConn zookeeper.Connection, i *integration.Integration) (*broker, error) {
+func createBrokers(brokerID int, zkConn zookeeper.Connection, i *integration.Integration) ([]*broker, error) {
 
 	// Collect broker connection information from ZooKeeper
-	_, host, jmxPort, kafkaPort, err := zookeeper.GetBrokerConnectionInfo(brokerID, zkConn)
+	brokerConnections, err := zookeeper.GetBrokerConnectionInfo(brokerID, zkConn)
 	if err != nil {
 		log.Error("Unable to get broker JMX information for broker id %d: %s", brokerID, err)
-		return nil, err
-	}
-
-	// Create broker entity
-	clusterIDAttr := integration.NewIDAttribute("clusterName", args.GlobalArgs.ClusterName)
-	brokerEntity, err := i.Entity(fmt.Sprintf("%s:%d", host, kafkaPort), "ka-broker", clusterIDAttr)
-	if err != nil {
-		log.Error("Unable to create entity for broker ID %d: %s", brokerID, err)
 		return nil, err
 	}
 
@@ -136,16 +130,31 @@ func createBroker(brokerID int, zkConn zookeeper.Connection, i *integration.Inte
 		log.Error("Unable to get broker configuration information for broker id %d: %s", brokerID, err)
 	}
 
-	newBroker := &broker{
-		Host:      host,
-		JMXPort:   jmxPort,
-		KafkaPort: kafkaPort,
-		Entity:    brokerEntity,
-		ID:        brokerID,
-		Config:    brokerConfig,
+	var brokers []*broker
+	for _, brokerConnection := range brokerConnections {
+		// Create broker entity
+		clusterIDAttr := integration.NewIDAttribute("clusterName", args.GlobalArgs.ClusterName)
+		brokerEntity, err := i.Entity(
+			fmt.Sprintf("%s:%d", brokerConnection.BrokerHost, brokerConnection.BrokerPort),
+			"ka-broker",
+			clusterIDAttr)
+
+		if err != nil {
+			log.Error("Unable to create entity for broker ID %d: %s", brokerID, err)
+			return nil, err
+		}
+
+		brokers = append(brokers, &broker{
+			Host:      brokerConnection.BrokerHost,
+			JMXPort:   brokerConnection.JmxPort,
+			KafkaPort: brokerConnection.BrokerPort,
+			Entity:    brokerEntity,
+			ID:        brokerID,
+			Config:    brokerConfig,
+		})
 	}
 
-	return newBroker, nil
+	return brokers, nil
 }
 
 // For a given broker struct, populate the inventory of its entity with the information gathered

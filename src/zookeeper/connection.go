@@ -26,6 +26,14 @@ type Connection interface {
 	CreateClusterAdmin() (sarama.ClusterAdmin, error)
 }
 
+// BrokerConnection struct to allow for multiple connection setups.
+type BrokerConnection struct {
+	Scheme     string
+	BrokerHost string
+	JmxPort    int
+	BrokerPort int
+}
+
 type zookeeperConnection struct {
 	inner *zk.Conn
 }
@@ -44,8 +52,7 @@ func (z zookeeperConnection) CreateClient() (connection.Client, error) {
 		return nil, err
 	}
 
-	brokers := make([]string, 0, len(brokerIDs))
-	isTLS := false
+	connections := make(map[string][]string, 0)
 	for _, brokerID := range brokerIDs {
 		// convert to int id
 		intID, err := strconv.Atoi(brokerID)
@@ -55,25 +62,31 @@ func (z zookeeperConnection) CreateClient() (connection.Client, error) {
 		}
 
 		// get broker connection info
-		scheme, host, _, port, err := GetBrokerConnectionInfo(intID, z)
+		brokerConnections, err := GetBrokerConnectionInfo(intID, z)
 		if err != nil {
 			log.Warn("Unable to get connection information for broker with ID '%d'. Will not collect offset data for consumer groups on this broker: %s", intID, err)
 			continue
 		}
 
-		if !isTLS && scheme == "https" {
-			isTLS = true
+		for _, brokerConnection := range brokerConnections {
+			connections[brokerConnection.Scheme] = append(connections[brokerConnection.Scheme],
+				fmt.Sprintf("%s:%d", brokerConnection.BrokerHost, brokerConnection.BrokerPort))
 		}
-
-		brokers = append(brokers, fmt.Sprintf("%s:%d", host, port))
 	}
 
-	c, err := sarama.NewClient(brokers, createConfig(isTLS))
+	var client sarama.Client
+	for scheme, connection := range connections {
+		client, err = sarama.NewClient(connection, createConfig(scheme == "https"))
+		if err != nil {
+			continue
+		} else { // make sure that we break when we have a working connection.
+			break
+		}
+	}
 	if err != nil {
 		return nil, err
 	}
-
-	return connection.SaramaClient{c}, nil
+	return connection.SaramaClient{client}, nil
 }
 
 func (z zookeeperConnection) CreateClusterAdmin() (sarama.ClusterAdmin, error) {
@@ -82,8 +95,7 @@ func (z zookeeperConnection) CreateClusterAdmin() (sarama.ClusterAdmin, error) {
 		return nil, err
 	}
 
-	brokers := make([]string, 0, len(brokerIDs))
-	isTLS := false
+	connections := make(map[string][]string, 0)
 	for _, brokerID := range brokerIDs {
 		// convert to int id
 		intID, err := strconv.Atoi(brokerID)
@@ -93,25 +105,32 @@ func (z zookeeperConnection) CreateClusterAdmin() (sarama.ClusterAdmin, error) {
 		}
 
 		// get broker connection info
-		scheme, host, _, port, err := GetBrokerConnectionInfo(intID, z)
+		brokerConnections, err := GetBrokerConnectionInfo(intID, z)
 		if err != nil {
 			log.Warn("Unable to get connection information for broker with ID '%d'. Will not collect offset data for consumer groups on this broker: %s", intID, err)
 			continue
 		}
 
-		if !isTLS && scheme == "https" {
-			isTLS = true
+		for _, brokerConnection := range brokerConnections {
+			connections[brokerConnection.Scheme] = append(connections[brokerConnection.Scheme],
+				fmt.Sprintf("%s:%d", brokerConnection.BrokerHost, brokerConnection.BrokerPort))
 		}
-
-		brokers = append(brokers, fmt.Sprintf("%s:%d", host, port))
 	}
 
-	c, err := sarama.NewClusterAdmin(brokers, createConfig(isTLS))
+	var client sarama.ClusterAdmin
+	for scheme, connection := range connections {
+		client, err = sarama.NewClusterAdmin(connection, createConfig(scheme == "https"))
+		if err != nil {
+			continue
+		} else { // make sure that we break when we have a working connection.
+			break
+		}
+	}
 	if err != nil {
 		return nil, err
 	}
 
-	return c, nil
+	return client, nil
 }
 
 func createConfig(isTLS bool) *sarama.Config {
@@ -174,16 +193,21 @@ func GetBrokerIDs(zkConn Connection) ([]string, error) {
 	return brokerIDs, nil
 }
 
-func getURLStringAndSchemeFromEndpoints(endpoints []string, protocolMap map[string]string) (scheme string, brokerHost *url.URL, err error) {
+func getURLStringAndSchemeFromEndpoints(endpoints []string, protocolMap map[string]string) (schemes []string, brokerHosts []*url.URL, err error) {
+	schemes = make([]string, 0)
+	brokerHosts = make([]*url.URL, 0)
 	for _, urlString := range endpoints {
-		scheme, brokerHost, err = getURLStringAndSchemeFromEndpoint(urlString, protocolMap)
-		if err == nil {
-			return
+		scheme, brokerHost, err := getURLStringAndSchemeFromEndpoint(urlString, protocolMap)
+		if err != nil {
+			continue
 		}
-
-		log.Debug("Error getting host and schema from url list: %s", err)
+		schemes = append(schemes, scheme)
+		brokerHosts = append(brokerHosts, brokerHost)
 	}
-	return "", nil, errors.New("host could not be found for broker")
+	if len(schemes) == 0 && len(brokerHosts) == 0 {
+		return nil, nil, errors.New("host could not be found for broker")
+	}
+	return schemes, brokerHosts, nil
 }
 
 func getURLStringAndSchemeFromEndpoint(urlString string, protocolMap map[string]string) (scheme string, brokerHost *url.URL, err error) {
@@ -204,7 +228,7 @@ func getURLStringAndSchemeFromEndpoint(urlString string, protocolMap map[string]
 }
 
 // GetBrokerConnectionInfo Collects Broker connection info from Zookeeper
-func GetBrokerConnectionInfo(brokerID int, zkConn Connection) (scheme, brokerHost string, jmxPort int, brokerPort int, err error) {
+func GetBrokerConnectionInfo(brokerID int, zkConn Connection) (brokerConnetions []BrokerConnection, err error) {
 
 	// Query Zookeeper for broker information
 	path := Path("/brokers/ids/" + strconv.Itoa(brokerID))
@@ -226,18 +250,21 @@ func GetBrokerConnectionInfo(brokerID int, zkConn Connection) (scheme, brokerHos
 	}
 
 	// We only want the URL if it's SSL or PLAINTEXT
-	scheme, brokerURL, err := getURLStringAndSchemeFromEndpoints(brokerDecoded.Endpoints, brokerDecoded.ProtocolMap)
+	schemes, brokerURLs, err := getURLStringAndSchemeFromEndpoints(brokerDecoded.Endpoints, brokerDecoded.ProtocolMap)
 
 	if err != nil {
 		return
 	}
 
-	host, portString := brokerURL.Hostname(), brokerURL.Port()
+	connections := make([]BrokerConnection, 0)
+	for i, scheme := range schemes {
+		host, portString := brokerURLs[i].Hostname(), brokerURLs[i].Port()
 
-	port, err := strconv.Atoi(portString)
-	if err != nil {
-		return
+		port, err := strconv.Atoi(portString)
+		if err != nil {
+			return nil, nil
+		}
+		connections = append(connections, BrokerConnection{Scheme: scheme, BrokerHost: host, JmxPort: brokerDecoded.JmxPort, BrokerPort: port})
 	}
-
-	return scheme, host, brokerDecoded.JmxPort, port, nil
+	return connections, nil
 }
