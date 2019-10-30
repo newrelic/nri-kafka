@@ -104,7 +104,7 @@ const maxTopics = 300
 
 func enforceTopicLimit(collectedTopics []string) []string {
 	if length := len(collectedTopics); length > maxTopics {
-		log.Error("There are %d topics in collection, the maximum amount of topics to collect is %d. Use the topic whitelist configuration parameter to limit collection size.", length, maxTopics)
+		log.Error("There are %d topics in collection, the maximum amount of topics to collect is %d. Use the topic allowed list configuration parameter to limit collection size.", length, maxTopics)
 		return make([]string, 0)
 	}
 

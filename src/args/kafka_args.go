@@ -177,7 +177,7 @@ func unmarshalJMXHosts(data []byte, a *ArgumentList) ([]*JMXHost, error) {
 	return v, nil
 }
 
-// ConsumerGroups is the structure to represent the whitelist for
+// ConsumerGroups is the structure to represent the allowed list for
 // consumer_groups argument
 type ConsumerGroups map[string]map[string][]int32
 
