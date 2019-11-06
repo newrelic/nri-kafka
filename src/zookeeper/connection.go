@@ -62,7 +62,7 @@ func (z zookeeperConnection) CreateClient() (connection.Client, error) {
 		}
 
 		// get broker connection info
-		brokerConnections, err := GetBrokerConnectionInfo(intID, z)
+		brokerConnections, err := GetBrokerConnections(intID, z)
 		if err != nil {
 			log.Warn("Unable to get connection information for broker with ID '%d'. Will not collect offset data for consumer groups on this broker: %s", intID, err)
 			continue
@@ -105,7 +105,7 @@ func (z zookeeperConnection) CreateClusterAdmin() (sarama.ClusterAdmin, error) {
 		}
 
 		// get broker connection info
-		brokerConnections, err := GetBrokerConnectionInfo(intID, z)
+		brokerConnections, err := GetBrokerConnections(intID, z)
 		if err != nil {
 			log.Warn("Unable to get connection information for broker with ID '%d'. Will not collect offset data for consumer groups on this broker: %s", intID, err)
 			continue
@@ -207,7 +207,7 @@ func getURLStringAndSchemeFromEndpoints(endpoints []string, protocolMap map[stri
 	if len(schemes) == 0 && len(brokerHosts) == 0 {
 		return nil, nil, errors.New("host could not be found for broker")
 	}
-	return schemes, brokerHosts, nil
+	return
 }
 
 func getURLStringAndSchemeFromEndpoint(urlString string, protocolMap map[string]string) (scheme string, brokerHost *url.URL, err error) {
@@ -227,8 +227,8 @@ func getURLStringAndSchemeFromEndpoint(urlString string, protocolMap map[string]
 	return "", nil, errors.New("Protocol not found")
 }
 
-// GetBrokerConnectionInfo Collects Broker connection info from Zookeeper
-func GetBrokerConnectionInfo(brokerID int, zkConn Connection) (brokerConnetions []BrokerConnection, err error) {
+// GetBrokerConnections Collects Broker connection info from Zookeeper
+func GetBrokerConnections(brokerID int, zkConn Connection) (brokerConnections []BrokerConnection, err error) {
 
 	// Query Zookeeper for broker information
 	path := Path("/brokers/ids/" + strconv.Itoa(brokerID))
@@ -256,15 +256,15 @@ func GetBrokerConnectionInfo(brokerID int, zkConn Connection) (brokerConnetions 
 		return
 	}
 
-	connections := make([]BrokerConnection, 0)
+	brokerConnections = make([]BrokerConnection, len(brokerURLs))
 	for i, scheme := range schemes {
 		host, portString := brokerURLs[i].Hostname(), brokerURLs[i].Port()
 
 		port, err := strconv.Atoi(portString)
 		if err != nil {
-			return nil, nil
+			return nil, err
 		}
-		connections = append(connections, BrokerConnection{Scheme: scheme, BrokerHost: host, JmxPort: brokerDecoded.JmxPort, BrokerPort: port})
+		brokerConnections[i] = BrokerConnection{Scheme: scheme, BrokerHost: host, JmxPort: brokerDecoded.JmxPort, BrokerPort: port}
 	}
-	return connections, nil
+	return
 }

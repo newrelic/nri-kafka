@@ -86,7 +86,7 @@ func brokerWorker(brokerChan <-chan int, collectedTopics []string, wg *sync.Wait
 		}
 
 		// Create Broker
-		brokers, err := createBrokers(brokerID, zkConn, i)
+		brokers, err := createBrokerConnectionVariants(brokerID, zkConn, i)
 		if err != nil {
 			continue
 		}
@@ -109,16 +109,16 @@ func brokerWorker(brokerChan <-chan int, collectedTopics []string, wg *sync.Wait
 				}
 				log.Debug("Done Collecting metrics for broker %s", broker.Entity.Metadata.Name)
 			}
+			break
 		}
 	}
 }
 
-// Creates and populates an array of broker structs with all the information needed to
-// populate inventory and metrics.
-func createBrokers(brokerID int, zkConn zookeeper.Connection, i *integration.Integration) ([]*broker, error) {
+// Creates and populates an array of different ways to connect to one broker.
+func createBrokerConnectionVariants(brokerID int, zkConn zookeeper.Connection, i *integration.Integration) ([]*broker, error) {
 
 	// Collect broker connection information from ZooKeeper
-	brokerConnections, err := zookeeper.GetBrokerConnectionInfo(brokerID, zkConn)
+	brokerConnections, err := zookeeper.GetBrokerConnections(brokerID, zkConn)
 	if err != nil {
 		log.Error("Unable to get broker JMX information for broker id %d: %s", brokerID, err)
 		return nil, err

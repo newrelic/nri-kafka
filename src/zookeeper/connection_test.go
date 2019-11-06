@@ -20,7 +20,7 @@ func Test_GetBrokerConnectionInfo_WithHost(t *testing.T) {
 		{Scheme: "http", BrokerHost: "my-broker.host", JmxPort: 9999, BrokerPort: 9092},
 	}
 
-	brokerConnections, err := GetBrokerConnectionInfo(brokerID, &zkConn)
+	brokerConnections, err := GetBrokerConnections(brokerID, &zkConn)
 	if err != nil {
 		t.Fatalf("Unexpected error %s", err.Error())
 	}
@@ -56,7 +56,7 @@ func Test_GetBrokerConnectionInfo_WithProtocolMap(t *testing.T) {
 		{Scheme: "http", BrokerHost: "my-broker.host", JmxPort: 9999, BrokerPort: 9093},
 	}
 
-	brokerConnections, err := GetBrokerConnectionInfo(brokerID, &zkConn)
+	brokerConnections, err := GetBrokerConnections(brokerID, &zkConn)
 
 	if err != nil {
 		t.Fatalf("Unexpected error %s", err.Error())
