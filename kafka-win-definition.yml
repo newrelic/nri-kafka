@@ -1,0 +1,27 @@
+name: com.newrelic.kafka
+description: Reports status and metrics for Kafka services
+protocol_version: 2
+os: windows
+
+commands:
+  metrics:
+    command:
+      - .\bin\nr-kafka.exe
+      - --metrics
+    interval: 15
+
+  inventory:
+    command:
+      - .\bin\nr-kafka.exe
+      - --inventory
+    prefix: config/kafka
+    interval: 15
+
+  consumer_offset:
+    command:
+      - .\bin\nr-kafka.exe
+      - --consumer_offset
+      - --inventory=false
+      - --metrics=false
+    prefix: config/kafka
+    interval: 15
