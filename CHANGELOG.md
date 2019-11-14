@@ -16,7 +16,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## 2.4.0 - 2019-10-25
 ### Added
 - `consumer_group_regex` argument
-- 
+ 
 ### Changed
 - Deprecated `consumer_groups` in favor of `consumer_group_regex` 
 
