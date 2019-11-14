@@ -218,17 +218,21 @@ func calculateUnderReplicatedCount(partitions []*partition, sample *metric.Set) 
 func topicRespondsToMetadata(t *Topic, zkConn zookeeper.Connection) int {
 
 	// Get connection information for a broker
-	_, host, _, port, err := zookeeper.GetBrokerConnectionInfo(0, zkConn)
+	connections, err := zookeeper.GetBrokerConnections(0, zkConn)
 	if err != nil {
 		return 0
 	}
 
+	var broker *sarama.Broker
+
 	// Create a broker connection object and open the connection
-	broker := sarama.NewBroker(fmt.Sprintf("%s:%d", host, port))
-	config := sarama.NewConfig()
-	err = broker.Open(config)
-	if err != nil {
-		return 0
+	for _, connection := range connections {
+		broker = sarama.NewBroker(fmt.Sprintf("%s:%d", connection.BrokerHost, connection.BrokerPort))
+		config := sarama.NewConfig()
+		err = broker.Open(config)
+		if err != nil {
+			return 0
+		}
 	}
 
 	defer func() {

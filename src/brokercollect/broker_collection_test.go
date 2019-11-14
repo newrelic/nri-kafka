@@ -21,7 +21,7 @@ import (
 )
 
 var (
-	brokerConnectionBytes = []byte(`{"listener_security_protocol_map":{"PLAINTEXT":"PLAINTEXT"},"endpoints":["PLAINTEXT://kafkabroker:9092"],"jmx_port":9999,"host":"kafkabroker","timestamp":"1530886155628","port":9092,"version":4}`)
+	brokerConnectionBytes = []byte(`{"listener_security_protocol_map":{"PLAINTEXT":"PLAINTEXT", "SSL":"SSL"},"endpoints":["PLAINTEXT://kafkabroker:9092", "SSL://kafkabroker:9093"],"jmx_port":9999,"host":"kafkabroker","timestamp":"1530886155628","port":9092,"version":4}`)
 	brokerConfigBytes     = []byte(`{"version":1,"config":{"flush.messages":"12345"}}`)
 	brokerConfigBytes2    = []byte(`{"version":1,"config":{"leader.replication.throttled.replicas":"10000"}}`)
 )
@@ -77,7 +77,7 @@ func TestCreateBroker_ZKError(t *testing.T) {
 	zkConn.On("Get", "/brokers/ids/0").Return([]byte{}, new(zk.Stat), errors.New("this is a test error"))
 	i, _ := integration.New("kafka", "1.0.0")
 
-	_, err := createBroker(brokerID, zkConn, i)
+	_, err := createBrokerConnectionVariants(brokerID, zkConn, i)
 	if err == nil {
 		t.Error("Expected error")
 	}
@@ -89,32 +89,43 @@ func TestCreateBroker_Normal(t *testing.T) {
 	zkConn.On("Get", "/config/brokers/0").Return(brokerConfigBytes, new(zk.Stat), nil)
 	i, _ := integration.New("kafka", "1.0.0")
 
-	b, err := createBroker(brokerID, zkConn, i)
+	brokers, err := createBrokerConnectionVariants(brokerID, zkConn, i)
 	if err != nil {
 		t.Errorf("Unexpected error: %s", err.Error())
 	}
 
-	expectedBroker := &broker{
-		Host:      "kafkabroker",
-		KafkaPort: 9092,
-		JMXPort:   9999,
-		ID:        0,
+	expectedBrokers := []broker{
+		{
+			Host:      "kafkabroker",
+			KafkaPort: 9092,
+			JMXPort:   9999,
+			ID:        0,
+		},
+		{
+			Host:      "kafkabroker",
+			KafkaPort: 9093,
+			JMXPort:   9999,
+			ID:        0,
+		},
 	}
 
-	if expectedBroker.Host != b.Host {
-		t.Errorf("Expected JMX host '%s' got '%s'", expectedBroker.Host, b.Host)
-	}
-	if expectedBroker.JMXPort != b.JMXPort {
-		t.Errorf("Expected JMX Port '%d' got '%d'", expectedBroker.JMXPort, b.JMXPort)
-	}
-	if expectedBroker.KafkaPort != b.KafkaPort {
-		t.Errorf("Expected Kafka Port '%d' got '%d'", expectedBroker.KafkaPort, b.KafkaPort)
-	}
-	if b.Entity.Metadata.Name != "kafkabroker:9092" {
-		t.Errorf("Expected entity name '%s' got '%s'", expectedBroker.Host, b.Entity.Metadata.Name)
-	}
-	if b.Entity.Metadata.Namespace != "ka-broker" {
-		t.Errorf("Expected entity name '%s' got '%s'", "ka-broker", b.Entity.Metadata.Namespace)
+	for i, broker := range brokers {
+		if expectedBrokers[i].Host != broker.Host {
+			t.Errorf("Expected JMX host '%s' got '%s'", expectedBrokers[i].Host, broker.Host)
+		}
+		if expectedBrokers[i].JMXPort != broker.JMXPort {
+			t.Errorf("Expected JMX Port '%d' got '%d'", expectedBrokers[i].JMXPort, broker.JMXPort)
+		}
+		if expectedBrokers[i].KafkaPort != broker.KafkaPort {
+			t.Errorf("Expected Kafka Port '%d' got '%d'", expectedBrokers[i].KafkaPort, broker.KafkaPort)
+		}
+		metadataName := fmt.Sprintf("%s:%d", expectedBrokers[i].Host, expectedBrokers[i].KafkaPort)
+		if broker.Entity.Metadata.Name != metadataName {
+			t.Errorf("Expected entity name '%s' got '%s'", metadataName, broker.Entity.Metadata.Name)
+		}
+		if broker.Entity.Metadata.Namespace != "ka-broker" {
+			t.Errorf("Expected entity name '%s' got '%s'", "ka-broker", broker.Entity.Metadata.Namespace)
+		}
 	}
 }
 
@@ -225,23 +236,39 @@ func TestGetBrokerJMX(t *testing.T) {
 	brokerID := 0
 	zkConn := zookeeper.MockConnection{}
 	zkConn.On("Get", "/brokers/ids/0").Return(brokerConnectionBytes, new(zk.Stat), nil)
+	expectedBrokers := []zookeeper.BrokerConnection{
+		{
+			Scheme:     "http",
+			BrokerHost: "kafkabroker",
+			BrokerPort: 9092,
+			JmxPort:    9999,
+		},
+		{
+			Scheme:     "https",
+			BrokerHost: "kafkabroker",
+			BrokerPort: 9093,
+			JmxPort:    9999,
+		},
+	}
 
-	scheme, host, jmxPort, kafkaPort, err := zookeeper.GetBrokerConnectionInfo(brokerID, &zkConn)
+	brokerConnections, err := zookeeper.GetBrokerConnections(brokerID, &zkConn)
 	if err != nil {
 		t.Error(err)
 	}
 
-	if scheme != "http" {
-		t.Errorf("Expected scheme http, got %s", scheme)
-	}
-	if host != "kafkabroker" {
-		t.Errorf("Expected host kafkabroker, got %s", host)
-	}
-	if kafkaPort != 9092 {
-		t.Errorf("Expected kafka port 9092, got %d", kafkaPort)
-	}
-	if jmxPort != 9999 {
-		t.Errorf("Expected jmx port 9999, got %d", jmxPort)
+	for i, brokerConnection := range brokerConnections {
+		if brokerConnection.Scheme != expectedBrokers[i].Scheme {
+			t.Errorf("Expected scheme %s, got %s", expectedBrokers[i].Scheme, brokerConnection.Scheme)
+		}
+		if brokerConnection.BrokerHost != expectedBrokers[i].BrokerHost {
+			t.Errorf("Expected host %s, got %s", expectedBrokers[i].BrokerHost, brokerConnection.BrokerHost)
+		}
+		if brokerConnection.BrokerPort != expectedBrokers[i].BrokerPort {
+			t.Errorf("Expected kafka port %d, got %d", expectedBrokers[i].BrokerPort, brokerConnection.BrokerPort)
+		}
+		if brokerConnection.JmxPort != expectedBrokers[i].JmxPort {
+			t.Errorf("Expected jmx port %d, got %d", expectedBrokers[i].JmxPort, brokerConnection.JmxPort)
+		}
 	}
 }
 
