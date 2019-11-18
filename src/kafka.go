@@ -18,7 +18,7 @@ import (
 
 const (
 	integrationName    = "com.newrelic.kafka"
-	integrationVersion = "2.5.1"
+	integrationVersion = "2.6.0"
 )
 
 func main() {
