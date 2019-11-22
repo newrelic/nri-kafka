@@ -6,20 +6,20 @@ os: linux
 commands:
   metrics:
     command:
-      - ./bin/nr-kafka
+      - ./bin/nri-kafka
       - --metrics
     interval: 15
 
   inventory:
     command:
-      - ./bin/nr-kafka
+      - ./bin/nri-kafka
       - --inventory
     prefix: config/kafka
     interval: 15
 
   consumer_offset:
     command:
-      - ./bin/nr-kafka
+      - ./bin/nri-kafka
       - --consumer_offset
       - --inventory=false
       - --metrics=false

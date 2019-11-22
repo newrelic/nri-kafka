@@ -74,8 +74,7 @@
             </Component>
         </ComponentGroup>
         <ComponentGroup Id="CustomPluginsComponent" Directory="CustomPluginsFolder">
-            <Component Id="CMP_NRI_{IntegrationName}_DEFINITION_YML" Guid="c8d36adc-419f-45a7-9f3c-997b18e09155" Win64="no"
-                       NeverOverwrite="yes" Permanent="yes">
+            <Component Id="CMP_NRI_{IntegrationName}_DEFINITION_YML" Guid="c8d36adc-419f-45a7-9f3c-997b18e09155" Win64="no">
                 <File Id="FILE_NRI_{IntegrationName}_DEFINITION_YML"
                       Name="{IntegrationName}-definition.yml"
                       Source="$(var.ProjectRootPath){IntegrationName}-win-definition.yml"
