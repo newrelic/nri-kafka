@@ -24,6 +24,7 @@ type ArgumentList struct {
 	DefaultJMXHost      string `default:"localhost" help:"Default host for JMX collection."`
 	DefaultJMXUser      string `default:"admin" help:"Default JMX username. Useful if all JMX hosts use the same JMX username and password."`
 	DefaultJMXPassword  string `default:"admin" help:"Default JMX password. Useful if all JMX hosts use the same JMX username and password."`
+	NrJmx               string `default:"/usr/bin/nrjmx" help:"Path to the nrjmx executable"`
 
 	CollectBrokerTopicData bool   `default:"true" help:"Signals to collect Broker and Topic inventory and metrics. Should only be turned off when specifying a Zookeeper Host and not intending to collect Broker or detailed Topic data."`
 	TopicMode              string `default:"None" help:"Possible options are All, None, or List. If List, must also specify the list of topics to collect with the topic_list option."`

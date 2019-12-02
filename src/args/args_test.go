@@ -27,6 +27,7 @@ func TestParseArgs(t *testing.T) {
 		DefaultJMXPassword:     "admin2",
 		DefaultJMXHost:         "test-default-host",
 		DefaultJMXPort:         9998,
+        NrJmx:                  "/usr/bin/nrjmx",
 		CollectBrokerTopicData: true,
 		Producers:              `[{"name":"producer1", "host":"producerhost","user":"a1","password":"p1","port":9995},{"name":"producer2"}]`,
 		Consumers:              "[]",
@@ -61,6 +62,7 @@ func TestParseArgs(t *testing.T) {
 		ZookeeperPath:          "/test",
 		DefaultJMXUser:         "admin1",
 		DefaultJMXPassword:     "admin2",
+        NrJmx:                  "/usr/bin/nrjmx",
 		CollectBrokerTopicData: true,
 		Producers: []*JMXHost{
 			{
@@ -114,6 +116,7 @@ func TestDefaultArgs(t *testing.T) {
 		ZookeeperPath:          "",
 		DefaultJMXUser:         "admin",
 		DefaultJMXPassword:     "admin",
+        NrJmx:                  "/usr/bin/nrjmx",
 		CollectBrokerTopicData: true,
 		Producers:              []*JMXHost{},
 		Consumers:              []*JMXHost{},
