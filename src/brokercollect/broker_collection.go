@@ -191,6 +191,8 @@ func collectBrokerMetrics(b *broker, collectedTopics []string) error {
 		options = append(options, ssl)
 	}
 
+	options = append(options, jmx.WithNrJmxTool(args.GlobalArgs.NrJmx))
+
 	if err := jmxwrapper.JMXOpen(b.Host, strconv.Itoa(b.JMXPort), args.GlobalArgs.DefaultJMXUser, args.GlobalArgs.DefaultJMXPassword, options...); err != nil {
 		log.Error("Unable to make JMX connection for Broker '%s': %s", b.Host, err.Error())
 		jmxwrapper.JMXClose() // Close needs to be called even on a failed open to clear out any set variables
