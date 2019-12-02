@@ -8,12 +8,14 @@ commands:
     command:
       - .\bin\nri-kafka.exe
       - --metrics
+      - --nr_jmx=C:\Program Files\New Relic\nrjmx\nrjmx.bat
     interval: 15
 
   inventory:
     command:
       - .\bin\nri-kafka.exe
       - --inventory
+      - --nr_jmx=C:\Program Files\New Relic\nrjmx\nrjmx.bat
     prefix: config/kafka
     interval: 15
 
@@ -23,5 +25,6 @@ commands:
       - --consumer_offset
       - --inventory=false
       - --metrics=false
+      - --nr_jmx=C:\Program Files\New Relic\nrjmx\nrjmx.bat
     prefix: config/kafka
     interval: 15
