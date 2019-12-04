@@ -70,6 +70,8 @@ func ConsumerWorker(consumerChan <-chan *args.JMXHost, wg *sync.WaitGroup, i *in
 				options = append(options, ssl)
 			}
 
+			options = append(options, jmx.WithNrJmxTool(args.GlobalArgs.NrJmx))
+
 			if err := jmxwrapper.JMXOpen(jmxInfo.Host, strconv.Itoa(jmxInfo.Port), jmxInfo.User, jmxInfo.Password, options...); err != nil {
 				log.Error("Unable to make JMX connection for Consumer '%s': %s", consumerEntity.Metadata.Name, err.Error())
 				jmxwrapper.JMXClose() // Close needs to be called even on a failed open to clear out any set variables

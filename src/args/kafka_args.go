@@ -24,6 +24,7 @@ type KafkaArguments struct {
 	ZookeeperPath          string
 	DefaultJMXUser         string
 	DefaultJMXPassword     string
+	NrJmx                  string
 	CollectBrokerTopicData bool
 	Producers              []*JMXHost
 	Consumers              []*JMXHost
@@ -117,14 +118,15 @@ func ParseArgs(a ArgumentList) (*KafkaArguments, error) {
 	}
 
 	parsedArgs := &KafkaArguments{
-		DefaultArgumentList:    a.DefaultArgumentList,
-		ClusterName:            a.ClusterName,
-		ZookeeperHosts:         zookeeperHosts,
-		ZookeeperAuthScheme:    a.ZookeeperAuthScheme,
-		ZookeeperAuthSecret:    a.ZookeeperAuthSecret,
-		ZookeeperPath:          a.ZookeeperPath,
-		DefaultJMXUser:         a.DefaultJMXUser,
-		DefaultJMXPassword:     a.DefaultJMXPassword,
+		DefaultArgumentList: a.DefaultArgumentList,
+		ClusterName:         a.ClusterName,
+		ZookeeperHosts:      zookeeperHosts,
+		ZookeeperAuthScheme: a.ZookeeperAuthScheme,
+		ZookeeperAuthSecret: a.ZookeeperAuthSecret,
+		ZookeeperPath:       a.ZookeeperPath,
+		DefaultJMXUser:      a.DefaultJMXUser,
+		DefaultJMXPassword:  a.DefaultJMXPassword,
+		NrJmx:               a.NrJmx,
 		CollectBrokerTopicData: a.CollectBrokerTopicData,
 		Producers:              producers,
 		Consumers:              consumers,
