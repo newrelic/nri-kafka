@@ -17,7 +17,7 @@
                  Platform="x64"
                  Manufacturer="New Relic, Inc."
                  Comments="(c) {Year} New Relic, Inc."
-                 Keywords="infrastructure,MSI,on-host,{IntegrationName}"/>
+                 Keywords="infrastructure,MSI,on-host,{IntegrationName},nrjmx-$(env.NRJMX_VERSION)"/>
 
         <MajorUpgrade DowngradeErrorMessage="A newer version of [ProductName] is already installed."/>
         <MediaTemplate EmbedCab="yes"/>
@@ -29,6 +29,9 @@
             <ComponentGroupRef Id="CustomPluginsBinComponent"/>
             <ComponentGroupRef Id="CustomPluginsComponent"/>
             <ComponentGroupRef Id="PluginConfigsComponent"/>
+            <ComponentRef Id="CMP_V1_NRJMX_DIRECTORY"/>
+            <ComponentGroupRef Id="CMP_GRP_NRJMX_JAR"/>
+            <ComponentGroupRef Id="CMP_GRP_NRJMX_BAT"/>
         </Feature>
     </Product>
 
@@ -42,6 +45,7 @@
                             <Directory Id="CustomPluginsBinFolder" Name="bin"/>
                         </Directory>
                     </Directory>
+                    <Directory Id="NrjmxDirectory" Name="nrjmx" />
                 </Directory>
             </Directory>
         </Directory>
@@ -87,6 +91,39 @@
                 <File Id="FILE_NRI_{IntegrationName}_CONFIG_YML"
                       Name="{IntegrationName}-config.yml.sample"
                       Source="$(var.ProjectRootPath){IntegrationName}-config.yml.sample"
+                      KeyPath="yes"/>
+            </Component>
+        </ComponentGroup>
+    </Fragment>
+
+        <Fragment>
+        <DirectoryRef Id="NrjmxDirectory">
+            <Component Id="CMP_V1_NRJMX_DIRECTORY" Guid="e4ed6da6-b45c-4d0e-abf9-8adee95aed3c" KeyPath="yes">
+                <CreateFolder/>
+            </Component>
+        </DirectoryRef>
+    </Fragment>
+
+    <Fragment>
+        <ComponentGroup Id="CMP_GRP_NRJMX_JAR" Directory="NrjmxDirectory">
+            <Component Id="CMP_NRJMX_JAR" Guid="9ac6648a-d7e4-4c85-8240-8208bddc57b5" Win64="yes">
+                <RemoveFile Id="RM_FILE_NRJMX_JAR"
+                            Name="nrjmx.jar"
+                            On="install" />
+                <File Id="FILE_NRJMX_JAR"
+                      Source="$(var.ProjectRootPath)nrjmx-$(env.NRJMX_VERSION).jar"
+                      Name="nrjmx.jar"
+                      KeyPath="yes"/>
+            </Component>
+        </ComponentGroup>
+        <ComponentGroup Id="CMP_GRP_NRJMX_BAT" Directory="NrjmxDirectory">
+            <Component Id="CMP_NRJMX_BAT" Guid="fb3b675c-4905-45bd-a37f-8a9fb9dc2baf" Win64="yes">
+                <RemoveFile Id="RM_FILE_NRJMX_BAT"
+                            Name="nrjmx.bat"
+                            On="install" />
+                <File Id="FILE_NRJMX_BAT"
+                      Source="$(var.ProjectRootPath)nrjmx.bat"
+                      Name="nrjmx.bat"
                       KeyPath="yes"/>
             </Component>
         </ComponentGroup>
