@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"regexp"
+	"strconv"
 
 	sdkArgs "github.com/newrelic/infra-integrations-sdk/args"
 	"github.com/newrelic/infra-integrations-sdk/log"
@@ -31,6 +32,7 @@ type KafkaArguments struct {
 	TopicMode              string
 	TopicList              []string
 	TopicRegex             string
+	TopicBucket            TopicBucket
 	Timeout                int
 	CollectTopicSize       bool
 
@@ -44,6 +46,12 @@ type KafkaArguments struct {
 	ConsumerOffset     bool
 	ConsumerGroups     ConsumerGroups
 	ConsumerGroupRegex *regexp.Regexp
+}
+
+// TopicBucket is a struct that stores the information for bucketing topic collection
+type TopicBucket struct {
+	BucketNumber int
+	NumBuckets   int
 }
 
 // ZookeeperHost is a storage struct for ZooKeeper connection information
@@ -101,6 +109,35 @@ func ParseArgs(a ArgumentList) (*KafkaArguments, error) {
 		return nil, err
 	}
 
+	// Parse topic bucket
+	re := regexp.MustCompile(`(\d+)/(\d+)`)
+	match := re.FindStringSubmatch(a.TopicBucket)
+	if match == nil {
+		log.Error("Failed to parse topic bucket. Must be of form `1/3`")
+		return nil, errors.New("invalid topic bucket format")
+	}
+
+	bucketID, err := strconv.Atoi(match[1])
+	if err != nil {
+		log.Error("Bucket number %s is not parseable as an int", match[1])
+		return nil, errors.New("invalid topic bucket")
+	}
+	numBuckets, err := strconv.Atoi(match[2])
+	if err != nil {
+		log.Error("Number of buckets %s is not parseable as an int", match[2])
+		return nil, errors.New("invalid topic bucket")
+	}
+
+	if bucketID < 1 || bucketID > numBuckets {
+		log.Error("Bucket number must be between 1 and the number of buckets. ('1/3' is okay, but '4/3' is not)")
+		return nil, errors.New("invalid topic bucket")
+	}
+
+	topicBucket := TopicBucket{
+		BucketNumber: bucketID,
+		NumBuckets:   numBuckets,
+	}
+
 	// Parse consumser offset args
 	consumerGroups, err := unmarshalConsumerGroups(a.ConsumerOffset, a.ConsumerGroups)
 	if err != nil {
@@ -133,6 +170,7 @@ func ParseArgs(a ArgumentList) (*KafkaArguments, error) {
 		TopicMode:              a.TopicMode,
 		TopicList:              topics,
 		TopicRegex:             a.TopicRegex,
+		TopicBucket:            topicBucket,
 		Timeout:                a.Timeout,
 		KeyStore:               a.KeyStore,
 		KeyStorePassword:       a.KeyStorePassword,
