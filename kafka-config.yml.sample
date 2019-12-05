@@ -77,6 +77,13 @@ instances:
       topic_mode: <all, none, list or regex. All mode requires a zookeeper_host to be specified>
       topic_list: <JSON Array of Topics to monitor. Ignored if topic_mode is not list>
       topic_regex: <Regex pattern that matches the topics to be collected. Ignored if topic_mode is not regex>
+
+      # topic_bucket is used to split topic metric collection across multiple instances. This is useful when the number of topics you want to collect 
+      # is too large for a single collection, and are not easily partitionable with regex. It works by hashing the topic name, then using it to split
+      # the topics across a number of buckets. The first number is the index of the current instance, the second is the total number of instances the 
+      # topics are split across. For example, if you want the topics matched by `topic_regex: 'mytopic.*'` to be split across three instances, one
+      # instance will be configured with `topic_bucket: 1/3`, one with `2/3`, and one with `3/3`
+      topic_bucket: <A string of the form "1/3">
       collect_topic_size: <true or false. Indicate if topic size should be collected as it is a very resource intensive metric to collect>
     labels:
       env: production

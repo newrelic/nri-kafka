@@ -2,6 +2,7 @@
 package main
 
 import (
+	"hash/fnv"
 	"os"
 	"strings"
 	"sync"
@@ -18,7 +19,7 @@ import (
 
 const (
 	integrationName    = "com.newrelic.kafka"
-	integrationVersion = "2.7.0"
+	integrationVersion = "2.8.0"
 )
 
 func main() {
@@ -61,6 +62,7 @@ func coreCollection(zkConn zookeeper.Connection, kafkaIntegration *integration.I
 	log.Debug("Collecting metrics for the following topics: %s", strings.Join(collectedTopics, ","))
 
 	// Enforce hard limits on Topics
+	collectedTopics = filterTopicsByBucket(collectedTopics, args.GlobalArgs.TopicBucket)
 	collectedTopics = enforceTopicLimit(collectedTopics)
 
 	// Setup wait group
@@ -110,4 +112,19 @@ func enforceTopicLimit(collectedTopics []string) []string {
 	}
 
 	return collectedTopics
+}
+
+// filterTopicsByBucket
+func filterTopicsByBucket(topicList []string, topicBucket args.TopicBucket) []string {
+	filteredTopics := make([]string, 0, len(topicList))
+	for _, topic := range topicList {
+		h := fnv.New32()
+		h.Write([]byte(topic))
+		hashedTopic := int(h.Sum32())
+		if hashedTopic%topicBucket.NumBuckets+1 == topicBucket.BucketNumber {
+			filteredTopics = append(filteredTopics, topic)
+		}
+	}
+
+	return filteredTopics
 }
