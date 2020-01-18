@@ -75,16 +75,18 @@ func (z zookeeperConnection) CreateClient() (connection.Client, error) {
 	}
 
 	var client sarama.Client
+	errors := make([]error, 0)
 	for scheme, connection := range connections {
 		client, err = sarama.NewClient(connection, createConfig(scheme == "https"))
 		if err != nil {
+			errors = append(errors, err)
 			continue
 		} else { // make sure that we break when we have a working connection.
 			break
 		}
 	}
-	if err != nil {
-		return nil, err
+	if client == nil {
+		return nil, fmt.Errorf("none of the available connection schemes were able to successfully connect to a broker: errors: %#v", errors)
 	}
 	return connection.SaramaClient{client}, nil
 }
