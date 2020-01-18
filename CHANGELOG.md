@@ -5,6 +5,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 2.8.1 (2019-01-18)
+### Fixed
+- Avoid segfault by detecting error connecting 
+
 ## 2.8.0 (2019-12-05)
 ### Added
 - Topic bucket option that allows topic collection to be split between multiple instances
