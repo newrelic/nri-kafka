@@ -60,11 +60,13 @@ func Collect(zkConn zookeeper.Connection, kafkaIntegration *integration.Integrat
 		for consumerGroup := range consumerGroupMap {
 			consumerGroupList = append(consumerGroupList, consumerGroup)
 		}
+		log.Debug("Retrieved the list of consumer groups: %v", consumerGroupList)
 
 		consumerGroups, err := clusterAdmin.DescribeConsumerGroups(consumerGroupList)
 		if err != nil {
 			return fmt.Errorf("failed to get consumer group descriptions: %s", err)
 		}
+		log.Debug("Retrieved the descriptions of all consumer groups")
 
 		var unmatchedConsumerGroups []string
 		var wg sync.WaitGroup
