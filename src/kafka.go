@@ -2,14 +2,21 @@
 package main
 
 import (
+	"fmt"
 	"hash/fnv"
 	"os"
 	"sync"
 
+	"github.com/Shopify/sarama"
 	"github.com/newrelic/infra-integrations-sdk/integration"
 	"github.com/newrelic/infra-integrations-sdk/log"
 	"github.com/newrelic/nri-kafka/src/args"
+	"github.com/newrelic/nri-kafka/src/broker"
+	"github.com/newrelic/nri-kafka/src/client"
+	"github.com/newrelic/nri-kafka/src/connection"
 	"github.com/newrelic/nri-kafka/src/consumeroffset"
+	"github.com/newrelic/nri-kafka/src/topic"
+	"github.com/newrelic/nri-kafka/src/zookeeper"
 )
 
 const (
@@ -32,7 +39,9 @@ func main() {
 	if !args.GlobalArgs.ConsumerOffset {
 		coreCollection(kafkaIntegration)
 	} else {
-		if err := consumeroffset.Collect(clusterAdmin, kafkaIntegration); err != nil {
+		client, err := getClient(args.GlobalArgs)
+		ExitOnErr(err)
+		if err := consumeroffset.Collect(client, kafkaIntegration); err != nil {
 			log.Error("Failed collecting consumer offset data: %s", err.Error())
 			os.Exit(1)
 		}
@@ -44,37 +53,87 @@ func main() {
 	}
 }
 
+func getClient(args *args.ParsedArguments) (sarama.Client, error) {
+	zkConn, err := zookeeper.NewConnection(args)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create zookeeper connection: %s", err)
+	}
+	client, err := zookeeper.GetClientFromZookeeper(zkConn, args.PreferredListener)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get client from zookeeper: %s", err)
+	}
+
+	return client, nil
+}
+
+func getBrokerList(arguments *args.ParsedArguments) ([]*connection.Broker, error) {
+	switch arguments.AutodiscoverStrategy {
+	case "manual":
+		brokers := make([]*connection.Broker, 0, len(arguments.Brokers))
+		for _, broker := range arguments.Brokers {
+			newSaramaBroker, err := connection.NewBroker(broker.Host, broker.KafkaPort, broker.KafkaProtocol)
+			if err != nil {
+				log.Error("Failed creating client to manually configured broker %s: %s", broker.Host, err)
+			}
+
+			newBroker := &connection.Broker{
+				Broker:      newSaramaBroker,
+				Host:        broker.Host,
+				JMXPort:     broker.JMXPort,
+				JMXUser:     broker.JMXUser,
+				JMXPassword: broker.JMXPassword,
+			}
+			brokers = append(brokers, newBroker)
+		}
+
+		return brokers, nil
+	case "zookeeper":
+		zkConn, err := zookeeper.NewConnection(arguments)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create zookeeper connection: %s", err)
+		}
+		return zookeeper.GetBrokerList(zkConn, arguments.PreferredListener)
+	default:
+		return nil, fmt.Errorf("invalid autodiscovery strategy %s", arguments.AutodiscoverStrategy)
+	}
+}
+
 // coreCollection is the main integration collection. Does not handle consumerOffset collection
 func coreCollection(kafkaIntegration *integration.Integration) {
-	// TODO Get topic list
-	collectedTopics := []string{}
+	brokers, err := getBrokerList(args.GlobalArgs)
+	if err != nil {
+		log.Error("Failed to get list of brokers: %s", err)
+		return
+	}
+
+	clusterClient, err := getClient(args.GlobalArgs)
+	if err != nil {
+		log.Error("Failed to get a kafka client: %s", err)
+		return
+	}
+
+	topics, err := topic.GetTopics(clusterClient)
+	if err != nil {
+		log.Error("Failed to get a list of topics: %s", err)
+	}
 
 	// Enforce hard limits on Topics
-	collectedTopics = filterTopicsByBucket(collectedTopics, args.GlobalArgs.TopicBucket)
-	collectedTopics = enforceTopicLimit(collectedTopics)
+	bucketedTopics := filterTopicsByBucket(topics, args.GlobalArgs.TopicBucket)
+	collectedTopics := enforceTopicLimit(bucketedTopics)
 
 	// Setup wait group
 	var wg sync.WaitGroup
 
 	// Start all worker pools
-	brokerChan := bc.StartBrokerPool(3, &wg, zkConn, kafkaIntegration, collectedTopics)
-	topicChan := tc.StartTopicPool(5, &wg, zkConn)
-	consumerChan := pcc.StartWorkerPool(3, &wg, kafkaIntegration, collectedTopics, pcc.ConsumerWorker)
-	producerChan := pcc.StartWorkerPool(3, &wg, kafkaIntegration, collectedTopics, pcc.ProducerWorker)
+	brokerChan := broker.StartBrokerPool(3, &wg, kafkaIntegration, collectedTopics)
+	topicChan := topic.StartTopicPool(5, &wg, clusterClient)
+	consumerChan := client.StartWorkerPool(3, &wg, kafkaIntegration, collectedTopics, client.ConsumerWorker)
+	producerChan := client.StartWorkerPool(3, &wg, kafkaIntegration, collectedTopics, client.ProducerWorker)
 
-	// After all worker pools are created start feeding them.
-	// It is important to not start feeding any pool until all are created
-	// so that a race condition does not exist between creating all pools and waiting.
-	// Run all of theses in their own Go Routine to maximize concurrency
-	go func() {
-		if err := bc.FeedBrokerPool(zkConn, brokerChan); err != nil {
-			log.Error("Unable to collect Brokers: %s", err.Error())
-		}
-	}()
-
-	go tc.FeedTopicPool(topicChan, kafkaIntegration, collectedTopics)
-	go pcc.FeedWorkerPool(consumerChan, args.GlobalArgs.Consumers)
-	go pcc.FeedWorkerPool(producerChan, args.GlobalArgs.Producers)
+	go broker.FeedBrokerPool(brokers, brokerChan)
+	go topic.FeedTopicPool(topicChan, kafkaIntegration, collectedTopics)
+	go client.FeedWorkerPool(consumerChan, args.GlobalArgs.Consumers)
+	go client.FeedWorkerPool(producerChan, args.GlobalArgs.Producers)
 
 	wg.Wait()
 }

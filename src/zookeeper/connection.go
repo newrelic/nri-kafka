@@ -2,13 +2,11 @@
 package zookeeper
 
 import (
-	"crypto/tls"
 	"encoding/json"
 	"errors"
 	"fmt"
-	"net/url"
+	"regexp"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/Shopify/sarama"
@@ -22,16 +20,7 @@ import (
 type Connection interface {
 	Get(string) ([]byte, *zk.Stat, error)
 	Children(string) ([]string, *zk.Stat, error)
-	CreateClient() (connection.Client, error)
 	CreateClusterAdmin() (sarama.ClusterAdmin, error)
-}
-
-// BrokerConnection struct to allow for multiple connection setups.
-type BrokerConnection struct {
-	Scheme     string
-	BrokerHost string
-	JmxPort    int
-	BrokerPort int
 }
 
 type zookeeperConnection struct {
@@ -46,107 +35,13 @@ func (z zookeeperConnection) Get(s string) ([]byte, *zk.Stat, error) {
 	return z.inner.Get(s)
 }
 
-func (z zookeeperConnection) CreateClient() (connection.Client, error) {
-	brokerIDs, _, err := z.Children(Path("/brokers/ids"))
-	if err != nil {
-		return nil, err
-	}
-
-	connections := make(map[string][]string, 0)
-	for _, brokerID := range brokerIDs {
-		// convert to int id
-		intID, err := strconv.Atoi(brokerID)
-		if err != nil {
-			log.Warn("Unable to parse integer broker ID from %s", brokerID)
-			continue
-		}
-
-		// get broker connection info
-		brokerConnections, err := GetBrokerConnections(intID, z)
-		if err != nil {
-			log.Warn("Unable to get connection information for broker with ID '%d'. Will not collect offset data for consumer groups on this broker: %s", intID, err)
-			continue
-		}
-
-		for _, brokerConnection := range brokerConnections {
-			connections[brokerConnection.Scheme] = append(connections[brokerConnection.Scheme],
-				fmt.Sprintf("%s:%d", brokerConnection.BrokerHost, brokerConnection.BrokerPort))
-		}
-	}
-
-	var client sarama.Client
-	errors := make([]error, 0)
-	for scheme, connection := range connections {
-		client, err = sarama.NewClient(connection, createConfig(scheme == "https"))
-		if err != nil {
-			errors = append(errors, err)
-			continue
-		} else { // make sure that we break when we have a working connection.
-			break
-		}
-	}
-	if client == nil {
-		return nil, fmt.Errorf("none of the available connection schemes were able to successfully connect to a broker: errors: %#v", errors)
-	}
-	return connection.SaramaClient{client}, nil
-}
-
 func (z zookeeperConnection) CreateClusterAdmin() (sarama.ClusterAdmin, error) {
-	brokerIDs, _, err := z.Children(Path("/brokers/ids"))
+	client, err := GetClientFromZookeeper(z, args.GlobalArgs.PreferredListener)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to create client: %s", err)
 	}
 
-	connections := make(map[string][]string, 0)
-	for _, brokerID := range brokerIDs {
-		// convert to int id
-		intID, err := strconv.Atoi(brokerID)
-		if err != nil {
-			log.Warn("Unable to parse integer broker ID from %s", brokerID)
-			continue
-		}
-
-		// get broker connection info
-		brokerConnections, err := GetBrokerConnections(intID, z)
-		if err != nil {
-			log.Warn("Unable to get connection information for broker with ID '%d'. Will not collect offset data for consumer groups on this broker: %s", intID, err)
-			continue
-		}
-
-		for _, brokerConnection := range brokerConnections {
-			connections[brokerConnection.Scheme] = append(connections[brokerConnection.Scheme],
-				fmt.Sprintf("%s:%d", brokerConnection.BrokerHost, brokerConnection.BrokerPort))
-		}
-	}
-
-	var client sarama.ClusterAdmin
-	for scheme, connection := range connections {
-		client, err = sarama.NewClusterAdmin(connection, createConfig(scheme == "https"))
-		if err != nil {
-			continue
-		} else { // make sure that we break when we have a working connection.
-			break
-		}
-	}
-	if err != nil {
-		return nil, err
-	}
-
-	return client, nil
-}
-
-func createConfig(isTLS bool) *sarama.Config {
-	config := sarama.NewConfig()
-	if isTLS {
-		config.Net.TLS.Enable = true
-		config.Net.TLS.Config = &tls.Config{
-			InsecureSkipVerify: true,
-		}
-	}
-
-	config.Version = sarama.V2_0_0_0
-
-	return config
+	return sarama.NewClusterAdminFromClient(client)
 }
 
 // NewConnection creates a new Connection with the given arguments.
@@ -184,89 +79,176 @@ func NewConnection(kafkaArgs *args.ParsedArguments) (Connection, error) {
 	return zookeeperConnection{zkConn}, nil
 }
 
-// GetBrokerIDs retrieves the broker ids from Zookeeper
-func GetBrokerIDs(zkConn Connection) ([]string, error) {
+func GetBrokerList(zkConn Connection, preferredListener string) ([]*connection.Broker, error) {
+	// Get a list of brokers
+	brokerIDs, _, err := zkConn.Children(Path("/brokers/ids"))
+	if err != nil {
+		return nil, fmt.Errorf("unable to get broker ID from Zookeeper path %s: %s", Path("/brokers/ids"), err)
+	}
+
+	brokers := make([]*connection.Broker, 0, len(brokerIDs))
+	for _, id := range brokerIDs {
+		broker, err := GetBroker(zkConn, id, preferredListener)
+		if err != nil {
+			log.Error("Failed to get JMX connection info from broker id %s: %s", id, err)
+			continue
+		}
+		brokers = append(brokers, broker)
+	}
+
+	return brokers, nil
+}
+
+func GetBroker(zkConn Connection, id, preferredListener string) (*connection.Broker, error) {
+	// Query Zookeeper for broker information
+	rawBrokerJSON, _, err := zkConn.Get(Path(fmt.Sprintf("/brokers/ids/%s", id)))
+	if err != nil {
+		return nil, fmt.Errorf("failed to retrieve broker information: %w", err)
+	}
+
+	// Parse the JSON returned by Zookeeper
+	type brokerJSONDecoder struct {
+		Host        string
+		JMXPort     int               `json:"jmx_port"`
+		ProtocolMap map[string]string `json:"listener_security_protocol_map"`
+		Endpoints   []string          `json:"endpoints"`
+	}
+	var brokerDecoded brokerJSONDecoder
+	err = json.Unmarshal(rawBrokerJSON, &brokerDecoded)
+	if err != nil {
+		return nil, fmt.Errorf("failed to unmarshal broker information from zookeeper: %w", err)
+	}
+
+	// Go through the list of brokers until we find one that uses a protocol we know how to handle
+	var saramaBroker *sarama.Broker
+	for _, endpoint := range brokerDecoded.Endpoints {
+		listener, host, port, err := parseEndpoint(endpoint)
+		if err != nil {
+			log.Error("Failed to parse endpoint '%s' from zookeeper: %s", endpoint, err)
+			continue
+		}
+
+		// Skip this endpoint if it doesn't match the configured listener
+		if preferredListener != "" && preferredListener != listener {
+			log.Debug("Skipping endpoint '%s' because it doesn't match the preferredListener configured")
+			continue
+		}
+
+		// Check that the protocol map
+		protocol, ok := brokerDecoded.ProtocolMap[listener]
+		if !ok {
+			log.Error("Listener '%s' was not found in the protocol map")
+			continue
+		}
+
+		newBroker, err := connection.NewBroker(host, port, protocol)
+		if err != nil {
+			log.Warn("Failed creating client: %s")
+			continue
+		}
+
+		saramaBroker = newBroker
+	}
+
+	if saramaBroker == nil {
+		log.Error("Found no supported endpoint that successfully connected to broker with host %s", brokerDecoded.Host)
+	}
+
+	newBroker := &connection.Broker{
+		Broker:      saramaBroker,
+		JMXPort:     brokerDecoded.JMXPort,
+		Host:        brokerDecoded.Host,
+		JMXUser:     args.GlobalArgs.DefaultJMXUser,
+		JMXPassword: args.GlobalArgs.DefaultJMXPassword,
+	}
+
+	return newBroker, nil
+}
+
+func GetClientFromZookeeper(zkConn Connection, preferredListener string) (sarama.Client, error) {
+	// Get a list of brokers
 	brokerIDs, _, err := zkConn.Children(Path("/brokers/ids"))
 	if err != nil {
 		log.Info(Path("/brokers/ids"))
 		return nil, fmt.Errorf("unable to get broker ID from Zookeeper: %s", err.Error())
 	}
 
-	return brokerIDs, nil
-}
-
-func getURLStringAndSchemeFromEndpoints(endpoints []string, protocolMap map[string]string) (schemes []string, brokerHosts []*url.URL, err error) {
-	schemes = make([]string, 0)
-	brokerHosts = make([]*url.URL, 0)
-	for _, urlString := range endpoints {
-		scheme, brokerHost, err := getURLStringAndSchemeFromEndpoint(urlString, protocolMap)
+	errors := make([]error, 0)
+	for _, id := range brokerIDs {
+		client, err := GetClientToBrokerFromZookeeper(zkConn, preferredListener, id)
 		if err != nil {
+			errors = append(errors, err)
 			continue
 		}
-		schemes = append(schemes, scheme)
-		brokerHosts = append(brokerHosts, brokerHost)
+		return client, nil
 	}
-	if len(schemes) == 0 && len(brokerHosts) == 0 {
-		return nil, nil, errors.New("host could not be found for broker")
-	}
-	return
+
+	return nil, fmt.Errorf("could not connect to any broker: errors: %v", errors)
 }
 
-func getURLStringAndSchemeFromEndpoint(urlString string, protocolMap map[string]string) (scheme string, brokerHost *url.URL, err error) {
-	prefix := strings.Split(urlString, "://")[0]
-	brokerHost, err = url.Parse(urlString)
-	if err != nil {
-		return
-	}
-	urlStringProtocol, hasProtocol := protocolMap[prefix]
-	if strings.HasPrefix(urlString, "SSL") || (hasProtocol && strings.HasPrefix(urlStringProtocol, "SSL")) {
-		scheme = "https"
-		return
-	} else if strings.HasPrefix(urlString, "PLAINTEXT") || (hasProtocol && strings.HasPrefix(urlStringProtocol, "PLAINTEXT")) {
-		scheme = "http"
-		return
-	}
-	return "", nil, errors.New("Protocol not found")
-}
-
-// GetBrokerConnections Collects Broker connection info from Zookeeper
-func GetBrokerConnections(brokerID int, zkConn Connection) (brokerConnections []BrokerConnection, err error) {
-
+func GetClientToBrokerFromZookeeper(zkConn Connection, preferredListener string, brokerID string) (sarama.Client, error) {
 	// Query Zookeeper for broker information
-	path := Path("/brokers/ids/" + strconv.Itoa(brokerID))
-	rawBrokerJSON, _, err := zkConn.Get(path)
+	rawBrokerJSON, _, err := zkConn.Get(Path("/brokers/ids/" + brokerID))
 	if err != nil {
-		return
+		return nil, fmt.Errorf("failed to retrieve broker information: %w", err)
 	}
 
 	// Parse the JSON returned by Zookeeper
 	type brokerJSONDecoder struct {
 		ProtocolMap map[string]string `json:"listener_security_protocol_map"`
-		JmxPort     int               `json:"jmx_port"`
 		Endpoints   []string          `json:"endpoints"`
 	}
 	var brokerDecoded brokerJSONDecoder
 	err = json.Unmarshal(rawBrokerJSON, &brokerDecoded)
 	if err != nil {
-		return
+		return nil, fmt.Errorf("failed to unmarshal broker information from zookeeper: %w", err)
 	}
 
-	// We only want the URL if it's SSL or PLAINTEXT
-	schemes, brokerURLs, err := getURLStringAndSchemeFromEndpoints(brokerDecoded.Endpoints, brokerDecoded.ProtocolMap)
-
-	if err != nil {
-		return
-	}
-
-	brokerConnections = make([]BrokerConnection, len(brokerURLs))
-	for i, scheme := range schemes {
-		host, portString := brokerURLs[i].Hostname(), brokerURLs[i].Port()
-
-		port, err := strconv.Atoi(portString)
+	// Go through the list of brokers until we find one that uses a protocol we know how to handle
+	for _, endpoint := range brokerDecoded.Endpoints {
+		listener, host, port, err := parseEndpoint(endpoint)
 		if err != nil {
-			return nil, err
+			log.Error("Failed to parse endpoint '%s' from zookeeper: %s", endpoint, err)
+			continue
 		}
-		brokerConnections[i] = BrokerConnection{Scheme: scheme, BrokerHost: host, JmxPort: brokerDecoded.JmxPort, BrokerPort: port}
+
+		// Skip this endpoint if it doesn't match the configured listener
+		if preferredListener != "" && preferredListener != listener {
+			log.Debug("Skipping endpoint '%s' because it doesn't match the preferredListener configured")
+			continue
+		}
+
+		// Check that the protocol map
+		protocol, ok := brokerDecoded.ProtocolMap[listener]
+		if !ok {
+			log.Error("Listener '%s' was not found in the protocol map")
+			continue
+		}
+
+		client, err := connection.NewClient(host, port, protocol)
+		if err != nil {
+			log.Warn("Failed creating client: %s")
+			continue
+		}
+
+		return client, nil
 	}
-	return
+
+	return nil, errors.New("no brokers found that I know how to connect to")
+}
+
+// parseEndpoint takes a broker endpoint from zookeeper and parses it into its listener, host, and port components
+func parseEndpoint(endpoint string) (listener, host string, port int, err error) {
+	re := regexp.MustCompile(`([A-Za-z_]+)://([^:]+):(\d+)`)
+	matches := re.FindStringSubmatch(endpoint)
+	if matches == nil {
+		return "", "", 0, errors.New("regex pattern did not match endpoint")
+	}
+
+	port, err = strconv.Atoi(matches[3])
+	if err != nil {
+		return "", "", 0, fmt.Errorf("failed parsing port as int: %s", err)
+	}
+
+	return matches[1], matches[2], port, nil
 }

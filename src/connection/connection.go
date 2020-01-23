@@ -1,54 +1,103 @@
 package connection
 
 import (
+	"crypto/tls"
+	"errors"
+	"fmt"
+
 	"github.com/Shopify/sarama"
+	"github.com/newrelic/infra-integrations-sdk/integration"
+	"github.com/newrelic/nri-kafka/src/args"
 )
 
-// Client is an interface for mocking
-type Client interface {
-	Brokers() []Broker
-	Topics() ([]string, error)
-	Partitions(string) ([]int32, error)
-	RefreshCoordinator(string) error
-	Coordinator(string) (Broker, error)
-	Leader(string, int32) (Broker, error)
-	Close() error
-	GetOffset(string, int32, int64) (int64, error)
+// Broker TODO
+type Broker struct {
+	JMXPort     int
+	JMXUser     string
+	JMXPassword string
+	Host        string
+	*sarama.Broker
 }
 
-// SaramaClient is a wrapper struct for sarama.Client
-type SaramaClient struct {
-	sarama.Client
+func (b *Broker) Entity(i *integration.Integration) (*integration.Entity, error) {
+	clusterIDAttr := integration.NewIDAttribute("clusterName", args.GlobalArgs.ClusterName)
+	return i.Entity(b.Addr(), "ka-broker", clusterIDAttr)
 }
 
-// Brokers wraps the sarama Brokers function
-func (c SaramaClient) Brokers() []Broker {
-	saramaBrokers := c.Client.Brokers()
-	brokers := make([]Broker, len(saramaBrokers))
-	for i, broker := range saramaBrokers {
-		saramaBrokers[i] = broker
+func NewBroker(host string, port int, protocol string) (*sarama.Broker, error) {
+	address := fmt.Sprintf("%s:%d", host, port)
+
+	switch protocol {
+	case "PLAINTEXT":
+		broker := sarama.NewBroker(address)
+		err := broker.Open(newPlaintextConfig())
+		if err != nil {
+			return nil, fmt.Errorf("failed opening connection: %w", err)
+		}
+		connected, err := broker.Connected()
+		if err != nil {
+			return nil, fmt.Errorf("failed checking if connection opened successfully: %w", err)
+		}
+		if !connected {
+			return nil, errors.New("broker is not connected")
+		}
+		return broker, nil
+	case "SSL":
+		broker := sarama.NewBroker(address)
+		err := broker.Open(newSSLConfig())
+		if err != nil {
+			return nil, fmt.Errorf("failed opening connection: %w", err)
+		}
+		connected, err := broker.Connected()
+		if err != nil {
+			return nil, fmt.Errorf("failed checking if connection opened successfully: %w", err)
+		}
+		if !connected {
+			return nil, errors.New("broker is not connected")
+		}
+		return broker, nil
+	case "SASL_PLAINTEXT":
+		return nil, fmt.Errorf("skipping %s://%s:%d because it uses unsupported protocol %s", protocol, host, port, protocol)
+	case "SASL_SSL":
+		return nil, fmt.Errorf("skipping %s://%s:%d because it uses unsupported protocol %s", protocol, host, port, protocol)
+	default:
+		return nil, fmt.Errorf("skipping %s://%s:%d because it uses unknown protocol %s", protocol, host, port, protocol)
 	}
 
-	return brokers
 }
 
-// Coordinator wraps the sarama.Client.Coordinator() function
-func (c SaramaClient) Coordinator(groupID string) (Broker, error) {
-	return c.Client.Coordinator(groupID)
+func NewClient(host string, port int, protocol string) (sarama.Client, error) {
+	address := fmt.Sprintf("%s:%d", host, port)
+
+	switch protocol {
+	case "PLAINTEXT":
+		return sarama.NewClient([]string{address}, newPlaintextConfig())
+	case "SSL":
+		return sarama.NewClient([]string{address}, newSSLConfig())
+	case "SASL_PLAINTEXT":
+		return nil, fmt.Errorf("skipping %s://%s:%d because it uses unsupported protocol %s", protocol, host, port, protocol)
+	case "SASL_SSL":
+		return nil, fmt.Errorf("skipping %s://%s:%d because it uses unsupported protocol %s", protocol, host, port, protocol)
+	default:
+		return nil, fmt.Errorf("skipping %s://%s:%d because it uses unknown protocol %s", protocol, host, port, protocol)
+	}
+
 }
 
-// Leader wraps the sarama.Client.Leader() function
-func (c SaramaClient) Leader(topic string, partition int32) (Broker, error) {
-	return c.Client.Leader(topic, partition)
+func newPlaintextConfig() *sarama.Config {
+	config := sarama.NewConfig()
+	config.Version = sarama.V2_0_0_0
+
+	return config
 }
 
-// Broker is an interface for mocking
-type Broker interface {
-	Connected() (bool, error)
-	FetchOffset(*sarama.OffsetFetchRequest) (*sarama.OffsetFetchResponse, error)
-	Fetch(*sarama.FetchRequest) (*sarama.FetchResponse, error)
-	Open(*sarama.Config) error
-	DescribeGroups(*sarama.DescribeGroupsRequest) (*sarama.DescribeGroupsResponse, error)
-	ListGroups(*sarama.ListGroupsRequest) (*sarama.ListGroupsResponse, error)
-	Close() error
+func newSSLConfig() *sarama.Config {
+	config := sarama.NewConfig()
+	config.Net.TLS.Enable = true
+	config.Net.TLS.Config = &tls.Config{
+		InsecureSkipVerify: true,
+	}
+	config.Version = sarama.V2_0_0_0
+
+	return config
 }

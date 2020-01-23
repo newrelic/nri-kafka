@@ -86,6 +86,16 @@ type ZookeeperHost struct {
 	Port int    `json:"port"`
 }
 
+// Broker is a storage struct for manual Broker connection information
+type BrokerHost struct {
+	Host          string
+	KafkaPort     int
+	KafkaProtocol string
+	JMXPort       int
+	JMXUser       string
+	JMXPassword   string
+}
+
 // JMXHost is a storage struct for producer and consumer connection information
 type JMXHost struct {
 	Name     string
@@ -93,13 +103,6 @@ type JMXHost struct {
 	Port     int
 	User     string
 	Password string
-}
-
-type BrokerHost struct {
-	Host          string
-	JMXPort       string
-	KafkaPort     string
-	KafkaProtocol string
 }
 
 // ParseArgs validates the arguments in argumentList and parses them
@@ -110,8 +113,7 @@ func ParseArgs(a ArgumentList) (*ParsedArguments, error) {
 	var zookeeperHosts []*ZookeeperHost
 	err := json.Unmarshal([]byte(a.ZookeeperHosts), &zookeeperHosts)
 	if err != nil {
-		log.Error("Failed to parse zookeepers from json")
-		return nil, err
+		return nil, fmt.Errorf("failed to parse zookeepers from json: %w", err)
 	}
 
 	for _, zookeeperHost := range zookeeperHosts {
@@ -119,6 +121,38 @@ func ParseArgs(a ArgumentList) (*ParsedArguments, error) {
 		if zookeeperHost.Port == 0 {
 			zookeeperHost.Port = defaultZookeeperPort
 		}
+	}
+
+	if a.AutodiscoverStrategy == "zookeeper" && len(zookeeperHosts) == 0 {
+		return nil, errors.New("Must specify a zookeeper host when the autodiscover strategy is 'zookeeper' (default)")
+	}
+
+	if a.AutodiscoverStrategy != "zookeeper" && len(zookeeperHosts) != 0 {
+		return nil, errors.New("Zookeeper hosts have been defined even though the autodiscovery strategy is not 'zookeeper'")
+	}
+
+	// Parse Broker hosts
+	var brokerHosts []*BrokerHost
+	err = json.Unmarshal([]byte(a.Brokers), &brokerHosts)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse brokers from json: %w", err)
+	}
+
+	for _, broker := range brokerHosts {
+		if broker.KafkaPort == 0 {
+			broker.KafkaPort = defaultKafkaPort
+		}
+		if broker.JMXPort == 0 {
+			broker.JMXPort = defaultJMXPort
+		}
+	}
+
+	if a.AutodiscoverStrategy == "manual" && len(brokerHosts) == 0 {
+		return nil, errors.New("Must specify a broker host when the autodiscover strategy is 'manual'")
+	}
+
+	if a.AutodiscoverStrategy != "manual" && len(brokerHosts) != 0 {
+		return nil, errors.New("Broker hosts have been defined even though the autodiscovery strategy is not 'manual'")
 	}
 
 	// Parse consumers
@@ -189,11 +223,14 @@ func ParseArgs(a ArgumentList) (*ParsedArguments, error) {
 
 	parsedArgs := &ParsedArguments{
 		DefaultArgumentList:    a.DefaultArgumentList,
+		AutodiscoverStrategy:   a.AutodiscoverStrategy,
+		Brokers:                brokerHosts,
 		ClusterName:            a.ClusterName,
 		ZookeeperHosts:         zookeeperHosts,
 		ZookeeperAuthScheme:    a.ZookeeperAuthScheme,
 		ZookeeperAuthSecret:    a.ZookeeperAuthSecret,
 		ZookeeperPath:          a.ZookeeperPath,
+		PreferredListener:      a.PreferredListener,
 		DefaultJMXUser:         a.DefaultJMXUser,
 		DefaultJMXPassword:     a.DefaultJMXPassword,
 		NrJmx:                  a.NrJmx,

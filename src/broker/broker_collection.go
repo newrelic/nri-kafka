@@ -2,21 +2,21 @@
 package broker
 
 import (
-	"encoding/json"
 	"fmt"
 	"strconv"
+	"strings"
 	"sync"
 
-	"github.com/samuel/go-zookeeper/zk"
+	"github.com/Shopify/sarama"
 
 	"github.com/newrelic/infra-integrations-sdk/data/metric"
 	"github.com/newrelic/infra-integrations-sdk/integration"
 	"github.com/newrelic/infra-integrations-sdk/jmx"
 	"github.com/newrelic/infra-integrations-sdk/log"
 	"github.com/newrelic/nri-kafka/src/args"
+	"github.com/newrelic/nri-kafka/src/connection"
 	"github.com/newrelic/nri-kafka/src/jmxwrapper"
 	"github.com/newrelic/nri-kafka/src/metrics"
-	"github.com/newrelic/nri-kafka/src/zookeeper"
 )
 
 // broker is a storage struct for information about brokers
@@ -32,14 +32,14 @@ type broker struct {
 // StartBrokerPool starts a pool of brokerWorkers to handle collecting data for Broker entities.
 // The returned channel can be fed brokerIDs to collect, and is to be closed by the user
 // (or closed by feedBrokerPool)
-func StartBrokerPool(poolSize int, wg *sync.WaitGroup, zkConn zookeeper.Connection, integration *integration.Integration, collectedTopics []string) chan int {
-	brokerChan := make(chan int)
+func StartBrokerPool(poolSize int, wg *sync.WaitGroup, integration *integration.Integration, collectedTopics []string) chan *connection.Broker {
+	brokerChan := make(chan *connection.Broker)
 
 	// Only spin off brokerWorkers if signaled
-	if args.GlobalArgs.CollectBrokerTopicData && zkConn != nil {
+	if args.GlobalArgs.CollectBrokerTopicData {
 		for i := 0; i < poolSize; i++ {
 			wg.Add(1)
-			go brokerWorker(brokerChan, collectedTopics, wg, zkConn, integration)
+			go brokerWorker(brokerChan, collectedTopics, wg, integration)
 		}
 	}
 
@@ -48,141 +48,78 @@ func StartBrokerPool(poolSize int, wg *sync.WaitGroup, zkConn zookeeper.Connecti
 
 // FeedBrokerPool collects a list of brokerIDs from ZooKeeper and feeds them into a
 // channel to be read by a broker worker pool.
-func FeedBrokerPool(zkConn zookeeper.Connection, brokerChan chan<- int) error {
+func FeedBrokerPool(brokers []*connection.Broker, brokerChan chan<- *connection.Broker) {
 	defer close(brokerChan) // close the broker channel when done feeding
 
 	// Don't make API calls or feed down channel if we don't want to collect brokers
-	if args.GlobalArgs.CollectBrokerTopicData && zkConn != nil {
-		brokerIDs, err := zookeeper.GetBrokerIDs(zkConn)
-		if err != nil {
-			return err
-		}
-
-		for _, id := range brokerIDs {
-			intID, err := strconv.Atoi(id)
-			if err != nil {
-				log.Error("Unable to parse integer broker ID from %s", id)
-				continue
-			}
-			brokerChan <- intID
+	if args.GlobalArgs.CollectBrokerTopicData {
+		for _, broker := range brokers {
+			brokerChan <- broker
 		}
 	}
-
-	return nil
 }
 
 // Reads brokerIDs from a channel, creates an entity for each broker, and collects
 // inventory and metrics data for that broker. Exits when it determines the channel has
 // been closed
-func brokerWorker(brokerChan <-chan int, collectedTopics []string, wg *sync.WaitGroup, zkConn zookeeper.Connection, i *integration.Integration) {
+func brokerWorker(brokerChan <-chan *connection.Broker, collectedTopics []string, wg *sync.WaitGroup, i *integration.Integration) {
 	defer wg.Done()
 
 	for {
-		// Collect broker ID from channel.
-		// Exit worker if channel has been closed and no more brokerIDs can be collected.
-		brokerID, ok := <-brokerChan
+		broker, ok := <-brokerChan
 		if !ok {
 			return
 		}
 
-		// Create Broker
-		brokers, err := createBrokerConnectionVariants(brokerID, zkConn, i)
-		if err != nil {
-			continue
+		if args.GlobalArgs.HasInventory() {
+			populateBrokerInventory(broker, i)
 		}
 
-		for _, broker := range brokers {
-			// Populate inventory for broker
-			if args.GlobalArgs.All() || args.GlobalArgs.Inventory {
-				log.Debug("Collecting inventory for broker %s", broker.Entity.Metadata.Name)
-				if err := populateBrokerInventory(broker); err != nil {
-					continue
-				}
-				log.Debug("Done Collecting inventory for broker %s", broker.Entity.Metadata.Name)
-			}
-
-			// Populate metrics for broker
-			if args.GlobalArgs.All() || args.GlobalArgs.Metrics {
-				log.Debug("Collecting metrics for broker %s", broker.Entity.Metadata.Name)
-				if err := collectBrokerMetrics(broker, collectedTopics); err != nil {
-					continue
-				}
-				log.Debug("Done Collecting metrics for broker %s", broker.Entity.Metadata.Name)
-			}
-			break
+		if args.GlobalArgs.HasMetrics() {
+			collectBrokerMetrics(broker, collectedTopics, i)
 		}
 	}
-}
-
-// Creates and populates an array of different ways to connect to one broker.
-func createBrokerConnectionVariants(brokerID int, zkConn zookeeper.Connection, i *integration.Integration) ([]*broker, error) {
-
-	// Collect broker connection information from ZooKeeper
-	brokerConnections, err := zookeeper.GetBrokerConnections(brokerID, zkConn)
-	if err != nil {
-		log.Error("Unable to get broker JMX information for broker id %d: %s", brokerID, err)
-		return nil, err
-	}
-
-	// Gather broker configuration from ZooKeeper
-	brokerConfig, err := getBrokerConfig(brokerID, zkConn)
-	if err != nil {
-		log.Error("Unable to get broker configuration information for broker id %d: %s", brokerID, err)
-	}
-
-	var brokers []*broker
-	for _, brokerConnection := range brokerConnections {
-		// Create broker entity
-		clusterIDAttr := integration.NewIDAttribute("clusterName", args.GlobalArgs.ClusterName)
-		brokerEntity, err := i.Entity(
-			fmt.Sprintf("%s:%d", brokerConnection.BrokerHost, brokerConnection.BrokerPort),
-			"ka-broker",
-			clusterIDAttr)
-
-		if err != nil {
-			log.Error("Unable to create entity for broker ID %d: %s", brokerID, err)
-			return nil, err
-		}
-
-		brokers = append(brokers, &broker{
-			Host:      brokerConnection.BrokerHost,
-			JMXPort:   brokerConnection.JmxPort,
-			KafkaPort: brokerConnection.BrokerPort,
-			Entity:    brokerEntity,
-			ID:        brokerID,
-			Config:    brokerConfig,
-		})
-	}
-
-	return brokers, nil
 }
 
 // For a given broker struct, populate the inventory of its entity with the information gathered
-func populateBrokerInventory(b *broker) error {
+func populateBrokerInventory(b *connection.Broker, integration *integration.Integration) {
 	// Populate connection information
-	if err := b.Entity.SetInventoryItem("broker.hostname", "value", b.Host); err != nil {
+	entity, err := b.Entity(integration)
+	if err != nil {
+		log.Error("Failed to get entity for broker %s: %s", b.Addr(), err)
+		return
+	}
+
+	if err := entity.SetInventoryItem("broker.hostname", "value", b.Host); err != nil {
 		log.Error("Unable to set Hostinventory item for broker %d: %s", b.ID, err)
 	}
-	if err := b.Entity.SetInventoryItem("broker.jmxPort", "value", b.JMXPort); err != nil {
+	if err := entity.SetInventoryItem("broker.jmxPort", "value", b.JMXPort); err != nil {
 		log.Error("Unable to set JMX Port inventory item for broker %d: %s", b.ID, err)
 	}
-	if err := b.Entity.SetInventoryItem("broker.kafkaPort", "value", b.KafkaPort); err != nil {
-		log.Error("Unable to set Kafka Port inventory item for broker %d: %s", b.ID, err)
+	hostPort := strings.Split(b.Addr(), ":")
+	if len(hostPort) == 2 {
+		if err := entity.SetInventoryItem("broker.kafkaPort", "value", hostPort[1]); err != nil {
+			log.Error("Unable to set Kafka Port inventory item for broker %d: %s", b.ID, err)
+		}
+	} else {
+		log.Error("Failed to parse port from address. Skipping setting port inventory item")
 	}
 
 	// Populate configuration information
-	for key, value := range b.Config {
-		if err := b.Entity.SetInventoryItem("broker."+key, "value", value); err != nil {
+	brokerConfigs, err := getBrokerConfig(b)
+	if err != nil {
+		log.Error("Failed to get broker configs: %s", err)
+		return
+	}
+
+	for _, config := range brokerConfigs {
+		if err := entity.SetInventoryItem("broker."+config.Name, "value", config.Value); err != nil {
 			log.Error("Unable to set inventory item for broker %d: %s", b.ID, err)
 		}
 	}
-
-	return nil
 }
 
-func collectBrokerMetrics(b *broker, collectedTopics []string) error {
-	// Lock since we can only make a single JMX connection at a time.
-	jmxwrapper.JMXLock.Lock()
+func collectBrokerMetrics(b *connection.Broker, collectedTopics []string, i *integration.Integration) error {
 
 	// Open JMX connection
 	options := make([]jmx.Option, 0)
@@ -190,9 +127,10 @@ func collectBrokerMetrics(b *broker, collectedTopics []string) error {
 		ssl := jmx.WithSSL(args.GlobalArgs.KeyStore, args.GlobalArgs.KeyStorePassword, args.GlobalArgs.TrustStore, args.GlobalArgs.TrustStorePassword)
 		options = append(options, ssl)
 	}
-
 	options = append(options, jmx.WithNrJmxTool(args.GlobalArgs.NrJmx))
 
+	// Lock since we can only make a single JMX connection at a time.
+	jmxwrapper.JMXLock.Lock()
 	if err := jmxwrapper.JMXOpen(b.Host, strconv.Itoa(b.JMXPort), args.GlobalArgs.DefaultJMXUser, args.GlobalArgs.DefaultJMXPassword, options...); err != nil {
 		log.Error("Unable to make JMX connection for Broker '%s': %s", b.Host, err.Error())
 		jmxwrapper.JMXClose() // Close needs to be called even on a failed open to clear out any set variables
@@ -201,14 +139,14 @@ func collectBrokerMetrics(b *broker, collectedTopics []string) error {
 	}
 
 	// Collect broker metrics
-	populateBrokerMetrics(b)
+	populateBrokerMetrics(b, i)
 
 	// Gather Broker specific Topic metrics
-	topicSampleLookup := collectBrokerTopicMetrics(b, collectedTopics)
+	topicSampleLookup := collectBrokerTopicMetrics(b, collectedTopics, i)
 
 	// If enabled collect topic sizes
 	if args.GlobalArgs.CollectTopicSize {
-		gatherTopicSizes(b, topicSampleLookup)
+		gatherTopicSizes(b, topicSampleLookup, i)
 	}
 
 	// Close connection and release lock so another process can make JMX Connections
@@ -218,11 +156,16 @@ func collectBrokerMetrics(b *broker, collectedTopics []string) error {
 }
 
 // For a given broker struct, collect and populate its entity with broker metrics
-func populateBrokerMetrics(b *broker) {
+func populateBrokerMetrics(b *connection.Broker, i *integration.Integration) {
 	// Create a metric set on the broker entity
-	sample := b.Entity.NewMetricSet("KafkaBrokerSample",
-		metric.Attribute{Key: "displayName", Value: b.Entity.Metadata.Name},
-		metric.Attribute{Key: "entityName", Value: "broker:" + b.Entity.Metadata.Name},
+	entity, err := b.Entity(i)
+	if err != nil {
+		log.Error("Failed to get entity for broker: %s", err)
+		return
+	}
+	sample := entity.NewMetricSet("KafkaBrokerSample",
+		metric.Attribute{Key: "displayName", Value: entity.Metadata.Name},
+		metric.Attribute{Key: "entityName", Value: "broker:" + entity.Metadata.Name},
 	)
 
 	// Populate metrics set with broker metrics
@@ -231,13 +174,18 @@ func populateBrokerMetrics(b *broker) {
 
 // collectBrokerTopicMetrics gathers Broker specific Topic metrics.
 // Returns a map of Topic names to the corresponding entity *metric.Set
-func collectBrokerTopicMetrics(b *broker, collectedTopics []string) map[string]*metric.Set {
+func collectBrokerTopicMetrics(b *connection.Broker, collectedTopics []string, i *integration.Integration) map[string]*metric.Set {
 	topicSampleLookup := make(map[string]*metric.Set)
+	entity, err := b.Entity(i)
+	if err != nil {
+		log.Error("Failed to create entity for broker: %s", err)
+		return nil
+	}
 
 	for _, topicName := range collectedTopics {
-		sample := b.Entity.NewMetricSet("KafkaBrokerSample",
-			metric.Attribute{Key: "displayName", Value: b.Entity.Metadata.Name},
-			metric.Attribute{Key: "entityName", Value: "broker:" + b.Entity.Metadata.Name},
+		sample := entity.NewMetricSet("KafkaBrokerSample",
+			metric.Attribute{Key: "displayName", Value: entity.Metadata.Name},
+			metric.Attribute{Key: "entityName", Value: "broker:" + entity.Metadata.Name},
 			metric.Attribute{Key: "topic", Value: topicName},
 		)
 
@@ -251,26 +199,28 @@ func collectBrokerTopicMetrics(b *broker, collectedTopics []string) map[string]*
 }
 
 // Collect broker configuration from Zookeeper
-func getBrokerConfig(brokerID int, zkConn zookeeper.Connection) (map[string]string, error) {
+func getBrokerConfig(broker *connection.Broker) ([]*sarama.ConfigEntry, error) {
 
-	// Query Zookeeper for broker configuration
-	rawBrokerConfig, _, err := zkConn.Get(zookeeper.Path("/config/brokers/" + strconv.Itoa(brokerID)))
+	configRequest := &sarama.DescribeConfigsRequest{
+		Version:         0,
+		IncludeSynonyms: true,
+		Resources: []*sarama.ConfigResource{
+			{
+				Type:        sarama.BrokerResource,
+				Name:        string(broker.ID()),
+				ConfigNames: nil,
+			},
+		},
+	}
+
+	configResponse, err := broker.DescribeConfigs(configRequest)
 	if err != nil {
-		if err == zk.ErrNoNode {
-			return map[string]string{}, nil
-		}
-		return nil, err
+		return nil, fmt.Errorf("failed to describe configs: %s", err)
 	}
 
-	// Parse the JSON returned by Zookeeper
-	type brokerConfigDecoder struct {
-		Config map[string]string `json:"config"`
-	}
-	var brokerConfigDecoded brokerConfigDecoder
-	err = json.Unmarshal(rawBrokerConfig, &brokerConfigDecoded)
-	if err != nil {
-		return nil, err
+	if len(configResponse.Resources) != 1 {
+		return nil, fmt.Errorf("got an unexpected number (%d) of config resources back", len(configResponse.Resources))
 	}
 
-	return brokerConfigDecoded.Config, nil
+	return configResponse.Resources[0].Configs, nil
 }

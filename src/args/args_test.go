@@ -19,15 +19,15 @@ func TestParseArgs(t *testing.T) {
 			Metrics:   false,
 			Events:    false,
 		},
-		ZookeeperHosts:      `[{"host":"host1","port":2180},{"host":"host2"}]`,
-		ZookeeperAuthScheme: "",
-		ZookeeperAuthSecret: "",
-		ZookeeperPath:       "/test",
-		DefaultJMXUser:      "admin1",
-		DefaultJMXPassword:  "admin2",
-		DefaultJMXHost:      "test-default-host",
-		DefaultJMXPort:      9998,
-		NrJmx:               "/usr/bin/nrjmx",
+		ZookeeperHosts:         `[{"host":"host1","port":2180},{"host":"host2"}]`,
+		ZookeeperAuthScheme:    "",
+		ZookeeperAuthSecret:    "",
+		ZookeeperPath:          "/test",
+		DefaultJMXUser:         "admin1",
+		DefaultJMXPassword:     "admin2",
+		DefaultJMXHost:         "test-default-host",
+		DefaultJMXPort:         9998,
+		NrJmx:                  "/usr/bin/nrjmx",
 		CollectBrokerTopicData: true,
 		Producers:              `[{"name":"producer1", "host":"producerhost","user":"a1","password":"p1","port":9995},{"name":"producer2"}]`,
 		Consumers:              "[]",
@@ -40,7 +40,7 @@ func TestParseArgs(t *testing.T) {
 		ConsumerGroupRegex:     ".*",
 	}
 
-	expectedArgs := &KafkaArguments{
+	expectedArgs := &ParsedArguments{
 		DefaultArgumentList: sdkArgs.DefaultArgumentList{
 			Verbose:   false,
 			Pretty:    false,
@@ -58,12 +58,12 @@ func TestParseArgs(t *testing.T) {
 				Port: 2181,
 			},
 		},
-		ZookeeperAuthScheme: "",
-		ZookeeperAuthSecret: "",
-		ZookeeperPath:       "/test",
-		DefaultJMXUser:      "admin1",
-		DefaultJMXPassword:  "admin2",
-		NrJmx:               "/usr/bin/nrjmx",
+		ZookeeperAuthScheme:    "",
+		ZookeeperAuthSecret:    "",
+		ZookeeperPath:          "/test",
+		DefaultJMXUser:         "admin1",
+		DefaultJMXPassword:     "admin2",
+		NrJmx:                  "/usr/bin/nrjmx",
 		CollectBrokerTopicData: true,
 		Producers: []*JMXHost{
 			{
@@ -104,7 +104,7 @@ func TestDefaultArgs(t *testing.T) {
 	var a ArgumentList
 	_, err := integration.New("name", "1.0.0", integration.Args(&a))
 
-	expectedArgs := &KafkaArguments{
+	expectedArgs := &ParsedArguments{
 		DefaultArgumentList: sdkArgs.DefaultArgumentList{
 			Verbose:   false,
 			Pretty:    false,
@@ -112,13 +112,13 @@ func TestDefaultArgs(t *testing.T) {
 			Metrics:   false,
 			Events:    false,
 		},
-		ZookeeperHosts:      []*ZookeeperHost{},
-		ZookeeperAuthScheme: "",
-		ZookeeperAuthSecret: "",
-		ZookeeperPath:       "",
-		DefaultJMXUser:      "admin",
-		DefaultJMXPassword:  "admin",
-		NrJmx:               "/usr/bin/nrjmx",
+		ZookeeperHosts:         []*ZookeeperHost{},
+		ZookeeperAuthScheme:    "",
+		ZookeeperAuthSecret:    "",
+		ZookeeperPath:          "",
+		DefaultJMXUser:         "admin",
+		DefaultJMXPassword:     "admin",
+		NrJmx:                  "/usr/bin/nrjmx",
 		CollectBrokerTopicData: true,
 		Producers:              []*JMXHost{},
 		Consumers:              []*JMXHost{},
