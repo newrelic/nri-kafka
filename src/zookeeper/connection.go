@@ -154,7 +154,7 @@ func createConfig(isTLS bool) *sarama.Config {
 //
 // Waiting on issue https://github.com/samuel/go-zookeeper/issues/108 so we can change this function
 // and allow us to mock out the zk.Connect function
-func NewConnection(kafkaArgs *args.KafkaArguments) (Connection, error) {
+func NewConnection(kafkaArgs *args.ParsedArguments) (Connection, error) {
 	// No Zookeeper hosts so can't make a connection
 	if len(kafkaArgs.ZookeeperHosts) == 0 {
 		return nil, errors.New("no Zookeeper hosts specified")

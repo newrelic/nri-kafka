@@ -1,5 +1,5 @@
 // Package brokercollect handles collection of Broker inventory and metric data
-package brokercollect
+package broker
 
 import (
 	"encoding/json"

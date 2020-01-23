@@ -1,4 +1,4 @@
-package prodconcollect
+package client
 
 import (
 	"errors"

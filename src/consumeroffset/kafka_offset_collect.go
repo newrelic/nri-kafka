@@ -1,4 +1,4 @@
-package conoffsetcollect
+package consumeroffset
 
 import (
 	"fmt"

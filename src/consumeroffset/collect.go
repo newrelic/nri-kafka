@@ -1,5 +1,5 @@
-// Package conoffsetcollect handles collection of consumer offsets for consumer groups
-package conoffsetcollect
+// Package consumeroffset handles collection of consumer offsets for consumer groups
+package consumeroffset
 
 import (
 	"errors"
@@ -10,7 +10,6 @@ import (
 	"github.com/newrelic/infra-integrations-sdk/integration"
 	"github.com/newrelic/infra-integrations-sdk/log"
 	"github.com/newrelic/nri-kafka/src/args"
-	"github.com/newrelic/nri-kafka/src/zookeeper"
 )
 
 type partitionOffsets struct {
@@ -25,7 +24,7 @@ type partitionOffsets struct {
 type TopicPartitions map[string][]int32
 
 // Collect collects offset data per consumer group specified in the arguments
-func Collect(zkConn zookeeper.Connection, kafkaIntegration *integration.Integration) error {
+func Collect(clusterAdmin, kafkaIntegration *integration.Integration) error {
 	client, err := zkConn.CreateClient()
 	if err != nil {
 		return err

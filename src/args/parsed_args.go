@@ -12,40 +12,66 @@ import (
 )
 
 // GlobalArgs represents the global arguments that were passed in
-var GlobalArgs *KafkaArguments
+var GlobalArgs *ParsedArguments
 
-// KafkaArguments is an special version of the config arguments that has advanced parsing
+// Define the default ports for zookeeper and JMX
+const (
+	defaultZookeeperPort = 2181
+	defaultJMXPort       = 9999
+	defaultKafkaPort     = 9092
+)
+
+// ParsedArguments is an special version of the config arguments that has advanced parsing
 // to allow arguments to be consumed easier.
-type KafkaArguments struct {
+type ParsedArguments struct {
 	sdkArgs.DefaultArgumentList
-	ClusterName            string
-	ZookeeperHosts         []*ZookeeperHost
-	ZookeeperAuthScheme    string
-	ZookeeperAuthSecret    string
-	ZookeeperPath          string
-	DefaultJMXUser         string
-	DefaultJMXPassword     string
-	NrJmx                  string
-	CollectBrokerTopicData bool
-	Producers              []*JMXHost
-	Consumers              []*JMXHost
-	TopicMode              string
-	TopicList              []string
-	TopicRegex             string
-	TopicBucket            TopicBucket
-	Timeout                int
-	CollectTopicSize       bool
 
-	// SSL options
+	ClusterName string
+
+	AutodiscoverStrategy string
+
+	// Zookeeper autodiscovery. Only required if using zookeeper to autodiscover brokers
+	ZookeeperHosts      []*ZookeeperHost
+	ZookeeperAuthScheme string
+	ZookeeperAuthSecret string
+	ZookeeperPath       string
+	PreferredListener   string
+
+	// Manual discovery
+	Brokers []*BrokerHost
+
+	// Producer and consumer connection info. No autodiscovery is supported for producers and consumers
+	Producers []*JMXHost
+	Consumers []*JMXHost
+
+	// JMX defaults
+	DefaultJMXPort     int
+	DefaultJMXHost     string
+	DefaultJMXUser     string
+	DefaultJMXPassword string
+
+	// JMX SSL options
 	KeyStore           string
 	KeyStorePassword   string
 	TrustStore         string
 	TrustStorePassword string
 
+	NrJmx string
+
+	// Collection configuration
+	CollectBrokerTopicData bool
+	TopicMode              string
+	TopicList              []string
+	TopicRegex             string
+	TopicBucket            TopicBucket
+	CollectTopicSize       bool
+
 	// Consumer offset arguments
 	ConsumerOffset     bool
 	ConsumerGroups     ConsumerGroups
 	ConsumerGroupRegex *regexp.Regexp
+
+	Timeout int `default:"10000" help:"Timeout in milliseconds per single JMX query."`
 }
 
 // TopicBucket is a struct that stores the information for bucketing topic collection
@@ -62,16 +88,23 @@ type ZookeeperHost struct {
 
 // JMXHost is a storage struct for producer and consumer connection information
 type JMXHost struct {
-	Name     string `json:"name"`
-	Host     string `json:"host"`
-	Port     int    `json:"port"`
-	User     string `json:"user"`
-	Password string `json:"password"`
+	Name     string
+	Host     string
+	Port     int
+	User     string
+	Password string
+}
+
+type BrokerHost struct {
+	Host          string
+	JMXPort       string
+	KafkaPort     string
+	KafkaProtocol string
 }
 
 // ParseArgs validates the arguments in argumentList and parses them
 // into more easily used structs
-func ParseArgs(a ArgumentList) (*KafkaArguments, error) {
+func ParseArgs(a ArgumentList) (*ParsedArguments, error) {
 
 	// Parse ZooKeeper hosts
 	var zookeeperHosts []*ZookeeperHost
@@ -154,16 +187,16 @@ func ParseArgs(a ArgumentList) (*KafkaArguments, error) {
 		}
 	}
 
-	parsedArgs := &KafkaArguments{
-		DefaultArgumentList: a.DefaultArgumentList,
-		ClusterName:         a.ClusterName,
-		ZookeeperHosts:      zookeeperHosts,
-		ZookeeperAuthScheme: a.ZookeeperAuthScheme,
-		ZookeeperAuthSecret: a.ZookeeperAuthSecret,
-		ZookeeperPath:       a.ZookeeperPath,
-		DefaultJMXUser:      a.DefaultJMXUser,
-		DefaultJMXPassword:  a.DefaultJMXPassword,
-		NrJmx:               a.NrJmx,
+	parsedArgs := &ParsedArguments{
+		DefaultArgumentList:    a.DefaultArgumentList,
+		ClusterName:            a.ClusterName,
+		ZookeeperHosts:         zookeeperHosts,
+		ZookeeperAuthScheme:    a.ZookeeperAuthScheme,
+		ZookeeperAuthSecret:    a.ZookeeperAuthSecret,
+		ZookeeperPath:          a.ZookeeperPath,
+		DefaultJMXUser:         a.DefaultJMXUser,
+		DefaultJMXPassword:     a.DefaultJMXPassword,
+		NrJmx:                  a.NrJmx,
 		CollectBrokerTopicData: a.CollectBrokerTopicData,
 		Producers:              producers,
 		Consumers:              consumers,

@@ -1,4 +1,4 @@
-package brokercollect
+package broker
 
 import (
 	"errors"

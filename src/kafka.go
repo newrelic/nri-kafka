@@ -4,17 +4,12 @@ package main
 import (
 	"hash/fnv"
 	"os"
-	"strings"
 	"sync"
 
 	"github.com/newrelic/infra-integrations-sdk/integration"
 	"github.com/newrelic/infra-integrations-sdk/log"
 	"github.com/newrelic/nri-kafka/src/args"
-	bc "github.com/newrelic/nri-kafka/src/brokercollect"
-	offc "github.com/newrelic/nri-kafka/src/conoffsetcollect"
-	pcc "github.com/newrelic/nri-kafka/src/prodconcollect"
-	tc "github.com/newrelic/nri-kafka/src/topiccollect"
-	"github.com/newrelic/nri-kafka/src/zookeeper"
+	"github.com/newrelic/nri-kafka/src/consumeroffset"
 )
 
 const (
@@ -24,25 +19,20 @@ const (
 
 func main() {
 	var argList args.ArgumentList
-	// Create Integration
 	kafkaIntegration, err := integration.New(integrationName, integrationVersion, integration.Args(&argList))
 	ExitOnErr(err)
 
 	// Setup logging with verbose
 	log.SetupLogging(argList.Verbose)
 
-	// Parse args into structs
-	// This has to be after integration creation for defaults to be populated
+	// Parsing args must be done after integration creation for defaults to be populated
 	args.GlobalArgs, err = args.ParseArgs(argList)
 	ExitOnErr(err)
 
-	zkConn, err := zookeeper.NewConnection(args.GlobalArgs)
-	ExitOnErr(err)
-
 	if !args.GlobalArgs.ConsumerOffset {
-		coreCollection(zkConn, kafkaIntegration)
+		coreCollection(kafkaIntegration)
 	} else {
-		if err := offc.Collect(zkConn, kafkaIntegration); err != nil {
+		if err := consumeroffset.Collect(clusterAdmin, kafkaIntegration); err != nil {
 			log.Error("Failed collecting consumer offset data: %s", err.Error())
 			os.Exit(1)
 		}
@@ -55,11 +45,9 @@ func main() {
 }
 
 // coreCollection is the main integration collection. Does not handle consumerOffset collection
-func coreCollection(zkConn zookeeper.Connection, kafkaIntegration *integration.Integration) {
-	// Get topic list
-	collectedTopics, err := tc.GetTopics(zkConn)
-	ExitOnErr(err)
-	log.Debug("Collecting metrics for the following topics: %s", strings.Join(collectedTopics, ","))
+func coreCollection(kafkaIntegration *integration.Integration) {
+	// TODO Get topic list
+	collectedTopics := []string{}
 
 	// Enforce hard limits on Topics
 	collectedTopics = filterTopicsByBucket(collectedTopics, args.GlobalArgs.TopicBucket)
@@ -119,7 +107,7 @@ func filterTopicsByBucket(topicList []string, topicBucket args.TopicBucket) []st
 	filteredTopics := make([]string, 0, len(topicList))
 	for _, topic := range topicList {
 		h := fnv.New32()
-		h.Write([]byte(topic))
+		_, _ = h.Write([]byte(topic))
 		hashedTopic := int(h.Sum32())
 		if hashedTopic%topicBucket.NumBuckets+1 == topicBucket.BucketNumber {
 			filteredTopics = append(filteredTopics, topic)
