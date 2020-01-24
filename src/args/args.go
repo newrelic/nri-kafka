@@ -11,7 +11,7 @@ type ArgumentList struct {
 	sdkArgs.DefaultArgumentList
 	ClusterName string `default:"" help:"A user-defined name to uniquely identify the cluster"`
 
-	AutodiscoverStrategy string `default:"zookeeper" help:"How to discover broker nodes to collect metrics from. One of 'zookeeper' (default), or 'manual'"`
+	AutodiscoverStrategy string `default:"zookeeper" help:"How to discover broker nodes to collect metrics from. One of 'zookeeper' (default) or 'bootstrap'"`
 
 	// Zookeeper autodiscovery. Only required if using zookeeper to autodiscover brokers
 	ZookeeperHosts      string `default:"[]" help:"JSON array of ZooKeeper hosts with the following fields: host, port. Port defaults to 2181"`
@@ -20,8 +20,8 @@ type ArgumentList struct {
 	ZookeeperPath       string `default:"" help:"The Zookeeper path which contains the Kafka configuration. A leading slash is required."`
 	PreferredListener   string `default:"" help:"Override which broker listener to attempt to connect to. Defaults to the first that works"`
 
-	// Manual discovery
-	Brokers string `default:"[]" help:"JSON array of brokers with the following fields: 'host', 'jmx_port', 'jmx_user', 'jmx_password', 'kafka_port', 'protocol'"`
+	// Bootstrap discovery
+	BootstrapBroker string `default:"{}" help:"JSON object with the following fields: 'host', 'jmx_port', 'jmx_user', 'jmx_password', 'kafka_port', 'protocol'"`
 
 	// Producer and consumer connection info. No autodiscovery is supported for producers and consumers
 	Producers string `default:"[]" help:"JSON array of producer key:value maps with the keys 'name', 'host', 'port', 'user', 'password'. The 'name' key is required, the others default to the specified defaults in the default_jmx_* options.  "`
@@ -42,7 +42,7 @@ type ArgumentList struct {
 	NrJmx string `default:"/usr/bin/nrjmx" help:"Path to the nrjmx executable"`
 
 	// Collection configuration
-	CollectClusterMetrics  bool   `default:"true" help:"Collect cluster-level metrics such as topic metrics. If disabled, will only collect metrics specific to brokers, producers, and consumers configured (or discovered)"`
+	LocalOnlyCollection    bool   `default:"false" help:"Collect only the metrics related to the configured bootstrap broker. Useful for distributed metric collection"`
 	CollectBrokerTopicData bool   `default:"true" help:"DEPRECATED -- Signals to collect Broker and Topic inventory and metrics. Should only be turned off when specifying a Zookeeper Host and not intending to collect Broker or detailed Topic data."`
 	TopicMode              string `default:"None" help:"Possible options are All, None, or List. If List, must also specify the list of topics to collect with the topic_list option."`
 	TopicList              string `default:"[]" help:"JSON array of strings with the names of topics to monitor. Only used if collect_topics is set to 'List'"`

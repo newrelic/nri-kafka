@@ -37,8 +37,8 @@ type ParsedArguments struct {
 	ZookeeperPath       string
 	PreferredListener   string
 
-	// Manual discovery
-	Brokers []*BrokerHost
+	// Bootstrap discovery. Only required if
+	BootstrapBroker BrokerHost
 
 	// Producer and consumer connection info. No autodiscovery is supported for producers and consumers
 	Producers []*JMXHost
@@ -59,6 +59,7 @@ type ParsedArguments struct {
 	NrJmx string
 
 	// Collection configuration
+	LocalOnlyCollection   bool
 	CollectClusterMetrics bool
 	TopicMode             string
 	TopicList             []string
@@ -131,27 +132,25 @@ func ParseArgs(a ArgumentList) (*ParsedArguments, error) {
 	}
 
 	// Parse Broker hosts
-	var brokerHosts []*BrokerHost
-	err = json.Unmarshal([]byte(a.Brokers), &brokerHosts)
+	var brokerHost BrokerHost
+	err = json.Unmarshal([]byte(a.BootstrapBroker), &brokerHost)
 	if err != nil {
-		return nil, fmt.Errorf("failed to parse brokers from json: %w", err)
+		return nil, fmt.Errorf("failed to parse boostrap broker from json: %w", err)
 	}
 
-	for _, broker := range brokerHosts {
-		if broker.KafkaPort == 0 {
-			broker.KafkaPort = defaultKafkaPort
-		}
-		if broker.JMXPort == 0 {
-			broker.JMXPort = defaultJMXPort
-		}
+	if brokerHost.KafkaPort == 0 {
+		brokerHost.KafkaPort = defaultKafkaPort
+	}
+	if brokerHost.JMXPort == 0 {
+		brokerHost.JMXPort = defaultJMXPort
 	}
 
-	if a.AutodiscoverStrategy == "manual" && len(brokerHosts) == 0 {
-		return nil, errors.New("Must specify a broker host when the autodiscover strategy is 'manual'")
+	if a.AutodiscoverStrategy == "bootstrap" && a.BootstrapBroker == "{}" {
+		return nil, errors.New("Must specify a BootstrapBroker when the autodiscover strategy is 'bootstrap'")
 	}
 
-	if a.AutodiscoverStrategy != "manual" && len(brokerHosts) != 0 {
-		return nil, errors.New("Broker hosts have been defined even though the autodiscovery strategy is not 'manual'")
+	if a.AutodiscoverStrategy != "bootstrap" && a.BootstrapBroker != "{}" {
+		return nil, errors.New("BootstrapBroker been defined even though the autodiscovery strategy is not 'bootstrap'")
 	}
 
 	// Parse consumers
@@ -221,40 +220,40 @@ func ParseArgs(a ArgumentList) (*ParsedArguments, error) {
 	}
 
 	if a.CollectBrokerTopicData == false {
-		log.Warn("CollectBrokerTopicData has been deprecated in favor of CollectClusterMetrics." +
-			"Additionally, significant changes have been made to the topic collection" +
+		log.Warn("CollectBrokerTopicData has been deprecated. " +
+			"Significant changes have been made to the topic collection" +
 			"that makes the performance impact much less prominent than previously.")
 	}
 
 	parsedArgs := &ParsedArguments{
-		DefaultArgumentList:   a.DefaultArgumentList,
-		AutodiscoverStrategy:  a.AutodiscoverStrategy,
-		Brokers:               brokerHosts,
-		ClusterName:           a.ClusterName,
-		ZookeeperHosts:        zookeeperHosts,
-		ZookeeperAuthScheme:   a.ZookeeperAuthScheme,
-		ZookeeperAuthSecret:   a.ZookeeperAuthSecret,
-		ZookeeperPath:         a.ZookeeperPath,
-		PreferredListener:     a.PreferredListener,
-		DefaultJMXUser:        a.DefaultJMXUser,
-		DefaultJMXPassword:    a.DefaultJMXPassword,
-		NrJmx:                 a.NrJmx,
-		Producers:             producers,
-		Consumers:             consumers,
-		TopicMode:             a.TopicMode,
-		TopicList:             topics,
-		TopicRegex:            a.TopicRegex,
-		TopicBucket:           topicBucket,
-		Timeout:               a.Timeout,
-		KeyStore:              a.KeyStore,
-		KeyStorePassword:      a.KeyStorePassword,
-		TrustStore:            a.TrustStore,
-		TrustStorePassword:    a.TrustStorePassword,
-		CollectClusterMetrics: a.CollectClusterMetrics,
-		CollectTopicSize:      a.CollectTopicSize,
-		ConsumerOffset:        a.ConsumerOffset,
-		ConsumerGroups:        consumerGroups,
-		ConsumerGroupRegex:    consumerGroupRegex,
+		DefaultArgumentList:  a.DefaultArgumentList,
+		AutodiscoverStrategy: a.AutodiscoverStrategy,
+		BootstrapBroker:      brokerHost,
+		ClusterName:          a.ClusterName,
+		ZookeeperHosts:       zookeeperHosts,
+		ZookeeperAuthScheme:  a.ZookeeperAuthScheme,
+		ZookeeperAuthSecret:  a.ZookeeperAuthSecret,
+		ZookeeperPath:        a.ZookeeperPath,
+		PreferredListener:    a.PreferredListener,
+		DefaultJMXUser:       a.DefaultJMXUser,
+		DefaultJMXPassword:   a.DefaultJMXPassword,
+		NrJmx:                a.NrJmx,
+		Producers:            producers,
+		Consumers:            consumers,
+		TopicMode:            a.TopicMode,
+		TopicList:            topics,
+		TopicRegex:           a.TopicRegex,
+		TopicBucket:          topicBucket,
+		Timeout:              a.Timeout,
+		KeyStore:             a.KeyStore,
+		KeyStorePassword:     a.KeyStorePassword,
+		TrustStore:           a.TrustStore,
+		TrustStorePassword:   a.TrustStorePassword,
+		LocalOnlyCollection:  a.LocalOnlyCollection,
+		CollectTopicSize:     a.CollectTopicSize,
+		ConsumerOffset:       a.ConsumerOffset,
+		ConsumerGroups:       consumerGroups,
+		ConsumerGroupRegex:   consumerGroupRegex,
 	}
 
 	return parsedArgs, nil

@@ -12,6 +12,7 @@ import (
 
 // Broker is a struct containing all the information to collect from both Kafka and from JMX
 type Broker struct {
+	Config      *sarama.Config
 	JMXPort     int
 	JMXUser     string
 	JMXPassword string
@@ -26,17 +27,18 @@ func (b *Broker) Entity(i *integration.Integration) (*integration.Entity, error)
 	return i.Entity(b.Addr(), "ka-broker", clusterIDAttr, brokerIDAttr)
 }
 
-func NewBroker(host string, port int, protocol string) (*sarama.Broker, error) {
-	address := fmt.Sprintf("%s:%d", host, port)
+func NewBroker(brokerArgs *args.BrokerHost) (*Broker, error) {
+	address := fmt.Sprintf("%s:%d", brokerArgs.Host, brokerArgs.KafkaPort)
 
-	switch protocol {
+	switch brokerArgs.KafkaProtocol {
 	case "PLAINTEXT":
-		broker := sarama.NewBroker(address)
-		err := broker.Open(newPlaintextConfig())
+		saramaBroker := sarama.NewBroker(address)
+		config := newPlaintextConfig()
+		err := saramaBroker.Open(newPlaintextConfig())
 		if err != nil {
 			return nil, fmt.Errorf("failed opening connection: %w", err)
 		}
-		connected, err := broker.Connected()
+		connected, err := saramaBroker.Connected()
 		if err != nil {
 			return nil, fmt.Errorf("failed checking if connection opened successfully: %w", err)
 		}
@@ -45,47 +47,61 @@ func NewBroker(host string, port int, protocol string) (*sarama.Broker, error) {
 		}
 
 		// TODO figure out how to get the ID from the broker. ID() returns -1
-		return broker, nil
+		newBroker := &Broker{
+			Broker:      saramaBroker,
+			Host:        brokerArgs.Host,
+			JMXPort:     brokerArgs.JMXPort,
+			JMXUser:     brokerArgs.JMXUser,
+			JMXPassword: brokerArgs.JMXPassword,
+			ID:          fmt.Sprintf("%d", saramaBroker.ID()),
+			Config:      config,
+		}
+		return newBroker, nil
 	case "SSL":
-		broker := sarama.NewBroker(address)
-		err := broker.Open(newSSLConfig())
+		saramaBroker := sarama.NewBroker(address)
+		config := newSSLConfig()
+		err := saramaBroker.Open(newSSLConfig())
 		if err != nil {
 			return nil, fmt.Errorf("failed opening connection: %w", err)
 		}
-		connected, err := broker.Connected()
+		connected, err := saramaBroker.Connected()
 		if err != nil {
 			return nil, fmt.Errorf("failed checking if connection opened successfully: %w", err)
 		}
 		if !connected {
 			return nil, errors.New("broker is not connected")
 		}
-		return broker, nil
+		newBroker := &Broker{
+			Broker:      saramaBroker,
+			Host:        brokerArgs.Host,
+			JMXPort:     brokerArgs.JMXPort,
+			JMXUser:     brokerArgs.JMXUser,
+			JMXPassword: brokerArgs.JMXPassword,
+			ID:          fmt.Sprintf("%d", saramaBroker.ID()),
+			Config:      config,
+		}
+		return newBroker, nil
 	case "SASL_PLAINTEXT":
-		return nil, fmt.Errorf("skipping %s://%s:%d because it uses unsupported protocol '%s'", protocol, host, port, protocol)
+		return nil, fmt.Errorf("skipping %s://%s:%d because it uses unsupported protocol '%s'", brokerArgs.KafkaProtocol, brokerArgs.Host, brokerArgs.KafkaPort, brokerArgs.KafkaProtocol)
 	case "SASL_SSL":
-		return nil, fmt.Errorf("skipping %s://%s:%d because it uses unsupported protocol '%s'", protocol, host, port, protocol)
+		return nil, fmt.Errorf("skipping %s://%s:%d because it uses unsupported protocol '%s'", brokerArgs.KafkaProtocol, brokerArgs.Host, brokerArgs.KafkaPort, brokerArgs.KafkaProtocol)
 	default:
-		return nil, fmt.Errorf("skipping %s://%s:%d because it uses unknown protocol '%s'", protocol, host, port, protocol)
+		return nil, fmt.Errorf("skipping %s://%s:%d because it uses unknown protocol '%s'", brokerArgs.KafkaProtocol, brokerArgs.Host, brokerArgs.KafkaPort, brokerArgs.KafkaProtocol)
 	}
 
 }
 
-func NewClient(host string, port int, protocol string) (sarama.Client, error) {
-	address := fmt.Sprintf("%s:%d", host, port)
-
-	switch protocol {
-	case "PLAINTEXT":
-		return sarama.NewClient([]string{address}, newPlaintextConfig())
-	case "SSL":
-		return sarama.NewClient([]string{address}, newSSLConfig())
-	case "SASL_PLAINTEXT":
-		return nil, fmt.Errorf("skipping %s://%s:%d because it uses unsupported protocol %s", protocol, host, port, protocol)
-	case "SASL_SSL":
-		return nil, fmt.Errorf("skipping %s://%s:%d because it uses unsupported protocol %s", protocol, host, port, protocol)
-	default:
-		return nil, fmt.Errorf("skipping %s://%s:%d because it uses unknown protocol %s", protocol, host, port, protocol)
+func NewSaramaClientFromBrokerList(brokers []*Broker) (sarama.Client, error) {
+	if len(brokers) == 0 {
+		return nil, errors.New("cannot create sarama client with no brokers")
 	}
 
+	brokerAddresses := make([]string, 0, len(brokers))
+	for _, broker := range brokers {
+		brokerAddresses = append(brokerAddresses, broker.Addr())
+	}
+
+	return sarama.NewClient(brokerAddresses, brokers[0].Config)
 }
 
 func newPlaintextConfig() *sarama.Config {

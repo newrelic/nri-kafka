@@ -9,7 +9,6 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/Shopify/sarama"
 	"github.com/newrelic/infra-integrations-sdk/log"
 	"github.com/newrelic/nri-kafka/src/args"
 	"github.com/newrelic/nri-kafka/src/connection"
@@ -20,7 +19,6 @@ import (
 type Connection interface {
 	Get(string) ([]byte, *zk.Stat, error)
 	Children(string) ([]string, *zk.Stat, error)
-	CreateClusterAdmin() (sarama.ClusterAdmin, error)
 }
 
 type zookeeperConnection struct {
@@ -33,15 +31,6 @@ func (z zookeeperConnection) Children(s string) ([]string, *zk.Stat, error) {
 
 func (z zookeeperConnection) Get(s string) ([]byte, *zk.Stat, error) {
 	return z.inner.Get(s)
-}
-
-func (z zookeeperConnection) CreateClusterAdmin() (sarama.ClusterAdmin, error) {
-	client, err := GetClientFromZookeeper(z, args.GlobalArgs.PreferredListener)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create client: %s", err)
-	}
-
-	return sarama.NewClusterAdminFromClient(client)
 }
 
 type zookeeperLogger struct{}
@@ -127,7 +116,6 @@ func GetBroker(zkConn Connection, id, preferredListener string) (*connection.Bro
 	}
 
 	// Go through the list of brokers until we find one that uses a protocol we know how to handle
-	var saramaBroker *sarama.Broker
 	for _, endpoint := range brokerDecoded.Endpoints {
 		listener, host, port, err := parseEndpoint(endpoint)
 		if err != nil {
@@ -148,101 +136,24 @@ func GetBroker(zkConn Connection, id, preferredListener string) (*connection.Bro
 			continue
 		}
 
-		newBroker, err := connection.NewBroker(host, port, protocol)
+		brokerConfig := &args.BrokerHost{
+			Host:          host,
+			KafkaPort:     port,
+			KafkaProtocol: protocol,
+			JMXPort:       brokerDecoded.JMXPort,
+			JMXUser:       args.GlobalArgs.DefaultJMXUser,
+			JMXPassword:   args.GlobalArgs.DefaultJMXPassword,
+		}
+		newBroker, err := connection.NewBroker(brokerConfig)
 		if err != nil {
 			log.Warn("Failed creating client: %s")
 			continue
 		}
 
-		saramaBroker = newBroker
+		return newBroker, nil
 	}
 
-	if saramaBroker == nil {
-		log.Error("Found no supported endpoint that successfully connected to broker with host %s", brokerDecoded.Host)
-	}
-
-	newBroker := &connection.Broker{
-		Broker:      saramaBroker,
-		JMXPort:     brokerDecoded.JMXPort,
-		Host:        brokerDecoded.Host,
-		JMXUser:     args.GlobalArgs.DefaultJMXUser,
-		JMXPassword: args.GlobalArgs.DefaultJMXPassword,
-		ID:          id,
-	}
-
-	return newBroker, nil
-}
-
-func GetClientFromZookeeper(zkConn Connection, preferredListener string) (sarama.Client, error) {
-	// Get a list of brokers
-	brokerIDs, _, err := zkConn.Children(Path("/brokers/ids"))
-	if err != nil {
-		log.Info(Path("/brokers/ids"))
-		return nil, fmt.Errorf("unable to get broker ID from Zookeeper: %s", err.Error())
-	}
-
-	errors := make([]error, 0)
-	for _, id := range brokerIDs {
-		client, err := GetClientToBrokerFromZookeeper(zkConn, preferredListener, id)
-		if err != nil {
-			errors = append(errors, err)
-			continue
-		}
-		return client, nil
-	}
-
-	return nil, fmt.Errorf("could not connect to any broker: errors: %v", errors)
-}
-
-func GetClientToBrokerFromZookeeper(zkConn Connection, preferredListener string, brokerID string) (sarama.Client, error) {
-	// Query Zookeeper for broker information
-	rawBrokerJSON, _, err := zkConn.Get(Path("/brokers/ids/" + brokerID))
-	if err != nil {
-		return nil, fmt.Errorf("failed to retrieve broker information: %w", err)
-	}
-
-	// Parse the JSON returned by Zookeeper
-	type brokerJSONDecoder struct {
-		ProtocolMap map[string]string `json:"listener_security_protocol_map"`
-		Endpoints   []string          `json:"endpoints"`
-	}
-	var brokerDecoded brokerJSONDecoder
-	err = json.Unmarshal(rawBrokerJSON, &brokerDecoded)
-	if err != nil {
-		return nil, fmt.Errorf("failed to unmarshal broker information from zookeeper: %w", err)
-	}
-
-	// Go through the list of brokers until we find one that uses a protocol we know how to handle
-	for _, endpoint := range brokerDecoded.Endpoints {
-		listener, host, port, err := parseEndpoint(endpoint)
-		if err != nil {
-			log.Error("Failed to parse endpoint '%s' from zookeeper: %s", endpoint, err)
-			continue
-		}
-
-		// Skip this endpoint if it doesn't match the configured listener
-		if preferredListener != "" && preferredListener != listener {
-			log.Debug("Skipping endpoint '%s' because it doesn't match the preferredListener configured")
-			continue
-		}
-
-		// Check that the protocol map
-		protocol, ok := brokerDecoded.ProtocolMap[listener]
-		if !ok {
-			log.Error("Listener '%s' was not found in the protocol map")
-			continue
-		}
-
-		client, err := connection.NewClient(host, port, protocol)
-		if err != nil {
-			log.Warn("Failed creating client: %s")
-			continue
-		}
-
-		return client, nil
-	}
-
-	return nil, errors.New("no brokers found that I know how to connect to")
+	return nil, fmt.Errorf("found no supported endpoint that successfully connected to broker with host %s", brokerDecoded.Host)
 }
 
 // parseEndpoint takes a broker endpoint from zookeeper and parses it into its listener, host, and port components

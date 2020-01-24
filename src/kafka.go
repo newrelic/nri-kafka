@@ -40,7 +40,9 @@ func main() {
 	if !args.GlobalArgs.ConsumerOffset {
 		coreCollection(kafkaIntegration)
 	} else {
-		client, err := getClient(args.GlobalArgs)
+		brokers, err := getBrokerList(args.GlobalArgs)
+		ExitOnErr(err)
+		client, err := connection.NewSaramaClientFromBrokerList(brokers)
 		ExitOnErr(err)
 		if err := consumeroffset.Collect(client, kafkaIntegration); err != nil {
 			log.Error("Failed collecting consumer offset data: %s", err.Error())
@@ -54,54 +56,57 @@ func main() {
 	}
 }
 
-func getClient(args *args.ParsedArguments) (sarama.Client, error) {
-	switch args.AutodiscoverStrategy {
-	case "manual":
-		for _, broker := range args.Brokers {
-			newBroker, err := connection.NewClient(broker.Host, broker.KafkaPort, broker.KafkaProtocol)
-			if err != nil {
-				log.Error("Failed creating client to manually configured broker %s: %s", broker.Host, err)
-				continue
-			}
-			return newBroker, nil
-		}
-
-		return nil, errors.New("failed to connect to any of the configured brokers")
-	case "zookeeper":
-		zkConn, err := zookeeper.NewConnection(args)
-		if err != nil {
-			return nil, fmt.Errorf("failed to create zookeeper connection: %s", err)
-		}
-		client, err := zookeeper.GetClientFromZookeeper(zkConn, args.PreferredListener)
-		if err != nil {
-			return nil, fmt.Errorf("failed to get client from zookeeper: %s", err)
-		}
-		return client, nil
-	default:
-		return nil, fmt.Errorf("invalid autodiscovery strategy %s", args.AutodiscoverStrategy)
-	}
-}
-
 func getBrokerList(arguments *args.ParsedArguments) ([]*connection.Broker, error) {
 	switch arguments.AutodiscoverStrategy {
-	case "manual":
-		brokers := make([]*connection.Broker, 0, len(arguments.Brokers))
-		for _, broker := range arguments.Brokers {
-			newSaramaBroker, err := connection.NewBroker(broker.Host, broker.KafkaPort, broker.KafkaProtocol)
-			if err != nil {
-				log.Error("Failed creating Kafka client to manually configured broker %s: %s", broker.Host, err)
-				continue
-			}
+	case "bootstrap":
+		bootstrapBroker, err := connection.NewBroker(&arguments.BootstrapBroker)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create boostrap broker: %s", err)
+		}
 
-			newBroker := &connection.Broker{
-				Broker:      newSaramaBroker,
-				Host:        broker.Host,
-				JMXPort:     broker.JMXPort,
-				JMXUser:     broker.JMXUser,
-				JMXPassword: broker.JMXPassword,
-				ID:          fmt.Sprintf("%d", newSaramaBroker.ID()),
+		metadata, err := bootstrapBroker.GetMetadata(&sarama.MetadataRequest{})
+		if err != nil {
+			return nil, fmt.Errorf("failed to get metadata from broker: %s", err)
+		}
+
+		brokers := make([]*connection.Broker, 0, len(metadata.Brokers))
+		for _, broker := range metadata.Brokers {
+			if arguments.LocalOnlyCollection {
+				// TODO figure out a way to get ID on this broker without trying to match addresses
+				// This is really hacky, but there doesn't appear to be any way to get the ID off of
+				// a broker that we create with NewBroker.
+				if broker.Addr() == bootstrapBroker.Addr() {
+					bootstrapBroker.ID = fmt.Sprintf("%d", broker.ID())
+					return []*connection.Broker{bootstrapBroker}, nil
+				} else {
+					log.Info(broker.Addr())
+					log.Info(bootstrapBroker.Addr())
+				}
+			} else {
+				err := broker.Open(bootstrapBroker.Config)
+				if err != nil {
+					return nil, fmt.Errorf("failed opening connection: %w", err)
+				}
+				connected, err := broker.Connected()
+				if err != nil {
+					return nil, fmt.Errorf("failed checking if connection opened successfully: %w", err)
+				}
+				if !connected {
+					return nil, errors.New("broker is not connected")
+				}
+
+				newBroker := &connection.Broker{
+					Broker:      broker,
+					Host:        arguments.BootstrapBroker.Host,
+					JMXPort:     arguments.BootstrapBroker.JMXPort,
+					JMXUser:     arguments.BootstrapBroker.JMXUser,
+					JMXPassword: arguments.BootstrapBroker.JMXPassword,
+					ID:          fmt.Sprintf("%d", broker.ID()),
+					Config:      bootstrapBroker.Config,
+				}
+				brokers = append(brokers, newBroker)
+
 			}
-			brokers = append(brokers, newBroker)
 		}
 
 		return brokers, nil
@@ -125,7 +130,7 @@ func coreCollection(kafkaIntegration *integration.Integration) {
 		return
 	}
 
-	clusterClient, err := getClient(args.GlobalArgs)
+	clusterClient, err := connection.NewSaramaClientFromBrokerList(brokers)
 	if err != nil {
 		log.Error("Failed to get a kafka client: %s", err)
 		return
@@ -146,7 +151,7 @@ func coreCollection(kafkaIntegration *integration.Integration) {
 	consumerChan := client.StartWorkerPool(3, &wg, kafkaIntegration, collectedTopics, client.ConsumerWorker)
 	producerChan := client.StartWorkerPool(3, &wg, kafkaIntegration, collectedTopics, client.ProducerWorker)
 
-	if args.GlobalArgs.CollectClusterMetrics {
+	if !args.GlobalArgs.LocalOnlyCollection {
 		topicChan := topic.StartTopicPool(5, &wg, clusterClient)
 		go topic.FeedTopicPool(topicChan, kafkaIntegration, collectedTopics)
 	}
