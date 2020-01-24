@@ -42,7 +42,8 @@ type ArgumentList struct {
 	NrJmx string `default:"/usr/bin/nrjmx" help:"Path to the nrjmx executable"`
 
 	// Collection configuration
-	CollectBrokerTopicData bool   `default:"true" help:"Signals to collect Broker and Topic inventory and metrics. Should only be turned off when specifying a Zookeeper Host and not intending to collect Broker or detailed Topic data."`
+	CollectClusterMetrics  bool   `default:"true" help:"Collect cluster-level metrics such as topic metrics. If disabled, will only collect metrics specific to brokers, producers, and consumers configured (or discovered)"`
+	CollectBrokerTopicData bool   `default:"true" help:"DEPRECATED -- Signals to collect Broker and Topic inventory and metrics. Should only be turned off when specifying a Zookeeper Host and not intending to collect Broker or detailed Topic data."`
 	TopicMode              string `default:"None" help:"Possible options are All, None, or List. If List, must also specify the list of topics to collect with the topic_list option."`
 	TopicList              string `default:"[]" help:"JSON array of strings with the names of topics to monitor. Only used if collect_topics is set to 'List'"`
 	TopicRegex             string `default:"" help:"A regex pattern that matches the list of topics to collect. Only used if collect_topics is set to 'Regex'"`

@@ -44,6 +44,12 @@ func (z zookeeperConnection) CreateClusterAdmin() (sarama.ClusterAdmin, error) {
 	return sarama.NewClusterAdminFromClient(client)
 }
 
+type zookeeperLogger struct{}
+
+func (z zookeeperLogger) Printf(format string, args ...interface{}) {
+	log.Debug(format, args...)
+}
+
 // NewConnection creates a new Connection with the given arguments.
 // If not hosts are specified then a nil Connection and error will be returned
 //
@@ -63,7 +69,8 @@ func NewConnection(kafkaArgs *args.ParsedArguments) (Connection, error) {
 
 	// Create array of host:port strings for connecting
 	// Create connection and add authentication if provided
-	zkConn, _, err := zk.Connect(zkHosts, time.Second)
+
+	zkConn, _, err := zk.Connect(zkHosts, time.Second, zk.WithLogger(zookeeperLogger{}))
 	if err != nil {
 		log.Error("Failed to connect to Zookeeper: %s", err.Error())
 		return nil, err
@@ -160,6 +167,7 @@ func GetBroker(zkConn Connection, id, preferredListener string) (*connection.Bro
 		Host:        brokerDecoded.Host,
 		JMXUser:     args.GlobalArgs.DefaultJMXUser,
 		JMXPassword: args.GlobalArgs.DefaultJMXPassword,
+		ID:          id,
 	}
 
 	return newBroker, nil

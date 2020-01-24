@@ -30,11 +30,9 @@ type Topic struct {
 func StartTopicPool(poolSize int, wg *sync.WaitGroup, client sarama.Client) chan *Topic {
 	topicChan := make(chan *Topic)
 
-	if args.GlobalArgs.CollectBrokerTopicData {
-		for i := 0; i < poolSize; i++ {
-			wg.Add(1)
-			go topicWorker(topicChan, wg, client)
-		}
+	for i := 0; i < poolSize; i++ {
+		wg.Add(1)
+		go topicWorker(topicChan, wg, client)
 	}
 
 	return topicChan
@@ -86,19 +84,17 @@ func GetTopics(client sarama.Client) ([]string, error) {
 func FeedTopicPool(topicChan chan<- *Topic, i *integration.Integration, collectedTopics []string) {
 	defer close(topicChan)
 
-	if args.GlobalArgs.CollectBrokerTopicData {
-		for _, topicName := range collectedTopics {
-			// create topic entity
-			clusterIDAttr := integration.NewIDAttribute("clusterName", args.GlobalArgs.ClusterName)
-			topicEntity, err := i.Entity(topicName, "ka-topic", clusterIDAttr)
-			if err != nil {
-				log.Error("Unable to create an entity for topic %s", topicName)
-			}
+	for _, topicName := range collectedTopics {
+		// create topic entity
+		clusterIDAttr := integration.NewIDAttribute("clusterName", args.GlobalArgs.ClusterName)
+		topicEntity, err := i.Entity(topicName, "ka-topic", clusterIDAttr)
+		if err != nil {
+			log.Error("Unable to create an entity for topic %s", topicName)
+		}
 
-			topicChan <- &Topic{
-				Name:   topicName,
-				Entity: topicEntity,
-			}
+		topicChan <- &Topic{
+			Name:   topicName,
+			Entity: topicEntity,
 		}
 	}
 }

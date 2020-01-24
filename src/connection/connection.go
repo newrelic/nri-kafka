@@ -10,18 +10,20 @@ import (
 	"github.com/newrelic/nri-kafka/src/args"
 )
 
-// Broker TODO
+// Broker is a struct containing all the information to collect from both Kafka and from JMX
 type Broker struct {
 	JMXPort     int
 	JMXUser     string
 	JMXPassword string
 	Host        string
+	ID          string
 	*sarama.Broker
 }
 
 func (b *Broker) Entity(i *integration.Integration) (*integration.Entity, error) {
 	clusterIDAttr := integration.NewIDAttribute("clusterName", args.GlobalArgs.ClusterName)
-	return i.Entity(b.Addr(), "ka-broker", clusterIDAttr)
+	brokerIDAttr := integration.NewIDAttribute("brokerID", string(b.ID))
+	return i.Entity(b.Addr(), "ka-broker", clusterIDAttr, brokerIDAttr)
 }
 
 func NewBroker(host string, port int, protocol string) (*sarama.Broker, error) {
@@ -41,6 +43,8 @@ func NewBroker(host string, port int, protocol string) (*sarama.Broker, error) {
 		if !connected {
 			return nil, errors.New("broker is not connected")
 		}
+
+		// TODO figure out how to get the ID from the broker. ID() returns -1
 		return broker, nil
 	case "SSL":
 		broker := sarama.NewBroker(address)
@@ -57,11 +61,11 @@ func NewBroker(host string, port int, protocol string) (*sarama.Broker, error) {
 		}
 		return broker, nil
 	case "SASL_PLAINTEXT":
-		return nil, fmt.Errorf("skipping %s://%s:%d because it uses unsupported protocol %s", protocol, host, port, protocol)
+		return nil, fmt.Errorf("skipping %s://%s:%d because it uses unsupported protocol '%s'", protocol, host, port, protocol)
 	case "SASL_SSL":
-		return nil, fmt.Errorf("skipping %s://%s:%d because it uses unsupported protocol %s", protocol, host, port, protocol)
+		return nil, fmt.Errorf("skipping %s://%s:%d because it uses unsupported protocol '%s'", protocol, host, port, protocol)
 	default:
-		return nil, fmt.Errorf("skipping %s://%s:%d because it uses unknown protocol %s", protocol, host, port, protocol)
+		return nil, fmt.Errorf("skipping %s://%s:%d because it uses unknown protocol '%s'", protocol, host, port, protocol)
 	}
 
 }

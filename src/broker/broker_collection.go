@@ -36,11 +36,9 @@ func StartBrokerPool(poolSize int, wg *sync.WaitGroup, integration *integration.
 	brokerChan := make(chan *connection.Broker)
 
 	// Only spin off brokerWorkers if signaled
-	if args.GlobalArgs.CollectBrokerTopicData {
-		for i := 0; i < poolSize; i++ {
-			wg.Add(1)
-			go brokerWorker(brokerChan, collectedTopics, wg, integration)
-		}
+	for i := 0; i < poolSize; i++ {
+		wg.Add(1)
+		go brokerWorker(brokerChan, collectedTopics, wg, integration)
 	}
 
 	return brokerChan
@@ -51,11 +49,8 @@ func StartBrokerPool(poolSize int, wg *sync.WaitGroup, integration *integration.
 func FeedBrokerPool(brokers []*connection.Broker, brokerChan chan<- *connection.Broker) {
 	defer close(brokerChan) // close the broker channel when done feeding
 
-	// Don't make API calls or feed down channel if we don't want to collect brokers
-	if args.GlobalArgs.CollectBrokerTopicData {
-		for _, broker := range brokers {
-			brokerChan <- broker
-		}
+	for _, broker := range brokers {
+		brokerChan <- broker
 	}
 }
 
@@ -71,6 +66,7 @@ func brokerWorker(brokerChan <-chan *connection.Broker, collectedTopics []string
 			return
 		}
 
+		log.Debug("Starting collection for broker id %v", broker.ID)
 		if args.GlobalArgs.HasInventory() {
 			populateBrokerInventory(broker, i)
 		}
@@ -192,7 +188,7 @@ func collectBrokerTopicMetrics(b *connection.Broker, collectedTopics []string, i
 		// Insert into map
 		topicSampleLookup[topicName] = sample
 
-		metrics.CollectMetricDefintions(sample, metrics.BrokerTopicMetricDefs, metrics.ApplyTopicName(topicName))
+		metrics.CollectMetricDefinitions(sample, metrics.BrokerTopicMetricDefs, metrics.ApplyTopicName(topicName))
 	}
 
 	return topicSampleLookup
@@ -207,7 +203,7 @@ func getBrokerConfig(broker *connection.Broker) ([]*sarama.ConfigEntry, error) {
 		Resources: []*sarama.ConfigResource{
 			{
 				Type:        sarama.BrokerResource,
-				Name:        string(broker.ID()),
+				Name:        string(broker.ID),
 				ConfigNames: nil,
 			},
 		},

@@ -59,12 +59,12 @@ type ParsedArguments struct {
 	NrJmx string
 
 	// Collection configuration
-	CollectBrokerTopicData bool
-	TopicMode              string
-	TopicList              []string
-	TopicRegex             string
-	TopicBucket            TopicBucket
-	CollectTopicSize       bool
+	CollectClusterMetrics bool
+	TopicMode             string
+	TopicList             []string
+	TopicRegex            string
+	TopicBucket           TopicBucket
+	CollectTopicSize      bool
 
 	// Consumer offset arguments
 	ConsumerOffset     bool
@@ -89,11 +89,11 @@ type ZookeeperHost struct {
 // Broker is a storage struct for manual Broker connection information
 type BrokerHost struct {
 	Host          string
-	KafkaPort     int
-	KafkaProtocol string
-	JMXPort       int
-	JMXUser       string
-	JMXPassword   string
+	KafkaPort     int    `json:"kafka_port"`
+	KafkaProtocol string `json:"kafka_protocol"`
+	JMXPort       int    `json:"jmx_port"`
+	JMXUser       string `json:"jmx_user"`
+	JMXPassword   string `json:"jmx_password"`
 }
 
 // JMXHost is a storage struct for producer and consumer connection information
@@ -108,7 +108,6 @@ type JMXHost struct {
 // ParseArgs validates the arguments in argumentList and parses them
 // into more easily used structs
 func ParseArgs(a ArgumentList) (*ParsedArguments, error) {
-
 	// Parse ZooKeeper hosts
 	var zookeeperHosts []*ZookeeperHost
 	err := json.Unmarshal([]byte(a.ZookeeperHosts), &zookeeperHosts)
@@ -221,35 +220,41 @@ func ParseArgs(a ArgumentList) (*ParsedArguments, error) {
 		}
 	}
 
+	if a.CollectBrokerTopicData == false {
+		log.Warn("CollectBrokerTopicData has been deprecated in favor of CollectClusterMetrics." +
+			"Additionally, significant changes have been made to the topic collection" +
+			"that makes the performance impact much less prominent than previously.")
+	}
+
 	parsedArgs := &ParsedArguments{
-		DefaultArgumentList:    a.DefaultArgumentList,
-		AutodiscoverStrategy:   a.AutodiscoverStrategy,
-		Brokers:                brokerHosts,
-		ClusterName:            a.ClusterName,
-		ZookeeperHosts:         zookeeperHosts,
-		ZookeeperAuthScheme:    a.ZookeeperAuthScheme,
-		ZookeeperAuthSecret:    a.ZookeeperAuthSecret,
-		ZookeeperPath:          a.ZookeeperPath,
-		PreferredListener:      a.PreferredListener,
-		DefaultJMXUser:         a.DefaultJMXUser,
-		DefaultJMXPassword:     a.DefaultJMXPassword,
-		NrJmx:                  a.NrJmx,
-		CollectBrokerTopicData: a.CollectBrokerTopicData,
-		Producers:              producers,
-		Consumers:              consumers,
-		TopicMode:              a.TopicMode,
-		TopicList:              topics,
-		TopicRegex:             a.TopicRegex,
-		TopicBucket:            topicBucket,
-		Timeout:                a.Timeout,
-		KeyStore:               a.KeyStore,
-		KeyStorePassword:       a.KeyStorePassword,
-		TrustStore:             a.TrustStore,
-		TrustStorePassword:     a.TrustStorePassword,
-		CollectTopicSize:       a.CollectTopicSize,
-		ConsumerOffset:         a.ConsumerOffset,
-		ConsumerGroups:         consumerGroups,
-		ConsumerGroupRegex:     consumerGroupRegex,
+		DefaultArgumentList:   a.DefaultArgumentList,
+		AutodiscoverStrategy:  a.AutodiscoverStrategy,
+		Brokers:               brokerHosts,
+		ClusterName:           a.ClusterName,
+		ZookeeperHosts:        zookeeperHosts,
+		ZookeeperAuthScheme:   a.ZookeeperAuthScheme,
+		ZookeeperAuthSecret:   a.ZookeeperAuthSecret,
+		ZookeeperPath:         a.ZookeeperPath,
+		PreferredListener:     a.PreferredListener,
+		DefaultJMXUser:        a.DefaultJMXUser,
+		DefaultJMXPassword:    a.DefaultJMXPassword,
+		NrJmx:                 a.NrJmx,
+		Producers:             producers,
+		Consumers:             consumers,
+		TopicMode:             a.TopicMode,
+		TopicList:             topics,
+		TopicRegex:            a.TopicRegex,
+		TopicBucket:           topicBucket,
+		Timeout:               a.Timeout,
+		KeyStore:              a.KeyStore,
+		KeyStorePassword:      a.KeyStorePassword,
+		TrustStore:            a.TrustStore,
+		TrustStorePassword:    a.TrustStorePassword,
+		CollectClusterMetrics: a.CollectClusterMetrics,
+		CollectTopicSize:      a.CollectTopicSize,
+		ConsumerOffset:        a.ConsumerOffset,
+		ConsumerGroups:        consumerGroups,
+		ConsumerGroupRegex:    consumerGroupRegex,
 	}
 
 	return parsedArgs, nil

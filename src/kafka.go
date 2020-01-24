@@ -2,6 +2,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"hash/fnv"
 	"os"
@@ -54,16 +55,31 @@ func main() {
 }
 
 func getClient(args *args.ParsedArguments) (sarama.Client, error) {
-	zkConn, err := zookeeper.NewConnection(args)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create zookeeper connection: %s", err)
-	}
-	client, err := zookeeper.GetClientFromZookeeper(zkConn, args.PreferredListener)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get client from zookeeper: %s", err)
-	}
+	switch args.AutodiscoverStrategy {
+	case "manual":
+		for _, broker := range args.Brokers {
+			newBroker, err := connection.NewClient(broker.Host, broker.KafkaPort, broker.KafkaProtocol)
+			if err != nil {
+				log.Error("Failed creating client to manually configured broker %s: %s", broker.Host, err)
+				continue
+			}
+			return newBroker, nil
+		}
 
-	return client, nil
+		return nil, errors.New("failed to connect to any of the configured brokers")
+	case "zookeeper":
+		zkConn, err := zookeeper.NewConnection(args)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create zookeeper connection: %s", err)
+		}
+		client, err := zookeeper.GetClientFromZookeeper(zkConn, args.PreferredListener)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get client from zookeeper: %s", err)
+		}
+		return client, nil
+	default:
+		return nil, fmt.Errorf("invalid autodiscovery strategy %s", args.AutodiscoverStrategy)
+	}
 }
 
 func getBrokerList(arguments *args.ParsedArguments) ([]*connection.Broker, error) {
@@ -73,7 +89,8 @@ func getBrokerList(arguments *args.ParsedArguments) ([]*connection.Broker, error
 		for _, broker := range arguments.Brokers {
 			newSaramaBroker, err := connection.NewBroker(broker.Host, broker.KafkaPort, broker.KafkaProtocol)
 			if err != nil {
-				log.Error("Failed creating client to manually configured broker %s: %s", broker.Host, err)
+				log.Error("Failed creating Kafka client to manually configured broker %s: %s", broker.Host, err)
+				continue
 			}
 
 			newBroker := &connection.Broker{
@@ -82,6 +99,7 @@ func getBrokerList(arguments *args.ParsedArguments) ([]*connection.Broker, error
 				JMXPort:     broker.JMXPort,
 				JMXUser:     broker.JMXUser,
 				JMXPassword: broker.JMXPassword,
+				ID:          fmt.Sprintf("%d", newSaramaBroker.ID()),
 			}
 			brokers = append(brokers, newBroker)
 		}
@@ -100,6 +118,7 @@ func getBrokerList(arguments *args.ParsedArguments) ([]*connection.Broker, error
 
 // coreCollection is the main integration collection. Does not handle consumerOffset collection
 func coreCollection(kafkaIntegration *integration.Integration) {
+	log.Info("Running core collection")
 	brokers, err := getBrokerList(args.GlobalArgs)
 	if err != nil {
 		log.Error("Failed to get list of brokers: %s", err)
@@ -114,24 +133,25 @@ func coreCollection(kafkaIntegration *integration.Integration) {
 
 	topics, err := topic.GetTopics(clusterClient)
 	if err != nil {
-		log.Error("Failed to get a list of topics: %s", err)
+		log.Error("Failed to get a list of topics. Continuing with broker collection: %s", err)
 	}
 
-	// Enforce hard limits on Topics
+	// Enforce hard limits on topics
 	bucketedTopics := filterTopicsByBucket(topics, args.GlobalArgs.TopicBucket)
 	collectedTopics := enforceTopicLimit(bucketedTopics)
 
-	// Setup wait group
+	// Start and feed all worker pools
 	var wg sync.WaitGroup
-
-	// Start all worker pools
 	brokerChan := broker.StartBrokerPool(3, &wg, kafkaIntegration, collectedTopics)
-	topicChan := topic.StartTopicPool(5, &wg, clusterClient)
 	consumerChan := client.StartWorkerPool(3, &wg, kafkaIntegration, collectedTopics, client.ConsumerWorker)
 	producerChan := client.StartWorkerPool(3, &wg, kafkaIntegration, collectedTopics, client.ProducerWorker)
 
+	if args.GlobalArgs.CollectClusterMetrics {
+		topicChan := topic.StartTopicPool(5, &wg, clusterClient)
+		go topic.FeedTopicPool(topicChan, kafkaIntegration, collectedTopics)
+	}
+
 	go broker.FeedBrokerPool(brokers, brokerChan)
-	go topic.FeedTopicPool(topicChan, kafkaIntegration, collectedTopics)
 	go client.FeedWorkerPool(consumerChan, args.GlobalArgs.Consumers)
 	go client.FeedWorkerPool(producerChan, args.GlobalArgs.Producers)
 

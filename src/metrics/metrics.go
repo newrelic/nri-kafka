@@ -15,19 +15,19 @@ import (
 
 // GetBrokerMetrics collects all Broker JMX metrics and stores them in sample
 func GetBrokerMetrics(sample *metric.Set) {
-	CollectMetricDefintions(sample, brokerMetricDefs, nil)
+	CollectMetricDefinitions(sample, brokerMetricDefs, nil)
 }
 
 // GetConsumerMetrics collects all Consumer metrics for the given
 // consumerName and stores them in sample.
 func GetConsumerMetrics(consumerName string, sample *metric.Set) {
-	CollectMetricDefintions(sample, consumerMetricDefs, applyConsumerName(consumerName))
+	CollectMetricDefinitions(sample, consumerMetricDefs, applyConsumerName(consumerName))
 }
 
 // GetProducerMetrics collects all Producer and Producer metrics for the given
 // producerName and stores them in sample.
 func GetProducerMetrics(producerName string, sample *metric.Set) {
-	CollectMetricDefintions(sample, producerMetricDefs, applyProducerName(producerName))
+	CollectMetricDefinitions(sample, producerMetricDefs, applyProducerName(producerName))
 }
 
 // CollectTopicSubMetrics collects Topic metrics that are related to either a Producer or Consumer
@@ -48,12 +48,12 @@ func CollectTopicSubMetrics(entity *integration.Entity, entityType string,
 			metric.Attribute{Key: "topic", Value: topicName},
 		)
 
-		CollectMetricDefintions(topicSample, metricSets, beanModifier(entity.Metadata.Name, topicName))
+		CollectMetricDefinitions(topicSample, metricSets, beanModifier(entity.Metadata.Name, topicName))
 	}
 }
 
-// CollectMetricDefintions collects the set of metrics from the current open JMX connection and add them to the sample
-func CollectMetricDefintions(sample *metric.Set, metricSets []*JMXMetricSet, beanModifier BeanModifier) {
+// CollectMetricDefinitions collects the set of metrics from the current open JMX connection and add them to the sample
+func CollectMetricDefinitions(sample *metric.Set, metricSets []*JMXMetricSet, beanModifier BeanModifier) {
 	notFoundMetrics := make([]string, 0)
 
 	for _, metricSet := range metricSets {
