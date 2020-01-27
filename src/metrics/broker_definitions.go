@@ -7,6 +7,46 @@ import (
 )
 
 // Broker metrics
+var brokerRequestMetricDefs = []*JMXMetricSet{
+	{
+		MBean:        "kafka.network:type=RequestMetrics,name=RequestsPerSec,request=*,*",
+		MetricPrefix: "kafka.network:type=RequestMetrics,name=RequestsPerSec,",
+		MetricDefs: []*MetricDefinition{
+			{
+				Name:       "request.produceRequestsPerSecond",
+				SourceType: metric.GAUGE,
+				JMXAttr:    "request=Produce",
+			},
+			{
+				Name:       "request.fetchConsumerRequestsPerSecond",
+				SourceType: metric.GAUGE,
+				JMXAttr:    "request=FetchConsumer",
+			},
+			{
+				Name:       "request.fetchFollowerRequestsPerSecond",
+				SourceType: metric.GAUGE,
+				JMXAttr:    "request=FetchFollower",
+			},
+			{
+				Name:       "request.metadataRequestsPerSecond",
+				SourceType: metric.GAUGE,
+				JMXAttr:    "request=Metadata",
+			},
+			{
+				Name:       "request.offsetCommitRequestsPerSecond",
+				SourceType: metric.GAUGE,
+				JMXAttr:    "request=OffsetCommit",
+			},
+			{
+				Name:       "request.listGroupsRequestsPerSecond",
+				SourceType: metric.GAUGE,
+				JMXAttr:    "request=ListGroups",
+			},
+		},
+	},
+}
+
+// Broker metrics
 var brokerMetricDefs = []*JMXMetricSet{
 	// Metadata request Metrics
 	{

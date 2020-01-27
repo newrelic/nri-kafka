@@ -16,6 +16,7 @@ import (
 // GetBrokerMetrics collects all Broker JMX metrics and stores them in sample
 func GetBrokerMetrics(sample *metric.Set) {
 	CollectMetricDefinitions(sample, brokerMetricDefs, nil)
+	CollectBrokerRequestMetrics(sample, brokerRequestMetricDefs)
 }
 
 // GetConsumerMetrics collects all Consumer metrics for the given
@@ -49,6 +50,54 @@ func CollectTopicSubMetrics(entity *integration.Entity, entityType string,
 		)
 
 		CollectMetricDefinitions(topicSample, metricSets, beanModifier(entity.Metadata.Name, topicName))
+	}
+}
+
+func CollectBrokerRequestMetrics(sample *metric.Set, metricSets []*JMXMetricSet) {
+	notFoundMetrics := make([]string, 0)
+
+	for _, metricSet := range metricSets {
+		beanName := metricSet.MBean
+
+		// Return all the results under a specific mBean
+		results, err := jmxwrapper.JMXQuery(beanName, args.GlobalArgs.Timeout)
+		// If we fail we don't want a total failure as other metrics can be collected even if a single failure/timout occurs
+		if err != nil {
+			log.Error("Unable to execute JMX query for MBean '%s': %s", beanName, err.Error())
+			continue
+		}
+
+		// For each metric to collect, populate the sample if it is
+		// found in results, otherwise save the mBeanKey as not found
+		for _, metricDef := range metricSet.MetricDefs {
+			versionRollup := 0.0
+			found := false
+			// Newer versions of Kafka have nest the request metrics under a version, so we have to roll these up
+			for metric, value := range results {
+				if strings.HasPrefix(metric, metricSet.MetricPrefix+metricDef.JMXAttr) && strings.HasSuffix(metric, "attr=OneMinuteRate") {
+					found = true
+					rate, ok := value.(float64)
+					if !ok {
+						log.Warn("Got non-float64 value for a rate")
+						continue
+					}
+					versionRollup += rate
+				}
+			}
+
+			if !found {
+				notFoundMetrics = append(notFoundMetrics, metricDef.Name)
+				continue
+			}
+
+			if err := sample.SetMetric(metricDef.Name, versionRollup, metricDef.SourceType); err != nil {
+				log.Error("Error setting value: %s", err)
+			}
+		}
+	}
+
+	if len(notFoundMetrics) > 0 {
+		log.Warn("Can't find raw metrics in results for keys: %v", notFoundMetrics)
 	}
 }
 
@@ -89,6 +138,6 @@ func CollectMetricDefinitions(sample *metric.Set, metricSets []*JMXMetricSet, be
 	}
 
 	if len(notFoundMetrics) > 0 {
-		log.Debug("Can't find raw metrics in results for keys: %v", notFoundMetrics)
+		log.Warn("Can't find raw metrics in results for keys: %v", notFoundMetrics)
 	}
 }
