@@ -41,7 +41,7 @@ func getConsumerOffsetsFromBroker(groupName string, topicPartitions TopicPartiti
 	}
 
 	if len(resp.Blocks) == 0 {
-		return nil, fmt.Errorf("no offset data found for consumer group '%s'. There may not be any active consumers.", groupName)
+		return nil, fmt.Errorf("no offset data found for consumer group '%s'. There may not be any active consumers", groupName)
 	}
 
 	for topic, partitions := range topicPartitions {

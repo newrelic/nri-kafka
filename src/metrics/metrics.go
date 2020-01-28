@@ -53,6 +53,7 @@ func CollectTopicSubMetrics(entity *integration.Entity, entityType string,
 	}
 }
 
+// CollectBrokerRequestMetrics collects request metrics from brokers
 func CollectBrokerRequestMetrics(sample *metric.Set, metricSets []*JMXMetricSet) {
 	notFoundMetrics := make([]string, 0)
 

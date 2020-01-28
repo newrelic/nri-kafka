@@ -20,9 +20,9 @@ func Test_GetBrokerFromZookeeper(t *testing.T) {
 
 }
 
-func parseEndpointTest(t *testing.T, input, listener, host string, port int, is_err bool) {
+func parseEndpointTest(t *testing.T, input, listener, host string, port int, isErr bool) {
 	l, h, p, e := parseEndpoint(input)
-	if is_err {
+	if isErr {
 		assert.Error(t, e, "Expected an error")
 	} else {
 		assert.NoError(t, e, "Unexpected error")

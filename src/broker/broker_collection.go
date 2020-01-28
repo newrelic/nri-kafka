@@ -1,4 +1,4 @@
-// Package brokercollect handles collection of Broker inventory and metric data
+// Package broker handles collection of Broker inventory and metric data
 package broker
 
 import (
@@ -72,7 +72,10 @@ func brokerWorker(brokerChan <-chan *connection.Broker, collectedTopics []string
 		}
 
 		if args.GlobalArgs.HasMetrics() {
-			collectBrokerMetrics(broker, collectedTopics, i)
+			err := collectBrokerMetrics(broker, collectedTopics, i)
+			if err != nil {
+				log.Error("Failed to collect broker metrics for broker %s: %s", broker.ID, err)
+			}
 		}
 	}
 }

@@ -78,18 +78,15 @@ func getBrokerList(arguments *args.ParsedArguments) ([]*connection.Broker, error
 				if broker.Addr() == bootstrapBroker.Addr() {
 					bootstrapBroker.ID = fmt.Sprintf("%d", broker.ID())
 					return []*connection.Broker{bootstrapBroker}, nil
-				} else {
-					log.Info(broker.Addr())
-					log.Info(bootstrapBroker.Addr())
 				}
 			} else {
 				err := broker.Open(bootstrapBroker.Config)
 				if err != nil {
-					return nil, fmt.Errorf("failed opening connection: %w", err)
+					return nil, fmt.Errorf("failed opening connection: %s", err)
 				}
 				connected, err := broker.Connected()
 				if err != nil {
-					return nil, fmt.Errorf("failed checking if connection opened successfully: %w", err)
+					return nil, fmt.Errorf("failed checking if connection opened successfully: %s", err)
 				}
 				if !connected {
 					return nil, errors.New("broker is not connected")
@@ -107,6 +104,10 @@ func getBrokerList(arguments *args.ParsedArguments) ([]*connection.Broker, error
 				brokers = append(brokers, newBroker)
 
 			}
+		}
+
+		if len(brokers) == 0 {
+			return nil, errors.New("failed to match any brokers with configured address")
 		}
 
 		return brokers, nil

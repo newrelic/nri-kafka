@@ -1,4 +1,6 @@
 //go:generate mockery -name=Client -name=SaramaBroker
+
+// Package connection handles connecting to brokers via JMX and Kafka protocol
 package connection
 
 import (
@@ -89,12 +91,14 @@ type Broker struct {
 	SaramaBroker
 }
 
+// Entity gets the entity object for the broker
 func (b *Broker) Entity(i *integration.Integration) (*integration.Entity, error) {
 	clusterIDAttr := integration.NewIDAttribute("clusterName", args.GlobalArgs.ClusterName)
 	brokerIDAttr := integration.NewIDAttribute("brokerID", string(b.ID))
 	return i.Entity(b.Addr(), "ka-broker", clusterIDAttr, brokerIDAttr)
 }
 
+// NewBroker creates a new broker
 func NewBroker(brokerArgs *args.BrokerHost) (*Broker, error) {
 	address := fmt.Sprintf("%s:%d", brokerArgs.Host, brokerArgs.KafkaPort)
 
@@ -104,11 +108,11 @@ func NewBroker(brokerArgs *args.BrokerHost) (*Broker, error) {
 		config := newPlaintextConfig()
 		err := saramaBroker.Open(newPlaintextConfig())
 		if err != nil {
-			return nil, fmt.Errorf("failed opening connection: %w", err)
+			return nil, fmt.Errorf("failed opening connection: %s", err)
 		}
 		connected, err := saramaBroker.Connected()
 		if err != nil {
-			return nil, fmt.Errorf("failed checking if connection opened successfully: %w", err)
+			return nil, fmt.Errorf("failed checking if connection opened successfully: %s", err)
 		}
 		if !connected {
 			return nil, errors.New("broker is not connected")
@@ -130,11 +134,11 @@ func NewBroker(brokerArgs *args.BrokerHost) (*Broker, error) {
 		config := newSSLConfig()
 		err := saramaBroker.Open(newSSLConfig())
 		if err != nil {
-			return nil, fmt.Errorf("failed opening connection: %w", err)
+			return nil, fmt.Errorf("failed opening connection: %s", err)
 		}
 		connected, err := saramaBroker.Connected()
 		if err != nil {
-			return nil, fmt.Errorf("failed checking if connection opened successfully: %w", err)
+			return nil, fmt.Errorf("failed checking if connection opened successfully: %s", err)
 		}
 		if !connected {
 			return nil, errors.New("broker is not connected")
@@ -159,6 +163,7 @@ func NewBroker(brokerArgs *args.BrokerHost) (*Broker, error) {
 
 }
 
+// NewSaramaClientFromBrokerList creates a new Client from a list of brokers
 func NewSaramaClientFromBrokerList(brokers []*Broker) (Client, error) {
 	if len(brokers) == 0 {
 		return nil, errors.New("cannot create sarama client with no brokers")
@@ -191,6 +196,7 @@ func newSSLConfig() *sarama.Config {
 	return config
 }
 
+// GetBrokerListFromZookeeper gets a list of brokers from zookeeper
 func GetBrokerListFromZookeeper(zkConn zookeeper.Connection, preferredListener string) ([]*Broker, error) {
 	// Get a list of brokers
 	brokerIDs, _, err := zkConn.Children(zookeeper.Path("/brokers/ids"))
@@ -211,11 +217,12 @@ func GetBrokerListFromZookeeper(zkConn zookeeper.Connection, preferredListener s
 	return brokers, nil
 }
 
+// GetBrokerFromZookeeper gets a broker with given ID from zookeeper
 func GetBrokerFromZookeeper(zkConn zookeeper.Connection, id, preferredListener string) (*Broker, error) {
 	// Query Zookeeper for broker information
 	rawBrokerJSON, _, err := zkConn.Get(zookeeper.Path(fmt.Sprintf("/brokers/ids/%s", id)))
 	if err != nil {
-		return nil, fmt.Errorf("failed to retrieve broker information: %w", err)
+		return nil, fmt.Errorf("failed to retrieve broker information: %s", err)
 	}
 
 	// Parse the JSON returned by Zookeeper
@@ -228,7 +235,7 @@ func GetBrokerFromZookeeper(zkConn zookeeper.Connection, id, preferredListener s
 	var brokerDecoded brokerJSONDecoder
 	err = json.Unmarshal(rawBrokerJSON, &brokerDecoded)
 	if err != nil {
-		return nil, fmt.Errorf("failed to unmarshal broker information from zookeeper: %w", err)
+		return nil, fmt.Errorf("failed to unmarshal broker information from zookeeper: %s", err)
 	}
 
 	// Go through the list of brokers until we find one that uses a protocol we know how to handle

@@ -87,7 +87,7 @@ type ZookeeperHost struct {
 	Port int    `json:"port"`
 }
 
-// Broker is a storage struct for manual Broker connection information
+// BrokerHost is a storage struct for manual Broker connection information
 type BrokerHost struct {
 	Host          string
 	KafkaPort     int    `json:"kafka_port"`
@@ -113,7 +113,7 @@ func ParseArgs(a ArgumentList) (*ParsedArguments, error) {
 	var zookeeperHosts []*ZookeeperHost
 	err := json.Unmarshal([]byte(a.ZookeeperHosts), &zookeeperHosts)
 	if err != nil {
-		return nil, fmt.Errorf("failed to parse zookeepers from json: %w", err)
+		return nil, fmt.Errorf("failed to parse zookeepers from json: %s", err)
 	}
 
 	for _, zookeeperHost := range zookeeperHosts {
@@ -135,7 +135,7 @@ func ParseArgs(a ArgumentList) (*ParsedArguments, error) {
 	var brokerHost BrokerHost
 	err = json.Unmarshal([]byte(a.BootstrapBroker), &brokerHost)
 	if err != nil {
-		return nil, fmt.Errorf("failed to parse boostrap broker from json: %w", err)
+		return nil, fmt.Errorf("failed to parse boostrap broker from json: %s", err)
 	}
 
 	if brokerHost.KafkaPort == 0 {

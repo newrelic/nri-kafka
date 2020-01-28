@@ -43,15 +43,15 @@ func startPartitionPool(poolSize int, wg *sync.WaitGroup, client connection.Clie
 func feedPartitionPool(partitionInChan chan<- *partitionSender, topic string, client connection.Client) {
 	defer close(partitionInChan)
 
-	partitionIds, err := client.Partitions(topic)
+	partitionIDs, err := client.Partitions(topic)
 	if err != nil {
 		log.Error("Failed to get partitions for topic %s: %s", topic, err)
 	}
 
 	// Feed partition info to the partitionWorkers
-	for partitionId := range partitionIds {
+	for partitionID := range partitionIDs {
 		newSender := &partitionSender{
-			ID:        partitionId,
+			ID:        partitionID,
 			TopicName: topic,
 		}
 
