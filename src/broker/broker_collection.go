@@ -19,16 +19,6 @@ import (
 	"github.com/newrelic/nri-kafka/src/metrics"
 )
 
-// broker is a storage struct for information about brokers
-type broker struct {
-	ID        int
-	Entity    *integration.Entity
-	Host      string
-	JMXPort   int
-	KafkaPort int
-	Config    map[string]string
-}
-
 // StartBrokerPool starts a pool of brokerWorkers to handle collecting data for Broker entities.
 // The returned channel can be fed brokerIDs to collect, and is to be closed by the user
 // (or closed by feedBrokerPool)

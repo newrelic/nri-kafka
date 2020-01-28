@@ -20,12 +20,6 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-var (
-	brokerConnectionBytes = []byte(`{"listener_security_protocol_map":{"PLAINTEXT":"PLAINTEXT", "SSL":"SSL"},"endpoints":["PLAINTEXT://kafkabroker:9092", "SSL://kafkabroker:9093"],"jmx_port":9999,"host":"kafkabroker","timestamp":"1530886155628","port":9092,"version":4}`)
-	brokerConfigBytes     = []byte(`{"version":1,"config":{"flush.messages":"12345"}}`)
-	brokerConfigBytes2    = []byte(`{"version":1,"config":{"leader.replication.throttled.replicas":"10000"}}`)
-)
-
 func TestStartBrokerPool(t *testing.T) {
 	testutils.SetupTestArgs()
 
@@ -208,7 +202,8 @@ func TestCollectBrokerTopicMetrics(t *testing.T) {
 		metric.Attribute{Key: "topic", Value: "topic"},
 	)
 
-	sample.SetMetric("broker.bytesWrittenToTopicPerSecond", float64(0), metric.GAUGE)
+	err := sample.SetMetric("broker.bytesWrittenToTopicPerSecond", float64(0), metric.GAUGE)
+	assert.NoError(t, err)
 
 	expected := map[string]*metric.Set{
 		"topic": sample,

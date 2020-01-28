@@ -105,6 +105,7 @@ func TestParseArgs(t *testing.T) {
 func TestDefaultArgs(t *testing.T) {
 	var a ArgumentList
 	_, err := integration.New("name", "1.0.0", integration.Args(&a))
+	assert.NoError(t, err)
 	a.ZookeeperHosts = `[{"host":"localhost", "port":2181}]`
 
 	expectedArgs := &ParsedArguments{
@@ -151,7 +152,7 @@ func TestDefaultArgs(t *testing.T) {
 }
 
 func Test_unmarshalConsumerGroups_All(t *testing.T) {
-	expected := make(ConsumerGroups, 0)
+	expected := make(ConsumerGroups)
 
 	out, err := unmarshalConsumerGroups(true, "{}")
 	if err != nil {

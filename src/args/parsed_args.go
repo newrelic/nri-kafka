@@ -219,7 +219,7 @@ func ParseArgs(a ArgumentList) (*ParsedArguments, error) {
 		}
 	}
 
-	if a.CollectBrokerTopicData == false {
+	if !a.CollectBrokerTopicData {
 		log.Warn("CollectBrokerTopicData has been deprecated. " +
 			"Significant changes have been made to the topic collection" +
 			"that makes the performance impact much less prominent than previously.")
