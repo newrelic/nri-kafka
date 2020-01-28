@@ -1,17 +1,12 @@
-// Package zookeeper has a common interface and mock objects to implement and test Zookeeper connections.
 package zookeeper
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
-	"regexp"
-	"strconv"
 	"time"
 
 	"github.com/newrelic/infra-integrations-sdk/log"
 	"github.com/newrelic/nri-kafka/src/args"
-	"github.com/newrelic/nri-kafka/src/connection"
 	"github.com/samuel/go-zookeeper/zk"
 )
 
@@ -73,101 +68,4 @@ func NewConnection(kafkaArgs *args.ParsedArguments) (Connection, error) {
 	}
 
 	return zookeeperConnection{zkConn}, nil
-}
-
-func GetBrokerList(zkConn Connection, preferredListener string) ([]*connection.Broker, error) {
-	// Get a list of brokers
-	brokerIDs, _, err := zkConn.Children(Path("/brokers/ids"))
-	if err != nil {
-		return nil, fmt.Errorf("unable to get broker ID from Zookeeper path %s: %s", Path("/brokers/ids"), err)
-	}
-
-	brokers := make([]*connection.Broker, 0, len(brokerIDs))
-	for _, id := range brokerIDs {
-		broker, err := GetBroker(zkConn, id, preferredListener)
-		if err != nil {
-			log.Error("Failed to get JMX connection info from broker id %s: %s", id, err)
-			continue
-		}
-		brokers = append(brokers, broker)
-	}
-
-	return brokers, nil
-}
-
-func GetBroker(zkConn Connection, id, preferredListener string) (*connection.Broker, error) {
-	// Query Zookeeper for broker information
-	rawBrokerJSON, _, err := zkConn.Get(Path(fmt.Sprintf("/brokers/ids/%s", id)))
-	if err != nil {
-		return nil, fmt.Errorf("failed to retrieve broker information: %w", err)
-	}
-
-	// Parse the JSON returned by Zookeeper
-	type brokerJSONDecoder struct {
-		Host        string
-		JMXPort     int               `json:"jmx_port"`
-		ProtocolMap map[string]string `json:"listener_security_protocol_map"`
-		Endpoints   []string          `json:"endpoints"`
-	}
-	var brokerDecoded brokerJSONDecoder
-	err = json.Unmarshal(rawBrokerJSON, &brokerDecoded)
-	if err != nil {
-		return nil, fmt.Errorf("failed to unmarshal broker information from zookeeper: %w", err)
-	}
-
-	// Go through the list of brokers until we find one that uses a protocol we know how to handle
-	for _, endpoint := range brokerDecoded.Endpoints {
-		listener, host, port, err := parseEndpoint(endpoint)
-		if err != nil {
-			log.Error("Failed to parse endpoint '%s' from zookeeper: %s", endpoint, err)
-			continue
-		}
-
-		// Skip this endpoint if it doesn't match the configured listener
-		if preferredListener != "" && preferredListener != listener {
-			log.Debug("Skipping endpoint '%s' because it doesn't match the preferredListener configured")
-			continue
-		}
-
-		// Check that the protocol map
-		protocol, ok := brokerDecoded.ProtocolMap[listener]
-		if !ok {
-			log.Error("Listener '%s' was not found in the protocol map")
-			continue
-		}
-
-		brokerConfig := &args.BrokerHost{
-			Host:          host,
-			KafkaPort:     port,
-			KafkaProtocol: protocol,
-			JMXPort:       brokerDecoded.JMXPort,
-			JMXUser:       args.GlobalArgs.DefaultJMXUser,
-			JMXPassword:   args.GlobalArgs.DefaultJMXPassword,
-		}
-		newBroker, err := connection.NewBroker(brokerConfig)
-		if err != nil {
-			log.Warn("Failed creating client: %s")
-			continue
-		}
-
-		return newBroker, nil
-	}
-
-	return nil, fmt.Errorf("found no supported endpoint that successfully connected to broker with host %s", brokerDecoded.Host)
-}
-
-// parseEndpoint takes a broker endpoint from zookeeper and parses it into its listener, host, and port components
-func parseEndpoint(endpoint string) (listener, host string, port int, err error) {
-	re := regexp.MustCompile(`([A-Za-z_]+)://([^:]+):(\d+)`)
-	matches := re.FindStringSubmatch(endpoint)
-	if matches == nil {
-		return "", "", 0, errors.New("regex pattern did not match endpoint")
-	}
-
-	port, err = strconv.Atoi(matches[3])
-	if err != nil {
-		return "", "", 0, fmt.Errorf("failed parsing port as int: %s", err)
-	}
-
-	return matches[1], matches[2], port, nil
 }

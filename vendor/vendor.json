@@ -205,6 +205,10 @@
 			"revisionTime": "2018-07-16T14:42:29Z"
 		},
 		{
+			"path": "github/Shopify/sarama",
+			"revision": ""
+		},
+		{
 			"path": "github/kr/pretty",
 			"revision": ""
 		},

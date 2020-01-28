@@ -2,22 +2,22 @@ package broker
 
 import (
 	"errors"
-	"fmt"
 	"reflect"
 	"sync"
 	"testing"
 	"time"
 
-	"github.com/kr/pretty"
+	"github.com/Shopify/sarama"
 	"github.com/newrelic/infra-integrations-sdk/data/inventory"
 	"github.com/newrelic/infra-integrations-sdk/data/metric"
 	"github.com/newrelic/infra-integrations-sdk/integration"
 	"github.com/newrelic/infra-integrations-sdk/jmx"
+	"github.com/newrelic/nri-kafka/src/connection"
+	"github.com/newrelic/nri-kafka/src/connection/mocks"
 	"github.com/newrelic/nri-kafka/src/jmxwrapper"
 	"github.com/newrelic/nri-kafka/src/testutils"
-	"github.com/newrelic/nri-kafka/src/zookeeper"
-	"github.com/samuel/go-zookeeper/zk"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 )
 
 var (
@@ -30,14 +30,13 @@ func TestStartBrokerPool(t *testing.T) {
 	testutils.SetupTestArgs()
 
 	var wg sync.WaitGroup
-	zkConn := zookeeper.MockConnection{}
 	collectedTopics := make([]string, 0)
 	i, err := integration.New("kafka", "1.0.0")
 	if err != nil {
 		t.Error(err)
 	}
 
-	brokerChan := StartBrokerPool(3, &wg, &zkConn, i, collectedTopics)
+	brokerChan := StartBrokerPool(3, &wg, i, collectedTopics)
 	close(brokerChan)
 
 	c := make(chan int)
@@ -53,97 +52,58 @@ func TestStartBrokerPool(t *testing.T) {
 	}
 }
 
-func TestBrokerWorker(t *testing.T) {
-	zkConn := &zookeeper.MockConnection{}
-	zkConn.On("Get", "/brokers/ids/0").Return(brokerConnectionBytes, new(zk.Stat), nil)
-	zkConn.On("Get", "/config/brokers/0").Return(brokerConfigBytes, new(zk.Stat), nil)
-
+func TestBrokerWorker_Exits(t *testing.T) {
 	var wg sync.WaitGroup
-	brokerChan := make(chan int, 10)
+	brokerChan := make(chan *connection.Broker, 1)
 	i, _ := integration.New("kafka", "1.0.0")
 	testutils.SetupJmxTesting()
 	testutils.SetupTestArgs()
 
 	wg.Add(1)
-	brokerChan <- 0
 	close(brokerChan)
-	brokerWorker(brokerChan, []string{}, &wg, zkConn, i)
+	brokerWorker(brokerChan, []string{}, &wg, i)
 
-	wg.Wait()
-}
+	finished := make(chan *connection.Broker)
+	go func() {
+		wg.Wait()
+		close(finished)
+	}()
 
-func TestCreateBroker_ZKError(t *testing.T) {
-	brokerID, zkConn := 0, &zookeeper.MockConnection{}
-	zkConn.On("Get", "/brokers/ids/0").Return([]byte{}, new(zk.Stat), errors.New("this is a test error"))
-	i, _ := integration.New("kafka", "1.0.0")
-
-	_, err := createBrokerConnectionVariants(brokerID, zkConn, i)
-	if err == nil {
-		t.Error("Expected error")
-	}
-}
-
-func TestCreateBroker_Normal(t *testing.T) {
-	brokerID, zkConn := 0, &zookeeper.MockConnection{}
-	zkConn.On("Get", "/brokers/ids/0").Return(brokerConnectionBytes, new(zk.Stat), nil)
-	zkConn.On("Get", "/config/brokers/0").Return(brokerConfigBytes, new(zk.Stat), nil)
-	i, _ := integration.New("kafka", "1.0.0")
-
-	brokers, err := createBrokerConnectionVariants(brokerID, zkConn, i)
-	if err != nil {
-		t.Errorf("Unexpected error: %s", err.Error())
+	select {
+	case <-finished:
+	case <-time.After(100 * time.Millisecond):
+		assert.Fail(t, "Broker worker did not exit before timeout")
 	}
 
-	expectedBrokers := []broker{
-		{
-			Host:      "kafkabroker",
-			KafkaPort: 9092,
-			JMXPort:   9999,
-			ID:        0,
-		},
-		{
-			Host:      "kafkabroker",
-			KafkaPort: 9093,
-			JMXPort:   9999,
-			ID:        0,
-		},
-	}
-
-	for i, broker := range brokers {
-		if expectedBrokers[i].Host != broker.Host {
-			t.Errorf("Expected JMX host '%s' got '%s'", expectedBrokers[i].Host, broker.Host)
-		}
-		if expectedBrokers[i].JMXPort != broker.JMXPort {
-			t.Errorf("Expected JMX Port '%d' got '%d'", expectedBrokers[i].JMXPort, broker.JMXPort)
-		}
-		if expectedBrokers[i].KafkaPort != broker.KafkaPort {
-			t.Errorf("Expected Kafka Port '%d' got '%d'", expectedBrokers[i].KafkaPort, broker.KafkaPort)
-		}
-		metadataName := fmt.Sprintf("%s:%d", expectedBrokers[i].Host, expectedBrokers[i].KafkaPort)
-		if broker.Entity.Metadata.Name != metadataName {
-			t.Errorf("Expected entity name '%s' got '%s'", metadataName, broker.Entity.Metadata.Name)
-		}
-		if broker.Entity.Metadata.Namespace != "ka-broker" {
-			t.Errorf("Expected entity name '%s' got '%s'", "ka-broker", broker.Entity.Metadata.Namespace)
-		}
-	}
 }
 
 func TestPopulateBrokerInventory(t *testing.T) {
-	testBroker := &broker{
-		Host:      "kafkabroker",
-		JMXPort:   9999,
-		KafkaPort: 9092,
-		ID:        0,
-		Config:    map[string]string{"leader.replication.throttled.replicas": "10000"},
+	mockBroker := &mocks.SaramaBroker{}
+	mockBroker.On("Addr").Return("kafkabroker:9090")
+	mockBroker.On("DescribeConfigs", mock.Anything).Return(&sarama.DescribeConfigsResponse{
+		Resources: []*sarama.ResourceResponse{
+			{
+				Type: sarama.BrokerResource,
+				Name: "0",
+				Configs: []*sarama.ConfigEntry{
+					{
+						Name:  "leader.replication.throttled.replicas",
+						Value: "10000",
+					},
+				},
+			},
+		},
+	}, nil)
+
+	testBroker := &connection.Broker{
+		Host:         "kafkabroker",
+		JMXPort:      9999,
+		ID:           "0",
+		SaramaBroker: mockBroker,
 	}
 	i, _ := integration.New("kafka", "1.0.0")
 
-	testBroker.Entity, _ = i.Entity("brokerHost", "ka-broker")
-
-	if err := populateBrokerInventory(testBroker); err != nil {
-		t.Errorf("Unexpected error: %s", err.Error())
-	}
+	populateBrokerInventory(testBroker, i)
 
 	expectedInventoryItems := map[string]inventory.Item{
 		"broker.hostname": {
@@ -152,16 +112,14 @@ func TestPopulateBrokerInventory(t *testing.T) {
 		"broker.jmxPort": {
 			"value": testBroker.JMXPort,
 		},
-		"broker.kafkaPort": {
-			"value": testBroker.KafkaPort,
-		},
 		"broker.leader.replication.throttled.replicas": {
 			"value": "10000",
 		},
 	}
 
 	for key, item := range expectedInventoryItems {
-		if value, ok := testBroker.Entity.Inventory.Item(key); !ok {
+		entity, _ := testBroker.Entity(i)
+		if value, ok := entity.Inventory.Item(key); !ok {
 			t.Errorf("Entity missing Inventory Key: %s", key)
 		} else if !reflect.DeepEqual(item, value) {
 			t.Errorf("Expected Item %+v got %+v", item, value)
@@ -177,127 +135,46 @@ func TestPopulateBrokerMetrics_JMXOpenError(t *testing.T) {
 	jmxwrapper.JMXOpen = func(hostname, port, username, password string, options ...jmx.Option) error {
 		return errors.New(errorText)
 	}
-	testBroker := &broker{
-		Host:      "kafkabroker",
-		JMXPort:   9999,
-		KafkaPort: 9092,
-		ID:        0,
+	testBroker := &connection.Broker{
+		Host:    "kafkabroker",
+		JMXPort: 9999,
+		ID:      "0",
 	}
 	i, _ := integration.New("kafka", "1.0.0")
 
-	testBroker.Entity, _ = i.Entity(testBroker.Host, "ka-broker")
-
-	err := collectBrokerMetrics(testBroker, []string{})
-	if err == nil {
-		t.Error("Did not get expected error")
-	} else if err.Error() != errorText {
-		t.Errorf("Expected error '%s' got '%s'", errorText, err.Error())
-	}
+	err := collectBrokerMetrics(testBroker, []string{}, i)
+	assert.Equal(t, "jmx error", err.Error())
 }
 
 func TestPopulateBrokerMetrics_Normal(t *testing.T) {
 	testutils.SetupTestArgs()
 	testutils.SetupJmxTesting()
 
-	testBroker := &broker{
-		Host:      "kafkabroker",
-		JMXPort:   9999,
-		KafkaPort: 9092,
-		ID:        0,
+	mockBroker := &mocks.SaramaBroker{}
+	mockBroker.On("Addr").Return("kafkabroker:9090")
+
+	testBroker := &connection.Broker{
+		Host:         "kafkabroker",
+		JMXPort:      9999,
+		ID:           "0",
+		SaramaBroker: mockBroker,
 	}
 	i, _ := integration.New("kafka", "1.0.0")
 
-	testBroker.Entity, _ = i.Entity(testBroker.Host, "ka-broker")
+	populateBrokerMetrics(testBroker, i)
 
-	populateBrokerMetrics(testBroker)
+	entity, _ := testBroker.Entity(i)
+	assert.Len(t, entity.Metrics, 1, "Unexpected number of metrics")
 
-	// MetricSet should still be created during a failed query.
-	if len(testBroker.Entity.Metrics) != 1 {
-		t.Errorf("Expected one metric set got %d", len(testBroker.Entity.Metrics))
-	}
-
-	sample := testBroker.Entity.Metrics[0]
+	sample := entity.Metrics[0]
 
 	expected := map[string]interface{}{
 		"event_type":  "KafkaBrokerSample",
-		"displayName": testBroker.Host,
-		"entityName":  "broker:" + testBroker.Host,
+		"displayName": "kafkabroker:9090",
+		"entityName":  "broker:" + "kafkabroker:9090",
 	}
 
-	if !reflect.DeepEqual(sample.Metrics, expected) {
-		fmt.Println(pretty.Diff(sample.Metrics, expected))
-		t.Errorf("Expected Item %+v got %+v", expected, sample.Metrics)
-	}
-}
-
-func TestGetBrokerJMX(t *testing.T) {
-	testutils.SetupTestArgs()
-
-	brokerID := 0
-	zkConn := zookeeper.MockConnection{}
-	zkConn.On("Get", "/brokers/ids/0").Return(brokerConnectionBytes, new(zk.Stat), nil)
-	expectedBrokers := []zookeeper.BrokerConnection{
-		{
-			Scheme:     "http",
-			BrokerHost: "kafkabroker",
-			BrokerPort: 9092,
-			JmxPort:    9999,
-		},
-		{
-			Scheme:     "https",
-			BrokerHost: "kafkabroker",
-			BrokerPort: 9093,
-			JmxPort:    9999,
-		},
-	}
-
-	brokerConnections, err := zookeeper.GetBrokerConnections(brokerID, &zkConn)
-	if err != nil {
-		t.Error(err)
-	}
-
-	for i, brokerConnection := range brokerConnections {
-		if brokerConnection.Scheme != expectedBrokers[i].Scheme {
-			t.Errorf("Expected scheme %s, got %s", expectedBrokers[i].Scheme, brokerConnection.Scheme)
-		}
-		if brokerConnection.BrokerHost != expectedBrokers[i].BrokerHost {
-			t.Errorf("Expected host %s, got %s", expectedBrokers[i].BrokerHost, brokerConnection.BrokerHost)
-		}
-		if brokerConnection.BrokerPort != expectedBrokers[i].BrokerPort {
-			t.Errorf("Expected kafka port %d, got %d", expectedBrokers[i].BrokerPort, brokerConnection.BrokerPort)
-		}
-		if brokerConnection.JmxPort != expectedBrokers[i].JmxPort {
-			t.Errorf("Expected jmx port %d, got %d", expectedBrokers[i].JmxPort, brokerConnection.JmxPort)
-		}
-	}
-}
-
-func TestGetBrokerConfig(t *testing.T) {
-
-	testCases := []struct {
-		brokerID       int
-		expectedConfig map[string]string
-		expectedError  bool
-	}{
-		{0, map[string]string{"leader.replication.throttled.replicas": "10000"}, false},
-		{1, nil, true},
-	}
-
-	for _, tc := range testCases {
-		zkConn := zookeeper.MockConnection{}
-		zkConn.On("Get", "/config/brokers/0").Return(brokerConfigBytes2, new(zk.Stat), nil)
-		zkConn.On("Get", "/config/brokers/1").Return([]byte{}, new(zk.Stat), errors.New("this is a test error"))
-
-		brokerConfig, err := getBrokerConfig(tc.brokerID, &zkConn)
-		if (err != nil) != tc.expectedError {
-			t.Error(err)
-			t.FailNow()
-		}
-
-		assert.Equal(t, tc.expectedConfig, brokerConfig)
-	}
-
-	return
+	assert.Equal(t, expected, sample.Metrics)
 }
 
 func TestCollectBrokerTopicMetrics(t *testing.T) {
@@ -312,30 +189,24 @@ func TestCollectBrokerTopicMetrics(t *testing.T) {
 		return result, nil
 	}
 
-	i, err := integration.New("test", "1.0.0")
-	if err != nil {
-		t.Errorf("Unexpected error %s", err.Error())
-		t.FailNow()
-	}
+	i, _ := integration.New("test", "1.0.0")
+	e, _ := i.Entity("testEntity", "testNamespace")
 
-	e, err := i.Entity("testEntity", "testNamespace")
-	if err != nil {
-		t.Errorf("Unexpected error %s", err.Error())
-		t.FailNow()
-	}
+	mockBroker := &mocks.SaramaBroker{}
+	mockBroker.On("Addr").Return("kafkabroker:9090")
 
-	testBroker := &broker{
-		Host:      "kafkabroker",
-		JMXPort:   9999,
-		KafkaPort: 9092,
-		ID:        0,
-		Entity:    e,
+	testBroker := &connection.Broker{
+		Host:         "kafkabroker",
+		JMXPort:      9999,
+		ID:           "0",
+		SaramaBroker: mockBroker,
 	}
 
 	sample := e.NewMetricSet("KafkaBrokerSample",
-		metric.Attribute{Key: "displayName", Value: "testEntity"},
-		metric.Attribute{Key: "entityName", Value: "broker:testEntity"},
-		metric.Attribute{Key: "topic", Value: "topic"})
+		metric.Attribute{Key: "displayName", Value: "kafkabroker:9090"},
+		metric.Attribute{Key: "entityName", Value: "broker:kafkabroker:9090"},
+		metric.Attribute{Key: "topic", Value: "topic"},
+	)
 
 	sample.SetMetric("broker.bytesWrittenToTopicPerSecond", float64(0), metric.GAUGE)
 
@@ -343,9 +214,7 @@ func TestCollectBrokerTopicMetrics(t *testing.T) {
 		"topic": sample,
 	}
 
-	out := collectBrokerTopicMetrics(testBroker, []string{"topic"})
+	out := collectBrokerTopicMetrics(testBroker, []string{"topic"}, i)
 
-	if !reflect.DeepEqual(out, expected) {
-		t.Errorf("Expected %+v got %+v", expected, out)
-	}
+	assert.Equal(t, expected, out)
 }

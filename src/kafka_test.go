@@ -44,14 +44,14 @@ func Test_filterTopicsByBucket(t *testing.T) {
 	initialTopics := []string{"a", "b", "c", "d", "e", "f", "g", "h"}
 
 	expectedTopics1 := []string{"c", "f"}
-	filteredTopics1 := filterTopicsByBucket(initialTopics, args.TopicBucket{1, 3})
+	filteredTopics1 := filterTopicsByBucket(initialTopics, args.TopicBucket{BucketNumber: 1, NumBuckets: 3})
 	assert.Equal(t, expectedTopics1, filteredTopics1)
 
 	expectedTopics2 := []string{"b", "e", "h"}
-	filteredTopics2 := filterTopicsByBucket(initialTopics, args.TopicBucket{2, 3})
+	filteredTopics2 := filterTopicsByBucket(initialTopics, args.TopicBucket{BucketNumber: 2, NumBuckets: 3})
 	assert.Equal(t, expectedTopics2, filteredTopics2)
 
 	expectedTopics3 := []string{"a", "d", "g"}
-	filteredTopics3 := filterTopicsByBucket(initialTopics, args.TopicBucket{3, 3})
+	filteredTopics3 := filterTopicsByBucket(initialTopics, args.TopicBucket{BucketNumber: 3, NumBuckets: 3})
 	assert.Equal(t, expectedTopics3, filteredTopics3)
 }

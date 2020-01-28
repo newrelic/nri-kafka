@@ -11,6 +11,7 @@ import (
 	"github.com/newrelic/infra-integrations-sdk/integration"
 	"github.com/newrelic/infra-integrations-sdk/log"
 	"github.com/newrelic/nri-kafka/src/args"
+	"github.com/newrelic/nri-kafka/src/connection"
 )
 
 type partitionOffsets struct {
@@ -25,7 +26,7 @@ type partitionOffsets struct {
 type TopicPartitions map[string][]int32
 
 // Collect collects offset data per consumer group specified in the arguments
-func Collect(client sarama.Client, kafkaIntegration *integration.Integration) error {
+func Collect(client connection.Client, kafkaIntegration *integration.Integration) error {
 	clusterAdmin, err := sarama.NewClusterAdminFromClient(client)
 	if err != nil {
 		return fmt.Errorf("failed to create cluster admin: %s", err)

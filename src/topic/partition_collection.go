@@ -3,8 +3,8 @@ package topic
 import (
 	"sync"
 
-	"github.com/Shopify/sarama"
 	"github.com/newrelic/infra-integrations-sdk/log"
+	"github.com/newrelic/nri-kafka/src/connection"
 )
 
 // partition is a storage struct for information about partitions
@@ -24,7 +24,7 @@ type partitionSender struct {
 
 // Starts a pool of partitionWorkers to handle collection partition information
 // Returns a channel for inbound partitionSenders and outbound partition/error
-func startPartitionPool(poolSize int, wg *sync.WaitGroup, client sarama.Client) (chan *partitionSender, []chan *partition) {
+func startPartitionPool(poolSize int, wg *sync.WaitGroup, client connection.Client) (chan *partitionSender, []chan *partition) {
 	partitionInChan := make(chan *partitionSender, 20)
 	var partitionOutChans []chan *partition
 	for i := 0; i < poolSize; i++ {
@@ -40,7 +40,7 @@ func startPartitionPool(poolSize int, wg *sync.WaitGroup, client sarama.Client) 
 // Collects the list of partition IDs from zookeeper, then feeds the partition
 // workers with partitionSender structs which contain all the information needed
 // for the partitionWorker to populate a partition struct
-func feedPartitionPool(partitionInChan chan<- *partitionSender, topic string, client sarama.Client) {
+func feedPartitionPool(partitionInChan chan<- *partitionSender, topic string, client connection.Client) {
 	defer close(partitionInChan)
 
 	partitionIds, err := client.Partitions(topic)
@@ -112,7 +112,7 @@ func collectPartitions(partitionOutChans []chan *partition) []*partition {
 }
 
 // Reads partitionSenders from a channel and pushes a completed partition struct onto its unique partitionOutChan
-func partitionWorker(partitionInChan chan *partitionSender, partitionOutChan chan *partition, wg *sync.WaitGroup, client sarama.Client) {
+func partitionWorker(partitionInChan chan *partitionSender, partitionOutChan chan *partition, wg *sync.WaitGroup, client connection.Client) {
 	defer wg.Done()
 	defer close(partitionOutChan)
 

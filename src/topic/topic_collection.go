@@ -13,6 +13,7 @@ import (
 	"github.com/newrelic/infra-integrations-sdk/integration"
 	"github.com/newrelic/infra-integrations-sdk/log"
 	"github.com/newrelic/nri-kafka/src/args"
+	"github.com/newrelic/nri-kafka/src/connection"
 )
 
 // Topic is a storage struct for information about topics
@@ -27,7 +28,7 @@ type Topic struct {
 
 // StartTopicPool Starts a pool of topicWorkers to handle collecting data for Topic entities.
 // The channel returned is to be closed by the user.
-func StartTopicPool(poolSize int, wg *sync.WaitGroup, client sarama.Client) chan *Topic {
+func StartTopicPool(poolSize int, wg *sync.WaitGroup, client connection.Client) chan *Topic {
 	topicChan := make(chan *Topic)
 
 	for i := 0; i < poolSize; i++ {
@@ -39,7 +40,7 @@ func StartTopicPool(poolSize int, wg *sync.WaitGroup, client sarama.Client) chan
 }
 
 // GetTopics retrieves the list of topics to collect based on the user-provided configuration
-func GetTopics(client sarama.Client) ([]string, error) {
+func GetTopics(client connection.Client) ([]string, error) {
 	switch strings.ToLower(args.GlobalArgs.TopicMode) {
 	case "none":
 		return []string{}, nil
@@ -62,7 +63,7 @@ func GetTopics(client sarama.Client) ([]string, error) {
 
 		filteredTopics := make([]string, 0, len(allTopics))
 		for _, topic := range allTopics {
-			if pattern.Match([]byte(topic)) {
+			if pattern.MatchString(topic) {
 				filteredTopics = append(filteredTopics, topic)
 			}
 		}
@@ -100,7 +101,7 @@ func FeedTopicPool(topicChan chan<- *Topic, i *integration.Integration, collecte
 }
 
 // Collect inventory and metrics for topics sent down topicChan
-func topicWorker(topicChan <-chan *Topic, wg *sync.WaitGroup, client sarama.Client) {
+func topicWorker(topicChan <-chan *Topic, wg *sync.WaitGroup, client connection.Client) {
 	defer wg.Done()
 
 	for {
@@ -145,7 +146,7 @@ func topicWorker(topicChan <-chan *Topic, wg *sync.WaitGroup, client sarama.Clie
 }
 
 // Calculate topic metrics and populate metric set with them
-func populateTopicMetrics(t *Topic, sample *metric.Set, client sarama.Client) error {
+func populateTopicMetrics(t *Topic, sample *metric.Set, client connection.Client) error {
 
 	if err := calculateNonPreferredLeader(t.Partitions, sample); err != nil {
 		return err
@@ -182,7 +183,7 @@ func calculateUnderReplicatedCount(partitions []*partition, sample *metric.Set) 
 }
 
 // Makes a metadata request to determine whether a topic is able to respond
-func topicRespondsToMetadata(t *Topic, client sarama.Client) int {
+func topicRespondsToMetadata(t *Topic, client connection.Client) int {
 	controller, err := client.Controller()
 	if err != nil {
 		log.Error("Failed to get controller from client: %s", err)
@@ -198,7 +199,7 @@ func topicRespondsToMetadata(t *Topic, client sarama.Client) int {
 }
 
 // Collect and populate the remainder of the topic struct fields
-func setTopicInfo(t *Topic, client sarama.Client) error {
+func setTopicInfo(t *Topic, client connection.Client) error {
 	configRequest := &sarama.DescribeConfigsRequest{
 		Version:         0,
 		IncludeSynonyms: true,

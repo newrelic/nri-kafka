@@ -10,10 +10,11 @@ import (
 	"github.com/newrelic/infra-integrations-sdk/integration"
 	"github.com/newrelic/infra-integrations-sdk/log"
 	"github.com/newrelic/nri-kafka/src/args"
+	"github.com/newrelic/nri-kafka/src/connection"
 )
 
 // getConsumerOffsets collects consumer offsets from Kafka brokers rather than Zookeeper
-func getConsumerOffsets(groupName string, topicPartitions TopicPartitions, client sarama.Client) (groupOffsets, error) {
+func getConsumerOffsets(groupName string, topicPartitions TopicPartitions, client connection.Client) (groupOffsets, error) {
 
 	// refresh coordinator cache (suggested by sarama to do so)
 	if err := client.RefreshCoordinator(groupName); err != nil {
@@ -29,14 +30,10 @@ func getConsumerOffsets(groupName string, topicPartitions TopicPartitions, clien
 }
 
 // getConsumerOffsetsFromBroker collects a consumer groups offsets
-func getConsumerOffsetsFromBroker(groupName string, topicPartitions TopicPartitions, broker *sarama.Broker) (groupOffsets, error) {
+func getConsumerOffsetsFromBroker(groupName string, topicPartitions TopicPartitions, broker connection.SaramaBroker) (groupOffsets, error) {
 	offsetRequest := createOffsetFetchRequest(groupName, topicPartitions)
 
 	offsets := make(groupOffsets)
-	err := resetBrokerConnection(broker, sarama.NewConfig())
-	if err != nil {
-		return nil, err
-	}
 
 	resp, err := broker.FetchOffset(offsetRequest)
 	if err != nil {
@@ -66,20 +63,6 @@ func getConsumerOffsetsFromBroker(groupName string, topicPartitions TopicPartiti
 	return offsets, nil
 }
 
-func resetBrokerConnection(broker *sarama.Broker, config *sarama.Config) error {
-	if yes, _ := broker.Connected(); yes {
-		if err := broker.Close(); err != nil {
-			return err
-		}
-	}
-
-	if err := broker.Open(config); err != nil {
-		return err
-	}
-
-	return nil
-}
-
 type groupOffsets map[string]topicOffsets
 
 type topicOffsets map[int32]int64
@@ -91,7 +74,7 @@ type topicOffsets map[int32]int64
 // is the leader for. This is more complicated than it sounds, see createFetchRequest for details.
 // Finally, it makes the request, and for each partition in the request, it inserts the highWaterMarkOffset
 // from the partition-associated block into the hwms map to be returned.
-func getHighWaterMarks(topicPartitions TopicPartitions, client sarama.Client) (groupOffsets, error) {
+func getHighWaterMarks(topicPartitions TopicPartitions, client connection.Client) (groupOffsets, error) {
 	// Determine which broker is the leader for each partition
 	brokerLeaderMap, err := getBrokerLeaderMap(topicPartitions, client)
 	if err != nil {
@@ -135,23 +118,14 @@ func getHighWaterMarks(topicPartitions TopicPartitions, client sarama.Client) (g
 
 }
 
-func fetchHighWaterMarkResponse(broker *sarama.Broker, tps TopicPartitions, client sarama.Client) (*sarama.FetchResponse, error) {
-	// Open the connection if necessary
-	if err := resetBrokerConnection(broker, sarama.NewConfig()); err != nil {
-		return nil, err
-	}
-
+func fetchHighWaterMarkResponse(broker *sarama.Broker, tps TopicPartitions, client connection.Client) (*sarama.FetchResponse, error) {
 	// Create the fetch request for the correct partitions
 	fetchRequest := createFetchRequest(tps, client)
-
-	// Run the request
-	resp, err := broker.Fetch(fetchRequest)
-
-	return resp, err
+	return broker.Fetch(fetchRequest)
 
 }
 
-func getBrokerLeaderMap(topicPartitions TopicPartitions, client sarama.Client) (map[*sarama.Broker]TopicPartitions, error) {
+func getBrokerLeaderMap(topicPartitions TopicPartitions, client connection.Client) (map[*sarama.Broker]TopicPartitions, error) {
 	brokerLeaderMap := make(map[*sarama.Broker]TopicPartitions)
 	for topic, partitions := range topicPartitions {
 		for _, partition := range partitions {
@@ -173,7 +147,7 @@ func getBrokerLeaderMap(topicPartitions TopicPartitions, client sarama.Client) (
 // fillOutTopicPartitionsFromKafka checks all topics for the consumer group.
 // If a topic has no partition then all partitions of a topic will be added.
 // All calls will query Kafka rather than Zookeeper
-func fillTopicPartitions(groupID string, topicPartitions TopicPartitions, client sarama.Client) TopicPartitions {
+func fillTopicPartitions(groupID string, topicPartitions TopicPartitions, client connection.Client) TopicPartitions {
 
 	// If no topics return error
 	if len(topicPartitions) == 0 {
@@ -218,7 +192,7 @@ func createOffsetFetchRequest(groupName string, topicPartitions TopicPartitions)
 	return request
 }
 
-func createFetchRequest(topicPartitions TopicPartitions, client sarama.Client) *sarama.FetchRequest {
+func createFetchRequest(topicPartitions TopicPartitions, client connection.Client) *sarama.FetchRequest {
 	// Explanation:
 	// To add a block, you have to specify an offset to start reading from. Unfortunately, unlike
 	// other parts of the library, this offset cannot use the standard enums OffsetOldest or OffsetNewest.
@@ -295,7 +269,7 @@ func populateOffsetStructs(offsets, hwms groupOffsets) []*partitionOffsets {
 
 }
 
-func collectOffsetsForConsumerGroup(client sarama.Client, clusterAdmin sarama.ClusterAdmin, consumerGroup string, members map[string]*sarama.GroupMemberDescription, kafkaIntegration *integration.Integration, wg *sync.WaitGroup) {
+func collectOffsetsForConsumerGroup(client connection.Client, clusterAdmin sarama.ClusterAdmin, consumerGroup string, members map[string]*sarama.GroupMemberDescription, kafkaIntegration *integration.Integration, wg *sync.WaitGroup) {
 	defer wg.Done()
 	log.Debug("Collecting offsets for consumer group '%s'", consumerGroup)
 	defer log.Debug("Finished collecting offsets for consumer group '%s'", consumerGroup)
@@ -418,7 +392,7 @@ func calculateLagTotals(partitionLagChan chan partitionLagResult, wg *sync.WaitG
 	}
 }
 
-func collectPartitionOffsetMetrics(client sarama.Client, consumerGroup string, memberDescription *sarama.GroupMemberDescription, topic string, partition int32, block *sarama.OffsetFetchResponseBlock, partitionLagChan chan partitionLagResult, wg *sync.WaitGroup, kafkaIntegration *integration.Integration) {
+func collectPartitionOffsetMetrics(client connection.Client, consumerGroup string, memberDescription *sarama.GroupMemberDescription, topic string, partition int32, block *sarama.OffsetFetchResponseBlock, partitionLagChan chan partitionLagResult, wg *sync.WaitGroup, kafkaIntegration *integration.Integration) {
 	defer wg.Done()
 	log.Debug("Collecting offsets for consumerGroup '%s', member '%s', topic '%s', partition '%d'", consumerGroup, memberDescription.ClientId, topic, partition)
 	defer log.Debug("Finished collecting offsets for consumerGroup '%s', member '%s', topic '%s', partition '%d'", consumerGroup, memberDescription.ClientId, topic, partition)

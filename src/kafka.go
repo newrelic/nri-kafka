@@ -96,13 +96,13 @@ func getBrokerList(arguments *args.ParsedArguments) ([]*connection.Broker, error
 				}
 
 				newBroker := &connection.Broker{
-					Broker:      broker,
-					Host:        arguments.BootstrapBroker.Host,
-					JMXPort:     arguments.BootstrapBroker.JMXPort,
-					JMXUser:     arguments.BootstrapBroker.JMXUser,
-					JMXPassword: arguments.BootstrapBroker.JMXPassword,
-					ID:          fmt.Sprintf("%d", broker.ID()),
-					Config:      bootstrapBroker.Config,
+					SaramaBroker: broker,
+					Host:         arguments.BootstrapBroker.Host,
+					JMXPort:      arguments.BootstrapBroker.JMXPort,
+					JMXUser:      arguments.BootstrapBroker.JMXUser,
+					JMXPassword:  arguments.BootstrapBroker.JMXPassword,
+					ID:           fmt.Sprintf("%d", broker.ID()),
+					Config:       bootstrapBroker.Config,
 				}
 				brokers = append(brokers, newBroker)
 
@@ -115,7 +115,7 @@ func getBrokerList(arguments *args.ParsedArguments) ([]*connection.Broker, error
 		if err != nil {
 			return nil, fmt.Errorf("failed to create zookeeper connection: %s", err)
 		}
-		return zookeeper.GetBrokerList(zkConn, arguments.PreferredListener)
+		return connection.GetBrokerListFromZookeeper(zkConn, arguments.PreferredListener)
 	default:
 		return nil, fmt.Errorf("invalid autodiscovery strategy %s", arguments.AutodiscoverStrategy)
 	}

@@ -12,10 +12,16 @@ GOTOOLS       = github.com/kardianos/govendor \
 		github.com/axw/gocov/gocov \
 		github.com/stretchr/testify/assert \
 		github.com/AlekSi/gocov-xml \
+		github.com/vektra/mockery/.../ \
+		github.com/josephspurrier/goversioninfo/cmd/goversioninfo \
 
 all: build
 
 build: check-version clean validate test compile
+
+generate: tools
+	@echo "=== $(INTEGRATION) === [ generate ]: Generating mocks..."
+	@go generate ./src/connection/...
 
 clean:
 	@echo "=== $(INTEGRATION) === [ clean ]: Removing binaries and coverage file..."
