@@ -8,11 +8,10 @@ BINARY_NAME   = nri-$(INTEGRATION)
 GO_PKGS      := $(shell go list ./... | grep -v "/vendor/")
 GO_FILES     := ./src/
 GOTOOLS       = github.com/kardianos/govendor \
+		gopkg.in/alecthomas/gometalinter.v2 \
 		github.com/axw/gocov/gocov \
 		github.com/stretchr/testify/assert \
 		github.com/AlekSi/gocov-xml \
-		github.com/vektra/mockery/.../ \
-		github.com/josephspurrier/goversioninfo/cmd/goversioninfo \
 
 all: build
 
@@ -29,12 +28,12 @@ clean:
 tools: check-version
 	@echo "=== $(INTEGRATION) === [ tools ]: Installing tools required by the project..."
 	@go get $(GOTOOLS)
-	@if $(shell go env GOPATH)/bin/golangci-lint --version | grep -q 1.23.1 ; then curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(shell go env GOPATH)/bin v1.23.1 ; fi
+	@gometalinter.v2 --install
 
 tools-update: check-version
 	@echo "=== $(INTEGRATION) === [ tools-update ]: Updating tools required by the project..."
 	@go get -u $(GOTOOLS)
-	@curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(shell go env GOPATH)/bin v1.23.1
+	@gometalinter.v2 --install
 
 deps: tools deps-only
 
@@ -43,8 +42,12 @@ deps-only:
 	@govendor sync
 
 validate: deps
-	@echo "=== $(INTEGRATION) === [ validate ]: Validating source code running golangci-lint..."
-	@golangci-lint run ./src/...
+	@echo "=== $(INTEGRATION) === [ validate ]: Validating source code running gometalinter..."
+	@gometalinter.v2 --config=.gometalinter.json ./...
+
+validate-all: deps
+	@echo "=== $(INTEGRATION) === [ validate ]: Validating source code running gometalinter..."
+	@gometalinter.v2 --config=.gometalinter.json --enable=interfacer --enable=gosimple ./...
 
 compile: deps
 	@echo "=== $(INTEGRATION) === [ compile ]: Building $(BINARY_NAME)..."
