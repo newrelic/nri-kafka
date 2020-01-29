@@ -1,31 +1,23 @@
-package brokercollect
+package broker
 
 import (
 	"errors"
-	"reflect"
 	"testing"
 
 	"github.com/newrelic/infra-integrations-sdk/data/metric"
 	"github.com/newrelic/infra-integrations-sdk/integration"
+	"github.com/newrelic/nri-kafka/src/connection"
+	"github.com/newrelic/nri-kafka/src/connection/mocks"
 	"github.com/newrelic/nri-kafka/src/jmxwrapper"
 	"github.com/newrelic/nri-kafka/src/testutils"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestGatherTopicSize_Single(t *testing.T) {
 	testutils.SetupJmxTesting()
 	testutils.SetupTestArgs()
 
-	i, err := integration.New("test", "1.0.0")
-	if err != nil {
-		t.Errorf("Unexpected error %s", err.Error())
-		t.FailNow()
-	}
-
-	e, err := i.Entity("testEntity", "testNamespace")
-	if err != nil {
-		t.Errorf("Unexpected error %s", err.Error())
-		t.FailNow()
-	}
+	i, _ := integration.New("test", "1.0.0")
 
 	jmxwrapper.JMXQuery = func(query string, timeout int) (map[string]interface{}, error) {
 		return map[string]interface{}{
@@ -36,6 +28,16 @@ func TestGatherTopicSize_Single(t *testing.T) {
 		}, nil
 	}
 
+	mockBroker := &mocks.SaramaBroker{}
+	mockBroker.On("Addr").Return("kafkabroker:9090")
+
+	broker := &connection.Broker{
+		Host:         "localhost",
+		JMXPort:      9999,
+		SaramaBroker: mockBroker,
+	}
+
+	e, _ := broker.Entity(i)
 	collectedTopics := map[string]*metric.Set{
 		"topic": e.NewMetricSet("KafkaBrokerSample",
 			metric.Attribute{Key: "displayName", Value: "testEntity"},
@@ -44,13 +46,7 @@ func TestGatherTopicSize_Single(t *testing.T) {
 		),
 	}
 
-	broker := &broker{
-		Host:    "localhost",
-		JMXPort: 9999,
-		Entity:  e,
-	}
-
-	gatherTopicSizes(broker, collectedTopics)
+	gatherTopicSizes(broker, collectedTopics, i)
 
 	expected := map[string]interface{}{
 		"topic.diskSize": float64(10),
@@ -60,29 +56,30 @@ func TestGatherTopicSize_Single(t *testing.T) {
 		"topic":          "topic",
 	}
 
-	m := broker.Entity.Metrics[0]
-	if !reflect.DeepEqual(m.Metrics, expected) {
-		t.Errorf("Expected %+v got %+v", expected, m.Metrics)
-	}
+	entity, err := broker.Entity(i)
+	assert.NoError(t, err)
+	assert.Len(t, entity.Metrics, 1)
+	assert.Equal(t, expected, entity.Metrics[0].Metrics)
 }
 
 func TestGatherTopicSize_QueryError(t *testing.T) {
 	testutils.SetupJmxTesting()
 	testutils.SetupTestArgs()
 
-	i, err := integration.New("test", "1.0.0")
-	if err != nil {
-		t.Errorf("Unexpected error %s", err.Error())
-		t.FailNow()
-	}
-
-	e, err := i.Entity("testEntity", "testNamespace")
-	if err != nil {
-		t.Errorf("Unexpected error %s", err.Error())
-		t.FailNow()
-	}
+	i, _ := integration.New("test", "1.0.0")
 
 	jmxwrapper.JMXQuery = func(query string, timeout int) (map[string]interface{}, error) { return nil, errors.New("error") }
+
+	mockBroker := &mocks.SaramaBroker{}
+	mockBroker.On("Addr").Return("kafkabroker:9090")
+
+	broker := &connection.Broker{
+		Host:         "localhost",
+		JMXPort:      9999,
+		SaramaBroker: mockBroker,
+	}
+
+	e, _ := broker.Entity(i)
 
 	collectedTopics := map[string]*metric.Set{
 		"topic": e.NewMetricSet("KafkaBrokerSample",
@@ -92,38 +89,32 @@ func TestGatherTopicSize_QueryError(t *testing.T) {
 		),
 	}
 
-	broker := &broker{
-		Host:    "localhost",
-		JMXPort: 9999,
-		Entity:  e,
-	}
+	gatherTopicSizes(broker, collectedTopics, i)
 
-	gatherTopicSizes(broker, collectedTopics)
-
-	if _, ok := broker.Entity.Metrics[0].Metrics["topic.diskSize"]; ok {
-		t.Error("topic.diskSize metric set was created")
-	}
+	assert.Len(t, e.Metrics, 1)
+	assert.NotContains(t, e.Metrics[0].Metrics, "topic.diskSize", "Metric was unexpectedly set after query error")
 }
 
 func TestGatherTopicSize_QueryBlank(t *testing.T) {
 	testutils.SetupJmxTesting()
 	testutils.SetupTestArgs()
 
-	i, err := integration.New("test", "1.0.0")
-	if err != nil {
-		t.Errorf("Unexpected error %s", err.Error())
-		t.FailNow()
-	}
-
-	e, err := i.Entity("testEntity", "testNamespace")
-	if err != nil {
-		t.Errorf("Unexpected error %s", err.Error())
-		t.FailNow()
-	}
+	i, _ := integration.New("test", "1.0.0")
 
 	jmxwrapper.JMXQuery = func(query string, timeout int) (map[string]interface{}, error) {
 		return make(map[string]interface{}), nil
 	}
+
+	mockBroker := &mocks.SaramaBroker{}
+	mockBroker.On("Addr").Return("kafkabroker:9090")
+
+	broker := &connection.Broker{
+		Host:         "localhost",
+		JMXPort:      9999,
+		SaramaBroker: mockBroker,
+	}
+
+	e, _ := broker.Entity(i)
 
 	collectedTopics := map[string]*metric.Set{
 		"topic": e.NewMetricSet("KafkaBrokerSample",
@@ -133,34 +124,17 @@ func TestGatherTopicSize_QueryBlank(t *testing.T) {
 		),
 	}
 
-	broker := &broker{
-		Host:    "localhost",
-		JMXPort: 9999,
-		Entity:  e,
-	}
+	gatherTopicSizes(broker, collectedTopics, i)
 
-	gatherTopicSizes(broker, collectedTopics)
-
-	if _, ok := broker.Entity.Metrics[0].Metrics["topic.diskSize"]; ok {
-		t.Error("topic.diskSize metric set was created")
-	}
+	assert.Len(t, e.Metrics, 1)
+	assert.NotContains(t, e.Metrics[0].Metrics, "topic.diskSize", "Metric was unexpectedly set after empty query result")
 }
 
 func TestGatherTopicSize_AggregateError(t *testing.T) {
 	testutils.SetupJmxTesting()
 	testutils.SetupTestArgs()
 
-	i, err := integration.New("test", "1.0.0")
-	if err != nil {
-		t.Errorf("Unexpected error %s", err.Error())
-		t.FailNow()
-	}
-
-	e, err := i.Entity("testEntity", "testNamespace")
-	if err != nil {
-		t.Errorf("Unexpected error %s", err.Error())
-		t.FailNow()
-	}
+	i, _ := integration.New("test", "1.0.0")
 
 	jmxwrapper.JMXQuery = func(query string, timeout int) (map[string]interface{}, error) {
 		return map[string]interface{}{
@@ -169,6 +143,17 @@ func TestGatherTopicSize_AggregateError(t *testing.T) {
 		}, nil
 	}
 
+	mockBroker := &mocks.SaramaBroker{}
+	mockBroker.On("Addr").Return("kafkabroker:9090")
+
+	broker := &connection.Broker{
+		Host:         "localhost",
+		JMXPort:      9999,
+		SaramaBroker: mockBroker,
+	}
+
+	e, _ := broker.Entity(i)
+
 	collectedTopics := map[string]*metric.Set{
 		"topic": e.NewMetricSet("KafkaBrokerSample",
 			metric.Attribute{Key: "displayName", Value: "testEntity"},
@@ -177,15 +162,8 @@ func TestGatherTopicSize_AggregateError(t *testing.T) {
 		),
 	}
 
-	broker := &broker{
-		Host:    "localhost",
-		JMXPort: 9999,
-		Entity:  e,
-	}
+	gatherTopicSizes(broker, collectedTopics, i)
 
-	gatherTopicSizes(broker, collectedTopics)
-
-	if _, ok := broker.Entity.Metrics[0].Metrics["topic.diskSize"]; ok {
-		t.Error("topic.diskSize metric set was created")
-	}
+	assert.Len(t, e.Metrics, 1)
+	assert.NotContains(t, e.Metrics[0].Metrics, "topic.diskSize", "Metric was unexpectedly set after aggregate error")
 }

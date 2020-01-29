@@ -150,7 +150,7 @@ func TestCollectMetricDefinitions_QueryError(t *testing.T) {
 
 	m := e.NewMetricSet("testMetrics")
 
-	CollectMetricDefintions(m, brokerMetricDefs, nil)
+	CollectMetricDefinitions(m, brokerMetricDefs, nil)
 
 	if len(m.Metrics) != 1 {
 		t.Error("Metrics where inserted even with a bad query")
@@ -185,7 +185,7 @@ func TestCollectMetricDefinitions_MetricError(t *testing.T) {
 
 	m := e.NewMetricSet("testMetrics")
 
-	CollectMetricDefintions(m, brokerMetricDefs, nil)
+	CollectMetricDefinitions(m, brokerMetricDefs, nil)
 
 	if !reflect.DeepEqual(expected, m.Metrics) {
 		t.Errorf("Expected %+v got %+v", expected, m.Metrics)
@@ -247,7 +247,7 @@ func TestCollectMetricDefinitions_BeanModifier(t *testing.T) {
 		}
 	}
 
-	CollectMetricDefintions(m, testMetricSet, renameFunc("Replaced"))
+	CollectMetricDefinitions(m, testMetricSet, renameFunc("Replaced"))
 
 	if !reflect.DeepEqual(expected, m.Metrics) {
 		t.Errorf("Expected %+v got %+v", expected, m.Metrics)

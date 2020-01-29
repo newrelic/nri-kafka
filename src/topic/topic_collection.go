@@ -1,8 +1,7 @@
-// Package topiccollect handles collection of Topic inventory and metric data
-package topiccollect
+// Package topic handles collection of Topic inventory and metric data
+package topic
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"regexp"
@@ -14,7 +13,7 @@ import (
 	"github.com/newrelic/infra-integrations-sdk/integration"
 	"github.com/newrelic/infra-integrations-sdk/log"
 	"github.com/newrelic/nri-kafka/src/args"
-	"github.com/newrelic/nri-kafka/src/zookeeper"
+	"github.com/newrelic/nri-kafka/src/connection"
 )
 
 // Topic is a storage struct for information about topics
@@ -23,37 +22,31 @@ type Topic struct {
 	Name              string
 	PartitionCount    int
 	ReplicationFactor int
-	Configs           map[string]string
+	Configs           []*sarama.ConfigEntry
 	Partitions        []*partition
 }
 
 // StartTopicPool Starts a pool of topicWorkers to handle collecting data for Topic entities.
 // The channel returned is to be closed by the user.
-func StartTopicPool(poolSize int, wg *sync.WaitGroup, zkConn zookeeper.Connection) chan *Topic {
+func StartTopicPool(poolSize int, wg *sync.WaitGroup, client connection.Client) chan *Topic {
 	topicChan := make(chan *Topic)
 
-	if args.GlobalArgs.CollectBrokerTopicData && zkConn != nil {
-		for i := 0; i < poolSize; i++ {
-			wg.Add(1)
-			go topicWorker(topicChan, wg, zkConn)
-		}
+	for i := 0; i < poolSize; i++ {
+		wg.Add(1)
+		go topicWorker(topicChan, wg, client)
 	}
 
 	return topicChan
 }
 
 // GetTopics retrieves the list of topics to collect based on the user-provided configuration
-func GetTopics(zkConn zookeeper.Connection) ([]string, error) {
+func GetTopics(client connection.Client) ([]string, error) {
 	switch strings.ToLower(args.GlobalArgs.TopicMode) {
 	case "none":
 		return []string{}, nil
 	case "list":
 		return args.GlobalArgs.TopicList, nil
 	case "regex":
-		if zkConn == nil {
-			return nil, errors.New("zookeeper connection must not be nil for 'All' mode")
-		}
-
 		if args.GlobalArgs.TopicRegex == "" {
 			return nil, errors.New("regex topic mode requires the topic_regex argument to be set")
 		}
@@ -63,33 +56,25 @@ func GetTopics(zkConn zookeeper.Connection) ([]string, error) {
 			return nil, fmt.Errorf("failed to compile topic regex: %s", err)
 		}
 
-		// If they want all topics, ask Zookeeper for the list of topics
-		collectedTopics, _, err := zkConn.Children(zookeeper.Path("/brokers/topics"))
+		allTopics, err := client.Topics()
 		if err != nil {
-			log.Error("Unable to get list of topics from Zookeeper with error: %s", err)
-			return nil, err
+			return nil, fmt.Errorf("failed to get topics from client: %s", err)
 		}
 
-		filteredTopics := make([]string, 0)
-		for _, topic := range collectedTopics {
-			if pattern.Match([]byte(topic)) {
+		filteredTopics := make([]string, 0, len(allTopics))
+		for _, topic := range allTopics {
+			if pattern.MatchString(topic) {
 				filteredTopics = append(filteredTopics, topic)
 			}
 		}
 
 		return filteredTopics, nil
 	case "all":
-		if zkConn == nil {
-			return nil, errors.New("zookeeper connection must not be nil for 'All' mode")
-		}
-
-		// If they want all topics, ask Zookeeper for the list of topics
-		collectedTopics, _, err := zkConn.Children(zookeeper.Path("/brokers/topics"))
+		allTopics, err := client.Topics()
 		if err != nil {
-			log.Error("Unable to get list of topics from Zookeeper with error: %s", err)
-			return nil, err
+			return nil, fmt.Errorf("failed to get topics from client: %s", err)
 		}
-		return collectedTopics, nil
+		return allTopics, nil
 	default:
 		log.Error("Invalid topic mode %s", args.GlobalArgs.TopicMode)
 		return nil, fmt.Errorf("invalid topic_mode '%s'", args.GlobalArgs.TopicMode)
@@ -100,25 +85,23 @@ func GetTopics(zkConn zookeeper.Connection) ([]string, error) {
 func FeedTopicPool(topicChan chan<- *Topic, i *integration.Integration, collectedTopics []string) {
 	defer close(topicChan)
 
-	if args.GlobalArgs.CollectBrokerTopicData {
-		for _, topicName := range collectedTopics {
-			// create topic entity
-			clusterIDAttr := integration.NewIDAttribute("clusterName", args.GlobalArgs.ClusterName)
-			topicEntity, err := i.Entity(topicName, "ka-topic", clusterIDAttr)
-			if err != nil {
-				log.Error("Unable to create an entity for topic %s", topicName)
-			}
+	for _, topicName := range collectedTopics {
+		// create topic entity
+		clusterIDAttr := integration.NewIDAttribute("clusterName", args.GlobalArgs.ClusterName)
+		topicEntity, err := i.Entity(topicName, "ka-topic", clusterIDAttr)
+		if err != nil {
+			log.Error("Unable to create an entity for topic %s", topicName)
+		}
 
-			topicChan <- &Topic{
-				Name:   topicName,
-				Entity: topicEntity,
-			}
+		topicChan <- &Topic{
+			Name:   topicName,
+			Entity: topicEntity,
 		}
 	}
 }
 
 // Collect inventory and metrics for topics sent down topicChan
-func topicWorker(topicChan <-chan *Topic, wg *sync.WaitGroup, zkConn zookeeper.Connection) {
+func topicWorker(topicChan <-chan *Topic, wg *sync.WaitGroup, client connection.Client) {
 	defer wg.Done()
 
 	for {
@@ -128,13 +111,13 @@ func topicWorker(topicChan <-chan *Topic, wg *sync.WaitGroup, zkConn zookeeper.C
 		}
 
 		// Finish populating topic struct
-		if err := setTopicInfo(topic, zkConn); err != nil {
+		if err := setTopicInfo(topic, client); err != nil {
 			log.Error("Unable to set topic data for topic %s with error: %s", topic.Name, err)
 			continue
 		}
 
 		// Collect and populate inventory with topic configuration
-		if args.GlobalArgs.All() || args.GlobalArgs.Inventory {
+		if args.GlobalArgs.HasInventory() {
 			log.Debug("Collecting inventory for topic %q", topic.Name)
 			errors := populateTopicInventory(topic)
 			if len(errors) != 0 {
@@ -144,7 +127,7 @@ func topicWorker(topicChan <-chan *Topic, wg *sync.WaitGroup, zkConn zookeeper.C
 		}
 
 		// Collect topic metrics
-		if args.GlobalArgs.All() || args.GlobalArgs.Metrics {
+		if args.GlobalArgs.HasMetrics() {
 			log.Debug("Collecting metrics for topic %s", topic.Name)
 			// Create metric set for topic
 			sample := topic.Entity.NewMetricSet("KafkaTopicSample",
@@ -153,7 +136,7 @@ func topicWorker(topicChan <-chan *Topic, wg *sync.WaitGroup, zkConn zookeeper.C
 			)
 
 			// Collect metrics and populate metric set with them
-			if err := populateTopicMetrics(topic, sample, zkConn); err != nil {
+			if err := populateTopicMetrics(topic, sample, client); err != nil {
 				log.Error("Error collecting metrics from Topic %q: %s", topic.Name, err.Error())
 			}
 
@@ -163,11 +146,7 @@ func topicWorker(topicChan <-chan *Topic, wg *sync.WaitGroup, zkConn zookeeper.C
 }
 
 // Calculate topic metrics and populate metric set with them
-func populateTopicMetrics(t *Topic, sample *metric.Set, zkConn zookeeper.Connection) error {
-
-	if err := calculateTopicRetention(t.Configs, sample); err != nil {
-		return err
-	}
+func populateTopicMetrics(t *Topic, sample *metric.Set, client connection.Client) error {
 
 	if err := calculateNonPreferredLeader(t.Partitions, sample); err != nil {
 		return err
@@ -177,19 +156,8 @@ func populateTopicMetrics(t *Topic, sample *metric.Set, zkConn zookeeper.Connect
 		return err
 	}
 
-	responds := topicRespondsToMetadata(t, zkConn)
+	responds := topicRespondsToMetadata(t, client)
 	return sample.SetMetric("topic.respondsToMetadataRequests", responds, metric.GAUGE)
-}
-
-func calculateTopicRetention(configs map[string]string, sample *metric.Set) error {
-	var topicRetention int
-	if _, ok := configs["retention.bytes"]; ok {
-		topicRetention = 1
-	} else {
-		topicRetention = 0
-	}
-
-	return sample.SetMetric("topic.retentionBytesOrTime", topicRetention, metric.GAUGE)
 }
 
 func calculateNonPreferredLeader(partitions []*partition, sample *metric.Set) error {
@@ -215,34 +183,14 @@ func calculateUnderReplicatedCount(partitions []*partition, sample *metric.Set) 
 }
 
 // Makes a metadata request to determine whether a topic is able to respond
-func topicRespondsToMetadata(t *Topic, zkConn zookeeper.Connection) int {
-
-	// Get connection information for a broker
-	connections, err := zookeeper.GetBrokerConnections(0, zkConn)
+func topicRespondsToMetadata(t *Topic, client connection.Client) int {
+	controller, err := client.Controller()
 	if err != nil {
-		return 0
+		log.Error("Failed to get controller from client: %s", err)
 	}
-
-	var broker *sarama.Broker
-
-	// Create a broker connection object and open the connection
-	for _, connection := range connections {
-		broker = sarama.NewBroker(fmt.Sprintf("%s:%d", connection.BrokerHost, connection.BrokerPort))
-		config := sarama.NewConfig()
-		err = broker.Open(config)
-		if err != nil {
-			return 0
-		}
-	}
-
-	defer func() {
-		if err := broker.Close(); err != nil {
-			log.Debug("Error closing broker connection: %s", err.Error())
-		}
-	}()
 
 	// Attempt to collect metadata and determine whether it errors out
-	_, err = broker.GetMetadata(&sarama.MetadataRequest{Version: 0, Topics: []string{t.Name}, AllowAutoTopicCreation: false})
+	_, err = controller.GetMetadata(&sarama.MetadataRequest{Version: 0, Topics: []string{t.Name}, AllowAutoTopicCreation: false})
 	if err != nil {
 		return 0
 	}
@@ -251,30 +199,42 @@ func topicRespondsToMetadata(t *Topic, zkConn zookeeper.Connection) int {
 }
 
 // Collect and populate the remainder of the topic struct fields
-func setTopicInfo(t *Topic, zkConn zookeeper.Connection) error {
+func setTopicInfo(t *Topic, client connection.Client) error {
+	configRequest := &sarama.DescribeConfigsRequest{
+		Version:         0,
+		IncludeSynonyms: true,
+		Resources: []*sarama.ConfigResource{
+			{
+				Type:        sarama.TopicResource,
+				Name:        string(t.Name),
+				ConfigNames: nil,
+			},
+		},
+	}
 
-	// Collect topic configuration from Zookeeper
-	config, _, err := zkConn.Get(zookeeper.Path("/config/topics/" + t.Name))
+	controller, err := client.Controller()
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to get controller from client: %s", err)
 	}
-	type topicConfigDecoder struct {
-		Config map[string]string `json:"config"`
+
+	configResponse, err := controller.DescribeConfigs(configRequest)
+	if err != nil {
+		return fmt.Errorf("failed to describe configs for topic %s: %s", t.Name, err)
 	}
-	var decodedTopicConfig topicConfigDecoder
-	if err = json.Unmarshal([]byte(config), &decodedTopicConfig); err != nil {
-		return err
+
+	if len(configResponse.Resources) != 1 {
+		return fmt.Errorf("received an unexpected number of config resources (%d)", len(configResponse.Resources))
 	}
 
 	// Collect partition information asynchronously
 	var wg sync.WaitGroup
-	partitionInChan, partitionOutChans := startPartitionPool(50, &wg, zkConn)
-	go feedPartitionPool(partitionInChan, t.Name, zkConn)
+	partitionInChan, partitionOutChans := startPartitionPool(50, &wg, client)
+	go feedPartitionPool(partitionInChan, t.Name, client)
 	partitions := collectPartitions(partitionOutChans)
 
 	// Populate topic struct fields
 	t.Partitions = partitions
-	t.Configs = decodedTopicConfig.Config
+	t.Configs = configResponse.Resources[0].Configs
 	t.PartitionCount = len(partitions)
 	if len(partitions) > 0 {
 		t.ReplicationFactor = len(partitions[0].Replicas)
@@ -296,8 +256,8 @@ func populateTopicInventory(t *Topic) []error {
 	}
 
 	// Add topic configs to inventory
-	for key, value := range t.Configs {
-		if err := t.Entity.SetInventoryItem("topic."+key, "value", value); err != nil {
+	for _, config := range t.Configs {
+		if err := t.Entity.SetInventoryItem("topic."+config.Name, "value", config.Value); err != nil {
 			errors = append(errors, err)
 		}
 	}

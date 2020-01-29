@@ -1,5 +1,5 @@
-// Package prodconcollect handles collection of Consumer and Producer metric data
-package prodconcollect
+// Package client handles collection of Consumer and Producer client metric data
+package client
 
 import (
 	"strconv"

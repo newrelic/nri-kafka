@@ -12,40 +12,67 @@ import (
 )
 
 // GlobalArgs represents the global arguments that were passed in
-var GlobalArgs *KafkaArguments
+var GlobalArgs *ParsedArguments
 
-// KafkaArguments is an special version of the config arguments that has advanced parsing
+// Define the default ports for zookeeper and JMX
+const (
+	defaultZookeeperPort = 2181
+	defaultJMXPort       = 9999
+	defaultKafkaPort     = 9092
+)
+
+// ParsedArguments is an special version of the config arguments that has advanced parsing
 // to allow arguments to be consumed easier.
-type KafkaArguments struct {
+type ParsedArguments struct {
 	sdkArgs.DefaultArgumentList
-	ClusterName            string
-	ZookeeperHosts         []*ZookeeperHost
-	ZookeeperAuthScheme    string
-	ZookeeperAuthSecret    string
-	ZookeeperPath          string
-	DefaultJMXUser         string
-	DefaultJMXPassword     string
-	NrJmx                  string
-	CollectBrokerTopicData bool
-	Producers              []*JMXHost
-	Consumers              []*JMXHost
-	TopicMode              string
-	TopicList              []string
-	TopicRegex             string
-	TopicBucket            TopicBucket
-	Timeout                int
-	CollectTopicSize       bool
 
-	// SSL options
+	ClusterName string
+
+	AutodiscoverStrategy string
+
+	// Zookeeper autodiscovery. Only required if using zookeeper to autodiscover brokers
+	ZookeeperHosts      []*ZookeeperHost
+	ZookeeperAuthScheme string
+	ZookeeperAuthSecret string
+	ZookeeperPath       string
+	PreferredListener   string
+
+	// Bootstrap discovery. Only required if
+	BootstrapBroker BrokerHost
+
+	// Producer and consumer connection info. No autodiscovery is supported for producers and consumers
+	Producers []*JMXHost
+	Consumers []*JMXHost
+
+	// JMX defaults
+	DefaultJMXPort     int
+	DefaultJMXHost     string
+	DefaultJMXUser     string
+	DefaultJMXPassword string
+
+	// JMX SSL options
 	KeyStore           string
 	KeyStorePassword   string
 	TrustStore         string
 	TrustStorePassword string
 
+	NrJmx string
+
+	// Collection configuration
+	LocalOnlyCollection   bool
+	CollectClusterMetrics bool
+	TopicMode             string
+	TopicList             []string
+	TopicRegex            string
+	TopicBucket           TopicBucket
+	CollectTopicSize      bool
+
 	// Consumer offset arguments
 	ConsumerOffset     bool
 	ConsumerGroups     ConsumerGroups
 	ConsumerGroupRegex *regexp.Regexp
+
+	Timeout int `default:"10000" help:"Timeout in milliseconds per single JMX query."`
 }
 
 // TopicBucket is a struct that stores the information for bucketing topic collection
@@ -60,25 +87,33 @@ type ZookeeperHost struct {
 	Port int    `json:"port"`
 }
 
+// BrokerHost is a storage struct for manual Broker connection information
+type BrokerHost struct {
+	Host          string
+	KafkaPort     int    `json:"kafka_port"`
+	KafkaProtocol string `json:"kafka_protocol"`
+	JMXPort       int    `json:"jmx_port"`
+	JMXUser       string `json:"jmx_user"`
+	JMXPassword   string `json:"jmx_password"`
+}
+
 // JMXHost is a storage struct for producer and consumer connection information
 type JMXHost struct {
-	Name     string `json:"name"`
-	Host     string `json:"host"`
-	Port     int    `json:"port"`
-	User     string `json:"user"`
-	Password string `json:"password"`
+	Name     string
+	Host     string
+	Port     int
+	User     string
+	Password string
 }
 
 // ParseArgs validates the arguments in argumentList and parses them
 // into more easily used structs
-func ParseArgs(a ArgumentList) (*KafkaArguments, error) {
-
+func ParseArgs(a ArgumentList) (*ParsedArguments, error) {
 	// Parse ZooKeeper hosts
 	var zookeeperHosts []*ZookeeperHost
 	err := json.Unmarshal([]byte(a.ZookeeperHosts), &zookeeperHosts)
 	if err != nil {
-		log.Error("Failed to parse zookeepers from json")
-		return nil, err
+		return nil, fmt.Errorf("failed to parse zookeepers from json: %s", err)
 	}
 
 	for _, zookeeperHost := range zookeeperHosts {
@@ -86,6 +121,36 @@ func ParseArgs(a ArgumentList) (*KafkaArguments, error) {
 		if zookeeperHost.Port == 0 {
 			zookeeperHost.Port = defaultZookeeperPort
 		}
+	}
+
+	if a.AutodiscoverStrategy == "zookeeper" && len(zookeeperHosts) == 0 {
+		return nil, errors.New("Must specify a zookeeper host when the autodiscover strategy is 'zookeeper' (default)")
+	}
+
+	if a.AutodiscoverStrategy != "zookeeper" && len(zookeeperHosts) != 0 {
+		return nil, errors.New("Zookeeper hosts have been defined even though the autodiscovery strategy is not 'zookeeper'")
+	}
+
+	// Parse Broker hosts
+	var brokerHost BrokerHost
+	err = json.Unmarshal([]byte(a.BootstrapBroker), &brokerHost)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse boostrap broker from json: %s", err)
+	}
+
+	if brokerHost.KafkaPort == 0 {
+		brokerHost.KafkaPort = defaultKafkaPort
+	}
+	if brokerHost.JMXPort == 0 {
+		brokerHost.JMXPort = defaultJMXPort
+	}
+
+	if a.AutodiscoverStrategy == "bootstrap" && a.BootstrapBroker == "{}" {
+		return nil, errors.New("Must specify a BootstrapBroker when the autodiscover strategy is 'bootstrap'")
+	}
+
+	if a.AutodiscoverStrategy != "bootstrap" && a.BootstrapBroker != "{}" {
+		return nil, errors.New("BootstrapBroker been defined even though the autodiscovery strategy is not 'bootstrap'")
 	}
 
 	// Parse consumers
@@ -154,32 +219,41 @@ func ParseArgs(a ArgumentList) (*KafkaArguments, error) {
 		}
 	}
 
-	parsedArgs := &KafkaArguments{
-		DefaultArgumentList: a.DefaultArgumentList,
-		ClusterName:         a.ClusterName,
-		ZookeeperHosts:      zookeeperHosts,
-		ZookeeperAuthScheme: a.ZookeeperAuthScheme,
-		ZookeeperAuthSecret: a.ZookeeperAuthSecret,
-		ZookeeperPath:       a.ZookeeperPath,
-		DefaultJMXUser:      a.DefaultJMXUser,
-		DefaultJMXPassword:  a.DefaultJMXPassword,
-		NrJmx:               a.NrJmx,
-		CollectBrokerTopicData: a.CollectBrokerTopicData,
-		Producers:              producers,
-		Consumers:              consumers,
-		TopicMode:              a.TopicMode,
-		TopicList:              topics,
-		TopicRegex:             a.TopicRegex,
-		TopicBucket:            topicBucket,
-		Timeout:                a.Timeout,
-		KeyStore:               a.KeyStore,
-		KeyStorePassword:       a.KeyStorePassword,
-		TrustStore:             a.TrustStore,
-		TrustStorePassword:     a.TrustStorePassword,
-		CollectTopicSize:       a.CollectTopicSize,
-		ConsumerOffset:         a.ConsumerOffset,
-		ConsumerGroups:         consumerGroups,
-		ConsumerGroupRegex:     consumerGroupRegex,
+	if !a.CollectBrokerTopicData {
+		log.Warn("CollectBrokerTopicData has been deprecated. " +
+			"Significant changes have been made to the topic collection" +
+			"that makes the performance impact much less prominent than previously.")
+	}
+
+	parsedArgs := &ParsedArguments{
+		DefaultArgumentList:  a.DefaultArgumentList,
+		AutodiscoverStrategy: a.AutodiscoverStrategy,
+		BootstrapBroker:      brokerHost,
+		ClusterName:          a.ClusterName,
+		ZookeeperHosts:       zookeeperHosts,
+		ZookeeperAuthScheme:  a.ZookeeperAuthScheme,
+		ZookeeperAuthSecret:  a.ZookeeperAuthSecret,
+		ZookeeperPath:        a.ZookeeperPath,
+		PreferredListener:    a.PreferredListener,
+		DefaultJMXUser:       a.DefaultJMXUser,
+		DefaultJMXPassword:   a.DefaultJMXPassword,
+		NrJmx:                a.NrJmx,
+		Producers:            producers,
+		Consumers:            consumers,
+		TopicMode:            a.TopicMode,
+		TopicList:            topics,
+		TopicRegex:           a.TopicRegex,
+		TopicBucket:          topicBucket,
+		Timeout:              a.Timeout,
+		KeyStore:             a.KeyStore,
+		KeyStorePassword:     a.KeyStorePassword,
+		TrustStore:           a.TrustStore,
+		TrustStorePassword:   a.TrustStorePassword,
+		LocalOnlyCollection:  a.LocalOnlyCollection,
+		CollectTopicSize:     a.CollectTopicSize,
+		ConsumerOffset:       a.ConsumerOffset,
+		ConsumerGroups:       consumerGroups,
+		ConsumerGroupRegex:   consumerGroupRegex,
 	}
 
 	return parsedArgs, nil

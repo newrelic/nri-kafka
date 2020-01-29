@@ -10,7 +10,7 @@ import (
 // SetupTestArgs sets up a basic value for KafkaArgs with CollectBrokerTopicData
 // set to true
 func SetupTestArgs() {
-	args.GlobalArgs = &args.KafkaArguments{CollectBrokerTopicData: true, ZookeeperPath: ""}
+	args.GlobalArgs = &args.ParsedArguments{ZookeeperPath: ""}
 }
 
 // SetupJmxTesting sets all JMX wrapper variables to basic shells

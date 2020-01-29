@@ -1,4 +1,4 @@
-package conoffsetcollect
+package consumeroffset
 
 import (
 	"fmt"
@@ -26,63 +26,41 @@ func getConsumerOffsets(groupName string, topicPartitions TopicPartitions, clien
 		return nil, fmt.Errorf("unable to get the coordinator broker for group %s", groupName)
 	}
 
-	return getConsumerOffsetsFromBroker(groupName, topicPartitions, []connection.Broker{coordinator})
+	return getConsumerOffsetsFromBroker(groupName, topicPartitions, coordinator)
 }
 
-// getConsumerOffsetsFromBroker collects a consumer groups offsets from the given brokers
-func getConsumerOffsetsFromBroker(groupName string, topicPartitions TopicPartitions, brokers []connection.Broker) (groupOffsets, error) {
+// getConsumerOffsetsFromBroker collects a consumer groups offsets
+func getConsumerOffsetsFromBroker(groupName string, topicPartitions TopicPartitions, broker connection.SaramaBroker) (groupOffsets, error) {
 	offsetRequest := createOffsetFetchRequest(groupName, topicPartitions)
 
 	offsets := make(groupOffsets)
-	for _, broker := range brokers {
-		err := resetBrokerConnection(broker, sarama.NewConfig())
-		if err != nil {
-			return nil, err
-		}
 
-		resp, err := broker.FetchOffset(offsetRequest)
-		if err != nil {
-			log.Debug("Error fetching offset requests for group '%s': %s", groupName, err.Error())
+	resp, err := broker.FetchOffset(offsetRequest)
+	if err != nil {
+		return nil, fmt.Errorf("error fetching offset requests for group '%s': %s", groupName, err)
+	}
+
+	if len(resp.Blocks) == 0 {
+		return nil, fmt.Errorf("no offset data found for consumer group '%s'. There may not be any active consumers", groupName)
+	}
+
+	for topic, partitions := range topicPartitions {
+		offsets[topic] = make(topicOffsets)
+		// case if partitions could not be collected from Kafka
+		if partitions == nil {
 			continue
 		}
 
-		if len(resp.Blocks) == 0 {
-			log.Debug("No offset data found for consumer group '%s'. There may not be any active consumers.", groupName)
-			continue
-		}
-
-		for topic, partitions := range topicPartitions {
-			offsets[topic] = make(topicOffsets)
-			// case if partitions could not be collected from Kafka
-			if partitions == nil {
-				continue
-			}
-
-			for _, partition := range partitions {
-				if block := resp.GetBlock(topic, partition); block != nil && block.Err == sarama.ErrNoError {
-					offsets[topic][partition] = block.Offset
-				} else {
-					return nil, fmt.Errorf("no offset found for topic '%s', partition %v", topic, partition)
-				}
+		for _, partition := range partitions {
+			if block := resp.GetBlock(topic, partition); block != nil && block.Err == sarama.ErrNoError {
+				offsets[topic][partition] = block.Offset
+			} else {
+				return nil, fmt.Errorf("no offset found for topic '%s', partition %v", topic, partition)
 			}
 		}
 	}
 
 	return offsets, nil
-}
-
-func resetBrokerConnection(broker connection.Broker, config *sarama.Config) error {
-	if yes, _ := broker.Connected(); yes {
-		if err := broker.Close(); err != nil {
-			return err
-		}
-	}
-
-	if err := broker.Open(config); err != nil {
-		return err
-	}
-
-	return nil
 }
 
 type groupOffsets map[string]topicOffsets
@@ -140,24 +118,15 @@ func getHighWaterMarks(topicPartitions TopicPartitions, client connection.Client
 
 }
 
-func fetchHighWaterMarkResponse(broker connection.Broker, tps TopicPartitions, client connection.Client) (*sarama.FetchResponse, error) {
-	// Open the connection if necessary
-	if err := resetBrokerConnection(broker, sarama.NewConfig()); err != nil {
-		return nil, err
-	}
-
+func fetchHighWaterMarkResponse(broker *sarama.Broker, tps TopicPartitions, client connection.Client) (*sarama.FetchResponse, error) {
 	// Create the fetch request for the correct partitions
 	fetchRequest := createFetchRequest(tps, client)
-
-	// Run the request
-	resp, err := broker.Fetch(fetchRequest)
-
-	return resp, err
+	return broker.Fetch(fetchRequest)
 
 }
 
-func getBrokerLeaderMap(topicPartitions TopicPartitions, client connection.Client) (map[connection.Broker]TopicPartitions, error) {
-	brokerLeaderMap := make(map[connection.Broker]TopicPartitions)
+func getBrokerLeaderMap(topicPartitions TopicPartitions, client connection.Client) (map[*sarama.Broker]TopicPartitions, error) {
+	brokerLeaderMap := make(map[*sarama.Broker]TopicPartitions)
 	for topic, partitions := range topicPartitions {
 		for _, partition := range partitions {
 			leader, err := client.Leader(topic, partition)

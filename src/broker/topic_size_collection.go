@@ -1,16 +1,24 @@
-package brokercollect
+package broker
 
 import (
 	"fmt"
 
 	"github.com/newrelic/infra-integrations-sdk/data/metric"
+	"github.com/newrelic/infra-integrations-sdk/integration"
 	"github.com/newrelic/infra-integrations-sdk/log"
 	"github.com/newrelic/nri-kafka/src/args"
+	"github.com/newrelic/nri-kafka/src/connection"
 	"github.com/newrelic/nri-kafka/src/jmxwrapper"
 	"github.com/newrelic/nri-kafka/src/metrics"
 )
 
-func gatherTopicSizes(b *broker, topicSampleLookup map[string]*metric.Set) {
+func gatherTopicSizes(b *connection.Broker, topicSampleLookup map[string]*metric.Set, i *integration.Integration) {
+	entity, err := b.Entity(i)
+	if err != nil {
+		log.Error("Failed to get broker entity: %s", err)
+		return
+	}
+
 	for topicName, sample := range topicSampleLookup {
 		beanModifier := metrics.ApplyTopicName(topicName)
 
@@ -30,10 +38,9 @@ func gatherTopicSizes(b *broker, topicSampleLookup map[string]*metric.Set) {
 		}
 
 		if err := sample.SetMetric("topic.diskSize", topicSize, metric.GAUGE); err != nil {
-			log.Error("Unable to collect topic size for Topic %s on Broker %s: %s", topicName, b.Entity.Metadata.Name, err.Error())
+			log.Error("Unable to collect topic size for Topic %s on Broker %s: %s", topicName, entity.Metadata.Name, err.Error())
 		}
 	}
-	return
 }
 
 func aggregateTopicSize(jmxResult map[string]interface{}) (size float64, err error) {

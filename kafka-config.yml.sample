@@ -1,3 +1,4 @@
+---
 integration_name: com.newrelic.kafka
 
 instances:
@@ -7,36 +8,33 @@ instances:
       # A cluster name is required to uniquely identify this collection result in Insights
       cluster_name: "testcluster1"
 
-      # In order to collect broker and topic metrics a Zookeeper connection needs to be specified.
-      # The "zookeeper_hosts" field is a JSON array, each entry in the array connection information for a Zookeeper
-      # node. 
+      # How to find brokers. Either "bootstrap" or "zookeeper"
+      autodiscover_strategy: "zookeeper"
+
+      # A list of zookeeper hosts to discover brokers from.
+      # Only required and used if `autodiscover_mechanism` is "zookeeper"
+      #
+      # The "zookeeper_hosts" field is a JSON array, each entry in the array connection information for a Zookeeper node.
       # Each entry should have the following fields:
       # - host: The IP or Hostname of a Zookeeper node, if the New Relic agent is installed on a Zookeeper node "localhost" is an acceptable value
       # - port: The port Zookeeper is listening on for incoming requests. If omitted, a default port of 2181 will be used.
-      # Example: '[{"host": "zookeeper.my.localnet", "port": 2181}]'
-      #
-      # Note: If only collecting producers/consumers and "topic_mode" is set to "List" all Zookeeper fields can be omitted.
-      zookeeper_hosts: <JSON Array of Zookeeper Hosts of the form '[{"host": "localhost", "port": 2181}]'>
-
-      # Authentication type for zookeeper. Currently only supports auth scheme "user". Defaults to no authentication.
-      zookeeper_auth_scheme: <Auth scheme for Zookeeper>
+      zookeeper_hosts: '[{"host": "localhost", "port": 2181}]'
 
       # If using "user" authentication, the credentials must be specified as a string of the form "<user>:<password>"
       # Example: 'zookeeperuser:zookeeperpass'
-      zookeeper_auth_secret: <Auth string for Zookeeper>
+      zookeeper_auth_secret: "username:password"
 
-      # If the Kafka configuration files are not in the root node of Zookeeper, an alternative root can be specified.
+      # If the Kafka configuration files are not in the root node of Zookeeper, an alternative root node can be specified.
       # The alternative root must have a leading slash.
-      # Example: '/kafka-root'
-      zookeeper_path: <Root path of Kafka nodes in Zookeeper>
+      zookeeper_path: "/kafka-root"
 
       # It is common to use the same JMX configuration across a Kafka cluster
       # The default username and password are the credentials that will be used to make
       # a JMX connection to each broker found by Zookeeper. Theses values will also
       # be used when connecting to a consumer and/or producer if the "username" or "password"
       # field are omitted.
-      default_jmx_user: <Default User name for JMX Connection>
-      default_jmx_password: <Default Password for JMX Connection>
+      default_jmx_user: "username"
+      default_jmx_password: "password"
 
       # In order to collect Java producer and consumer metrics the "producers" and "consumers" fields should be filled out.
       # Both fields are JSON arrays with each entry being a separate JAVA producer or consumer, in it's respective field.
@@ -47,20 +45,20 @@ instances:
       # - username: The username used to connect to JMX. If omitted, will use the value of the "default_jmx_user" field
       # - password: The password used to connect to JMX. If omitted, will use the value of the "default_jmx_password" field
       # Example: {"name": "myProducer", "host": "localhost", "port": 24, "username": "me', "password": "secret"}
-      producers: <JSON Array of Producers of the structure [{"name": "myProducer", "host": "localhost", "port": 24, "username": "me', "password": "secret"}]
-      consumers: <JSON Array of Consumers of the structure [{"name": "myConsumer", "host": "localhost", "port": 24, "username": "me', "password": "secret"}]
+      producers: '[{"name": "myProducer", "host": "localhost", "port": 24, "username": "me", "password": "secret"}]'
+      consumers: '[{"name": "myConsumer", "host": "localhost", "port": 24, "username": "me", "password": "secret"}]'
 
       # If several producers/consumers are on the same host an agent can be installed on that host and the
       # "default_jmx_host" and "default_jmx_port" field can be set once and used for all producers/consumers that 
       # do not have the "host" or "port" field repsectively.
       # These fields can be removed if each producer/consumer has it's own "host" and/or "port" field filled out.
-      default_jmx_host: <Default Host to collect JMX Metrics>
-      default_jmx_port: <Default Port to collect JMX Metrics>
+      default_jmx_host: "localhost"
+      default_jmx_port: "9999"
 
       # This field is used to toggle the collection of broker and topic metrics. This is on by default and should only be set to "false"
       # for the specific case where only producers/consumers are being monitored and "topic_mode" is set to "All".
       # Any other case this field can be omitted.
-      collect_broker_topic_data: <true or false>
+      collect_broker_topic_data: true
 
       # Below are the fields used to fine tune/toggle topic metric collection.
       # In order to collect topics the "topic_mode" field must be set to "all" or "list". If the field is set to "all"
@@ -74,17 +72,21 @@ instances:
       # "collect_topic_size" to true. This operation is intensive and can take a while to collect for a larger number of topics. 
       # It is recommended to only enable this feature if using a small "topic_list".
       # If the field is omitted it will default to false.
-      topic_mode: <all, none, list or regex. All mode requires a zookeeper_host to be specified>
-      topic_list: <JSON Array of Topics to monitor. Ignored if topic_mode is not list>
-      topic_regex: <Regex pattern that matches the topics to be collected. Ignored if topic_mode is not regex>
+      topic_mode: "regex"
+      # topic_list: `["topic1", "topic2", "topic3"]`
+      topic_regex: 'topic\d+'
+
+      # collect_topic_size collects the on-disk size for the topics collected. This can be very time intensive for large clusters, 
+      # so it is disabled by default
+      collect_topic_size: false
 
       # topic_bucket is used to split topic metric collection across multiple instances. This is useful when the number of topics you want to collect 
       # is too large for a single collection, and are not easily partitionable with regex. It works by hashing the topic name, then using it to split
       # the topics across a number of buckets. The first number is the index of the current instance, the second is the total number of instances the 
       # topics are split across. For example, if you want the topics matched by `topic_regex: 'mytopic.*'` to be split across three instances, one
       # instance will be configured with `topic_bucket: 1/3`, one with `2/3`, and one with `3/3`
-      topic_bucket: <A string of the form "1/3">
-      collect_topic_size: <true or false. Indicate if topic size should be collected as it is a very resource intensive metric to collect>
+      topic_bucket: '1/3'
+
     labels:
       env: production
       role: kafka
@@ -93,20 +95,12 @@ instances:
     command: inventory
     arguments:
       cluster_name: "testcluster2"
-      # More information about the zookeeper connection can be found above
-      zookeeper_hosts: <JSON Array of Zookeeper Hosts of the form '[{"host": "localhost", "port": 2181}]'>
-      zookeeper_auth_scheme: <Auth scheme for Zookeeper>
-      zookeeper_auth_secret: <Auth string for Zookeeper>
-      zookeeper_path: <Root path of Kafka nodes in Zookeeper>
+      zookeeper_hosts: '[{"host": "localhost", "port": 2181}]'
+      zookeeper_auth_secret: "username:password"
 
       # Below are the fields used to fine tune/toggle topic inventory collection.
-      # In order to collect topics the "topic_mode" field must be set to "All" or "List". If the field is set to "All"
-      # a Zookeeper connection is required, at least the "zookeeper_hosts" field is required, as topics are looked up via Zookeeper.
-      #
-      # It is recommended to use the "List" option to monitor a specific set of topics. If using "List" mode the "topic_list"
-      # field should be filled out. The "topic_list" is a JSON array of topic names to be monitored.
-      topic_mode: <All, None, or List. All mode requires a zookeeper_host to be specified>
-      topic_list: <JSON Array of Topics to monitor. Ignored if topic_mode is not List>
+      # In order to collect topics the "topic_mode" field must be set to "all", "list", or "regex"
+      topic_mode: 'all'
     labels:
       env: production
       role: kafka
@@ -115,14 +109,11 @@ instances:
     command: consumer_offset
     arguments:
       cluster_name: "testcluster3"
-      # More information about the zookeeper connection can be found above
-      zookeeper_hosts: <JSON Array of Zookeeper Hosts of the form '[{"host": "localhost", "port": 2181}]'>
-      zookeeper_auth_scheme: <Auth scheme for Zookeeper>
-      zookeeper_auth_secret: <Auth string for Zookeeper>
-      zookeeper_path: <Root path of Kafka nodes in Zookeeper>
 
-      # A regex pattern that matches the consumer groups to collect metrics for
-      # Replaces `consumer_groups`
+      autodiscover_strategy: "boostrap"
+      bootstrap_broker: '{"host": "localhost", "kafka_port": 9092, "kafka_protocol": "PLAINTEXT"}'
+
+      # A regex pattern that matches the consumer groups to collect metrics from
       consumer_group_regex: '.*'
     labels:
       env: production

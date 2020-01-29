@@ -1,16 +1,17 @@
-// Package conoffsetcollect handles collection of consumer offsets for consumer groups
-package conoffsetcollect
+// Package consumeroffset handles collection of consumer offsets for consumer groups
+package consumeroffset
 
 import (
 	"errors"
 	"fmt"
 	"sync"
 
+	"github.com/Shopify/sarama"
 	"github.com/newrelic/infra-integrations-sdk/data/metric"
 	"github.com/newrelic/infra-integrations-sdk/integration"
 	"github.com/newrelic/infra-integrations-sdk/log"
 	"github.com/newrelic/nri-kafka/src/args"
-	"github.com/newrelic/nri-kafka/src/zookeeper"
+	"github.com/newrelic/nri-kafka/src/connection"
 )
 
 type partitionOffsets struct {
@@ -25,33 +26,14 @@ type partitionOffsets struct {
 type TopicPartitions map[string][]int32
 
 // Collect collects offset data per consumer group specified in the arguments
-func Collect(zkConn zookeeper.Connection, kafkaIntegration *integration.Integration) error {
-	client, err := zkConn.CreateClient()
+func Collect(client connection.Client, kafkaIntegration *integration.Integration) error {
+	clusterAdmin, err := sarama.NewClusterAdminFromClient(client)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to create cluster admin: %s", err)
 	}
-	defer func() {
-		if err := client.Close(); err != nil {
-			log.Debug("Error closing client connection: %s", err.Error())
-		}
-	}()
-
-	clusterAdmin, err := zkConn.CreateClusterAdmin()
-	if err != nil {
-		return err
-	}
-	defer func() {
-		if err := clusterAdmin.Close(); err != nil {
-			log.Debug("Error closing clusterAdmin connection: %s", err.Error())
-		}
-	}()
 
 	// Use the more modern collection method if the configuration exists
 	if args.GlobalArgs.ConsumerGroupRegex != nil {
-		if err != nil {
-			return fmt.Errorf("failed to create cluster admin from client: %s", err)
-		}
-
 		consumerGroupMap, err := clusterAdmin.ListConsumerGroups()
 		if err != nil {
 			return fmt.Errorf("failed to get list of consumer groups: %s", err)
