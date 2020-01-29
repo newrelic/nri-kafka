@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 2.9.0 (2019-01-29)
+### Added
+- Connect to kafka with a bootstrap broker
+### Changed
+- Removed hard dependency on zookeeper configuration
+- Local-only broker metric collection
+
 ## 2.8.2 (2019-01-22)
 ### Added
 - Additional debug logging around offset collection
