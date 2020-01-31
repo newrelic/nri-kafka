@@ -37,8 +37,8 @@ type ParsedArguments struct {
 	ZookeeperPath       string
 	PreferredListener   string
 
-	// Bootstrap discovery. Only required if
-	BootstrapBroker BrokerHost
+	// Bootstrap discovery. Only required if AutodiscoverStrategy is `bootstrap`
+	BootstrapBroker *BrokerHost
 
 	// Producer and consumer connection info. No autodiscovery is supported for producers and consumers
 	Producers []*JMXHost
@@ -131,26 +131,25 @@ func ParseArgs(a ArgumentList) (*ParsedArguments, error) {
 		return nil, errors.New("Zookeeper hosts have been defined even though the autodiscovery strategy is not 'zookeeper'")
 	}
 
-	// Parse Broker hosts
-	var brokerHost BrokerHost
-	err = json.Unmarshal([]byte(a.BootstrapBroker), &brokerHost)
-	if err != nil {
-		return nil, fmt.Errorf("failed to parse boostrap broker from json: %s", err)
+	brokerHost := &BrokerHost{
+		Host:          a.BootstrapBrokerHost,
+		KafkaPort:     a.BootstrapBrokerKafkaPort,
+		KafkaProtocol: a.BootstrapBrokerKafkaProtocol,
+		JMXPort:       a.BootstrapBrokerJMXPort,
+		JMXUser:       a.BootstrapBrokerJMXUser,
+		JMXPassword:   a.BootstrapBrokerJMXPassword,
 	}
 
-	if brokerHost.KafkaPort == 0 {
-		brokerHost.KafkaPort = defaultKafkaPort
-	}
 	if brokerHost.JMXPort == 0 {
 		brokerHost.JMXPort = defaultJMXPort
 	}
 
-	if a.AutodiscoverStrategy == "bootstrap" && a.BootstrapBroker == "{}" {
-		return nil, errors.New("Must specify a BootstrapBroker when the autodiscover strategy is 'bootstrap'")
+	if brokerHost.JMXUser == "" {
+		brokerHost.JMXUser = a.DefaultJMXUser
 	}
 
-	if a.AutodiscoverStrategy != "bootstrap" && a.BootstrapBroker != "{}" {
-		return nil, errors.New("BootstrapBroker been defined even though the autodiscovery strategy is not 'bootstrap'")
+	if brokerHost.JMXPassword == "" {
+		brokerHost.JMXPassword = a.DefaultJMXPassword
 	}
 
 	// Parse consumers

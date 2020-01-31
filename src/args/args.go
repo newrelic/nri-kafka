@@ -20,8 +20,13 @@ type ArgumentList struct {
 	ZookeeperPath       string `default:"" help:"The Zookeeper path which contains the Kafka configuration. A leading slash is required."`
 	PreferredListener   string `default:"" help:"Override which broker listener to attempt to connect to. Defaults to the first that works"`
 
-	// Bootstrap discovery
-	BootstrapBroker string `default:"{}" help:"JSON object with the following fields: 'host', 'jmx_port', 'jmx_user', 'jmx_password', 'kafka_port', 'protocol'"`
+	// Bootstrap broker autodiscovery. Only required if using `bootstrap` as your AutodiscoverStrategy
+	BootstrapBrokerHost          string `default:"localhost" help:"The bootstrap broker host"`
+	BootstrapBrokerKafkaPort     int    `default:"9092" help:"The bootstrap broker Kafka port"`
+	BootstrapBrokerKafkaProtocol string `default:"PLAINTEXT" help:"The protocol to connect to the bootstrap broker with"`
+	BootstrapBrokerJMXPort       int    `default:"0" help:"The JMX port for the bootstrap broker"`
+	BootstrapBrokerJMXUser       string `default:"" help:"The JMX username for the bootstrap broker"`
+	BootstrapBrokerJMXPassword   string `default:"" help:"The JMX password for the bootstrap broker"`
 
 	// Producer and consumer connection info. No autodiscovery is supported for producers and consumers
 	Producers string `default:"[]" help:"JSON array of producer key:value maps with the keys 'name', 'host', 'port', 'user', 'password'. The 'name' key is required, the others default to the specified defaults in the default_jmx_* options.  "`
