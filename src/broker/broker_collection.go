@@ -155,6 +155,7 @@ func populateBrokerMetrics(b *connection.Broker, i *integration.Integration) {
 	sample := entity.NewMetricSet("KafkaBrokerSample",
 		metric.Attribute{Key: "displayName", Value: entity.Metadata.Name},
 		metric.Attribute{Key: "entityName", Value: "broker:" + entity.Metadata.Name},
+		metric.Attribute{Key: "clusterName", Value: args.GlobalArgs.ClusterName},
 	)
 
 	// Populate metrics set with broker metrics
@@ -175,6 +176,7 @@ func collectBrokerTopicMetrics(b *connection.Broker, collectedTopics []string, i
 		sample := entity.NewMetricSet("KafkaBrokerSample",
 			metric.Attribute{Key: "displayName", Value: entity.Metadata.Name},
 			metric.Attribute{Key: "entityName", Value: "broker:" + entity.Metadata.Name},
+			metric.Attribute{Key: "clusterName", Value: args.GlobalArgs.ClusterName},
 			metric.Attribute{Key: "topic", Value: topicName},
 		)
 

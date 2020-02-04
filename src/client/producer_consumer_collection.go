@@ -81,6 +81,7 @@ func ConsumerWorker(consumerChan <-chan *args.JMXHost, wg *sync.WaitGroup, i *in
 
 			// Create a sample for consumer metrics
 			sample := consumerEntity.NewMetricSet("KafkaConsumerSample",
+				metric.Attribute{Key: "clusterName", Value: args.GlobalArgs.ClusterName},
 				metric.Attribute{Key: "displayName", Value: jmxInfo.Name},
 				metric.Attribute{Key: "entityName", Value: "consumer:" + jmxInfo.Name},
 				metric.Attribute{Key: "host", Value: jmxInfo.Host},
@@ -141,6 +142,7 @@ func ProducerWorker(producerChan <-chan *args.JMXHost, wg *sync.WaitGroup, i *in
 
 			// Create a metric set for the producer
 			sample := producerEntity.NewMetricSet("KafkaProducerSample",
+				metric.Attribute{Key: "clusterName", Value: args.GlobalArgs.ClusterName},
 				metric.Attribute{Key: "displayName", Value: jmxInfo.Name},
 				metric.Attribute{Key: "entityName", Value: "producer:" + jmxInfo.Name},
 				metric.Attribute{Key: "host", Value: jmxInfo.Host},

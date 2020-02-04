@@ -356,6 +356,7 @@ func calculateLagTotals(partitionLagChan chan partitionLagResult, wg *sync.WaitG
 		ms := consumerGroupEntity.NewMetricSet("KafkaOffsetSample",
 			metric.Attribute{Key: "clusterName", Value: args.GlobalArgs.ClusterName},
 			metric.Attribute{Key: "consumerGroup", Value: consumerGroup},
+			metric.Attribute{Key: "clusterName", Value: args.GlobalArgs.ClusterName},
 		)
 
 		err = ms.SetMetric("consumerGroup.totalLag", totalLag, metric.GAUGE)
@@ -383,6 +384,7 @@ func calculateLagTotals(partitionLagChan chan partitionLagResult, wg *sync.WaitG
 		ms := clientEntity.NewMetricSet("KafkaOffsetSample",
 			metric.Attribute{Key: "clusterName", Value: args.GlobalArgs.ClusterName},
 			metric.Attribute{Key: "clientID", Value: clientID},
+			metric.Attribute{Key: "clusterName", Value: args.GlobalArgs.ClusterName},
 		)
 
 		err = ms.SetMetric("consumer.totalLag", totalLag, metric.GAUGE)

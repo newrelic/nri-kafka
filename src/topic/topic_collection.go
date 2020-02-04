@@ -133,6 +133,7 @@ func topicWorker(topicChan <-chan *Topic, wg *sync.WaitGroup, client connection.
 			sample := topic.Entity.NewMetricSet("KafkaTopicSample",
 				metric.Attribute{Key: "displayName", Value: topic.Name},
 				metric.Attribute{Key: "entityName", Value: "topic:" + topic.Name},
+				metric.Attribute{Key: "clusterName", Value: args.GlobalArgs.ClusterName},
 			)
 
 			// Collect metrics and populate metric set with them

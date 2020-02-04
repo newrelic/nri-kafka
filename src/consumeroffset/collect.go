@@ -121,7 +121,9 @@ func setMetrics(consumerGroup string, offsetData []*partitionOffsets, kafkaInteg
 	for _, offsetData := range offsetData {
 		metricSet := groupEntity.NewMetricSet("KafkaOffsetSample",
 			metric.Attribute{Key: "displayName", Value: groupEntity.Metadata.Name},
-			metric.Attribute{Key: "entityName", Value: "consumerGroup:" + groupEntity.Metadata.Name})
+			metric.Attribute{Key: "entityName", Value: "consumerGroup:" + groupEntity.Metadata.Name},
+			metric.Attribute{Key: "clusterName", Value: args.GlobalArgs.ClusterName},
+		)
 
 		if err := metricSet.MarshalMetrics(offsetData); err != nil {
 			log.Error("Error Marshaling offset metrics for consumer group '%s': %s", consumerGroup, err.Error())
