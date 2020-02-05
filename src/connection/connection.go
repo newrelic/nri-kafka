@@ -175,6 +175,10 @@ func NewSaramaClientFromBrokerList(brokers []*Broker) (Client, error) {
 	}
 
 	client, err := sarama.NewClient(brokerAddresses, brokers[0].Config)
+	if err != nil {
+		return nil, err
+	}
+
 	return client.(Client), err
 }
 
