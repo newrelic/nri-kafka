@@ -37,6 +37,8 @@ func main() {
 	args.GlobalArgs, err = args.ParseArgs(argList)
 	ExitOnErr(err)
 
+	sarama.Logger = saramaLogger{}
+
 	if !args.GlobalArgs.ConsumerOffset {
 		coreCollection(kafkaIntegration)
 	} else {

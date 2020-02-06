@@ -174,23 +174,26 @@ func NewSaramaClientFromBrokerList(brokers []*Broker) (Client, error) {
 		brokerAddresses = append(brokerAddresses, broker.Addr())
 	}
 
+	log.Debug("Creating a new client to brokers: %v", brokerAddresses)
 	client, err := sarama.NewClient(brokerAddresses, brokers[0].Config)
 	if err != nil {
 		return nil, err
 	}
 
-	return client.(Client), err
+	return client.(Client), nil
 }
 
 func newPlaintextConfig() *sarama.Config {
 	config := sarama.NewConfig()
 	config.Version = sarama.V2_0_0_0
+	config.ClientID = "nri-kafka"
 
 	return config
 }
 
 func newSSLConfig() *sarama.Config {
 	config := sarama.NewConfig()
+	config.ClientID = "nri-kafka"
 	config.Net.TLS.Enable = true
 	config.Net.TLS.Config = &tls.Config{
 		InsecureSkipVerify: true,
