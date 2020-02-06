@@ -5,18 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 2.9.3 (2019-02-06)
+### Added
+- Capture internal logging for Sarama
+
 ## 2.9.2 (2019-02-05)
-### Fixed 
+### Fixed
 - Panic on failed client connection
 
 ## 2.9.1 (2019-01-29)
-### Fixed 
+### Fixed
 - Broken makefile
 
 ## 2.9.0 (2019-01-29)
 ### Added
 - Connect to kafka with a bootstrap broker
- 
+
 ### Changed
 - Removed hard dependency on zookeeper configuration
 - Local-only broker metric collection
@@ -27,7 +31,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## 2.8.1 (2019-01-18)
 ### Fixed
-- Avoid segfault by detecting error connecting 
+- Avoid segfault by detecting error connecting
 
 ## 2.8.0 (2019-12-05)
 ### Added
@@ -36,11 +40,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## 2.7.0 (2019-12-04)
 ### Changed
 - Bundle nrjmx
- 
+
 ## 2.6.0 (2019-11-18)
 ### Changed
 - Renamed the integration executable from nr-kafka to nri-kafka in order to be consistent with the package naming. **Important Note:** if you have any security module rules (eg. SELinux), alerts or automation that depends on the name of this binary, these will have to be updated.
- 
+
 ## 2.5.1 - 2019-11-15
 ### Fixed
 - Remove windows definition from linux build
@@ -48,7 +52,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## 2.5.0 - 2019-11-14
 ### Added
 - Support for attempting multiple connection protocols to broker
- 
+
 ## 2.4.1 - 2019-11-12
 ### Added
 - Rollup metrics for consumer offsets
@@ -56,9 +60,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## 2.4.0 - 2019-10-25
 ### Added
 - `consumer_group_regex` argument
-- 
+-
 ### Changed
-- Deprecated `consumer_groups` in favor of `consumer_group_regex` 
+- Deprecated `consumer_groups` in favor of `consumer_group_regex`
 
 ## 2.3.2 - 2019-09-11
 ### Fixed
