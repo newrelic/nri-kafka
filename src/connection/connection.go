@@ -106,7 +106,7 @@ func NewBroker(brokerArgs *args.BrokerHost) (*Broker, error) {
 	case "PLAINTEXT":
 		saramaBroker := sarama.NewBroker(address)
 		config := newPlaintextConfig()
-		err := saramaBroker.Open(newPlaintextConfig())
+		err := saramaBroker.Open(config)
 		if err != nil {
 			return nil, fmt.Errorf("failed opening connection: %s", err)
 		}
@@ -185,7 +185,7 @@ func NewSaramaClientFromBrokerList(brokers []*Broker) (Client, error) {
 
 func newPlaintextConfig() *sarama.Config {
 	config := sarama.NewConfig()
-	config.Version = sarama.V2_0_0_0
+	config.Version = args.GlobalArgs.KafkaVersion
 	config.ClientID = "nri-kafka"
 
 	return config
@@ -198,7 +198,7 @@ func newSSLConfig() *sarama.Config {
 	config.Net.TLS.Config = &tls.Config{
 		InsecureSkipVerify: true,
 	}
-	config.Version = sarama.V2_0_0_0
+	config.Version = args.GlobalArgs.KafkaVersion
 
 	return config
 }

@@ -9,7 +9,8 @@ import (
 // ArgumentList is the raw arguments passed into the integration via yaml or CLI args
 type ArgumentList struct {
 	sdkArgs.DefaultArgumentList
-	ClusterName string `default:"" help:"A user-defined name to uniquely identify the cluster"`
+	ClusterName  string `default:"" help:"A user-defined name to uniquely identify the cluster"`
+	KafkaVersion string `default:"1.0.0" help:"What version of the API to use for connecting to Kafka. Versions older than 1.0.0 may be missing some features."`
 
 	AutodiscoverStrategy string `default:"zookeeper" help:"How to discover broker nodes to collect metrics from. One of 'zookeeper' (default) or 'bootstrap'"`
 

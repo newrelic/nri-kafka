@@ -5,6 +5,7 @@ import (
 	"regexp"
 	"testing"
 
+	"github.com/Shopify/sarama"
 	sdkArgs "github.com/newrelic/infra-integrations-sdk/args"
 	"github.com/newrelic/infra-integrations-sdk/integration"
 	"github.com/stretchr/testify/assert"
@@ -20,6 +21,7 @@ func TestParseArgs(t *testing.T) {
 			Events:    false,
 		},
 		AutodiscoverStrategy:       "zookeeper",
+		KafkaVersion:               "1.1.0",
 		ZookeeperHosts:             `[{"host":"host1","port":2180},{"host":"host2"}]`,
 		ZookeeperAuthScheme:        "",
 		ZookeeperAuthSecret:        "",
@@ -53,6 +55,7 @@ func TestParseArgs(t *testing.T) {
 			Events:    false,
 		},
 		AutodiscoverStrategy: "zookeeper",
+		KafkaVersion:         sarama.V1_1_0_0,
 		ZookeeperHosts: []*ZookeeperHost{
 			{
 				Host: "host1",
@@ -121,6 +124,7 @@ func TestDefaultArgs(t *testing.T) {
 			Events:    false,
 		},
 		AutodiscoverStrategy: "zookeeper",
+		KafkaVersion:         sarama.V1_0_0_0,
 		ZookeeperHosts: []*ZookeeperHost{
 			{
 				Host: "localhost",

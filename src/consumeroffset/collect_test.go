@@ -30,5 +30,5 @@ func Test_setMetrics(t *testing.T) {
 	resultEntity, err := i.Entity("testGroup", "ka-consumerGroup", clusterIDAttr)
 	assert.NoError(t, err)
 	assert.Len(t, resultEntity.Metrics, 1)
-	assert.Len(t, resultEntity.Metrics[0].Metrics, 8)
+	assert.Len(t, resultEntity.Metrics[0].Metrics, 9)
 }

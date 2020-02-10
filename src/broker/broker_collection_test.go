@@ -166,6 +166,7 @@ func TestPopulateBrokerMetrics_Normal(t *testing.T) {
 		"event_type":  "KafkaBrokerSample",
 		"displayName": "kafkabroker:9090",
 		"entityName":  "broker:" + "kafkabroker:9090",
+		"clusterName": "",
 	}
 
 	assert.Equal(t, expected, sample.Metrics)
@@ -184,7 +185,7 @@ func TestCollectBrokerTopicMetrics(t *testing.T) {
 	}
 
 	i, _ := integration.New("test", "1.0.0")
-	e, _ := i.Entity("testEntity", "testNamespace")
+	e, _ := i.Entity("testEntity", "testNamespace", integration.IDAttribute{Key: "clusterName", Value: ""})
 
 	mockBroker := &mocks.SaramaBroker{}
 	mockBroker.On("Addr").Return("kafkabroker:9090")
@@ -197,6 +198,7 @@ func TestCollectBrokerTopicMetrics(t *testing.T) {
 	}
 
 	sample := e.NewMetricSet("KafkaBrokerSample",
+		metric.Attribute{Key: "clusterName", Value: ""},
 		metric.Attribute{Key: "displayName", Value: "kafkabroker:9090"},
 		metric.Attribute{Key: "entityName", Value: "broker:kafkabroker:9090"},
 		metric.Attribute{Key: "topic", Value: "topic"},

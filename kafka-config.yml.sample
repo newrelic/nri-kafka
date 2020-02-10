@@ -9,6 +9,10 @@ instances:
       # A cluster name is required to uniquely identify this collection result in Insights
       cluster_name: "testcluster1"
 
+      # Override the kafka API version to target. Defaults to 1.0.0, which will work for all post-1.0.0 versions. Older versions of the API may be missing features.
+      kafka_version: "1.0.0"
+
+
       # How to find brokers. Either "bootstrap" or "zookeeper"
       autodiscover_strategy: "zookeeper"
 
@@ -50,21 +54,21 @@ instances:
       # field should be filled out. The "topic_list" is a JSON array of topic names to be monitored.
       # Example of topic_list: '["topic1", "topic2"]'
       #
-      # If monitoring topics via the "all" or "list" option for "topic_mode", the topic size can be collected from zookeeper by setting 
-      # "collect_topic_size" to true. This operation is intensive and can take a while to collect for a larger number of topics. 
+      # If monitoring topics via the "all" or "list" option for "topic_mode", the topic size can be collected from zookeeper by setting
+      # "collect_topic_size" to true. This operation is intensive and can take a while to collect for a larger number of topics.
       # It is recommended to only enable this feature if using a small "topic_list".
       # If the field is omitted it will default to false.
       topic_mode: "regex"
       # topic_list: `["topic1", "topic2", "topic3"]`
       topic_regex: 'topic\d+'
 
-      # collect_topic_size collects the on-disk size for the topics collected. This can be very time intensive for large clusters, 
+      # collect_topic_size collects the on-disk size for the topics collected. This can be very time intensive for large clusters,
       # so it is disabled by default
       collect_topic_size: false
 
-      # topic_bucket is used to split topic metric collection across multiple instances. This is useful when the number of topics you want to collect 
+      # topic_bucket is used to split topic metric collection across multiple instances. This is useful when the number of topics you want to collect
       # is too large for a single collection, and are not easily partitionable with regex. It works by hashing the topic name, then using it to split
-      # the topics across a number of buckets. The first number is the index of the current instance, the second is the total number of instances the 
+      # the topics across a number of buckets. The first number is the index of the current instance, the second is the total number of instances the
       # topics are split across. For example, if you want the topics matched by `topic_regex: 'mytopic.*'` to be split across three instances, one
       # instance will be configured with `topic_bucket: 1/3`, one with `2/3`, and one with `3/3`
       topic_bucket: '1/3'
@@ -84,7 +88,7 @@ instances:
       autodiscover_strategy: "bootstrap"
 
       # Bootstrap broker arguments. These configure a connection to a single broker. The rest of the brokers in the cluster
-      # will be discovered using that connection. 
+      # will be discovered using that connection.
       bootstrap_broker_host: "localhost"
       bootstrap_broker_kafka_port: 9092
       bootstrap_broker_kafka_protocol: PLAINTEXT # Currently support PLAINTEXT and SSL
@@ -148,7 +152,7 @@ instances:
       consumers: '[{"name": "myConsumer", "host": "localhost", "port": 24, "username": "me", "password": "secret"}]'
 
       # If several producers/consumers are on the same host an agent can be installed on that host and the
-      # "default_jmx_host" and "default_jmx_port" field can be set once and used for all producers/consumers that 
+      # "default_jmx_host" and "default_jmx_port" field can be set once and used for all producers/consumers that
       # do not have the "host" or "port" field repsectively.
       # These fields can be removed if each producer/consumer has it's own "host" and/or "port" field filled out.
       default_jmx_host: "localhost"

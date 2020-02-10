@@ -7,6 +7,7 @@ import (
 	"regexp"
 	"strconv"
 
+	"github.com/Shopify/sarama"
 	sdkArgs "github.com/newrelic/infra-integrations-sdk/args"
 	"github.com/newrelic/infra-integrations-sdk/log"
 )
@@ -26,7 +27,8 @@ const (
 type ParsedArguments struct {
 	sdkArgs.DefaultArgumentList
 
-	ClusterName string
+	ClusterName  string
+	KafkaVersion sarama.KafkaVersion
 
 	AutodiscoverStrategy string
 
@@ -224,11 +226,17 @@ func ParseArgs(a ArgumentList) (*ParsedArguments, error) {
 			"that makes the performance impact much less prominent than previously.")
 	}
 
+	version, err := sarama.ParseKafkaVersion(a.KafkaVersion)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse kafka version: %s", err)
+	}
+
 	parsedArgs := &ParsedArguments{
 		DefaultArgumentList:  a.DefaultArgumentList,
 		AutodiscoverStrategy: a.AutodiscoverStrategy,
 		BootstrapBroker:      brokerHost,
 		ClusterName:          a.ClusterName,
+		KafkaVersion:         version,
 		ZookeeperHosts:       zookeeperHosts,
 		ZookeeperAuthScheme:  a.ZookeeperAuthScheme,
 		ZookeeperAuthSecret:  a.ZookeeperAuthSecret,
