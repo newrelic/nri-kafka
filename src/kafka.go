@@ -61,7 +61,7 @@ func main() {
 func getBrokerList(arguments *args.ParsedArguments) ([]*connection.Broker, error) {
 	switch arguments.AutodiscoverStrategy {
 	case "bootstrap":
-		bootstrapBroker, err := connection.NewBroker(&arguments.BootstrapBroker)
+		bootstrapBroker, err := connection.NewBroker(arguments.BootstrapBroker)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create boostrap broker: %s", err)
 		}
