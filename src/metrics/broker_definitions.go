@@ -273,6 +273,12 @@ var TopicSizeMetricDef = &JMXMetricSet{
 	MBean: "kafka.log:type=Log,name=Size,topic=" + topicHolder + ",partition=*",
 }
 
+// TopicOffsetMetricDef metric definition for calculating the roll up for a Topic's
+// offset for a given Broker
+var TopicOffsetMetricDef = &JMXMetricSet{
+	MBean: "kafka.log:type=Log,name=LogEndOffset,topic=" + topicHolder + ",partition=*",
+}
+
 // ApplyTopicName to modified bean name for Topic
 func ApplyTopicName(topicName string) BeanModifier {
 	return func(beanName string) string {

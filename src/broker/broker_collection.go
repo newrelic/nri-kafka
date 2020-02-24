@@ -138,6 +138,11 @@ func collectBrokerMetrics(b *connection.Broker, collectedTopics []string, i *int
 		gatherTopicSizes(b, topicSampleLookup, i)
 	}
 
+	// If enabled collect topic offset
+	if args.GlobalArgs.CollectTopicOffset {
+		gatherTopicOffset(b, topicSampleLookup, i)
+	}
+
 	// Close connection and release lock so another process can make JMX Connections
 	jmxwrapper.JMXClose()
 	jmxwrapper.JMXLock.Unlock()

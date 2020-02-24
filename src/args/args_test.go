@@ -152,6 +152,7 @@ func TestDefaultArgs(t *testing.T) {
 		TopicBucket:        TopicBucket{1, 1},
 		Timeout:            10000,
 		CollectTopicSize:   false,
+		CollectTopicOffset: false,
 		ConsumerOffset:     false,
 		ConsumerGroups:     nil,
 		ConsumerGroupRegex: nil,

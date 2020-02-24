@@ -68,6 +68,7 @@ type ParsedArguments struct {
 	TopicRegex            string
 	TopicBucket           TopicBucket
 	CollectTopicSize      bool
+	CollectTopicOffset    bool
 
 	// Consumer offset arguments
 	ConsumerOffset     bool
@@ -258,6 +259,7 @@ func ParseArgs(a ArgumentList) (*ParsedArguments, error) {
 		TrustStorePassword:   a.TrustStorePassword,
 		LocalOnlyCollection:  a.LocalOnlyCollection,
 		CollectTopicSize:     a.CollectTopicSize,
+		CollectTopicOffset:   a.CollectTopicOffset,
 		ConsumerOffset:       a.ConsumerOffset,
 		ConsumerGroups:       consumerGroups,
 		ConsumerGroupRegex:   consumerGroupRegex,
