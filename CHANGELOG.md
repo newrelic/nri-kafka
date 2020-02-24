@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## 2.10.0 (2019-02-06)
 ### Added
+- `collect_topic_offset` argument. Useful when you want offsets for topics that aren't actively being consumed
+
+## 2.10.0 (2019-02-06)
+### Added
 - kafka_version argument to lower the targeted API version if necessary
 - Cluster name attribute on metrics
 
