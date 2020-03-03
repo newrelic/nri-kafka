@@ -1,0 +1,46 @@
+  kafka-config.yml: |
+    ---
+    # Run auto discovery to find pods with label "app=kafka"
+    # https://docs.newrelic.com/docs/integrations/host-integrations/installation/container-auto-discovery
+    discovery:
+      command:
+        # Run NRI Discovery for Kubernetes
+        # https://github.com/newrelic/nri-discovery-kubernetes
+        exec: /var/db/newrelic-infra/nri-discovery-kubernetes
+        match:
+          label.app: "kafka"
+    integrations:
+      # This instance gives an example of autodiscovery of brokers with a bootstrap broker
+      - name: nri-kafka
+        env: 
+          # A cluster name is required to uniquely identify this collection result in Insights
+          CLUSTER_NAME: testcluster1
+
+          AUTODISCOVER_STRATEGY: bootstrap
+
+          # Bootstrap broker arguments. These configure a connection to a single broker. The rest of the brokers in the cluster
+          # will be discovered using that connection.
+          BOOTSTRAP_BROKER_HOST: ${discovery.ip}
+          # Ports can be autodiscovered. You can use an ordinal number like ${discovery.ports.0}
+          # for the first discovered port (they are sorted in ascending order)
+          # E.g. if the pod ports are {9092, 9999}, then ${discovery.ports.0} has the value 9092 and
+          # ${discovery.ports.1} equals 9999
+          # Named ports can also be used like this ${discovery.ports.<name>}. E.g. ${discovery.ports.kafka}
+          BOOTSTRAP_BROKER_KAFKA_PORT: 9092
+          BOOTSTRAP_BROKER_KAFKA_PROTOCOL: PLAINTEXT # Currently support PLAINTEXT and SSL
+          BOOTSTRAP_BROKER_JMX_PORT: 9999
+          # JMX user and password default to `default_jmx_user` and `default_jmx_password` if unset
+          BOOTSTRAP_BROKER_JMX_USER: username
+          BOOTSTRAP_BROKER_JMX_PASSWORD: password
+
+          # Only collect metrics from the bootstrap broker configured. The integration will not attempt to collect metrics
+          # for any other broker, nor will it collect cluster-level metrics like topic metrics. This is useful for things
+          # like deployment to kubernetes, where a single integration instance is desired per broker.
+          LOCAL_ONLY_COLLECTION: true
+
+          # See above for more information on topic collection
+          COLLECT_BROKER_TOPIC_DATA: true
+          TOPIC_MODE: all
+          COLLECT_TOPIC_SIZE: false
+
+          METRICS: 1
