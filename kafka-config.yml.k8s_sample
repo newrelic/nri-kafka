@@ -12,7 +12,7 @@
     integrations:
       # This instance gives an example of autodiscovery of brokers with a bootstrap broker
       - name: nri-kafka
-        env: 
+        env:
           # A cluster name is required to uniquely identify this collection result in Insights
           CLUSTER_NAME: testcluster1
 
@@ -36,6 +36,13 @@
           # Only collect metrics from the bootstrap broker configured. The integration will not attempt to collect metrics
           # for any other broker, nor will it collect cluster-level metrics like topic metrics. This is useful for things
           # like deployment to kubernetes, where a single integration instance is desired per broker.
+          # In order to collect metrics from a single broker, you may need to set the KAFKA_ADVERTISED_HOST_NAME in your
+          # deployment file to the same value as in the BOOTSTRAP_BROKER_HOST config option. E.g. using the podIP:
+          # - name: KAFKA_ADVERTISED_HOST_NAME
+          #   valueFrom:
+          #     fieldRef:
+          #       apiVersion: "v1"
+          #       fieldPath: "status.podIP"
           LOCAL_ONLY_COLLECTION: true
 
           # See above for more information on topic collection
@@ -44,3 +51,57 @@
           COLLECT_TOPIC_SIZE: false
 
           METRICS: 1
+  nri-kafka-producers.yaml: |
+    ---
+    # Run auto discovery to find pods with label "app=kafka"
+    # https://docs.newrelic.com/docs/integrations/host-integrations/installation/container-auto-discovery
+    discovery:
+      command:
+        exec: /var/db/newrelic-infra/nri-discovery-kubernetes
+        match:
+          label.app: kafka-producer
+    integrations:
+      - name: nri-kafka
+        env:
+          CONSUMER_OFFSET: 1
+          # A cluster name is required to uniquely identify this collection result in Insights
+          CLUSTER_NAME: testcluster1
+          # In order to collect Java producers metrics the "producers" field should be filled out.
+          # Each entry should have the following fields:
+          # - name: This is the actual name of the producer/consumer as it appears in Kafka
+          # - host: The IP or Hostname of the producer/consumser. If omitted, will use the value of the "default_jmx_host" field
+          # - port: The port in which JMX is setup for on the producer/consumer. If omitted will, use the value of the "default_jmx_port" field
+          # - username: The username used to connect to JMX. If omitted, will use the value of the "default_jmx_user" field
+          # - password: The password used to connect to JMX. If omitted, will use the value of the "default_jmx_password" field
+          PRODUCERS: '[{"name": "producer-1", "host": "${discovery.ip}", "port": ${discovery.ports.jmx} }]'
+          # A list of zookeeper hosts to discover brokers from.
+          ZOOKEEPER_HOSTS: '[{"host": "kafka-zookeeper.kafka.svc.cluster.local", "port": 2181}]'
+          # A regex pattern that matches the consumer groups to collect metrics from
+          CONSUMER_GROUP_REGEX: '.*'
+  nri-kafka-consumer.yaml: |
+    ---
+    # Run auto discovery to find pods with label "app=kafka"
+    # https://docs.newrelic.com/docs/integrations/host-integrations/installation/container-auto-discovery
+    discovery:
+      command:
+        exec: /var/db/newrelic-infra/nri-discovery-kubernetes --port 10255 --insecure
+        match:
+          label.app: kafka-consumer
+    integrations:
+      - name: nri-kafka
+        env:
+          CONSUMER_OFFSET: 1
+          # A cluster name is required to uniquely identify this collection result in Insights
+          CLUSTER_NAME: testcluster1
+          # In order to collect Java consumer metrics the "consumers" field should be filled out.
+          # Each entry should have the following fields:
+          # - name: This is the actual name of the producer/consumer as it appears in Kafka
+          # - host: The IP or Hostname of the producer/consumser. If omitted, will use the value of the "default_jmx_host" field
+          # - port: The port in which JMX is setup for on the producer/consumer. If omitted will, use the value of the "default_jmx_port" field
+          # - username: The username used to connect to JMX. If omitted, will use the value of the "default_jmx_user" field
+          # - password: The password used to connect to JMX. If omitted, will use the value of the "default_jmx_password" field
+          CONSUMERS: '[{"name": "consumer-1", "host": "${discovery.ip}", "port": ${discovery.ports.jmx} }]'
+          # A list of zookeeper hosts to discover brokers from.
+          ZOOKEEPER_HOSTS: '[{"host": "kafka-zookeeper.kafka.svc.cluster.local", "port": 2181}]'
+          # A regex pattern that matches the consumer groups to collect metrics from
+          CONSUMER_GROUP_REGEX: '.*'
