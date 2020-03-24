@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
-## 2.11.1 (2019-02-06)
+## 2.11.2 (2019-02-06)
 ### Changed
 - Make consumer/producer config independent of broker config
 
