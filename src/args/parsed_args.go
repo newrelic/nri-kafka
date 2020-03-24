@@ -78,6 +78,7 @@ type ParsedArguments struct {
 	Timeout int `default:"10000" help:"Timeout in milliseconds per single JMX query."`
 }
 
+// CollectBrokers returns whether we should collect broker metrics
 func (args *ParsedArguments) CollectBrokers() bool {
 	return len(args.ZookeeperHosts) > 0 || args.BootstrapBroker != nil
 }

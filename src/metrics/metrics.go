@@ -47,7 +47,7 @@ func CollectTopicSubMetrics(
 	// need to title case the type so it matches the metric set of the parent entity
 	titleEntityType := strings.Title(strings.TrimPrefix(entity.Metadata.Namespace, "ka-"))
 
-	topicList, err := GetTopicListFromJMX(entity.Metadata.Name)
+	topicList, err := getTopicListFromJMX(entity.Metadata.Name)
 	if err != nil {
 		log.Error("Failed to collect topic list for producer or consumer: %s", err)
 		return
@@ -154,7 +154,7 @@ func CollectMetricDefinitions(sample *metric.Set, metricSets []*JMXMetricSet, be
 	}
 }
 
-func GetTopicListFromJMX(producer string) ([]string, error) {
+func getTopicListFromJMX(producer string) ([]string, error) {
 	switch strings.ToLower(args.GlobalArgs.TopicMode) {
 	case "none":
 		return []string{}, nil
@@ -170,7 +170,7 @@ func GetTopicListFromJMX(producer string) ([]string, error) {
 			return nil, fmt.Errorf("failed to compile topic regex: %s", err)
 		}
 
-		allTopics, err := GetAllTopicsFromJMX(producer)
+		allTopics, err := getAllTopicsFromJMX(producer)
 		if err != nil {
 			return nil, fmt.Errorf("failed to get topics from client: %s", err)
 		}
@@ -184,7 +184,7 @@ func GetTopicListFromJMX(producer string) ([]string, error) {
 
 		return filteredTopics, nil
 	case "all":
-		allTopics, err := GetAllTopicsFromJMX(producer)
+		allTopics, err := getAllTopicsFromJMX(producer)
 		if err != nil {
 			return nil, fmt.Errorf("failed to get topics from client: %s", err)
 		}
@@ -196,7 +196,7 @@ func GetTopicListFromJMX(producer string) ([]string, error) {
 
 }
 
-func GetAllTopicsFromJMX(producer string) ([]string, error) {
+func getAllTopicsFromJMX(producer string) ([]string, error) {
 	result, err := jmxwrapper.JMXQuery(fmt.Sprintf("kafka.producer:type=producer-topic-metrics,client-id=%s,topic=*", producer), args.GlobalArgs.Timeout)
 	if err != nil {
 		return nil, err

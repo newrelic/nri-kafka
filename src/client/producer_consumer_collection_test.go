@@ -15,13 +15,12 @@ import (
 
 func TestStartWorkerPool(t *testing.T) {
 	var wg sync.WaitGroup
-	collectedTopics := []string{"test1", "test2"}
 	i, err := integration.New("kafka", "1.0.0")
 	if err != nil {
 		t.Error(err)
 	}
 
-	consumerHosts := StartWorkerPool(3, &wg, i, collectedTopics, ConsumerWorker)
+	consumerHosts := StartWorkerPool(3, &wg, i, ConsumerWorker)
 
 	c := make(chan int)
 	go func() {
@@ -67,12 +66,11 @@ func TestConsumerWorker(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	collectedTopics := []string{"test1", "test2"}
 
 	testutils.SetupTestArgs()
 
 	wg.Add(1)
-	go ConsumerWorker(consumerChan, &wg, i, collectedTopics)
+	go ConsumerWorker(consumerChan, &wg, i)
 
 	newJmx := &args.JMXHost{
 		Name: "test",
@@ -95,12 +93,11 @@ func TestConsumerWorker_JmxOpenFuncErr(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	collectedTopics := []string{"test1", "test2"}
 
 	testutils.SetupTestArgs()
 
 	wg.Add(1)
-	go ConsumerWorker(consumerChan, &wg, i, collectedTopics)
+	go ConsumerWorker(consumerChan, &wg, i)
 
 	newJmx := &args.JMXHost{
 		Name: "test",
@@ -119,12 +116,11 @@ func TestProducerWorker(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	collectedTopics := []string{"test1", "test2"}
 
 	testutils.SetupTestArgs()
 
 	wg.Add(1)
-	go ProducerWorker(producerChan, &wg, i, collectedTopics)
+	go ProducerWorker(producerChan, &wg, i)
 
 	newJmx := &args.JMXHost{
 		Name: "test",
@@ -147,12 +143,11 @@ func TestProducerWorker_JmxOpenFuncErr(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	collectedTopics := []string{"test1", "test2"}
 
 	testutils.SetupTestArgs()
 
 	wg.Add(1)
-	go ProducerWorker(producerChan, &wg, i, collectedTopics)
+	go ProducerWorker(producerChan, &wg, i)
 
 	newJmx := &args.JMXHost{
 		Name: "test",
