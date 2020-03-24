@@ -78,6 +78,10 @@ type ParsedArguments struct {
 	Timeout int `default:"10000" help:"Timeout in milliseconds per single JMX query."`
 }
 
+func (args *ParsedArguments) CollectBrokers() bool {
+	return len(args.ZookeeperHosts) > 0 || args.BootstrapBroker != nil
+}
+
 // TopicBucket is a struct that stores the information for bucketing topic collection
 type TopicBucket struct {
 	BucketNumber int
@@ -126,33 +130,31 @@ func ParseArgs(a ArgumentList) (*ParsedArguments, error) {
 		}
 	}
 
-	if a.AutodiscoverStrategy == "zookeeper" && len(zookeeperHosts) == 0 {
-		return nil, errors.New("Must specify a zookeeper host when the autodiscover strategy is 'zookeeper' (default)")
-	}
-
 	if a.AutodiscoverStrategy != "zookeeper" && len(zookeeperHosts) != 0 {
 		return nil, errors.New("Zookeeper hosts have been defined even though the autodiscovery strategy is not 'zookeeper'")
 	}
 
-	brokerHost := &BrokerHost{
-		Host:          a.BootstrapBrokerHost,
-		KafkaPort:     a.BootstrapBrokerKafkaPort,
-		KafkaProtocol: a.BootstrapBrokerKafkaProtocol,
-		JMXPort:       a.BootstrapBrokerJMXPort,
-		JMXUser:       a.BootstrapBrokerJMXUser,
-		JMXPassword:   a.BootstrapBrokerJMXPassword,
-	}
+	var brokerHost *BrokerHost
+	if a.AutodiscoverStrategy == "bootstrap" {
+		brokerHost = &BrokerHost{
+			Host:          a.BootstrapBrokerHost,
+			KafkaPort:     a.BootstrapBrokerKafkaPort,
+			KafkaProtocol: a.BootstrapBrokerKafkaProtocol,
+			JMXPort:       a.BootstrapBrokerJMXPort,
+			JMXUser:       a.BootstrapBrokerJMXUser,
+			JMXPassword:   a.BootstrapBrokerJMXPassword,
+		}
+		if brokerHost.JMXPort == 0 {
+			brokerHost.JMXPort = defaultJMXPort
+		}
 
-	if brokerHost.JMXPort == 0 {
-		brokerHost.JMXPort = defaultJMXPort
-	}
+		if brokerHost.JMXUser == "" {
+			brokerHost.JMXUser = a.DefaultJMXUser
+		}
 
-	if brokerHost.JMXUser == "" {
-		brokerHost.JMXUser = a.DefaultJMXUser
-	}
-
-	if brokerHost.JMXPassword == "" {
-		brokerHost.JMXPassword = a.DefaultJMXPassword
+		if brokerHost.JMXPassword == "" {
+			brokerHost.JMXPassword = a.DefaultJMXPassword
+		}
 	}
 
 	// Parse consumers

@@ -126,40 +126,44 @@ func getBrokerList(arguments *args.ParsedArguments) ([]*connection.Broker, error
 
 // coreCollection is the main integration collection. Does not handle consumerOffset collection
 func coreCollection(kafkaIntegration *integration.Integration) {
-	log.Info("Running core collection")
-	brokers, err := getBrokerList(args.GlobalArgs)
-	if err != nil {
-		log.Error("Failed to get list of brokers: %s", err)
-		return
-	}
-
-	clusterClient, err := connection.NewSaramaClientFromBrokerList(brokers)
-	if err != nil {
-		log.Error("Failed to get a kafka client: %s", err)
-		return
-	}
-
-	topics, err := topic.GetTopics(clusterClient)
-	if err != nil {
-		log.Error("Failed to get a list of topics. Continuing with broker collection: %s", err)
-	}
-
-	// Enforce hard limits on topics
-	bucketedTopics := filterTopicsByBucket(topics, args.GlobalArgs.TopicBucket)
-	collectedTopics := enforceTopicLimit(bucketedTopics)
-
-	// Start and feed all worker pools
 	var wg sync.WaitGroup
-	brokerChan := broker.StartBrokerPool(3, &wg, kafkaIntegration, collectedTopics)
-	consumerChan := client.StartWorkerPool(3, &wg, kafkaIntegration, collectedTopics, client.ConsumerWorker)
-	producerChan := client.StartWorkerPool(3, &wg, kafkaIntegration, collectedTopics, client.ProducerWorker)
+	if args.GlobalArgs.CollectBrokers() {
+		log.Info("Running core collection")
+		brokers, err := getBrokerList(args.GlobalArgs)
+		if err != nil {
+			log.Error("Failed to get list of brokers: %s", err)
+			return
+		}
 
-	if !args.GlobalArgs.LocalOnlyCollection {
-		topicChan := topic.StartTopicPool(5, &wg, clusterClient)
-		go topic.FeedTopicPool(topicChan, kafkaIntegration, collectedTopics)
+		clusterClient, err := connection.NewSaramaClientFromBrokerList(brokers)
+		if err != nil {
+			log.Error("Failed to get a kafka client: %s", err)
+			return
+		}
+
+		topics, err := topic.GetTopics(clusterClient)
+		if err != nil {
+			log.Error("Failed to get a list of topics. Continuing with broker collection: %s", err)
+		}
+
+		// Enforce hard limits on topics
+		bucketedTopics := filterTopicsByBucket(topics, args.GlobalArgs.TopicBucket)
+		collectedTopics := enforceTopicLimit(bucketedTopics)
+
+		// Start and feed all worker pools
+		brokerChan := broker.StartBrokerPool(3, &wg, kafkaIntegration, collectedTopics)
+
+		if !args.GlobalArgs.LocalOnlyCollection {
+			topicChan := topic.StartTopicPool(5, &wg, clusterClient)
+			go topic.FeedTopicPool(topicChan, kafkaIntegration, collectedTopics)
+		}
+
+		go broker.FeedBrokerPool(brokers, brokerChan)
 	}
 
-	go broker.FeedBrokerPool(brokers, brokerChan)
+	consumerChan := client.StartWorkerPool(3, &wg, kafkaIntegration, client.ConsumerWorker)
+	producerChan := client.StartWorkerPool(3, &wg, kafkaIntegration, client.ProducerWorker)
+
 	go client.FeedWorkerPool(consumerChan, args.GlobalArgs.Consumers)
 	go client.FeedWorkerPool(producerChan, args.GlobalArgs.Producers)
 

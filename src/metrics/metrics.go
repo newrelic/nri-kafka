@@ -3,7 +3,9 @@
 package metrics
 
 import (
+	"errors"
 	"fmt"
+	"regexp"
 	"strings"
 
 	"github.com/newrelic/infra-integrations-sdk/data/metric"
@@ -35,12 +37,21 @@ func GetProducerMetrics(producerName string, sample *metric.Set) {
 //
 // beanModifier is a function that is used to replace place holder with actual Consumer/Producer
 // and Topic names for a given MBean
-func CollectTopicSubMetrics(entity *integration.Entity, entityType string,
-	metricSets []*JMXMetricSet, topicList []string,
-	beanModifier func(string, string) BeanModifier) {
+func CollectTopicSubMetrics(
+	entity *integration.Entity,
+	entityType string,
+	metricSets []*JMXMetricSet,
+	beanModifier func(string, string) BeanModifier,
+) {
 
 	// need to title case the type so it matches the metric set of the parent entity
 	titleEntityType := strings.Title(strings.TrimPrefix(entity.Metadata.Namespace, "ka-"))
+
+	topicList, err := GetTopicListFromJMX(entity.Metadata.Name)
+	if err != nil {
+		log.Error("Failed to collect topic list for producer or consumer: %s", err)
+		return
+	}
 
 	for _, topicName := range topicList {
 		topicSample := entity.NewMetricSet("Kafka"+titleEntityType+"Sample",
@@ -141,4 +152,71 @@ func CollectMetricDefinitions(sample *metric.Set, metricSets []*JMXMetricSet, be
 	if len(notFoundMetrics) > 0 {
 		log.Warn("Can't find raw metrics in results for keys: %v", notFoundMetrics)
 	}
+}
+
+func GetTopicListFromJMX(producer string) ([]string, error) {
+	switch strings.ToLower(args.GlobalArgs.TopicMode) {
+	case "none":
+		return []string{}, nil
+	case "list":
+		return args.GlobalArgs.TopicList, nil
+	case "regex":
+		if args.GlobalArgs.TopicRegex == "" {
+			return nil, errors.New("regex topic mode requires the topic_regex argument to be set")
+		}
+
+		pattern, err := regexp.Compile(args.GlobalArgs.TopicRegex)
+		if err != nil {
+			return nil, fmt.Errorf("failed to compile topic regex: %s", err)
+		}
+
+		allTopics, err := GetAllTopicsFromJMX(producer)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get topics from client: %s", err)
+		}
+
+		filteredTopics := make([]string, 0, len(allTopics))
+		for _, topic := range allTopics {
+			if pattern.MatchString(topic) {
+				filteredTopics = append(filteredTopics, topic)
+			}
+		}
+
+		return filteredTopics, nil
+	case "all":
+		allTopics, err := GetAllTopicsFromJMX(producer)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get topics from client: %s", err)
+		}
+		return allTopics, nil
+	default:
+		log.Error("Invalid topic mode %s", args.GlobalArgs.TopicMode)
+		return nil, fmt.Errorf("invalid topic_mode '%s'", args.GlobalArgs.TopicMode)
+	}
+
+}
+
+func GetAllTopicsFromJMX(producer string) ([]string, error) {
+	result, err := jmxwrapper.JMXQuery(fmt.Sprintf("kafka.producer:type=producer-topic-metrics,client-id=%s,topic=*", producer), args.GlobalArgs.Timeout)
+	if err != nil {
+		return nil, err
+	}
+
+	r := regexp.MustCompile(`topic="?([^,"]+)"?`)
+	uniqueTopics := make(map[string]struct{})
+	for key := range result {
+		match := r.FindStringSubmatch(key)
+		if match == nil {
+			continue
+		}
+
+		uniqueTopics[match[1]] = struct{}{}
+	}
+
+	topics := make([]string, 0, len(uniqueTopics))
+	for topic := range uniqueTopics {
+		topics = append(topics, topic)
+	}
+
+	return topics, nil
 }

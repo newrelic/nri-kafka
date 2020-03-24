@@ -16,14 +16,18 @@ import (
 
 // StartWorkerPool starts a pool of workers to handle collecting data for wither Consumer or producer entities.
 // The channel returned is to be closed by the user (or by feedWorkerPool)
-func StartWorkerPool(poolSize int, wg *sync.WaitGroup, integration *integration.Integration, collectedTopics []string,
-	worker func(<-chan *args.JMXHost, *sync.WaitGroup, *integration.Integration, []string)) chan *args.JMXHost {
+func StartWorkerPool(
+	poolSize int,
+	wg *sync.WaitGroup,
+	integration *integration.Integration,
+	worker func(<-chan *args.JMXHost, *sync.WaitGroup, *integration.Integration),
+) chan *args.JMXHost {
 
 	jmxHostChan := make(chan *args.JMXHost)
 
 	for i := 0; i < poolSize; i++ {
 		wg.Add(1)
-		go worker(jmxHostChan, wg, integration, collectedTopics)
+		go worker(jmxHostChan, wg, integration)
 	}
 
 	return jmxHostChan
@@ -40,7 +44,7 @@ func FeedWorkerPool(jmxHostChan chan<- *args.JMXHost, jmxHosts []*args.JMXHost) 
 }
 
 // ConsumerWorker collects information for consumers sent down the consumerChan
-func ConsumerWorker(consumerChan <-chan *args.JMXHost, wg *sync.WaitGroup, i *integration.Integration, collectedTopics []string) {
+func ConsumerWorker(consumerChan <-chan *args.JMXHost, wg *sync.WaitGroup, i *integration.Integration) {
 	defer wg.Done()
 
 	for {
@@ -92,8 +96,7 @@ func ConsumerWorker(consumerChan <-chan *args.JMXHost, wg *sync.WaitGroup, i *in
 			metrics.GetConsumerMetrics(consumerEntity.Metadata.Name, sample)
 
 			// Collect metrics that are topic-specific per Consumer
-			metrics.CollectTopicSubMetrics(consumerEntity, "consumer", metrics.ConsumerTopicMetricDefs,
-				collectedTopics, metrics.ApplyConsumerTopicName)
+			metrics.CollectTopicSubMetrics(consumerEntity, "consumer", metrics.ConsumerTopicMetricDefs, metrics.ApplyConsumerTopicName)
 
 			log.Debug("Collecting metrics for consumer %s", consumerEntity.Metadata.Name)
 
@@ -105,7 +108,7 @@ func ConsumerWorker(consumerChan <-chan *args.JMXHost, wg *sync.WaitGroup, i *in
 }
 
 // ProducerWorker collect information for Producers sent down the producerChan
-func ProducerWorker(producerChan <-chan *args.JMXHost, wg *sync.WaitGroup, i *integration.Integration, collectedTopics []string) {
+func ProducerWorker(producerChan <-chan *args.JMXHost, wg *sync.WaitGroup, i *integration.Integration) {
 	defer wg.Done()
 	for {
 		jmxInfo, ok := <-producerChan
@@ -153,8 +156,7 @@ func ProducerWorker(producerChan <-chan *args.JMXHost, wg *sync.WaitGroup, i *in
 			metrics.GetProducerMetrics(producerEntity.Metadata.Name, sample)
 
 			// Collect metrics that are topic specific per Producer
-			metrics.CollectTopicSubMetrics(producerEntity, "producer", metrics.ProducerTopicMetricDefs,
-				collectedTopics, metrics.ApplyProducerTopicName)
+			metrics.CollectTopicSubMetrics(producerEntity, "producer", metrics.ProducerTopicMetricDefs, metrics.ApplyProducerTopicName)
 
 			log.Debug("Done Collecting metrics for producer %s", producerEntity.Metadata.Name)
 
