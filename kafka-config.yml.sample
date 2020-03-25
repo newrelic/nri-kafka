@@ -73,6 +73,17 @@ instances:
       # instance will be configured with `topic_bucket: 1/3`, one with `2/3`, and one with `3/3`
       topic_bucket: '1/3'
 
+      # block below needed if you have kafka ssl connections enforced.
+      # example on how to generate the cert and key pem files needed to work
+      # https://mapr.com/support/s/article/Convert-and-export-key-certificate-pair-from-jks-to-pkcs12-format?language=en_US
+      # key_store: /path/to/keystore.jks
+      # key_store_password: keystorepassword
+      # trust_store: /path/to/truststore.jks
+      # trust_store_password: truststorepassword
+      # client_cert: /path/to/cert.pem
+      # client_key: /path/to/key.pem
+      # root_ca: /path/to/CA.crt
+
     # Additionally, custom labels can be added to further identify your data
     labels:
       env: production
