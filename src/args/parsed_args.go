@@ -97,6 +97,9 @@ type BrokerHost struct {
 	JMXPort       int    `json:"jmx_port"`
 	JMXUser       string `json:"jmx_user"`
 	JMXPassword   string `json:"jmx_password"`
+	ClientKey     string `json:"client_key"`
+	ClientCert    string `json:"client_cert"`
+	RootCa        string `json:"root_ca"`
 }
 
 // JMXHost is a storage struct for producer and consumer connection information
@@ -140,6 +143,9 @@ func ParseArgs(a ArgumentList) (*ParsedArguments, error) {
 		JMXPort:       a.BootstrapBrokerJMXPort,
 		JMXUser:       a.BootstrapBrokerJMXUser,
 		JMXPassword:   a.BootstrapBrokerJMXPassword,
+		ClientKey:     a.ClientKey,
+		ClientCert:    a.ClientCert,
+		RootCa:        a.RootCa,
 	}
 
 	if brokerHost.JMXPort == 0 {

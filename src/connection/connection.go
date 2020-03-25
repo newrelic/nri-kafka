@@ -5,9 +5,11 @@ package connection
 
 import (
 	"crypto/tls"
+	"crypto/x509"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io/ioutil"
 	"regexp"
 	"strconv"
 
@@ -132,7 +134,38 @@ func NewBroker(brokerArgs *args.BrokerHost) (*Broker, error) {
 	case "SSL":
 		saramaBroker := sarama.NewBroker(address)
 		config := newSSLConfig()
-		err := saramaBroker.Open(newSSLConfig())
+		// there is probably a way better way of doing this, but want to confirm its the issue
+		// These 2 blocks are need when kafka ssl enforcement is turned on
+		// You need client cert, client key, and root ca
+		if brokerArgs.ClientCert != "" && brokerArgs.ClientKey != "" {
+			cert, err := tls.LoadX509KeyPair(brokerArgs.ClientCert, brokerArgs.ClientKey)
+			if err == nil {
+				config.Net.TLS.Config.Certificates = []tls.Certificate{cert}
+			} else {
+				log.Error("Error trying to use ssl certificate, going to proceed with out verifiying ssl: %s", err)
+			}
+		} else {
+			log.Error("cert args not set, you migh get a unkown authrity")
+		}
+		if brokerArgs.RootCa != "" {
+			// Load CA cert
+			caCert, err := ioutil.ReadFile(brokerArgs.RootCa)
+			if err != nil {
+				log.Error("Error trying to use rootCA, going to proceed: %s", err)
+			}
+			caCertPool := x509.NewCertPool()
+			caCertPool.AppendCertsFromPEM(caCert)
+			config.Net.TLS.Config.RootCAs = caCertPool
+			// This is needed when ssl authentication enforcement is turned on.
+			config.Net.TLS.Config.InsecureSkipVerify = false
+			config.Net.TLS.Config.Renegotiation = tls.RenegotiateOnceAsClient
+
+			config.Net.TLS.Config.BuildNameToCertificate()
+		} else {
+			log.Error("root CA not set, you migh get a unkown authrity")
+		}
+
+		err := saramaBroker.Open(config)
 		if err != nil {
 			return nil, fmt.Errorf("failed opening connection: %s", err)
 		}

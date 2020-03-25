@@ -44,6 +44,9 @@ type ArgumentList struct {
 	KeyStorePassword   string `default:"" help:"Password for the SSL Key Store"`
 	TrustStore         string `default:"" help:"The location for the keystore containing JMX Server's SSL certificate"`
 	TrustStorePassword string `default:"" help:"Password for the SSL Trust Store"`
+	ClientCert         string `default:"" help:"Full path to client certificate"`
+	ClientKey          string `default:"" help:"full path to client private key"`
+	RootCa             string `default:"" help:"full path to root ca"`
 
 	NrJmx string `default:"/usr/bin/nrjmx" help:"Path to the nrjmx executable"`
 
