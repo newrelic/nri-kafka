@@ -47,6 +47,13 @@ type ArgumentList struct {
 
 	NrJmx string `default:"/usr/bin/nrjmx" help:"Path to the nrjmx executable"`
 
+	// Kerberos auth args
+	SaslGssapiRealm              string `default:"" help:"Kerberos realm"`
+	SaslGssapiServiceName        string `default:"" help:"Kerberos service name"`
+	SaslGssapiUsername           string `default:"" help:"Kerberos username"`
+	SaslGssapiKeyTabPath         string `default:"" help:"Kerberos key tab path"`
+	SaslGssapiKerberosConfigPath string `default:"/etc/krb5.conf" help:"Kerberos config path"`
+
 	// Collection configuration
 	LocalOnlyCollection    bool   `default:"false" help:"Collect only the metrics related to the configured bootstrap broker. Useful for distributed metric collection"`
 	CollectBrokerTopicData bool   `default:"true" help:"DEPRECATED -- Signals to collect Broker and Topic inventory and metrics. Should only be turned off when specifying a Zookeeper Host and not intending to collect Broker or detailed Topic data."`
