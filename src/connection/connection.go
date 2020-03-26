@@ -1,6 +1,4 @@
-// go:generate mockery -name=Client -name=SaramaBroker
-
-// Package connection handles connecting to brokers via JMX and Kafka protocol
+//go:generate mockery -name=Client -name=SaramaBroker
 package connection
 
 import (
