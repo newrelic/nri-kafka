@@ -1,4 +1,6 @@
 //go:generate mockery -name=Client -name=SaramaBroker
+
+// Package connection implements connection code
 package connection
 
 import (
