@@ -1,6 +1,6 @@
 //go:generate mockery -name=Client -name=SaramaBroker
 
-// Package connection handles connecting to brokers via JMX and Kafka protocol
+// Package connection implements connection code
 package connection
 
 import (
@@ -35,6 +35,7 @@ type Client interface {
 	GetOffset(topic string, partitionID int32, time int64) (int64, error)
 	Coordinator(consumerGroup string) (*sarama.Broker, error)
 	RefreshCoordinator(consumerGroup string) error
+	RefreshController() (*sarama.Broker, error)
 	InitProducerID() (*sarama.InitProducerIDResponse, error)
 	Close() error
 	Closed() bool
@@ -154,7 +155,35 @@ func NewBroker(brokerArgs *args.BrokerHost) (*Broker, error) {
 		}
 		return newBroker, nil
 	case "SASL_PLAINTEXT":
-		return nil, fmt.Errorf("skipping %s://%s:%d because it uses unsupported protocol '%s'", brokerArgs.KafkaProtocol, brokerArgs.Host, brokerArgs.KafkaPort, brokerArgs.KafkaProtocol)
+		saramaBroker := sarama.NewBroker("kafka-kerb-1.bluemedora.localnet:9092")
+		config, err := newSASLPlaintextConfig()
+		if err != nil {
+			return nil, fmt.Errorf("create SASL_PLAINTEXT config: %s", err)
+		}
+
+		err = saramaBroker.Open(config)
+		if err != nil {
+			return nil, fmt.Errorf("failed opening connection: %s", err)
+		}
+		connected, err := saramaBroker.Connected()
+		if err != nil {
+			return nil, fmt.Errorf("failed checking if connection opened successfully: %s", err)
+		}
+		if !connected {
+			return nil, errors.New("broker is not connected")
+		}
+
+		// TODO figure out how to get the ID from the broker. ID() returns -1
+		newBroker := &Broker{
+			SaramaBroker: saramaBroker,
+			Host:         brokerArgs.Host,
+			JMXPort:      brokerArgs.JMXPort,
+			JMXUser:      brokerArgs.JMXUser,
+			JMXPassword:  brokerArgs.JMXPassword,
+			ID:           fmt.Sprintf("%d", saramaBroker.ID()),
+			Config:       config,
+		}
+		return newBroker, nil
 	case "SASL_SSL":
 		return nil, fmt.Errorf("skipping %s://%s:%d because it uses unsupported protocol '%s'", brokerArgs.KafkaProtocol, brokerArgs.Host, brokerArgs.KafkaPort, brokerArgs.KafkaProtocol)
 	default:
@@ -189,6 +218,31 @@ func newPlaintextConfig() *sarama.Config {
 	config.ClientID = "nri-kafka"
 
 	return config
+}
+
+func newSASLPlaintextConfig() (*sarama.Config, error) {
+	ga := args.GlobalArgs
+	if ga.SaslGssapiKerberosConfigPath == "" || ga.SaslGssapiKeyTabPath == "" || ga.SaslGssapiRealm == "" || ga.SaslGssapiServiceName == "" || ga.SaslGssapiUsername == "" {
+		return nil, fmt.Errorf("all sasl_gssapi_* arguments must be set for SASL_PLAINTEXT auth")
+	}
+
+	config := sarama.NewConfig()
+	config.Version = sarama.V2_0_0_0
+	config.ClientID = "nri-kafka"
+
+	config.Net.SASL.Enable = true
+	config.Net.SASL.Mechanism = sarama.SASLTypeGSSAPI
+
+	config.Net.SASL.GSSAPI = sarama.GSSAPIConfig{
+		AuthType:           sarama.KRB5_KEYTAB_AUTH,
+		Realm:              args.GlobalArgs.SaslGssapiRealm,
+		ServiceName:        args.GlobalArgs.SaslGssapiServiceName,
+		Username:           args.GlobalArgs.SaslGssapiUsername,
+		KeyTabPath:         args.GlobalArgs.SaslGssapiKeyTabPath,
+		KerberosConfigPath: args.GlobalArgs.SaslGssapiKerberosConfigPath,
+	}
+
+	return config, nil
 }
 
 func newSSLConfig() *sarama.Config {
