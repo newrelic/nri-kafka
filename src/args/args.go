@@ -29,6 +29,12 @@ type ArgumentList struct {
 	BootstrapBrokerJMXUser       string `default:"" help:"The JMX username for the bootstrap broker"`
 	BootstrapBrokerJMXPassword   string `default:"" help:"The JMX password for the bootstrap broker"`
 
+	// Broker TLS options
+	TLSCaFile             string `default:"" help:"CA file for broker connection"`
+	TLSCertFile           string `default:"" help:"Cert file for broker connection"`
+	TLSKeyFile            string `default:"" help:"Key file for broker connection"`
+	TLSInsecureSkipVerify bool   `default:"false" help:"Enabled TLS insecure skip verify"`
+
 	// Producer and consumer connection info. No autodiscovery is supported for producers and consumers
 	Producers string `default:"[]" help:"JSON array of producer key:value maps with the keys 'name', 'host', 'port', 'user', 'password'. The 'name' key is required, the others default to the specified defaults in the default_jmx_* options.  "`
 	Consumers string `default:"[]" help:"JSON array of consumer key:value maps with the keys 'name', 'host', 'port', 'user', 'password'. The 'name' key is required, the others default to the specified defaults in the default_jmx_* options.  "`

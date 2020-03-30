@@ -42,6 +42,12 @@ type ParsedArguments struct {
 	// Bootstrap discovery. Only required if AutodiscoverStrategy is `bootstrap`
 	BootstrapBroker *BrokerHost
 
+	// Broker TLS options
+	TLSCaFile             string
+	TLSCertFile           string
+	TLSKeyFile            string
+	TLSInsecureSkipVerify bool
+
 	// Producer and consumer connection info. No autodiscovery is supported for producers and consumers
 	Producers []*JMXHost
 	Consumers []*JMXHost
@@ -246,6 +252,10 @@ func ParseArgs(a ArgumentList) (*ParsedArguments, error) {
 		DefaultArgumentList:          a.DefaultArgumentList,
 		AutodiscoverStrategy:         a.AutodiscoverStrategy,
 		BootstrapBroker:              brokerHost,
+		TLSCaFile:                    a.TLSCaFile,
+		TLSCertFile:                  a.TLSCertFile,
+		TLSKeyFile:                   a.TLSKeyFile,
+		TLSInsecureSkipVerify:        a.TLSInsecureSkipVerify,
 		ClusterName:                  a.ClusterName,
 		KafkaVersion:                 version,
 		ZookeeperHosts:               zookeeperHosts,
