@@ -5,6 +5,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 2.12.0 (2019-03-30)
+### Added
+- TLS configuration for both SSL and SASL_SSL
+
 ## 2.11.3 (2019-03-26)
 ### Added
 - Kerberos authentication
