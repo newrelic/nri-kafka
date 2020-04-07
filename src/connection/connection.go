@@ -304,23 +304,26 @@ func newSaslSslConfig() (*sarama.Config, error) {
 	config.Net.TLS.Enable = true
 
 	config.Net.TLS.Config = &tls.Config{
-		RootCAs:            x509.NewCertPool(),
 		InsecureSkipVerify: args.GlobalArgs.TLSInsecureSkipVerify,
 	}
 
 	if args.GlobalArgs.TLSCaFile != "" {
+		certPool := x509.NewCertPool()
 		ca, err := ioutil.ReadFile(args.GlobalArgs.TLSCaFile)
 		if err != nil {
 			return nil, err
 		}
-		config.Net.TLS.Config.RootCAs.AppendCertsFromPEM(ca)
+		certPool.AppendCertsFromPEM(ca)
+		config.Net.TLS.Config.RootCAs = certPool
 	}
 
-	cert, err := tls.LoadX509KeyPair(args.GlobalArgs.TLSCertFile, args.GlobalArgs.TLSKeyFile)
-	if err != nil {
-		return nil, err
+	if args.GlobalArgs.TLSCertFile != "" && args.GlobalArgs.TLSKeyFile != "" {
+		cert, err := tls.LoadX509KeyPair(args.GlobalArgs.TLSCertFile, args.GlobalArgs.TLSKeyFile)
+		if err != nil {
+			return nil, err
+		}
+		config.Net.TLS.Config.Certificates = []tls.Certificate{cert}
 	}
-	config.Net.TLS.Config.Certificates = []tls.Certificate{cert}
 
 	return config, nil
 }
@@ -333,23 +336,26 @@ func newSSLConfig() (*sarama.Config, error) {
 	config.Net.TLS.Enable = true
 
 	config.Net.TLS.Config = &tls.Config{
-		RootCAs:            x509.NewCertPool(),
 		InsecureSkipVerify: args.GlobalArgs.TLSInsecureSkipVerify,
 	}
 
 	if args.GlobalArgs.TLSCaFile != "" {
+		certPool := x509.NewCertPool()
 		ca, err := ioutil.ReadFile(args.GlobalArgs.TLSCaFile)
 		if err == nil {
 			return nil, err
 		}
-		config.Net.TLS.Config.RootCAs.AppendCertsFromPEM(ca)
+		certPool.AppendCertsFromPEM(ca)
+		config.Net.TLS.Config.RootCAs = certPool
 	}
 
-	cert, err := tls.LoadX509KeyPair(args.GlobalArgs.TLSCertFile, args.GlobalArgs.TLSKeyFile)
-	if err != nil {
-		return nil, err
+	if args.GlobalArgs.TLSCertFile != "" && args.GlobalArgs.TLSKeyFile != "" {
+		cert, err := tls.LoadX509KeyPair(args.GlobalArgs.TLSCertFile, args.GlobalArgs.TLSKeyFile)
+		if err != nil {
+			return nil, err
+		}
+		config.Net.TLS.Config.Certificates = []tls.Certificate{cert}
 	}
-	config.Net.TLS.Config.Certificates = []tls.Certificate{cert}
 	return config, nil
 }
 
