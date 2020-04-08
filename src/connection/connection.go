@@ -411,7 +411,7 @@ func GetBrokerFromZookeeper(zkConn zookeeper.Connection, id, preferredListener s
 
 		// Skip this endpoint if it doesn't match the configured listener
 		if preferredListener != "" && preferredListener != listener {
-			log.Debug("Skipping endpoint '%s' because it doesn't match the preferredListener configured")
+			log.Debug("Skipping endpoint '%s' because it doesn't match the preferredListener configured", endpoint)
 			continue
 		}
 
