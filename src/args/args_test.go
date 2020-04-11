@@ -34,16 +34,19 @@ func TestParseArgs(t *testing.T) {
 		DefaultJMXHost:             "test-default-host",
 		DefaultJMXPort:             9998,
 		NrJmx:                      "/usr/bin/nrjmx",
-		CollectBrokerTopicData: true,
-		Producers:              `[{"name":"producer1", "host":"producerhost","user":"a1","password":"p1","port":9995},{"name":"producer2"}]`,
-		Consumers:              "[]",
-		TopicMode:              "Specific",
-		TopicList:              `["test1", "test2", "test3"]`,
-		TopicBucket:            `1/3`,
-		Timeout:                1000,
-		ConsumerOffset:         false,
-		ConsumerGroups:         "[]",
-		ConsumerGroupRegex:     ".*",
+		CollectBrokerTopicData:     true,
+		Producers:                  `[{"name":"producer1", "host":"producerhost","user":"a1","password":"p1","port":9995},{"name":"producer2"}]`,
+		Consumers:                  "[]",
+		TopicMode:                  "Specific",
+		TopicList:                  `["test1", "test2", "test3"]`,
+		TopicBucket:                `1/3`,
+		Timeout:                    1000,
+		ConsumerOffset:             false,
+		ConsumerGroups:             "[]",
+		ConsumerGroupRegex:         ".*",
+		SaslMechanism:              "PLAIN",
+		SaslUsername:               "admin3",
+		SaslPassword:               "secret1",
 	}
 
 	expectedArgs := &ParsedArguments{
@@ -97,6 +100,9 @@ func TestParseArgs(t *testing.T) {
 		ConsumerOffset:     false,
 		ConsumerGroups:     nil,
 		ConsumerGroupRegex: regexp.MustCompile(".*"),
+		SaslMechanism:      "PLAIN",
+		SaslUsername:       "admin3",
+		SaslPassword:       "secret1",
 	}
 	parsedArgs, err := ParseArgs(a)
 	assert.NoError(t, err)
@@ -144,6 +150,7 @@ func TestDefaultArgs(t *testing.T) {
 		ConsumerGroups:               nil,
 		ConsumerGroupRegex:           nil,
 		SaslGssapiKerberosConfigPath: "/etc/krb5.conf",
+		SaslMechanism:                "GSSAPI",
 	}
 
 	parsedArgs, err := ParseArgs(a)

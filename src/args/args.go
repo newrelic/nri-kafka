@@ -24,7 +24,7 @@ type ArgumentList struct {
 	// Bootstrap broker autodiscovery. Only required if using `bootstrap` as your AutodiscoverStrategy
 	BootstrapBrokerHost          string `default:"localhost" help:"The bootstrap broker host"`
 	BootstrapBrokerKafkaPort     int    `default:"9092" help:"The bootstrap broker Kafka port"`
-	BootstrapBrokerKafkaProtocol string `default:"PLAINTEXT" help:"The protocol to connect to the bootstrap broker with"`
+	BootstrapBrokerKafkaProtocol string `default:"PLAINTEXT" help:"The protocol to connect to the bootstrap broker with. One of 'PLAINTEXT', 'SSL', 'SASL_PLAINTEXT', or 'SASL_SSL'"`
 	BootstrapBrokerJMXPort       int    `default:"0" help:"The JMX port for the bootstrap broker"`
 	BootstrapBrokerJMXUser       string `default:"" help:"The JMX username for the bootstrap broker"`
 	BootstrapBrokerJMXPassword   string `default:"" help:"The JMX password for the bootstrap broker"`
@@ -52,6 +52,10 @@ type ArgumentList struct {
 	TrustStorePassword string `default:"" help:"Password for the SSL Trust Store"`
 
 	NrJmx string `default:"/usr/bin/nrjmx" help:"Path to the nrjmx executable"`
+
+	SaslMechanism string `default:"GSSAPI" help:"SASL mechanism to use for authentication. One of 'PLAIN', 'SCRAM-SHA-256', 'SCRAM-SHA-512', or 'GSSAPI'"`
+	SaslUsername  string `default:"" help:"SASL username for use with the PLAIN and SCRAM mechanisms"`
+	SaslPassword  string `default:"" help:"SASL password for use with the PLAIN and SCRAM mechanisms"`
 
 	// Kerberos auth args
 	SaslGssapiRealm              string `default:"" help:"Kerberos realm"`

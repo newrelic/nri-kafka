@@ -66,6 +66,10 @@ type ParsedArguments struct {
 
 	NrJmx string
 
+	SaslMechanism string
+	SaslUsername  string
+	SaslPassword  string
+
 	// Kerberos auth args
 	SaslGssapiRealm              string
 	SaslGssapiServiceName        string
@@ -116,6 +120,9 @@ type BrokerHost struct {
 	JMXPort       int    `json:"jmx_port"`
 	JMXUser       string `json:"jmx_user"`
 	JMXPassword   string `json:"jmx_password"`
+	SaslUsername  string `json:"sasl_username"`
+	SaslPassword  string `json:"sasl_password"`
+	SaslMechanism string `json:"sasl_mechanism"`
 }
 
 // JMXHost is a storage struct for producer and consumer connection information
@@ -157,6 +164,9 @@ func ParseArgs(a ArgumentList) (*ParsedArguments, error) {
 			JMXPort:       a.BootstrapBrokerJMXPort,
 			JMXUser:       a.BootstrapBrokerJMXUser,
 			JMXPassword:   a.BootstrapBrokerJMXPassword,
+			SaslMechanism: a.SaslMechanism,
+			SaslUsername:  a.SaslUsername,
+			SaslPassword:  a.SaslPassword,
 		}
 		if brokerHost.JMXPort == 0 {
 			brokerHost.JMXPort = defaultJMXPort
@@ -283,6 +293,9 @@ func ParseArgs(a ArgumentList) (*ParsedArguments, error) {
 		ConsumerOffset:               a.ConsumerOffset,
 		ConsumerGroups:               consumerGroups,
 		ConsumerGroupRegex:           consumerGroupRegex,
+		SaslMechanism:                a.SaslMechanism,
+		SaslUsername:                 a.SaslUsername,
+		SaslPassword:                 a.SaslPassword,
 		SaslGssapiRealm:              a.SaslGssapiRealm,
 		SaslGssapiServiceName:        a.SaslGssapiServiceName,
 		SaslGssapiUsername:           a.SaslGssapiUsername,

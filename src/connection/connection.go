@@ -104,11 +104,15 @@ func (b *Broker) Entity(i *integration.Integration) (*integration.Entity, error)
 // NewBroker creates a new broker
 func NewBroker(brokerArgs *args.BrokerHost) (*Broker, error) {
 	address := fmt.Sprintf("%s:%d", brokerArgs.Host, brokerArgs.KafkaPort)
+	protocol := brokerArgs.KafkaProtocol
 
-	switch brokerArgs.KafkaProtocol {
+	config := sarama.NewConfig()
+	config.Version = args.GlobalArgs.KafkaVersion
+	config.ClientID = "nri-kafka"
+
+	switch protocol {
 	case "PLAINTEXT":
 		saramaBroker := sarama.NewBroker(address)
-		config := newPlaintextConfig()
 		err := saramaBroker.Open(config)
 		if err != nil {
 			return nil, fmt.Errorf("failed opening connection: %s", err)
@@ -134,9 +138,10 @@ func NewBroker(brokerArgs *args.BrokerHost) (*Broker, error) {
 		return newBroker, nil
 	case "SSL":
 		saramaBroker := sarama.NewBroker(address)
-		config, err := newSSLConfig()
+
+		err := configureTLS(config)
 		if err != nil {
-			return nil, fmt.Errorf("build ssl config: %s", err)
+			return nil, fmt.Errorf("build TLS config: %v", err)
 		}
 
 		err = saramaBroker.Open(config)
@@ -160,41 +165,20 @@ func NewBroker(brokerArgs *args.BrokerHost) (*Broker, error) {
 			Config:       config,
 		}
 		return newBroker, nil
-	case "SASL_PLAINTEXT":
+	case "SASL_PLAINTEXT", "SASL_SSL":
+		var err error
 		saramaBroker := sarama.NewBroker(address)
-		config, err := newSASLPlaintextConfig()
+
+		err = configureSASL(config)
 		if err != nil {
-			return nil, fmt.Errorf("create SASL_PLAINTEXT config: %s", err)
+			return nil, fmt.Errorf("create %s config: %v", protocol, err)
 		}
 
-		err = saramaBroker.Open(config)
-		if err != nil {
-			return nil, fmt.Errorf("failed opening connection: %s", err)
-		}
-		connected, err := saramaBroker.Connected()
-		if err != nil {
-			return nil, fmt.Errorf("failed checking if connection opened successfully: %s", err)
-		}
-		if !connected {
-			return nil, errors.New("broker is not connected")
-		}
-
-		// TODO figure out how to get the ID from the broker. ID() returns -1
-		newBroker := &Broker{
-			SaramaBroker: saramaBroker,
-			Host:         brokerArgs.Host,
-			JMXPort:      brokerArgs.JMXPort,
-			JMXUser:      brokerArgs.JMXUser,
-			JMXPassword:  brokerArgs.JMXPassword,
-			ID:           fmt.Sprintf("%d", saramaBroker.ID()),
-			Config:       config,
-		}
-		return newBroker, nil
-	case "SASL_SSL":
-		saramaBroker := sarama.NewBroker(address)
-		config, err := newSaslSslConfig()
-		if err != nil {
-			return nil, fmt.Errorf("create SASL_SSL config: %s", err)
+		if protocol == "SASL_SSL" {
+			err = configureTLS(config)
+			if err != nil {
+				return nil, fmt.Errorf("build TLS config: %v", err)
+			}
 		}
 
 		err = saramaBroker.Open(config)
@@ -246,63 +230,47 @@ func NewSaramaClientFromBrokerList(brokers []*Broker) (Client, error) {
 	return client.(Client), nil
 }
 
-func newPlaintextConfig() *sarama.Config {
-	config := sarama.NewConfig()
-	config.Version = args.GlobalArgs.KafkaVersion
-	config.ClientID = "nri-kafka"
+func configureSASL(config *sarama.Config) error {
+	ga := args.GlobalArgs
+	config.Net.SASL.Enable = true
 
-	return config
+	if ga.SaslMechanism == sarama.SASLTypePlaintext {
+		config.Net.SASL.Mechanism = sarama.SASLTypePlaintext
+		config.Net.SASL.User = ga.SaslUsername
+		config.Net.SASL.Password = ga.SaslPassword
+	} else if ga.SaslMechanism == "GSSAPI" {
+		if ga.SaslGssapiKerberosConfigPath == "" || ga.SaslGssapiKeyTabPath == "" || ga.SaslGssapiRealm == "" || ga.SaslGssapiServiceName == "" || ga.SaslGssapiUsername == "" {
+			return fmt.Errorf("all sasl_gssapi_* arguments must be set for GSSAPI auth")
+		}
+
+		config.Net.SASL.Mechanism = sarama.SASLTypeGSSAPI
+		config.Net.SASL.GSSAPI = sarama.GSSAPIConfig{
+			AuthType:           sarama.KRB5_KEYTAB_AUTH,
+			Realm:              args.GlobalArgs.SaslGssapiRealm,
+			ServiceName:        args.GlobalArgs.SaslGssapiServiceName,
+			Username:           args.GlobalArgs.SaslGssapiUsername,
+			KeyTabPath:         args.GlobalArgs.SaslGssapiKeyTabPath,
+			KerberosConfigPath: args.GlobalArgs.SaslGssapiKerberosConfigPath,
+		}
+	} else if ga.SaslMechanism == sarama.SASLTypeSCRAMSHA256 {
+		config.Net.SASL.Mechanism = sarama.SASLTypeSCRAMSHA256
+		config.Net.SASL.User = ga.SaslUsername
+		config.Net.SASL.Password = ga.SaslPassword
+		config.Net.SASL.SCRAMClientGeneratorFunc = func() sarama.SCRAMClient { return &XDGSCRAMClient{HashGeneratorFcn: SHA256} }
+	} else if ga.SaslMechanism == sarama.SASLTypeSCRAMSHA512 {
+		config.Net.SASL.Mechanism = sarama.SASLTypeSCRAMSHA512
+		config.Net.SASL.User = ga.SaslUsername
+		config.Net.SASL.Password = ga.SaslPassword
+		config.Net.SASL.SCRAMClientGeneratorFunc = func() sarama.SCRAMClient { return &XDGSCRAMClient{HashGeneratorFcn: SHA512} }
+	} else {
+		return fmt.Errorf("Unexpected SASL mechanism '%s'", ga.SaslMechanism)
+	}
+
+	return nil
 }
 
-func newSASLPlaintextConfig() (*sarama.Config, error) {
-	ga := args.GlobalArgs
-	if ga.SaslGssapiKerberosConfigPath == "" || ga.SaslGssapiKeyTabPath == "" || ga.SaslGssapiRealm == "" || ga.SaslGssapiServiceName == "" || ga.SaslGssapiUsername == "" {
-		return nil, fmt.Errorf("all sasl_gssapi_* arguments must be set for SASL_PLAINTEXT auth")
-	}
-
-	config := sarama.NewConfig()
-	config.Version = sarama.V2_0_0_0
-	config.ClientID = "nri-kafka"
-
-	config.Net.SASL.Enable = true
-	config.Net.SASL.Mechanism = sarama.SASLTypeGSSAPI
-
-	config.Net.SASL.GSSAPI = sarama.GSSAPIConfig{
-		AuthType:           sarama.KRB5_KEYTAB_AUTH,
-		Realm:              args.GlobalArgs.SaslGssapiRealm,
-		ServiceName:        args.GlobalArgs.SaslGssapiServiceName,
-		Username:           args.GlobalArgs.SaslGssapiUsername,
-		KeyTabPath:         args.GlobalArgs.SaslGssapiKeyTabPath,
-		KerberosConfigPath: args.GlobalArgs.SaslGssapiKerberosConfigPath,
-	}
-
-	return config, nil
-}
-
-func newSaslSslConfig() (*sarama.Config, error) {
-	ga := args.GlobalArgs
-	if ga.SaslGssapiKerberosConfigPath == "" || ga.SaslGssapiKeyTabPath == "" || ga.SaslGssapiRealm == "" || ga.SaslGssapiServiceName == "" || ga.SaslGssapiUsername == "" {
-		return nil, fmt.Errorf("all sasl_gssapi_* arguments must be set for SASL_PLAINTEXT auth")
-	}
-
-	config := sarama.NewConfig()
-	config.Version = sarama.V2_0_0_0
-	config.ClientID = "nri-kafka"
-
-	config.Net.SASL.Enable = true
-	config.Net.SASL.Mechanism = sarama.SASLTypeGSSAPI
-
-	config.Net.SASL.GSSAPI = sarama.GSSAPIConfig{
-		AuthType:           sarama.KRB5_KEYTAB_AUTH,
-		Realm:              args.GlobalArgs.SaslGssapiRealm,
-		ServiceName:        args.GlobalArgs.SaslGssapiServiceName,
-		Username:           args.GlobalArgs.SaslGssapiUsername,
-		KeyTabPath:         args.GlobalArgs.SaslGssapiKeyTabPath,
-		KerberosConfigPath: args.GlobalArgs.SaslGssapiKerberosConfigPath,
-	}
-
+func configureTLS(config *sarama.Config) error {
 	config.Net.TLS.Enable = true
-
 	config.Net.TLS.Config = &tls.Config{
 		InsecureSkipVerify: args.GlobalArgs.TLSInsecureSkipVerify,
 	}
@@ -311,7 +279,7 @@ func newSaslSslConfig() (*sarama.Config, error) {
 		certPool := x509.NewCertPool()
 		ca, err := ioutil.ReadFile(args.GlobalArgs.TLSCaFile)
 		if err != nil {
-			return nil, err
+			return err
 		}
 		certPool.AppendCertsFromPEM(ca)
 		config.Net.TLS.Config.RootCAs = certPool
@@ -320,43 +288,12 @@ func newSaslSslConfig() (*sarama.Config, error) {
 	if args.GlobalArgs.TLSCertFile != "" && args.GlobalArgs.TLSKeyFile != "" {
 		cert, err := tls.LoadX509KeyPair(args.GlobalArgs.TLSCertFile, args.GlobalArgs.TLSKeyFile)
 		if err != nil {
-			return nil, err
+			return err
 		}
 		config.Net.TLS.Config.Certificates = []tls.Certificate{cert}
 	}
 
-	return config, nil
-}
-
-func newSSLConfig() (*sarama.Config, error) {
-	config := sarama.NewConfig()
-	config.ClientID = "nri-kafka"
-	config.Version = args.GlobalArgs.KafkaVersion
-
-	config.Net.TLS.Enable = true
-
-	config.Net.TLS.Config = &tls.Config{
-		InsecureSkipVerify: args.GlobalArgs.TLSInsecureSkipVerify,
-	}
-
-	if args.GlobalArgs.TLSCaFile != "" {
-		certPool := x509.NewCertPool()
-		ca, err := ioutil.ReadFile(args.GlobalArgs.TLSCaFile)
-		if err == nil {
-			return nil, err
-		}
-		certPool.AppendCertsFromPEM(ca)
-		config.Net.TLS.Config.RootCAs = certPool
-	}
-
-	if args.GlobalArgs.TLSCertFile != "" && args.GlobalArgs.TLSKeyFile != "" {
-		cert, err := tls.LoadX509KeyPair(args.GlobalArgs.TLSCertFile, args.GlobalArgs.TLSKeyFile)
-		if err != nil {
-			return nil, err
-		}
-		config.Net.TLS.Config.Certificates = []tls.Certificate{cert}
-	}
-	return config, nil
+	return nil
 }
 
 // GetBrokerListFromZookeeper gets a list of brokers from zookeeper
