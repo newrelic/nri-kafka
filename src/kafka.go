@@ -182,7 +182,7 @@ func ExitOnErr(err error) {
 // maxTopics is the maximum amount of Topics that can be collect.
 // If there are more than this number of Topics then collection of
 // Topics will fail.
-const maxTopics = 300
+const maxTopics = 10000
 
 func enforceTopicLimit(collectedTopics []string) []string {
 	if length := len(collectedTopics); length > maxTopics {
