@@ -5,6 +5,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 2.13.2 (2019-04-30)
+### Changed
+- Add host to producer and consumer entity IDs
+
 ## 2.13.1 (2019-04-30)
 ### Changed
 - Raise topic limit to 10000
