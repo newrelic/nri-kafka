@@ -55,7 +55,8 @@ func ConsumerWorker(consumerChan <-chan *args.JMXHost, wg *sync.WaitGroup, i *in
 
 		// Create an entity for the consumer
 		clusterIDAttr := integration.NewIDAttribute("clusterName", args.GlobalArgs.ClusterName)
-		consumerEntity, err := i.Entity(jmxInfo.Name, "ka-consumer", clusterIDAttr)
+		hostIDAttr := integration.NewIDAttribute("host", jmxInfo.Host)
+		consumerEntity, err := i.Entity(jmxInfo.Name, "ka-consumer", clusterIDAttr, hostIDAttr)
 		if err != nil {
 			log.Error("Unable to create entity for Consumer %s: %s", jmxInfo.Name, err.Error())
 			continue
@@ -117,7 +118,9 @@ func ProducerWorker(producerChan <-chan *args.JMXHost, wg *sync.WaitGroup, i *in
 		}
 
 		// Create the producer entity
-		producerEntity, err := i.Entity(jmxInfo.Name, "ka-producer")
+		clusterIDAttr := integration.NewIDAttribute("clusterName", args.GlobalArgs.ClusterName)
+		hostIDAttr := integration.NewIDAttribute("host", jmxInfo.Host)
+		producerEntity, err := i.Entity(jmxInfo.Name, "ka-producer", clusterIDAttr, hostIDAttr)
 		if err != nil {
 			log.Error("Unable to create entity for Producer %s: %s", jmxInfo.Name, err.Error())
 			continue
