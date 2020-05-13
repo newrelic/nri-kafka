@@ -372,6 +372,7 @@ func GetBrokerFromZookeeper(zkConn zookeeper.Connection, id, preferredListener s
 			log.Warn("Failed creating client: %s", err)
 			continue
 		}
+		newBroker.ID = id
 
 		return newBroker, nil
 	}
