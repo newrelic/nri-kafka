@@ -5,6 +5,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 2.13.4 (2019-05-29)
+### Fixed
+- Bug in which bootstrap broker collection would combine multi-broker collection results
+
 ## 2.13.3 (2019-05-29)
 ### Fixed
 - Broker ID mismatch

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"hash/fnv"
 	"os"
+	"strings"
 	"sync"
 
 	"github.com/Shopify/sarama"
@@ -22,7 +23,7 @@ import (
 
 const (
 	integrationName    = "com.newrelic.kafka"
-	integrationVersion = "2.13.3"
+	integrationVersion = "2.13.4"
 )
 
 func main() {
@@ -94,9 +95,14 @@ func getBrokerList(arguments *args.ParsedArguments) ([]*connection.Broker, error
 					return nil, errors.New("broker is not connected")
 				}
 
+				hostPort := strings.Split(broker.Addr(), ":")
+				if len(hostPort) != 2 {
+					return nil, fmt.Errorf("failed to get host from broker address: %s", broker.Addr())
+				}
+
 				newBroker := &connection.Broker{
 					SaramaBroker: broker,
-					Host:         arguments.BootstrapBroker.Host,
+					Host:         hostPort[0],
 					JMXPort:      arguments.BootstrapBroker.JMXPort,
 					JMXUser:      arguments.BootstrapBroker.JMXUser,
 					JMXPassword:  arguments.BootstrapBroker.JMXPassword,
