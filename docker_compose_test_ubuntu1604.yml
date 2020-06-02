@@ -4,7 +4,7 @@ services:
 
   unit:
     build:
-      context: docker/dockerfiles/ubuntu/ubuntu1404/
+      context: docker/dockerfiles/ubuntu/ubuntu1604/
       dockerfile: Dockerfile
     volumes:
       - ${PWD}:/go/src/github.com/jportasa/nri-kafka/
