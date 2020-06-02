@@ -1,0 +1,30 @@
+#name: Unit tests
+#on:
+#  push:
+#    branches: [ master ]
+#  pull_request:
+#    branches: [ master ]
+#
+#env:
+#  # TODO: Change variable to your image's name.
+#  IMAGE_NAME: image
+#
+#  Test-go-windows:
+#    runs-on: windows-2019
+#    steps:
+#      - name: Install Chocolatey
+#        shell: powershell
+#        run: Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))
+#      - name: Choco install Go
+#        uses: crazy-max/ghaction-chocolatey@v1
+#        with:
+#          args: install golang --version 1.14 -y
+#      - name: Choco install Make
+#        uses: crazy-max/ghaction-chocolatey@v1
+#        with:
+#          args: install make -y
+#      - name: Checkout
+#        uses: actions/checkout@v2
+#      - name: Run Go tests
+#        shell: cmd
+#        run:  go test ./src/

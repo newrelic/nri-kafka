@@ -1,0 +1,12 @@
+version: '3'
+
+services:
+
+  unit:
+    build:
+      context: docker/dockerfiles/ubuntu/ubuntu1404/
+      dockerfile: Dockerfile
+    volumes:
+      - ${PWD}:/go/src/github.com/jportasa/nri-kafka/
+    working_dir: /go/src/github.com/jportasa/nri-kafka/
+    command: bash -c "export GOPATH=/go/; export PATH=$PATH:/root/go/bin; make validate; make compile; make test"

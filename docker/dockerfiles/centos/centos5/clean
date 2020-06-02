@@ -1,0 +1,16 @@
+#! /bin/sh
+
+mystrip()
+{
+    if [ ! -z "$(file -b $1 | grep -E '^ELF.*, not stripped')" ]; then
+        echo stripping $1
+        strip $1
+    fi
+}
+
+export -f mystrip
+
+ldconfig
+find /usr/local/ -name "*.so*" -exec bash -c 'mystrip "$0"' {} \; || true
+find /usr/local/bin -exec bash -c 'mystrip "$0"' {} \; || true
+rm -rf /tmp/*
