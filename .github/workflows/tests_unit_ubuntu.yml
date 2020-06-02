@@ -10,7 +10,7 @@ env:
   IMAGE_NAME: image
 
 jobs:
-  Test-go-centos:
+  Test-go-ubuntu1604:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
