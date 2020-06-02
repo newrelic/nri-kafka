@@ -9,4 +9,4 @@ services:
     volumes:
       - ${PWD}:/go/src/github.com/jportasa/nri-kafka/
     working_dir: /go/src/github.com/jportasa/nri-kafka/
-    command: bash -c "export GOPATH=/go/; export PATH=$PATH:/root/go/bin; make validate; make compile; make test"
+    command: bash -c "export GOPATH=/go/; export PATH=$PATH:/root/go/bin; make test"
