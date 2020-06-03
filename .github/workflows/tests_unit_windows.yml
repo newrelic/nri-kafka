@@ -31,4 +31,5 @@ jobs:
         run: |
          pwd
          ls -la
+         export GOPATH=${PWD}
          make test
