@@ -37,5 +37,5 @@ jobs:
            $env:GOBIN = "d:\a\${{ github.event.repository.name }}\go\bin"
            $env:path = "$env:path;$env:GOBIN;C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\MSBuild\Current\Bin"
            go get github.com/josephspurrier/goversioninfo/cmd/goversioninfo
-           ./win_build.ps1
+           .\win_build.ps1
 
