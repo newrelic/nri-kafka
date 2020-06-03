@@ -12,7 +12,7 @@ $executable = "nri-$integrationName.exe"
 if (-not (Test-Path env:GOPATH)) {
 	Write-Error "GOPATH not defined."
 }
-$projectRootPath = Join-Path -Path $env:GOPATH -ChildPath "src\github.com\newrelic\$integration"
+$projectRootPath = Join-Path -Path $env:GOPATH -ChildPath "src\github.com\jportasa\$integration"
 
 $versionInfoTempl = Get-Childitem -Path $projectRootPath -Include "versioninfo.json.template" -Recurse -ErrorAction SilentlyContinue
 if ("$versionInfoTempl" -eq "") {
