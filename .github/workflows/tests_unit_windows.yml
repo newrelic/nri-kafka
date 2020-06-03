@@ -27,9 +27,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
       - name: Run Go tests
-        shell: bash
-        run: |
-         pwd
-         ls -la
-         export GOPATH=${PWD}
-         make test
+        shell: powershell
+        run: win_build.ps1
+
