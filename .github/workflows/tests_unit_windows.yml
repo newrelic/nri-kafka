@@ -11,6 +11,10 @@ env:
 
 jobs:
   Test-go-windows:
+    strategy:
+      matrix:
+        go: [ 1.14 ]
+        goarch: [ amd64 ]
     runs-on: windows-2019
     steps:
 #      - name: Install Chocolatey
@@ -39,5 +43,5 @@ jobs:
            $env:path = "$env:path;$env:GOBIN;C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\MSBuild\Current\Bin"
            go build ./...
            go get github.com/josephspurrier/goversioninfo/cmd/goversioninfo
-           .\win_build.ps1 -integration ${{ github.event.repository.name }}
+           .\win_build.ps1 -integration ${{ github.event.repository.name }} -arch ${{ matrix.goarch }}
 
