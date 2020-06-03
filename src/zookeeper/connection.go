@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/newrelic/infra-integrations-sdk/log"
-	"github.com/newrelic/nri-kafka/src/args"
+	"github.com/jportasa/infra-integrations-sdk/log"
+	"github.com/jportasa/nri-kafka/src/args"
 	"github.com/samuel/go-zookeeper/zk"
 )
 

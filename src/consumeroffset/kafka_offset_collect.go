@@ -6,11 +6,11 @@ import (
 	"sync"
 
 	"github.com/Shopify/sarama"
-	"github.com/newrelic/infra-integrations-sdk/data/metric"
-	"github.com/newrelic/infra-integrations-sdk/integration"
-	"github.com/newrelic/infra-integrations-sdk/log"
-	"github.com/newrelic/nri-kafka/src/args"
-	"github.com/newrelic/nri-kafka/src/connection"
+	"github.com/jportasa/infra-integrations-sdk/data/metric"
+	"github.com/jportasa/infra-integrations-sdk/integration"
+	"github.com/jportasa/infra-integrations-sdk/log"
+	"github.com/jportasa/nri-kafka/src/args"
+	"github.com/jportasa/nri-kafka/src/connection"
 )
 
 // getConsumerOffsets collects consumer offsets from Kafka brokers rather than Zookeeper

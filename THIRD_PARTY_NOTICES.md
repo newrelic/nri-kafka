@@ -8,7 +8,7 @@ In the event that a required notice is missing or incorrect, please notify us
 by e-mailing [open-source@newrelic.com](mailto:open-source@newrelic.com).
 
 For any licenses that require the disclosure of source code, the source code
-can be found at github.com/newrelic/nri-kafka.
+can be found at github.com/jportasa/nri-kafka.
 
 ## Contents
  
@@ -435,7 +435,7 @@ OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 ## newrelic/infra-integrations-sdk
 
-* Web: github.com/newrelic/infra-integrations-sdk
+* Web: github.com/jportasa/infra-integrations-sdk
 * License: Unknown
 
 ```

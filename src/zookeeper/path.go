@@ -3,7 +3,7 @@ package zookeeper
 import (
 	"fmt"
 
-	"github.com/newrelic/nri-kafka/src/args"
+	"github.com/jportasa/nri-kafka/src/args"
 )
 
 // Path takes a zookeeper path and prepends it with argument args.GlobalArgs

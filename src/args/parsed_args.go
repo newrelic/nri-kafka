@@ -8,8 +8,8 @@ import (
 	"strconv"
 
 	"github.com/Shopify/sarama"
-	sdkArgs "github.com/newrelic/infra-integrations-sdk/args"
-	"github.com/newrelic/infra-integrations-sdk/log"
+	sdkArgs "github.com/jportasa/infra-integrations-sdk/args"
+	"github.com/jportasa/infra-integrations-sdk/log"
 )
 
 // GlobalArgs represents the global arguments that were passed in

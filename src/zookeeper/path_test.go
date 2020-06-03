@@ -3,8 +3,8 @@ package zookeeper
 import (
 	"testing"
 
-	"github.com/newrelic/nri-kafka/src/args"
-	"github.com/newrelic/nri-kafka/src/testutils"
+	"github.com/jportasa/nri-kafka/src/args"
+	"github.com/jportasa/nri-kafka/src/testutils"
 )
 
 func TestPath(t *testing.T) {

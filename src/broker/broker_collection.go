@@ -9,14 +9,14 @@ import (
 
 	"github.com/Shopify/sarama"
 
-	"github.com/newrelic/infra-integrations-sdk/data/metric"
-	"github.com/newrelic/infra-integrations-sdk/integration"
-	"github.com/newrelic/infra-integrations-sdk/jmx"
-	"github.com/newrelic/infra-integrations-sdk/log"
-	"github.com/newrelic/nri-kafka/src/args"
-	"github.com/newrelic/nri-kafka/src/connection"
-	"github.com/newrelic/nri-kafka/src/jmxwrapper"
-	"github.com/newrelic/nri-kafka/src/metrics"
+	"github.com/jportasa/infra-integrations-sdk/data/metric"
+	"github.com/jportasa/infra-integrations-sdk/integration"
+	"github.com/jportasa/infra-integrations-sdk/jmx"
+	"github.com/jportasa/infra-integrations-sdk/log"
+	"github.com/jportasa/nri-kafka/src/args"
+	"github.com/jportasa/nri-kafka/src/connection"
+	"github.com/jportasa/nri-kafka/src/jmxwrapper"
+	"github.com/jportasa/nri-kafka/src/metrics"
 )
 
 // StartBrokerPool starts a pool of brokerWorkers to handle collecting data for Broker entities.

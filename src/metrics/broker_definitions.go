@@ -3,7 +3,7 @@ package metrics
 import (
 	"strings"
 
-	"github.com/newrelic/infra-integrations-sdk/data/metric"
+	"github.com/jportasa/infra-integrations-sdk/data/metric"
 )
 
 // Broker metrics

@@ -1,6 +1,6 @@
 /*
 Package jmx is a library to get metrics through JMX. It requires additional
-setup. Read https://github.com/newrelic/infra-integrations-sdk#jmx-support for
+setup. Read https://github.com/jportasa/infra-integrations-sdk#jmx-support for
 instructions. */
 package jmx
 
@@ -17,7 +17,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/newrelic/infra-integrations-sdk/log"
+	"github.com/jportasa/infra-integrations-sdk/log"
 )
 
 const (

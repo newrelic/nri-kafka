@@ -14,10 +14,10 @@ import (
 	"strconv"
 
 	"github.com/Shopify/sarama"
-	"github.com/newrelic/infra-integrations-sdk/integration"
-	"github.com/newrelic/infra-integrations-sdk/log"
-	"github.com/newrelic/nri-kafka/src/args"
-	"github.com/newrelic/nri-kafka/src/zookeeper"
+	"github.com/jportasa/infra-integrations-sdk/integration"
+	"github.com/jportasa/infra-integrations-sdk/log"
+	"github.com/jportasa/nri-kafka/src/args"
+	"github.com/jportasa/nri-kafka/src/zookeeper"
 )
 
 // Client is a wrapper around sarama.Client so that we can generate mocks

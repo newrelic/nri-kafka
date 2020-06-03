@@ -6,11 +6,11 @@ import (
 	"time"
 
 	"github.com/Shopify/sarama"
-	"github.com/newrelic/infra-integrations-sdk/data/inventory"
-	"github.com/newrelic/infra-integrations-sdk/integration"
-	"github.com/newrelic/nri-kafka/src/args"
-	"github.com/newrelic/nri-kafka/src/connection/mocks"
-	"github.com/newrelic/nri-kafka/src/testutils"
+	"github.com/jportasa/infra-integrations-sdk/data/inventory"
+	"github.com/jportasa/infra-integrations-sdk/integration"
+	"github.com/jportasa/nri-kafka/src/args"
+	"github.com/jportasa/nri-kafka/src/connection/mocks"
+	"github.com/jportasa/nri-kafka/src/testutils"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )

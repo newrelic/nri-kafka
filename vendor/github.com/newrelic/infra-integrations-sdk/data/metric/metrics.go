@@ -6,7 +6,7 @@ import (
 	"sort"
 	"strconv"
 
-	"github.com/newrelic/infra-integrations-sdk/persist"
+	"github.com/jportasa/infra-integrations-sdk/persist"
 	"github.com/pkg/errors"
 )
 

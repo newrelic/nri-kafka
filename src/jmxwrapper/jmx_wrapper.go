@@ -1,11 +1,11 @@
-// Package jmxwrapper contains varaibles for using github.com/newrelic/infra-integrations-sdk/jmx package
+// Package jmxwrapper contains varaibles for using github.com/jportasa/infra-integrations-sdk/jmx package
 // while allowing everything to be mocked for testing.
 package jmxwrapper
 
 import (
 	"sync"
 
-	"github.com/newrelic/infra-integrations-sdk/jmx"
+	"github.com/jportasa/infra-integrations-sdk/jmx"
 )
 
 // JMX variable

@@ -6,8 +6,8 @@ import (
 	"testing"
 
 	"github.com/Shopify/sarama"
-	sdkArgs "github.com/newrelic/infra-integrations-sdk/args"
-	"github.com/newrelic/infra-integrations-sdk/integration"
+	sdkArgs "github.com/jportasa/infra-integrations-sdk/args"
+	"github.com/jportasa/infra-integrations-sdk/integration"
 	"github.com/stretchr/testify/assert"
 )
 

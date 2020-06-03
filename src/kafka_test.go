@@ -4,7 +4,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/newrelic/nri-kafka/src/args"
+	"github.com/jportasa/nri-kafka/src/args"
 	"github.com/stretchr/testify/assert"
 )
 

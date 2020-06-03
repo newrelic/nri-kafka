@@ -8,11 +8,11 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/newrelic/infra-integrations-sdk/data/metric"
-	"github.com/newrelic/infra-integrations-sdk/integration"
-	"github.com/newrelic/infra-integrations-sdk/log"
-	"github.com/newrelic/nri-kafka/src/args"
-	"github.com/newrelic/nri-kafka/src/jmxwrapper"
+	"github.com/jportasa/infra-integrations-sdk/data/metric"
+	"github.com/jportasa/infra-integrations-sdk/integration"
+	"github.com/jportasa/infra-integrations-sdk/log"
+	"github.com/jportasa/nri-kafka/src/args"
+	"github.com/jportasa/nri-kafka/src/jmxwrapper"
 )
 
 // GetBrokerMetrics collects all Broker JMX metrics and stores them in sample

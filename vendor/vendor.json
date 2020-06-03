@@ -99,54 +99,54 @@
 			"revisionTime": "2018-05-06T08:24:08Z"
 		},
 		{
-			"path": "github.com/newrelic/infra-integrations-sdk...",
+			"path": "github.com/jportasa/infra-integrations-sdk...",
 			"revision": ""
 		},
 		{
 			"checksumSHA1": "ZfId5ZYn7jmL0xTxooHcxrLlXoA=",
-			"path": "github.com/newrelic/infra-integrations-sdk/args",
+			"path": "github.com/jportasa/infra-integrations-sdk/args",
 			"revision": "d20f61f8131bc4098cdc34c0e3d206c4783dd2b2",
 			"revisionTime": "2019-11-14T09:00:00Z"
 		},
 		{
 			"checksumSHA1": "yU9Wr91yeGkqhQqVhwgeQ3xQgJU=",
-			"path": "github.com/newrelic/infra-integrations-sdk/data/event",
+			"path": "github.com/jportasa/infra-integrations-sdk/data/event",
 			"revision": "d20f61f8131bc4098cdc34c0e3d206c4783dd2b2",
 			"revisionTime": "2019-11-14T09:00:00Z"
 		},
 		{
 			"checksumSHA1": "EOoxXGqFDPkCvj7wec2S5kCXY2I=",
-			"path": "github.com/newrelic/infra-integrations-sdk/data/inventory",
+			"path": "github.com/jportasa/infra-integrations-sdk/data/inventory",
 			"revision": "d20f61f8131bc4098cdc34c0e3d206c4783dd2b2",
 			"revisionTime": "2019-11-14T09:00:00Z"
 		},
 		{
 			"checksumSHA1": "pyalPjuL/fgXjdxXlwI92sLSG8M=",
-			"path": "github.com/newrelic/infra-integrations-sdk/data/metric",
+			"path": "github.com/jportasa/infra-integrations-sdk/data/metric",
 			"revision": "d20f61f8131bc4098cdc34c0e3d206c4783dd2b2",
 			"revisionTime": "2019-11-14T09:00:00Z"
 		},
 		{
 			"checksumSHA1": "DdUizp/J5c7mAFZg2hoz4rRPOYM=",
-			"path": "github.com/newrelic/infra-integrations-sdk/integration",
+			"path": "github.com/jportasa/infra-integrations-sdk/integration",
 			"revision": "d20f61f8131bc4098cdc34c0e3d206c4783dd2b2",
 			"revisionTime": "2019-11-14T09:00:00Z"
 		},
 		{
 			"checksumSHA1": "Cz0x0qEmD9hIDSBaBVRQI4EUxwM=",
-			"path": "github.com/newrelic/infra-integrations-sdk/jmx",
+			"path": "github.com/jportasa/infra-integrations-sdk/jmx",
 			"revision": "d20f61f8131bc4098cdc34c0e3d206c4783dd2b2",
 			"revisionTime": "2019-11-14T09:00:00Z"
 		},
 		{
 			"checksumSHA1": "6/DhD+/LhC/k3NaLgkpd6iE8b5E=",
-			"path": "github.com/newrelic/infra-integrations-sdk/log",
+			"path": "github.com/jportasa/infra-integrations-sdk/log",
 			"revision": "d20f61f8131bc4098cdc34c0e3d206c4783dd2b2",
 			"revisionTime": "2019-11-14T09:00:00Z"
 		},
 		{
 			"checksumSHA1": "BsHp62Etporko0d+4GpVxrP2qtw=",
-			"path": "github.com/newrelic/infra-integrations-sdk/persist",
+			"path": "github.com/jportasa/infra-integrations-sdk/persist",
 			"revision": "d20f61f8131bc4098cdc34c0e3d206c4783dd2b2",
 			"revisionTime": "2019-11-14T09:00:00Z"
 		},
@@ -471,5 +471,5 @@
 			"revisionTime": "2019-10-02T18:33:36Z"
 		}
 	],
-	"rootPath": "github.com/newrelic/nri-kafka"
+	"rootPath": "github.com/jportasa/nri-kafka"
 }

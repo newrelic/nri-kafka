@@ -3,8 +3,8 @@ package integration
 import (
 	"io"
 
-	"github.com/newrelic/infra-integrations-sdk/log"
-	"github.com/newrelic/infra-integrations-sdk/persist"
+	"github.com/jportasa/infra-integrations-sdk/log"
+	"github.com/jportasa/infra-integrations-sdk/persist"
 )
 
 // Option sets an option on integration level.

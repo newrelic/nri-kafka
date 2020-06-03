@@ -12,7 +12,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/newrelic/infra-integrations-sdk/log"
+	"github.com/jportasa/infra-integrations-sdk/log"
 )
 
 const (

@@ -3,8 +3,8 @@ package connection
 import (
 	"testing"
 
-	"github.com/newrelic/nri-kafka/src/testutils"
-	"github.com/newrelic/nri-kafka/src/zookeeper"
+	"github.com/jportasa/nri-kafka/src/testutils"
+	"github.com/jportasa/nri-kafka/src/zookeeper"
 	"github.com/samuel/go-zookeeper/zk"
 	"github.com/stretchr/testify/assert"
 )

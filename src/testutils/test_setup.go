@@ -2,9 +2,9 @@
 package testutils
 
 import (
-	"github.com/newrelic/infra-integrations-sdk/jmx"
-	"github.com/newrelic/nri-kafka/src/args"
-	"github.com/newrelic/nri-kafka/src/jmxwrapper"
+	"github.com/jportasa/infra-integrations-sdk/jmx"
+	"github.com/jportasa/nri-kafka/src/args"
+	"github.com/jportasa/nri-kafka/src/jmxwrapper"
 )
 
 // SetupTestArgs sets up a basic value for KafkaArgs with CollectBrokerTopicData

@@ -11,9 +11,9 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/newrelic/infra-integrations-sdk/args"
-	"github.com/newrelic/infra-integrations-sdk/log"
-	"github.com/newrelic/infra-integrations-sdk/persist"
+	"github.com/jportasa/infra-integrations-sdk/args"
+	"github.com/jportasa/infra-integrations-sdk/log"
+	"github.com/jportasa/infra-integrations-sdk/persist"
 )
 
 // Custom attribute keys:

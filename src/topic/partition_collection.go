@@ -3,8 +3,8 @@ package topic
 import (
 	"sync"
 
-	"github.com/newrelic/infra-integrations-sdk/log"
-	"github.com/newrelic/nri-kafka/src/connection"
+	"github.com/jportasa/infra-integrations-sdk/log"
+	"github.com/jportasa/nri-kafka/src/connection"
 )
 
 // partition is a storage struct for information about partitions

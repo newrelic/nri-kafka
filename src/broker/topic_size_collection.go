@@ -3,13 +3,13 @@ package broker
 import (
 	"fmt"
 
-	"github.com/newrelic/infra-integrations-sdk/data/metric"
-	"github.com/newrelic/infra-integrations-sdk/integration"
-	"github.com/newrelic/infra-integrations-sdk/log"
-	"github.com/newrelic/nri-kafka/src/args"
-	"github.com/newrelic/nri-kafka/src/connection"
-	"github.com/newrelic/nri-kafka/src/jmxwrapper"
-	"github.com/newrelic/nri-kafka/src/metrics"
+	"github.com/jportasa/infra-integrations-sdk/data/metric"
+	"github.com/jportasa/infra-integrations-sdk/integration"
+	"github.com/jportasa/infra-integrations-sdk/log"
+	"github.com/jportasa/nri-kafka/src/args"
+	"github.com/jportasa/nri-kafka/src/connection"
+	"github.com/jportasa/nri-kafka/src/jmxwrapper"
+	"github.com/jportasa/nri-kafka/src/metrics"
 )
 
 func gatherTopicSizes(b *connection.Broker, topicSampleLookup map[string]*metric.Set, i *integration.Integration) {

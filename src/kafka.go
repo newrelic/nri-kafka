@@ -10,15 +10,15 @@ import (
 	"sync"
 
 	"github.com/Shopify/sarama"
-	"github.com/newrelic/infra-integrations-sdk/integration"
-	"github.com/newrelic/infra-integrations-sdk/log"
-	"github.com/newrelic/nri-kafka/src/args"
-	"github.com/newrelic/nri-kafka/src/broker"
-	"github.com/newrelic/nri-kafka/src/client"
-	"github.com/newrelic/nri-kafka/src/connection"
-	"github.com/newrelic/nri-kafka/src/consumeroffset"
-	"github.com/newrelic/nri-kafka/src/topic"
-	"github.com/newrelic/nri-kafka/src/zookeeper"
+	"github.com/jportasa/infra-integrations-sdk/integration"
+	"github.com/jportasa/infra-integrations-sdk/log"
+	"github.com/jportasa/nri-kafka/src/args"
+	"github.com/jportasa/nri-kafka/src/broker"
+	"github.com/jportasa/nri-kafka/src/client"
+	"github.com/jportasa/nri-kafka/src/connection"
+	"github.com/jportasa/nri-kafka/src/consumeroffset"
+	"github.com/jportasa/nri-kafka/src/topic"
+	"github.com/jportasa/nri-kafka/src/zookeeper"
 )
 
 const (

@@ -5,7 +5,7 @@
     discovery:
       command:
         # Run NRI Discovery for Kubernetes
-        # https://github.com/newrelic/nri-discovery-kubernetes
+        # https://github.com/jportasa/nri-discovery-kubernetes
         exec: /var/db/newrelic-infra/nri-discovery-kubernetes
         match:
           label.app: "kafka"
