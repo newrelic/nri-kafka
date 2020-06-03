@@ -24,12 +24,16 @@ jobs:
 #        uses: crazy-max/ghaction-chocolatey@v1
 #        with:
 #          args: install make -y
-      - name: Checkout
-        uses: actions/checkout@v2
+    - name: Check out code into the Go module directory
+      uses: actions/checkout@v1
+      with:
+        fetch-depth: 1
+        path: go/src/github.com/jportasa/${{ github.event.repository.name }}
+
       - name: Run Go tests
         shell: powershell
         run: |
         $env:GOPATH = "d:\a\${{ github.event.repository.name }}\go"
         $env:GOBIN = "d:\a\${{ github.event.repository.name }}\go\bin"
-        .\win_build.ps1
+        ./win_build.ps1
 
