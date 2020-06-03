@@ -29,6 +29,12 @@ jobs:
 #        with:
 #          args: install make -y
 
+       - name: Setting EnvVariable to checkout newLine char properly
+         shell: bash
+         run: |
+           git config --system core.autocrlf false
+           git config --system core.eol lf
+
        - name: Check out code into the Go module directory
          uses: actions/checkout@v1
          with:
@@ -43,5 +49,5 @@ jobs:
            $env:path = "$env:path;$env:GOBIN;C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\MSBuild\Current\Bin"
            go build ./...
            go get github.com/josephspurrier/goversioninfo/cmd/goversioninfo
-           .\win_build.ps1 -integration ${{ github.event.repository.name }} -arch ${{ matrix.goarch }}
+           .\win_build.ps1 -integration ${{ github.event.repository.name }}
 
