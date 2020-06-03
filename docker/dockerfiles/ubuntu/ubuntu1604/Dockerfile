@@ -11,3 +11,4 @@ RUN curl https://storage.googleapis.com/golang/go$GO_VERSION.linux-amd64.tar.gz 
 
 # Let's people find our Go binaries
 ENV PATH $PATH:/root/go/bin
+ENV GOPATH /root/go
