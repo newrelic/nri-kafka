@@ -1,0 +1,13 @@
+version: '3'
+
+services:
+
+  unit:
+    build:
+      context: docker/dockerfiles/windows/nanoserver
+      dockerfile: Dockerfile
+    volumes:
+      - ${PWD}:c:/repo
+    working_dir: /repo
+    command: bash -c "sleep 10000; make test-deps"
+
