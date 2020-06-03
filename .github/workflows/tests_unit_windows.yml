@@ -35,5 +35,5 @@ jobs:
          run: |
            $env:GOPATH = "d:\a\${{ github.event.repository.name }}\go"
            $env:GOBIN = "d:\a\${{ github.event.repository.name }}\go\bin"
-           ./win_build.ps1 -installer false
+           ./win_build.ps1
 
