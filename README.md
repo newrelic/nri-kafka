@@ -1,4 +1,6 @@
-[![Community Project header](https://github.com/newrelic/open-source-office/raw/master/examples/categories/images/Community_Project.png)](https://github.com/newrelic/open-source-office/blob/master/examples/categories/index.md#community-project)# New Relic infrastructure integration for Kafka
+[![Community Project header](https://github.com/newrelic/open-source-office/raw/master/examples/categories/images/Community_Project.png)](https://github.com/newrelic/open-source-office/blob/master/examples/categories/index.md#community-project)
+
+# New Relic infrastructure integration for Kafka
 
 The New Relic infrastructure integration for Kafka captures critical performance metrics and inventory reported by Kafka clusters. Data on Brokers, Topics, Java Producers, and Java Consumers is collected.
 
