@@ -5,11 +5,13 @@ package metrics
 import (
 	"errors"
 	"fmt"
+	"os"
 	"regexp"
 	"strings"
 
 	"github.com/newrelic/infra-integrations-sdk/data/metric"
 	"github.com/newrelic/infra-integrations-sdk/integration"
+	"github.com/newrelic/infra-integrations-sdk/jmx"
 	"github.com/newrelic/infra-integrations-sdk/log"
 	"github.com/newrelic/nri-kafka/src/args"
 	"github.com/newrelic/nri-kafka/src/jmxwrapper"
@@ -74,8 +76,11 @@ func CollectBrokerRequestMetrics(sample *metric.Set, metricSets []*JMXMetricSet)
 		// Return all the results under a specific mBean
 		results, err := jmxwrapper.JMXQuery(beanName, args.GlobalArgs.Timeout)
 		// If we fail we don't want a total failure as other metrics can be collected even if a single failure/timout occurs
-		if err != nil {
-			log.Error("Unable to execute JMX query for MBean '%s': %s", beanName, err.Error())
+		if err != nil && err == jmx.ErrConnection {
+			log.Error("Connection error: %s", err)
+			os.Exit(1)
+		} else if err != nil {
+			log.Error("Unable to execute JMX query for MBean '%s': %s", beanName, err)
 			continue
 		}
 
@@ -127,7 +132,10 @@ func CollectMetricDefinitions(sample *metric.Set, metricSets []*JMXMetricSet, be
 		// Return all the results under a specific mBean
 		results, err := jmxwrapper.JMXQuery(beanName, args.GlobalArgs.Timeout)
 		// If we fail we don't want a total failure as other metrics can be collected even if a single failure/timout occurs
-		if err != nil {
+		if err != nil && err == jmx.ErrConnection {
+			log.Error("Connection error: %s", err)
+			os.Exit(1)
+		} else if err != nil {
 			log.Error("Unable to execute JMX query for MBean '%s': %s", beanName, err.Error())
 			continue
 		}
@@ -198,7 +206,10 @@ func getTopicListFromJMX(producer string) ([]string, error) {
 
 func getAllTopicsFromJMX(producer string) ([]string, error) {
 	result, err := jmxwrapper.JMXQuery(fmt.Sprintf("kafka.producer:type=producer-topic-metrics,client-id=%s,topic=*", producer), args.GlobalArgs.Timeout)
-	if err != nil {
+	if err != nil && err == jmx.ErrConnection {
+		log.Error("Connection error: %s", err)
+		os.Exit(1)
+	} else if err != nil {
 		return nil, err
 	}
 

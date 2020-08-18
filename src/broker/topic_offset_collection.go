@@ -2,9 +2,11 @@ package broker
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/newrelic/infra-integrations-sdk/data/metric"
 	"github.com/newrelic/infra-integrations-sdk/integration"
+	"github.com/newrelic/infra-integrations-sdk/jmx"
 	"github.com/newrelic/infra-integrations-sdk/log"
 	"github.com/newrelic/nri-kafka/src/args"
 	"github.com/newrelic/nri-kafka/src/connection"
@@ -24,7 +26,10 @@ func gatherTopicOffset(b *connection.Broker, topicSampleLookup map[string]*metri
 
 		beanName := beanModifier(metrics.TopicOffsetMetricDef.MBean)
 		results, err := jmxwrapper.JMXQuery(beanName, args.GlobalArgs.Timeout)
-		if err != nil {
+		if err != nil && err == jmx.ErrConnection {
+			log.Error("Connection error: %s", err)
+			os.Exit(1)
+		} else if err != nil {
 			log.Error("Broker '%s' failed to make JMX Query: %s", b.Host, err.Error())
 			continue
 		} else if len(results) == 0 {
