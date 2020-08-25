@@ -135,7 +135,7 @@ instances:
 
   # Example configuration for collecting JMX metrics form consumers and producers
   - name: kafka-producer-consumer-metrics
-    command: consumer_offset
+    command: metrics
     arguments:
       cluster_name: "testcluster3"
 
