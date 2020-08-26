@@ -5,6 +5,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 2.13.6 (2019-08-26)
+### Fixed
+- Incorrect command in sample log
+
 ## 2.13.5 (2019-08-18)
 ### Fixed
 - Exit after a connection error is returned from a JMX query
