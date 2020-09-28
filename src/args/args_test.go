@@ -34,6 +34,7 @@ func TestParseArgs(t *testing.T) {
 		DefaultJMXHost:             "test-default-host",
 		DefaultJMXPort:             9998,
 		NrJmx:                      "/usr/bin/nrjmx",
+
 		CollectBrokerTopicData: true,
 		Producers:              `[{"name":"producer1", "host":"producerhost","user":"a1","password":"p1","port":9995},{"name":"producer2"}]`,
 		Consumers:              "[]",
