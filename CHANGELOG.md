@@ -5,6 +5,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 2.13.7 (2019-09-28)
+### Changed
+- Updated Sarama to latest version
+
 ## 2.13.6 (2019-08-26)
 ### Fixed
 - Incorrect command in sample log
