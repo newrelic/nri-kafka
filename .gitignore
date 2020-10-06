@@ -38,3 +38,7 @@ Session.vim
 # VSCode
 .vscode
 debug
+
+# Goreleaser
+dist/
+bin/
