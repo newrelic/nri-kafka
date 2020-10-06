@@ -48,7 +48,7 @@ nfpms:
     # Formats to be generated.
     formats:
       - deb
-    bindir: "/var/db/newrelic-infra/newrelic-integrations/bin"
+    bindir: /var/db/newrelic-infra/newrelic-integrations/bin
     files:
       "kafka-config.yml.sample": "/etc/newrelic-infra/integrations.d"
       "kafka-definition.yml": "/var/db/newrelic-infra/newrelic-integrations"
@@ -70,7 +70,7 @@ nfpms:
     # Formats to be generated.
     formats:
       - rpm
-    bindir: "/var/db/newrelic-infra/newrelic-integrations/bin"
+    bindir: /var/db/newrelic-infra/newrelic-integrations/bin
     files:
       "kafka-config.yml.sample": "/etc/newrelic-infra/integrations.d"
       "kafka-definition.yml": "/var/db/newrelic-infra/newrelic-integrations"
