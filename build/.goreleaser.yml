@@ -48,13 +48,15 @@ nfpms:
     # Formats to be generated.
     formats:
       - deb
-    bindir: /usr/bin #/var/db/newrelic-infra/newrelic-integrations/bin
+    bindir: /var/db/newrelic-infra/newrelic-integrations/bin
     files:
       "kafka-config.yml.sample": "/etc/newrelic-infra/integrations.d"
       "kafka-definition.yml": "/var/db/newrelic-infra/newrelic-integrations"
       "CHANGELOG.md": "/usr/share/doc/nri-kafka"
       "README.md":  "/usr/share/doc/nri-kafka"
       "LICENSE": "/usr/share/doc/nri-kafka"
+    empty_folders:
+      - "/var/db/newrelic-infra/newrelic-integrations/bin"
     dependencies:
       - "newrelic-infra"
 
@@ -84,16 +86,16 @@ nfpms:
 #        replacements:
 #          amd64: 1.x86_64
 
-archives:
-  - id: nri-kafka-nix
-    builds:
-      - nri-kafka-nix
-    name_template: "{{ .ProjectName }}_{{ .Os }}_{{ .Version }}_{{ .Arch }}_dirty"
-    files:
-      - kafka-config.yml.sample
-      - kafka-definition.yml
-      # installation scripts?
-    format: tar.gz
+#archives:
+#  - id: nri-kafka-nix
+#    builds:
+#      - nri-kafka-nix
+#    name_template: "{{ .ProjectName }}_{{ .Os }}_{{ .Version }}_{{ .Arch }}_dirty"
+#    files:
+#      - kafka-config.yml.sample
+#      - kafka-definition.yml
+#      # installation scripts?
+#    format: tar.gz
 
 #  - id: nri-kafka-win
 #    builds:
