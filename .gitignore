@@ -42,3 +42,4 @@ debug
 # Goreleaser
 bin/
 dist/
+.idea/
