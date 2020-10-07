@@ -40,5 +40,5 @@ Session.vim
 debug
 
 # Goreleaser
-dist/
 bin/
+dist/
