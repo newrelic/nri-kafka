@@ -2,10 +2,13 @@
 set -e
 #
 #
-# Sign RPM's and push /dist artifacts to GH Release Assets
+#
+# Sign RPM's & DEB's in /dist artifacts to GH Release Assets
 #
 #
 #
+
+# Sign RPM's
 echo "===> Create .rpmmacros to sign rpm's from Goreleaser"
 echo "%_gpg_name ${GPG_MAIL}" >> ~/.rpmmacros
 echo "%_signature gpg" >> ~/.rpmmacros
@@ -21,10 +24,25 @@ gpg --export -a ${GPG_MAIL} > /tmp/RPM-GPG-KEY-${GPG_MAIL}
 rpm --import /tmp/RPM-GPG-KEY-${GPG_MAIL}
 
 cd dist
+
 # TODO @cciutea - review this step
 for rpm_file in $(find -regex ".*\.\(rpm\)");do
   echo "===> Signing $rpm_file"
   rpm --addsign $rpm_file
   echo "===> Sign verification $rpm_file"
   rpm -v --checksig $rpm_file
+done
+
+# Sign DEB's
+GNUPGHOME="/root/.gnupg"
+echo "${GPG_PASSPHRASE}" > "${GNUPGHOME}/gpg-passphrase"
+echo "passphrase-file ${GNUPGHOME}/gpg-passphrase" >> "$GNUPGHOME/gpg.conf"
+echo 'allow-loopback-pinentry' >> "${GNUPGHOME}/gpg-agent.conf"
+echo 'pinentry-mode loopback' >> "${GNUPGHOME}/gpg.conf"
+echo 'use-agent' >> "${GNUPGHOME}/gpg.conf"
+echo RELOADAGENT | gpg-connect-agent
+
+for deb_file in $(find -regex ".*\.\(deb\)");do
+  echo "===> Signing $deb_file"
+  debsigs --sign=origin --verify --check -v -k ${GPG_MAIL} $deb_file
 done

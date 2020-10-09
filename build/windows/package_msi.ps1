@@ -9,7 +9,8 @@ param (
     [string]$arch="amd64",
     [string]$tag="v0.0.0",
     [string]$pfx_certificate_base64="none",
-    [string]$pfx_passphrase="none"
+    [string]$pfx_passphrase="none",
+    [string]$pfx_certificate_description="none"
 )
 
 $buildYear = (Get-Date).Year
@@ -47,7 +48,7 @@ echo $msBuild
 echo "===> Building Installer"
 Push-Location -Path "build\package\windows\nri-$arch-installer"
 
-. $msBuild/MSBuild.exe nri-installer.wixproj /p:IntegrationVersion=${version} /p:IntegrationName=$integration /p:Year=$buildYear
+. $msBuild/MSBuild.exe nri-installer.wixproj /p:IntegrationVersion=${version} /p:IntegrationName=$integration /p:Year=$buildYear /p:pfx_certificate_description=$pfx_certificate_description
 
 if (-not $?)
 {
@@ -59,7 +60,5 @@ if (-not $?)
 echo "===> Making versioned installed copy"
 cd bin\Release
 cp "nri-$integration-$arch.msi" "nri-$integration-$arch.$version.msi"
-# todo: why do we need this?
-cp "nri-$integration-$arch.msi" "nri-$integration.msi"
 
 Pop-Location

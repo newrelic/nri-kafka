@@ -5,6 +5,8 @@ RUN apt-get update \
         rpm \
         hub \
         gnupg2 \
+        gpg-agent \
+        debsigs \
         unzip \
         zip \
     && go get golang.org/dl/go1.9.7 \

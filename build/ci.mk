@@ -53,7 +53,6 @@ ifdef TAG
 			-e GPG_MAIL \
 			-e GPG_PASSPHRASE \
 			-e GPG_PRIVATE_KEY_BASE64 \
-			-e NRJMX_VERSION \
 			$(BUILDER_TAG) make release
 else
 	@echo "TAG env variable expected to be set"
