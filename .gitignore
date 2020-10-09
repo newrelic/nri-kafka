@@ -47,3 +47,8 @@ dist/
 .env
 .envrc
 *.gpg
+
+
+# build files
+src/versioninfo.json
+src/resource.syso
