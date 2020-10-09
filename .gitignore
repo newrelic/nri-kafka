@@ -39,7 +39,11 @@ Session.vim
 .vscode
 debug
 
-# Goreleaser
+# Local development tools/files
 bin/
 dist/
-.idea/
+
+.idea
+.env
+.envrc
+*.gpg
