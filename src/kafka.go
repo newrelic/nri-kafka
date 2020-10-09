@@ -23,7 +23,7 @@ import (
 )
 
 const (
-	integrationName    = "com.newrelic.kafka"
+	integrationName = "com.newrelic.kafka"
 )
 
 var (
