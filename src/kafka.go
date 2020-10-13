@@ -39,7 +39,7 @@ func main() {
 
 	if argList.ShowVersion {
 		fmt.Printf(
-			"New Relic %s integration \nVersion: %s \nPlatform: %s \nGoVersion: %s \nGitCommit: %s\n",
+			"New Relic %s integration Version: %s, Platform: %s, GoVersion: %s, GitCommit: %s\n",
 			strings.Title(strings.Replace(integrationName, "com.newrelic.", "", 1)),
 			integrationVersion,
 			targetPlatformArch,
