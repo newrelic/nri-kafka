@@ -29,7 +29,7 @@ const (
 var (
 	integrationVersion = "0.0.0"
 	gitCommit          = ""
-	targetPlatformArch = ""
+	buildDate          = ""
 )
 
 func main() {
@@ -39,12 +39,13 @@ func main() {
 
 	if argList.ShowVersion {
 		fmt.Printf(
-			"New Relic %s integration Version: %s, Platform: %s, GoVersion: %s, GitCommit: %s\n",
+			"New Relic %s integration Version: %s, Platform: %s, GoVersion: %s, GitCommit: %s, BuildDate: %s\n",
 			strings.Title(strings.Replace(integrationName, "com.newrelic.", "", 1)),
 			integrationVersion,
-			targetPlatformArch,
+			fmt.Sprintf("%s/%s", runtime.GOOS, runtime.GOARCH),
 			runtime.Version(),
-			gitCommit)
+			gitCommit,
+			buildDate)
 		os.Exit(0)
 	}
 

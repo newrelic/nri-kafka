@@ -12,7 +12,7 @@ builds:
     binary: nri-kafka
     gobinary: "go1.9.7"
     ldflags:
-      - -s -w -X main.integrationVersion={{.Version}} -X main.gitCommit={{.Commit}} -X main.targetPlatformArch={{.Os}}/{{.Arch}}
+      - -s -w -X main.integrationVersion={{.Version}} -X main.gitCommit={{.Commit}} -X main.targetPlatformArch={{.Os}}/{{.Arch}} -X main.buildDate={{.Date}}
     goos:
       - linux
       - darwin
@@ -30,7 +30,7 @@ builds:
     binary: nri-kafka
     gobinary: "go1.9.7"
     ldflags:
-      - -s -w -X main.integrationVersion={{.Version}} -X main.gitCommit={{.Commit}} -X main.targetPlatformArch={{.Os}}/{{.Arch}}
+      - -s -w -X main.integrationVersion={{.Version}} -X main.gitCommit={{.Commit}} -X main.targetPlatformArch={{.Os}}/{{.Arch}} -X main.buildDate={{.Date}}
     goos:
       - windows
     goarch:
