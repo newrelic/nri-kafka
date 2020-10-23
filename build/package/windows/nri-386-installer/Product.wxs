@@ -2,7 +2,7 @@
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
     <?define Version = "$(var.IntegrationVersion)" ?>
     <?define ProductId = "*" ?>
-    <?define UpgradeCode = "{a19e7c00-8735-4d10-9dc0-0f645f3542a0}" ?>
+    <?define UpgradeCode = "{a592ff01-8b28-4a35-9e3b-19c30164794e}" ?>
 
     <Product Id="$(var.ProductId)"
              Name="New Relic Infrastructure Integration, nri-$(var.IntegrationName)"
@@ -29,6 +29,9 @@
             <ComponentGroupRef Id="CustomPluginsBinComponent"/>
             <ComponentGroupRef Id="CustomPluginsComponent"/>
             <ComponentGroupRef Id="PluginConfigsComponent"/>
+            <ComponentRef Id="CMP_V1_NRJMX_DIRECTORY"/>
+            <ComponentGroupRef Id="CMP_GRP_NRJMX_JAR"/>
+            <ComponentGroupRef Id="CMP_GRP_NRJMX_BAT"/>
         </Feature>
     </Product>
 
@@ -49,17 +52,17 @@
 
     <Fragment>
         <DirectoryRef Id="PluginConfigsFolder">
-            <Component Id="CMP_V1_PLUGIN_CONFIGS" Guid="8d74979f-92d7-471a-973f-30d59ec39bef" KeyPath="yes">
+            <Component Id="CMP_V1_PLUGIN_CONFIGS" Guid="803C978C-B2A1-47C7-BB17-A2DE9E6D3145" KeyPath="yes">
                 <CreateFolder/>
             </Component>
         </DirectoryRef>
         <DirectoryRef Id="CustomPluginsFolder">
-            <Component Id="CMP_V1_CUSTOM_PLUGINS" Guid="3c0a1117-0a03-44f9-8d4f-1bfdf08b1250" KeyPath="yes">
+            <Component Id="CMP_V1_CUSTOM_PLUGINS" Guid="0EE4AAF4-9923-499C-A1D0-FF55B205A76C" KeyPath="yes">
                 <CreateFolder/>
             </Component>
         </DirectoryRef>
         <DirectoryRef Id="CustomPluginsBinFolder">
-            <Component Id="CMP_V1_CUSTOM_PLUGINS_BIN" Guid="a4cb8913-e778-4312-bf9c-a0e4f5481aaa" KeyPath="yes">
+            <Component Id="CMP_V1_CUSTOM_PLUGINS_BIN" Guid="e4509a7a-409e-4a38-8705-37de9cf0d72d" KeyPath="yes">
                 <CreateFolder/>
             </Component>
         </DirectoryRef>
@@ -67,7 +70,7 @@
 
     <Fragment>
         <ComponentGroup Id="CustomPluginsBinComponent" Directory="CustomPluginsBinFolder">
-            <Component Id="CMP_NRI_$(var.IntegrationName)_EXE" Guid="0114d18e-5e8d-4d89-9dde-3417d580f1b2" Win64="no">
+            <Component Id="CMP_NRI_$(var.IntegrationName)_EXE" Guid="615d1eff-9a67-4386-b47d-836cbb7fa87f" Win64="no">
                 <File Id="FILE_NRI_$(var.IntegrationName)_EXE"
                       Source="$(var.BinariesPath)New Relic\newrelic-infra\newrelic-integrations\bin\nri-$(var.IntegrationName).exe"
                       KeyPath="yes"/>
@@ -79,7 +82,7 @@
             </Component>
         </ComponentGroup>
         <ComponentGroup Id="CustomPluginsComponent" Directory="CustomPluginsFolder">
-            <Component Id="CMP_NRI_$(var.IntegrationName)_DEFINITION_YML" Guid="298a75f0-7d2e-4401-97d9-f9da0c748280" Win64="no">
+            <Component Id="CMP_NRI_$(var.IntegrationName)_DEFINITION_YML" Guid="c8d36adc-419f-45a7-9f3c-997b18e09155" Win64="no">
                 <File Id="FILE_NRI_$(var.IntegrationName)_DEFINITION_YML"
                       Name="$(var.IntegrationName)-win-definition.yml"
                       Source="$(var.BinariesPath)New Relic\newrelic-infra\newrelic-integrations\$(var.IntegrationName)-win-definition.yml"
@@ -87,11 +90,44 @@
             </Component>
         </ComponentGroup>
         <ComponentGroup Id="PluginConfigsComponent" Directory="PluginConfigsFolder">
-            <Component Id="CMP_NRI_$(var.IntegrationName)_CONFIG_YML" Guid="e98578e6-9c8f-47e4-a99c-509a014a34fd" Win64="no"
+            <Component Id="CMP_NRI_$(var.IntegrationName)_CONFIG_YML" Guid="5aedd0b1-e05d-4f8d-aa65-0683fd01b3d6" Win64="no"
                        NeverOverwrite="yes" Permanent="yes">
                 <File Id="FILE_NRI_$(var.IntegrationName)_CONFIG_YML"
                       Name="$(var.IntegrationName)-win-config.yml.sample"
                       Source="$(var.BinariesPath)New Relic\newrelic-infra\integrations.d\$(var.IntegrationName)-win-config.yml.sample"
+                      KeyPath="yes"/>
+            </Component>
+        </ComponentGroup>
+    </Fragment>
+
+    <Fragment>
+        <DirectoryRef Id="NrjmxDirectory">
+            <Component Id="CMP_V1_NRJMX_DIRECTORY" Guid="e4ed6da6-b45c-4d0e-abf9-8adee95aed3c" KeyPath="yes">
+                <CreateFolder/>
+            </Component>
+        </DirectoryRef>
+    </Fragment>
+
+    <Fragment>
+        <ComponentGroup Id="CMP_GRP_NRJMX_JAR" Directory="NrjmxDirectory">
+            <Component Id="CMP_NRJMX_JAR" Guid="9ac6648a-d7e4-4c85-8240-8208bddc57b5" Win64="no">
+                <RemoveFile Id="RM_FILE_NRJMX_JAR"
+                            Name="nrjmx.jar"
+                            On="install" />
+                <File Id="FILE_NRJMX_JAR"
+                      Source="$(var.ProjectRootPath)nrjmx.jar"
+                      Name="nrjmx.jar"
+                      KeyPath="yes"/>
+            </Component>
+        </ComponentGroup>
+        <ComponentGroup Id="CMP_GRP_NRJMX_BAT" Directory="NrjmxDirectory">
+            <Component Id="CMP_NRJMX_BAT" Guid="fb3b675c-4905-45bd-a37f-8a9fb9dc2baf" Win64="no">
+                <RemoveFile Id="RM_FILE_NRJMX_BAT"
+                            Name="nrjmx.bat"
+                            On="install" />
+                <File Id="FILE_NRJMX_BAT"
+                      Source="$(var.ProjectRootPath)nrjmx.bat"
+                      Name="nrjmx.bat"
                       KeyPath="yes"/>
             </Component>
         </ComponentGroup>
