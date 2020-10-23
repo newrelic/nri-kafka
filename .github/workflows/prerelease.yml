@@ -112,7 +112,7 @@ jobs:
         shell: pwsh
         run: |
           build\windows\download_zip_extract_exe.ps1 "$env:INTEGRATION" ${{ matrix.goarch }} "$env:TAG" "$env:REPO_FULL_NAME"
-      - name: Embbed jmx
+      - name: Embed jmx
         env:
           JMX_REPO: 'newrelic/nrjmx'
         shell: bash
