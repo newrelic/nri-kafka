@@ -10,13 +10,13 @@ on:
 env:
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   GO_VERSION: '1.9.7'
-  GPG_MAIL: 'info@newrelic.com'
+  GPG_MAIL: 'infrastructure-eng@newrelic.com'
   GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
   GPG_PRIVATE_KEY_BASE64: ${{ secrets.GPG_PRIVATE_KEY_BASE64 }} # base64 encoded
   INTEGRATION: "kafka"
   ORIGINAL_REPO_NAME: 'newrelic/nri-kafka'
   PFX_CERTIFICATE_BASE64: ${{ secrets.PFX_CERTIFICATE_BASE64 }} # base64 encoded
-  PFX_CERTIFICATE_DESCRIPTION: 'Contoso'
+  PFX_CERTIFICATE_DESCRIPTION: 'New Relic'
   PFX_PASSPHRASE:  ${{ secrets.PFX_PASSPHRASE }}
   REPO_FULL_NAME: ${{ github.event.repository.full_name }}
   SLACK_TOKEN: ${{ secrets.SLACK_TOKEN }}
@@ -75,7 +75,7 @@ jobs:
   prerelease:
     name: Build binary for *Nix/Win, create archives for *Nix/Win, create packages for *Nix, upload all artifacts into GH Release assets
     runs-on: ubuntu-20.04
-    needs: [validate, test-nix, test-windows]
+    needs: [validate, test-nix, test-windows, snyk]
     steps:
       - uses: actions/checkout@v2
       - name: Pre release
