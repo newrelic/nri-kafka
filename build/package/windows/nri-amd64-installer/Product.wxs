@@ -45,6 +45,7 @@
                             <Directory Id="CustomPluginsBinFolder" Name="bin"/>
                         </Directory>
                     </Directory>
+                    <Directory Id="NrjmxDirectory" Name="nrjmx" />
                 </Directory>
             </Directory>
         </Directory>
@@ -115,7 +116,7 @@
                             Name="nrjmx.jar"
                             On="install" />
                 <File Id="FILE_NRJMX_JAR"
-                      Source="$(var.ProjectRootPath)nrjmx-$(env.NRJMX_VERSION).jar"
+                      Source="$(var.ProjectRootPath)nrjmx.jar"
                       Name="nrjmx.jar"
                       KeyPath="yes"/>
             </Component>
