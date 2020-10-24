@@ -41,10 +41,11 @@
                 <Directory Id="CompanyFolder" Name="New Relic">
                     <Directory Id="AgentBinaryFolder" Name="newrelic-infra">
                         <Directory Id="PluginConfigsFolder" Name="integrations.d"/>
-                        <Directory Id="CustomPluginsFolder" Name="newrelic-integrations">
-                            <Directory Id="CustomPluginsBinFolder" Name="bin"/>
+                            <Directory Id="CustomPluginsFolder" Name="newrelic-integrations">
+                                <Directory Id="CustomPluginsBinFolder" Name="bin"/>
                         </Directory>
                     </Directory>
+                    <Directory Id="NrjmxDirectory" Name="nrjmx" />
                 </Directory>
             </Directory>
         </Directory>
