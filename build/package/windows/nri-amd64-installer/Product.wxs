@@ -45,6 +45,7 @@
                             <Directory Id="CustomPluginsBinFolder" Name="bin"/>
                         </Directory>
                     </Directory>
+                    <Directory Id="NrjmxDirectory" Name="nrjmx" />
                 </Directory>
             </Directory>
         </Directory>
