@@ -52,15 +52,8 @@ func Collect(client connection.Client, kafkaIntegration *integration.Integration
 
 		var unmatchedConsumerGroups []string
 		var wg sync.WaitGroup
-		numCollected := 0
-		skippedConsumerGroups := []string{}
 		for _, consumerGroup := range consumerGroups {
 			if args.GlobalArgs.ConsumerGroupRegex.MatchString(consumerGroup.GroupId) {
-				numCollected++
-				if numCollected > 200 {
-					skippedConsumerGroups = append(skippedConsumerGroups, consumerGroup.GroupId)
-					continue
-				}
 				wg.Add(1)
 				go collectOffsetsForConsumerGroup(client, clusterAdmin, consumerGroup.GroupId, consumerGroup.Members, kafkaIntegration, &wg)
 			} else {
@@ -70,10 +63,6 @@ func Collect(client connection.Client, kafkaIntegration *integration.Integration
 
 		if len(unmatchedConsumerGroups) > 0 {
 			log.Debug("Skipped collecting consumer offsets for unmatched consumer groups %v", unmatchedConsumerGroups)
-		}
-
-		if len(skippedConsumerGroups) > 0 {
-			log.Debug("Reached 200 consumer group limit. Skipping consumer groups %v", skippedConsumerGroups)
 		}
 
 		wg.Wait()
