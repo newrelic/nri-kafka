@@ -97,7 +97,7 @@ archives:
       - nri-win
     name_template: "{{ .ProjectName }}-{{ .Arch }}.{{ .Version }}_dirty"
     files:
-      - kafka-win-config.yml.sample
+      - kafka-config.yml.sample
       - kafka-win-definition.yml
     format: zip
 
