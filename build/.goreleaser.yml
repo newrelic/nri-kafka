@@ -54,6 +54,7 @@ nfpms:
       "kafka-definition.yml": "/var/db/newrelic-infra/newrelic-integrations/kafka-definition.yml"
     dependencies:
       - "newrelic-infra"
+      - "nrjmx"
 
   - id: nri-rpm
     builds:
@@ -77,6 +78,7 @@ nfpms:
       "kafka-definition.yml": "/var/db/newrelic-infra/newrelic-integrations/kafka-definition.yml"
     dependencies:
       - "newrelic-infra"
+      - "nrjmx"
     overrides:
       rpm:
         replacements:
