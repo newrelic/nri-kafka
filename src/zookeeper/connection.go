@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/go-zookeeper/zk"
 	"github.com/newrelic/infra-integrations-sdk/log"
 	"github.com/newrelic/nri-kafka/src/args"
-	"github.com/samuel/go-zookeeper/zk"
 )
 
 // Connection interface to allow easy mocking of a Zookeeper connection

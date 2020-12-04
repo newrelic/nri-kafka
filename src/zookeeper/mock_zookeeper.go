@@ -1,7 +1,7 @@
 package zookeeper
 
 import (
-	"github.com/samuel/go-zookeeper/zk"
+	"github.com/go-zookeeper/zk"
 	"github.com/stretchr/testify/mock"
 )
 
