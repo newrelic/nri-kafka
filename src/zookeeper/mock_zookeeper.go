@@ -21,3 +21,8 @@ func (m *MockConnection) Children(s string) ([]string, *zk.Stat, error) {
 	args := m.Called(s)
 	return args.Get(0).([]string), args.Get(1).(*zk.Stat), args.Error(2)
 }
+
+// Close does nothing
+func (m *MockConnection) Close() {
+	// do nothing
+}

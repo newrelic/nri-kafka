@@ -14,6 +14,7 @@ import (
 type Connection interface {
 	Get(string) ([]byte, *zk.Stat, error)
 	Children(string) ([]string, *zk.Stat, error)
+	Close()
 }
 
 type zookeeperConnection struct {
@@ -32,6 +33,12 @@ type zookeeperLogger struct{}
 
 func (z zookeeperLogger) Printf(format string, args ...interface{}) {
 	log.Debug(format, args...)
+}
+
+// Close closes the zookeeper connection. You will need to create a new connection after you close this one.
+func (z zookeeperConnection) Close() {
+	z.inner.Close()
+	z.inner = nil
 }
 
 // NewConnection creates a new Connection with the given arguments.
@@ -63,6 +70,7 @@ func NewConnection(kafkaArgs *args.ParsedArguments) (Connection, error) {
 	if kafkaArgs.ZookeeperAuthScheme != "" {
 		if err = zkConn.AddAuth(kafkaArgs.ZookeeperAuthScheme, []byte(kafkaArgs.ZookeeperAuthSecret)); err != nil {
 			log.Error("Failed to Authenticate to Zookeeper: %s", err.Error())
+			zkConn.Close()
 			return nil, err
 		}
 	}
