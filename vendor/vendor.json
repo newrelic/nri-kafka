@@ -35,12 +35,6 @@
 			"revisionTime": "2018-02-27T14:14:24Z"
 		},
 		{
-			"checksumSHA1": "aal26fgtxj7sXIkgKAZwOZuNLg0=",
-			"path": "github.com/go-zookeeper/zk",
-			"revision": "54f48128ea8ce6e8431de54415a1f965757ddb65",
-			"revisionTime": "2020-03-20T15:10:12Z"
-		},
-		{
 			"checksumSHA1": "4gKrTOaoNvbAgDCVfSLd6J77oPw=",
 			"path": "github.com/golang/snappy",
 			"revision": "ff6b7dc882cf4cfba7ee0b9f7dcc1ac096c554aa",
@@ -93,6 +87,22 @@
 			"path": "github.com/klauspost/compress/zstd/internal/xxhash",
 			"revision": "30993c63e1b02b47dd3878e74c8db50833706ecc",
 			"revisionTime": "2019-10-10T13:32:28Z"
+		},
+		{
+			"checksumSHA1": "3ohk4dFYrERZ6WTdKkIwnTA0HSI=",
+			"path": "github.com/kr/pretty",
+			"revision": "73f6ac0b30a98e433b289500d779f50c1a6f0712",
+			"revisionTime": "2018-05-06T08:33:45Z"
+		},
+		{
+			"checksumSHA1": "SbguDK5lY8uhaHNrmJmNbiWIGM0=",
+			"path": "github.com/kr/text",
+			"revision": "e2ffdb16a802fe2bb95e2e35ff34f0e53aeef34f",
+			"revisionTime": "2018-05-06T08:24:08Z"
+		},
+		{
+			"path": "github.com/newrelic/infra-integrations-sdk...",
+			"revision": ""
 		},
 		{
 			"checksumSHA1": "ZfId5ZYn7jmL0xTxooHcxrLlXoA=",
@@ -171,6 +181,12 @@
 			"path": "github.com/rcrowley/go-metrics",
 			"revision": "cac0b30c2563378d434b5af411844adff8e32960",
 			"revisionTime": "2019-08-26T02:22:08Z"
+		},
+		{
+			"checksumSHA1": "Vdjr+0mTbBmbiKNC+T0n4IrnF6M=",
+			"path": "github.com/samuel/go-zookeeper/zk",
+			"revision": "2cc03de413da42869e2db7ce7965d3e978d917eb",
+			"revisionTime": "2019-09-23T20:27:52Z"
 		},
 		{
 			"checksumSHA1": "tLHFmMOC2eMcXYaPXfifUVj3wX4=",

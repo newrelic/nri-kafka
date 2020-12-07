@@ -19,6 +19,7 @@ var GlobalArgs *ParsedArguments
 const (
 	defaultZookeeperPort = 2181
 	defaultJMXPort       = 9999
+	defaultKafkaPort     = 9092
 )
 
 // ParsedArguments is an special version of the config arguments that has advanced parsing
