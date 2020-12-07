@@ -124,6 +124,10 @@ func getBrokerList(arguments *args.ParsedArguments) ([]*connection.Broker, error
 		if err != nil {
 			return nil, fmt.Errorf("failed to create zookeeper connection: %s", err)
 		}
+		defer func(conn zookeeper.Connection) {
+			conn.Close()
+		}(zkConn)
+
 		return connection.GetBrokerListFromZookeeper(zkConn, arguments.PreferredListener)
 	default:
 		return nil, fmt.Errorf("invalid autodiscovery strategy %s", arguments.AutodiscoverStrategy)

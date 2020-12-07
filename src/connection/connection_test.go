@@ -3,9 +3,9 @@ package connection
 import (
 	"testing"
 
+	"github.com/go-zookeeper/zk"
 	"github.com/newrelic/nri-kafka/src/testutils"
 	"github.com/newrelic/nri-kafka/src/zookeeper"
-	"github.com/samuel/go-zookeeper/zk"
 	"github.com/stretchr/testify/assert"
 )
 
