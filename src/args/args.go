@@ -51,7 +51,7 @@ type ArgumentList struct {
 	TrustStore         string `default:"" help:"The location for the keystore containing JMX Server's SSL certificate"`
 	TrustStorePassword string `default:"" help:"Password for the SSL Trust Store"`
 
-	NrJmx string `default:"/usr/bin/nrjmx" help:"Path to the nrjmx executable"`
+	NrJmx string `default:"nrjmx" help:"Path to the nrjmx executable"`
 
 	SaslMechanism string `default:"GSSAPI" help:"SASL mechanism to use for authentication. One of 'PLAIN', 'SCRAM-SHA-256', 'SCRAM-SHA-512', or 'GSSAPI'"`
 	SaslUsername  string `default:"" help:"SASL username for use with the PLAIN and SCRAM mechanisms"`
