@@ -19,15 +19,10 @@ env:
   PFX_CERTIFICATE_DESCRIPTION: 'New Relic'
   PFX_PASSPHRASE:  ${{ secrets.PFX_PASSPHRASE }}
   REPO_FULL_NAME: ${{ github.event.repository.full_name }}
-  SLACK_TOKEN: ${{ secrets.SLACK_TOKEN }}
-  SLACK_CHANNEL: ${{ secrets.SLACK_CHANNEL }}
-  SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+  SNYK_TOKEN: ${{ secrets.COREINT_SNYK_TOKEN }}
   TAG: ${{ github.event.release.tag_name }}
-  DOCKER_HUB_ID: ${{ secrets.DOCKER_HUB_ID }}
-  DOCKER_HUB_PASSWORD: ${{ secrets.DOCKER_HUB_PASSWORD }}
 
 jobs:
-
   validate:
     name: Validate code via linters
     runs-on: ubuntu-20.04
@@ -36,8 +31,8 @@ jobs:
       - name: Login to DockerHub
         uses: docker/login-action@v1
         with:
-          username: ${{ env.DOCKER_HUB_ID }}
-          password: ${{ env.DOCKER_HUB_PASSWORD }}
+          username: ${{ secrets.OHAI_DOCKER_HUB_ID }}
+          password: ${{ secrets.OHAI_DOCKER_HUB_PASSWORD }}
       - name: Validate code
         run: make ci/validate
 
@@ -49,8 +44,8 @@ jobs:
       - name: Login to DockerHub
         uses: docker/login-action@v1
         with:
-          username: ${{ env.DOCKER_HUB_ID }}
-          password: ${{ env.DOCKER_HUB_PASSWORD }}
+          username: ${{ secrets.OHAI_DOCKER_HUB_ID }}
+          password: ${{ secrets.OHAI_DOCKER_HUB_PASSWORD }}
       - name: Scan code for vulnerabilities
         run: make ci/snyk-test
 
@@ -62,8 +57,8 @@ jobs:
       - name: Login to DockerHub
         uses: docker/login-action@v1
         with:
-          username: ${{ env.DOCKER_HUB_ID }}
-          password: ${{ env.DOCKER_HUB_PASSWORD }}
+          username: ${{ secrets.OHAI_DOCKER_HUB_ID }}
+          password: ${{ secrets.OHAI_DOCKER_HUB_PASSWORD }}
       - name: Unit tests
         run: make ci/test
 
@@ -98,8 +93,8 @@ jobs:
       - name: Login to DockerHub
         uses: docker/login-action@v1
         with:
-          username: ${{ env.DOCKER_HUB_ID }}
-          password: ${{ env.DOCKER_HUB_PASSWORD }}
+          username: ${{ secrets.OHAI_DOCKER_HUB_ID }}
+          password: ${{ secrets.OHAI_DOCKER_HUB_PASSWORD }}
       - name: Pre release
         run: make ci/prerelease
       - name: Notify failure via Slack
