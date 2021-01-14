@@ -45,13 +45,18 @@ nfpms:
     formats:
       - deb
     bindir: "/var/db/newrelic-infra/newrelic-integrations/bin"
-    files:
-      "kafka-config.yml.sample": "/etc/newrelic-infra/integrations.d/kafka-config.yml.sample"
-      "CHANGELOG.md": "/usr/share/doc/nri-kafka/CHANGELOG.md"
-      "README.md":  "/usr/share/doc/nri-kafka/README.md"
-      "LICENSE": "/usr/share/doc/nri-kafka/LICENSE"
-    config_files:
-      "kafka-definition.yml": "/var/db/newrelic-infra/newrelic-integrations/kafka-definition.yml"
+    contents:
+      - src: kafka-config.yml.sample
+        dst: /etc/newrelic-infra/integrations.d/kafka-config.yml.sample
+      - src: CHANGELOG.md
+        dst: /usr/share/doc/nri-kafka/CHANGELOG.md
+      - src: README.md
+        dst: /usr/share/doc/nri-kafka/README.md
+      - src: LICENSE
+        dst: /usr/share/doc/nri-kafka/LICENSE
+      - src: kafka-definition.yml
+        dst: /var/db/newrelic-infra/newrelic-integrations/kafka-definition.yml
+        type: config
     dependencies:
       - "newrelic-infra"
       - "nrjmx"
@@ -69,13 +74,18 @@ nfpms:
     formats:
       - rpm
     bindir: "/var/db/newrelic-infra/newrelic-integrations/bin"
-    files:
-      "kafka-config.yml.sample": "/etc/newrelic-infra/integrations.d/kafka-config.yml.sample"
-      "CHANGELOG.md": "/usr/share/doc/nri-kafka/CHANGELOG.md"
-      "README.md":  "/usr/share/doc/nri-kafka/README.md"
-      "LICENSE": "/usr/share/doc/nri-kafka/LICENSE"
-    config_files:
-      "kafka-definition.yml": "/var/db/newrelic-infra/newrelic-integrations/kafka-definition.yml"
+    contents:
+      - src: kafka-config.yml.sample
+        dst: /etc/newrelic-infra/integrations.d/kafka-config.yml.sample
+      - src: CHANGELOG.md
+        dst: /usr/share/doc/nri-kafka/CHANGELOG.md
+      - src: README.md
+        dst: /usr/share/doc/nri-kafka/README.md
+      - src: LICENSE
+        dst: /usr/share/doc/nri-kafka/LICENSE
+      - src: kafka-definition.yml
+        dst: /var/db/newrelic-infra/newrelic-integrations/kafka-definition.yml
+        type: config
     dependencies:
       - "newrelic-infra"
       - "nrjmx"
