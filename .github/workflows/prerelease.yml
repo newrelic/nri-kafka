@@ -132,6 +132,8 @@ jobs:
           build\windows\download_zip_extract_exe.ps1 "$env:INTEGRATION" ${{ matrix.goarch }} "$env:TAG" "$env:REPO_FULL_NAME"
       - name: Embed jmx
         shell: bash
+        env:
+          NRJMX_VERSION: "1.5.0" # embed_jmx is broken for newer versions
         run: |
           build/windows/embed_jmx.sh
       - name: Create MSI
