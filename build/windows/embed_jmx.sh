@@ -9,7 +9,7 @@ echo "Downlading last version of nrjmx.jar and nrjmx.bat"
 if [[ -z $NRJMX_VERSION ]]; then
     NRJMX_VERSION=$(curl --silent "https://api.github.com/repos/newrelic/nrjmx/releases/latest" | grep '"tag_name":' |  sed -E 's/.*"([^"]+)".*/\1/' | cut -d v -f2)
     echo "Using latest nrjmx version $NRJMX_VERSION."
-    echo "This script will not work for NRJMX 1.6.1 and onwards."
+    echo "Last version known to work is 1.6.1."
 fi
 
 curl -SL https://github.com/newrelic/nrjmx/releases/download/v${NRJMX_VERSION}/nrjmx-${NRJMX_VERSION}.tar.gz | tar xz

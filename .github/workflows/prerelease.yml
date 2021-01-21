@@ -133,7 +133,7 @@ jobs:
       - name: Embed jmx
         shell: bash
         env:
-          NRJMX_VERSION: "1.6.0" # embed_jmx is broken for newer versions
+          NRJMX_VERSION: "1.6.1" # embed_jmx is broken for newer versions
         run: |
           build/windows/embed_jmx.sh
       - name: Create MSI
