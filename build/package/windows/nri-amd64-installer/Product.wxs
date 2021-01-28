@@ -5,7 +5,7 @@
     <?define UpgradeCode = "{a592ff01-8b28-4a35-9e3b-19c30164794e}" ?>
 
     <Product Id="$(var.ProductId)"
-             Name="New Relic Infrastructure Integration, nri-$(var.IntegrationName)"
+             Name="New Relic Infrastructure Integration, nri-$(var.IntegrationName) (standalone)"
              Language="1033"
              Version="$(var.Version)"
              Manufacturer="New Relic, Inc."

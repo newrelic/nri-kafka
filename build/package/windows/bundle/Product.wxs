@@ -3,7 +3,7 @@
     <?define ProductId = "*" ?>
     <?define UpgradeCode = "{e313de86-53c7-4eeb-976b-94cc8b3478a4}" ?>
 
-    <Bundle Name="New Relic Infrastructure Integration, nri-$(var.IntegrationName)-bundle"
+    <Bundle Name="New Relic Infrastructure Integration, nri-$(var.IntegrationName)"
             Version="$(var.Version)"
             Manufacturer="New Relic, Inc."
             UpgradeCode="$(var.UpgradeCode)">
