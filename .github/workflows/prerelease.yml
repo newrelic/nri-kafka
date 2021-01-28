@@ -136,7 +136,7 @@ jobs:
           # override latest with 1.5.3 until a fix is released (2020-01-28)
           NRJMX_URL: "https://download.newrelic.com/infrastructure_agent/windows/integrations/nrjmx/nrjmx-amd64.1.5.3.msi"
         run: |
-          build/windows/downlaod_nrjmx.sh
+          build/windows/download_nrjmx.sh
       - name: Create MSI
         shell: pwsh
         run: |

@@ -10,4 +10,4 @@ if [[ -z $NRJMX_URL ]]; then
     NRJMX_URL=https://github.com/newrelic/nrjmx/releases/download/v$NRJMX_VERSION/nrjmx-amd64.$NRJMX_VERSION.msi
 fi
 
-curl "$NRJMX_URL" -o nrjmx-amd64.msi
+curl "$NRJMX_URL" -o "build/package/windows/bundle/nrjmx-amd64.msi"

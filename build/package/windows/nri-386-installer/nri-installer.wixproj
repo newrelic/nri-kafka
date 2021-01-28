@@ -4,14 +4,14 @@
         <Configuration Condition=" '$(Configuration)' == '' ">Release</Configuration>
         <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
         <ProductVersion>3.10</ProductVersion>
-        <ProjectGuid>101f30ba-6098-4ef0-8b8f-0636298997c6</ProjectGuid>
+        <ProjectGuid>4645d484-951f-41b7-9c71-4ef7a47ef806</ProjectGuid>
         <SchemaVersion>2.0</SchemaVersion>
         <OutputName>nri-$(IntegrationName)-386</OutputName>
         <OutputType>Package</OutputType>
         <SignToolPath>C:\Program Files (x86)\Windows Kits\10\bin\x64\</SignToolPath>
         <WixTargetsPath Condition=" '$(WixTargetsPath)' == '' AND '$(MSBuildExtensionsPath32)' != '' ">$(MSBuildExtensionsPath32)\Microsoft\WiX\v3.x\Wix.targets</WixTargetsPath>
         <WixTargetsPath Condition=" '$(WixTargetsPath)' == '' ">$(MSBuildExtensionsPath)\Microsoft\WiX\v3.x\Wix.targets</WixTargetsPath>
-        <Name>newrelic-nri-$(IntegrationName)-installer</Name>
+        <Name>newrelic-nri-$(IntegrationName)-bundle-installer</Name>
         <DefineSolutionProperties>false</DefineSolutionProperties>
     </PropertyGroup>
     <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
