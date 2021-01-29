@@ -10,14 +10,8 @@ on:
 env:
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   GO_VERSION: '1.9.7'
-  GPG_MAIL: 'infrastructure-eng@newrelic.com'
-  GPG_PASSPHRASE: ${{ secrets.OHAI_GPG_PASSPHRASE }}
-  GPG_PRIVATE_KEY_BASE64: ${{ secrets. OHAI_GPG_PRIVATE_KEY_BASE64  }} # base64 encoded
   INTEGRATION: "kafka"
   ORIGINAL_REPO_NAME: 'newrelic/nri-kafka'
-  PFX_CERTIFICATE_BASE64: ${{ secrets.OHAI_PFX_CERTIFICATE_BASE64 }} # base64 encoded
-  PFX_CERTIFICATE_DESCRIPTION: 'New Relic'
-  PFX_PASSPHRASE:  ${{ secrets.OHAI_PFX_PASSPHRASE }}
   REPO_FULL_NAME: ${{ github.event.repository.full_name }}
   TAG: ${{ github.event.release.tag_name }}
 
@@ -89,6 +83,10 @@ jobs:
     name: Build binary for *Nix/Win, create archives for *Nix/Win, create packages for *Nix, upload all artifacts into GH Release assets
     runs-on: ubuntu-20.04
     needs: [validate, test-nix, test-windows, snyk]
+    env:
+      GPG_MAIL: 'infrastructure-eng@newrelic.com'
+      GPG_PASSPHRASE: ${{ secrets.OHAI_GPG_PASSPHRASE }}
+      GPG_PRIVATE_KEY_BASE64: ${{ secrets. OHAI_GPG_PRIVATE_KEY_BASE64  }} # base64 encoded
     steps:
       - uses: actions/checkout@v2
       - name: Login to DockerHub
@@ -111,6 +109,9 @@ jobs:
     runs-on: windows-2019
     needs: [prerelease]
     env:
+      PFX_CERTIFICATE_BASE64: ${{ secrets.OHAI_PFX_CERTIFICATE_BASE64 }} # base64 encoded
+      PFX_CERTIFICATE_DESCRIPTION: 'New Relic'
+      PFX_PASSPHRASE: ${{ secrets.OHAI_PFX_PASSPHRASE }}
       GOPATH: ${{ github.workspace }}
     defaults:
       run:
