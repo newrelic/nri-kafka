@@ -12,7 +12,7 @@
             <bal:WixStandardBootstrapperApplication LicenseUrl="" />
         </BootstrapperApplicationRef>
         <Chain>
-            <MsiPackage Id="$(var.IntegrationName)" SourceFile="nri-$(var.IntegrationName)-amd64.$(var.Version).msi" Compressed="yes" />
+            <MsiPackage Id="$(var.IntegrationName)" SourceFile="nri-$(var.IntegrationName)-amd64.msi" Compressed="yes" />
             <MsiPackage Id="nrjmx" SourceFile="nrjmx-amd64.msi" Compressed="yes" />
         </Chain>
     </Bundle>
