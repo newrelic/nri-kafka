@@ -78,6 +78,6 @@ if (-not $?)
 }
 
 echo "===> Making versioned bundle copy"
-cp "bin\Release\nri-$integration-bundle-$arch.exe" "bin\Release\nri-$integration-$arch.$version.exe"
+cp "bin\Release\nri-$integration-bundle-$arch.exe" "bin\Release\nri-$integration-$arch-installer.$version.exe"
 
 Pop-Location
