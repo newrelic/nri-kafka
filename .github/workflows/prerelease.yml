@@ -117,7 +117,7 @@ jobs:
         working-directory: src/github.com/${{env.ORIGINAL_REPO_NAME}}
     strategy:
       matrix:
-        goarch: [amd64,386]
+        goarch: [ amd64 ] # 386 not supported in jmx integrations
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -130,12 +130,13 @@ jobs:
         shell: pwsh
         run: |
           build\windows\download_zip_extract_exe.ps1 "$env:INTEGRATION" ${{ matrix.goarch }} "$env:TAG" "$env:REPO_FULL_NAME"
-      - name: Embed jmx
+      - name: Download nrjmx
         shell: bash
         env:
-          NRJMX_VERSION: "1.6.1" # embed_jmx is broken for newer versions
+          # override latest with 1.5.3 until a fix is released (2020-01-28)
+          NRJMX_URL: "https://download.newrelic.com/infrastructure_agent/windows/integrations/nrjmx/nrjmx-amd64.1.5.3.msi"
         run: |
-          build/windows/embed_jmx.sh
+          build/windows/download_nrjmx.sh
       - name: Create MSI
         shell: pwsh
         run: |

@@ -44,7 +44,7 @@ if ($msBuild.Length -eq 0) {
 }
 echo $msBuild
 
-echo "===> Building Installer"
+echo "===> Building integration"
 Push-Location -Path "build\package\windows\nri-$arch-installer"
 
 . $msBuild/MSBuild.exe nri-installer.wixproj /p:IntegrationVersion=${version} /p:IntegrationName=$integration /p:Year=$buildYear /p:pfx_certificate_description=$pfx_certificate_description
@@ -58,6 +58,26 @@ if (-not $?)
 
 echo "===> Making versioned installed copy"
 cd bin\Release
-cp "nri-$integration-$arch.msi" "nri-$integration-$arch.$version.msi"
+cp "nri-$integration-$arch.msi" "nri-$integration-nodeps-$arch.$version.msi"
+
+Pop-Location
+
+# Copy integration MSI to bundle dir
+cp "build\package\windows\nri-$arch-installer\bin\Release\nri-$integration-$arch.msi" "build\package\windows\bundle"
+
+echo "===> Building nrjmx bundle"
+Push-Location -Path "build\package\windows\bundle"
+
+. $msBuild/MSBuild.exe bundle.wixproj /p:IntegrationVersion=${version} /p:IntegrationName=$integration /p:Year=$buildYear /p:pfx_certificate_description=$pfx_certificate_description
+
+if (-not $?)
+{
+    echo "Failed building bundle"
+    Pop-Location
+    exit -1
+}
+
+echo "===> Making versioned bundle copy"
+cp "bin\Release\nri-$integration-bundle-$arch.exe" "bin\Release\nri-$integration-$arch.$version.exe"
 
 Pop-Location
