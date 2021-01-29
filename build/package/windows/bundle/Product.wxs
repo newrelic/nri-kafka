@@ -1,0 +1,19 @@
+﻿<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi" xmlns:bal="http://schemas.microsoft.com/wix/BalExtension">
+    <?define Version = "$(var.IntegrationVersion)" ?>
+    <?define ProductId = "*" ?>
+    <?define UpgradeCode = "{e313de86-53c7-4eeb-976b-94cc8b3478a4}" ?>
+
+    <Bundle Name="New Relic Infrastructure Integration, nri-$(var.IntegrationName)"
+            Version="$(var.Version)"
+            Manufacturer="New Relic, Inc."
+            UpgradeCode="$(var.UpgradeCode)">
+
+        <BootstrapperApplicationRef Id="WixStandardBootstrapperApplication.HyperlinkLicense">
+            <bal:WixStandardBootstrapperApplication LicenseUrl="" />
+        </BootstrapperApplicationRef>
+        <Chain>
+            <MsiPackage Id="$(var.IntegrationName)" SourceFile="nri-$(var.IntegrationName)-amd64.msi" Compressed="yes" />
+            <MsiPackage Id="nrjmx" SourceFile="nrjmx-amd64.msi" Compressed="yes" />
+        </Chain>
+    </Bundle>
+</Wix>

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"hash/fnv"
 	"os"
+	"runtime"
 	"strings"
 	"sync"
 
@@ -22,14 +23,31 @@ import (
 )
 
 const (
-	integrationName    = "com.newrelic.kafka"
-	integrationVersion = "2.13.8"
+	integrationName = "com.newrelic.kafka"
+)
+
+var (
+	integrationVersion = "0.0.0"
+	gitCommit          = ""
+	buildDate          = ""
 )
 
 func main() {
 	var argList args.ArgumentList
 	kafkaIntegration, err := integration.New(integrationName, integrationVersion, integration.Args(&argList))
 	ExitOnErr(err)
+
+	if argList.ShowVersion {
+		fmt.Printf(
+			"New Relic %s integration Version: %s, Platform: %s, GoVersion: %s, GitCommit: %s, BuildDate: %s\n",
+			strings.Title(strings.Replace(integrationName, "com.newrelic.", "", 1)),
+			integrationVersion,
+			fmt.Sprintf("%s/%s", runtime.GOOS, runtime.GOARCH),
+			runtime.Version(),
+			gitCommit,
+			buildDate)
+		os.Exit(0)
+	}
 
 	// Setup logging with verbose
 	log.SetupLogging(argList.Verbose)
