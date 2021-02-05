@@ -138,7 +138,7 @@ func TestDefaultArgs(t *testing.T) {
 		BootstrapBroker:              nil,
 		DefaultJMXUser:               "admin",
 		DefaultJMXPassword:           "admin",
-		NrJmx:                        "/usr/bin/nrjmx",
+		NrJmx:                        "nrjmx",
 		Producers:                    []*JMXHost{},
 		Consumers:                    []*JMXHost{},
 		TopicMode:                    "None",
