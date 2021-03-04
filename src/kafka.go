@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"hash/fnv"
+	"net"
 	"os"
 	"runtime"
 	"strings"
@@ -63,6 +64,15 @@ func main() {
 	} else {
 		brokers, err := getBrokerList(args.GlobalArgs)
 		ExitOnErr(err)
+
+		errs := checkJMXConnection(brokers)
+		if len(errs) > 0 {
+			for _, e := range errs {
+				log.Error("%v", e)
+			}
+			os.Exit(2)
+		}
+
 		client, err := connection.NewSaramaClientFromBrokerList(brokers)
 		ExitOnErr(err)
 		if err := consumeroffset.Collect(client, kafkaIntegration); err != nil {
@@ -234,4 +244,22 @@ func filterTopicsByBucket(topicList []string, topicBucket args.TopicBucket) []st
 	}
 
 	return filteredTopics
+}
+
+// checkJMXConnection performs a basic connection check to all the supplied brokers, returning any error
+func checkJMXConnection(brokers []*connection.Broker) []error {
+	var errors []error
+	for _, broker := range brokers {
+		addr := fmt.Sprintf("%s:%d", broker.Host, broker.JMXPort)
+		log.Debug("Testing reachability of JMX port for broker %s", addr)
+
+		conn, err := net.DialTCP(addr, nil, nil)
+		if err != nil {
+			errors = append(errors, fmt.Errorf("error connecting to JMX port on %s: %v", addr, err))
+			continue
+		}
+		_ = conn.Close()
+	}
+
+	return errors
 }
