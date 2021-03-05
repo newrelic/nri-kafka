@@ -5,10 +5,12 @@ import (
 	"errors"
 	"fmt"
 	"hash/fnv"
+	"net"
 	"os"
 	"runtime"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/Shopify/sarama"
 	"github.com/newrelic/infra-integrations-sdk/integration"
@@ -63,6 +65,7 @@ func main() {
 	} else {
 		brokers, err := getBrokerList(args.GlobalArgs)
 		ExitOnErr(err)
+
 		client, err := connection.NewSaramaClientFromBrokerList(brokers)
 		ExitOnErr(err)
 		if err := consumeroffset.Collect(client, kafkaIntegration); err != nil {
@@ -169,6 +172,19 @@ func coreCollection(kafkaIntegration *integration.Integration) {
 			return
 		}
 
+		errs := checkJMXConnection(brokers, time.Duration(args.GlobalArgs.Timeout)*time.Millisecond)
+		if len(errs) > 0 {
+			for _, e := range errs {
+				log.Error("%v", e)
+			}
+			log.Error(
+				"Errors were detected while probing JMX port of one or more kafka brokers. " +
+					"Please ensure that JMX is enabled in all of them, and that the port is open. " +
+					"https://docs.newrelic.com/docs/integrations/host-integrations/host-integrations-list/kafka-monitoring-integration",
+			)
+			os.Exit(2)
+		}
+
 		topics, err := topic.GetTopics(clusterClient)
 		if err != nil {
 			log.Error("Failed to get a list of topics. Continuing with broker collection: %s", err)
@@ -234,4 +250,22 @@ func filterTopicsByBucket(topicList []string, topicBucket args.TopicBucket) []st
 	}
 
 	return filteredTopics
+}
+
+// checkJMXConnection performs a basic connection check to all the supplied brokers, returning any error
+func checkJMXConnection(brokers []*connection.Broker, timeout time.Duration) []error {
+	var errs []error
+	for _, brk := range brokers {
+		addr := net.JoinHostPort(brk.Host, fmt.Sprint(brk.JMXPort))
+		log.Debug("Testing reachability of JMX port for broker %s", addr)
+
+		conn, err := net.DialTimeout("tcp", addr, timeout)
+		if err != nil {
+			errs = append(errs, fmt.Errorf("error connecting to JMX port on %s: %v", addr, err))
+			continue
+		}
+		_ = conn.Close()
+	}
+
+	return errs
 }
