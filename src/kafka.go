@@ -70,6 +70,11 @@ func main() {
 			for _, e := range errs {
 				log.Error("%v", e)
 			}
+			log.Error(
+				"Errors were detected while probing JMX port of one or more kafka brokers. " +
+					"Please ensure that JMX is enabled in all of them, and that the port is open. " +
+					"https://docs.newrelic.com/docs/integrations/host-integrations/host-integrations-list/kafka-monitoring-integration",
+			)
 			os.Exit(2)
 		}
 
