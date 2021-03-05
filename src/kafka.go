@@ -172,7 +172,7 @@ func coreCollection(kafkaIntegration *integration.Integration) {
 			return
 		}
 
-		errs := checkJMXConnection(brokers, time.Duration(args.GlobalArgs.Timeout)*time.Second)
+		errs := checkJMXConnection(brokers, time.Duration(args.GlobalArgs.Timeout)*time.Millisecond)
 		if len(errs) > 0 {
 			for _, e := range errs {
 				log.Error("%v", e)
