@@ -63,6 +63,7 @@ type ArgumentList struct {
 	SaslGssapiUsername           string `default:"" help:"Kerberos username"`
 	SaslGssapiKeyTabPath         string `default:"" help:"Kerberos key tab path"`
 	SaslGssapiKerberosConfigPath string `default:"/etc/krb5.conf" help:"Kerberos config path"`
+	SaslGssapiDisableFASTNegotiation bool `default:"false" help:"Disable FAST negotiation."`
 
 	// Collection configuration
 	LocalOnlyCollection    bool   `default:"false" help:"Collect only the metrics related to the configured bootstrap broker. Useful for distributed metric collection"`

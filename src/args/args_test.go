@@ -48,6 +48,7 @@ func TestParseArgs(t *testing.T) {
 		SaslMechanism:          "PLAIN",
 		SaslUsername:           "admin3",
 		SaslPassword:           "secret1",
+		SaslGssapiDisableFASTNegotiation: true,
 	}
 
 	expectedArgs := &ParsedArguments{
@@ -104,6 +105,7 @@ func TestParseArgs(t *testing.T) {
 		SaslMechanism:      "PLAIN",
 		SaslUsername:       "admin3",
 		SaslPassword:       "secret1",
+		SaslGssapiDisableFASTNegotiation: true,
 	}
 	parsedArgs, err := ParseArgs(a)
 	assert.NoError(t, err)
@@ -152,6 +154,7 @@ func TestDefaultArgs(t *testing.T) {
 		ConsumerGroupRegex:           nil,
 		SaslGssapiKerberosConfigPath: "/etc/krb5.conf",
 		SaslMechanism:                "GSSAPI",
+		SaslGssapiDisableFASTNegotiation: false,
 	}
 
 	parsedArgs, err := ParseArgs(a)

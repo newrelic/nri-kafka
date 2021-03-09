@@ -76,6 +76,7 @@ type ParsedArguments struct {
 	SaslGssapiUsername           string
 	SaslGssapiKeyTabPath         string
 	SaslGssapiKerberosConfigPath string
+	SaslGssapiDisableFASTNegotiation bool
 
 	// Collection configuration
 	LocalOnlyCollection   bool
@@ -301,6 +302,7 @@ func ParseArgs(a ArgumentList) (*ParsedArguments, error) {
 		SaslGssapiUsername:           a.SaslGssapiUsername,
 		SaslGssapiKeyTabPath:         a.SaslGssapiKeyTabPath,
 		SaslGssapiKerberosConfigPath: a.SaslGssapiKerberosConfigPath,
+		SaslGssapiDisableFASTNegotiation: a.SaslGssapiDisableFASTNegotiation,
 	}
 
 	return parsedArgs, nil

@@ -157,3 +157,41 @@ instances:
       # These fields can be removed if each producer/consumer has it's own "host" and/or "port" field filled out.
       default_jmx_host: "localhost"
       default_jmx_port: "9999"
+
+  - name: kafka-kerberos-auth
+    command: metrics
+    arguments:
+      # A cluster name is required to uniquely identify this collection result in Insights
+      cluster_name: "testcluster1"
+
+      autodiscover_strategy: "bootstrap"
+
+      # Bootstrap broker arguments. These configure a connection to a single broker. The rest of the brokers in the cluster
+      # will be discovered using that connection.
+      bootstrap_broker_host: "localhost"
+      bootstrap_broker_kafka_port: 9092
+      bootstrap_broker_kafka_protocol: PLAINTEXT # Currently support PLAINTEXT and SSL
+      bootstrap_broker_jmx_port: 9999
+      # JMX user and password default to `default_jmx_user` and `default_jmx_password` if unset
+      bootstrap_broker_jmx_user: admin
+      bootstrap_broker_jmx_password: password
+
+      # Kerberos authentication arguments
+      sasl_mechanism: GSSAPI
+      sasl_gssapi_realm: SOMECORP.COM
+      sasl_gssapi_service_name: Kafka
+      sasl_gssapi_username: kafka
+      sasl_gssapi_key_tab_path: /etc/newrelic-infra/kafka.keytab
+      sasl_gssapi_kerberos_config_path: /etc/krb5.conf
+      # disables FAST negotiation that causes issues with Active Directory
+      # sasl_gssapi_disable_fast_negotiation: false
+
+      # Only collect metrics from the bootstrap broker configured. The integration will not attempt to collect metrics
+      # for any other broker, nor will it collect cluster-level metrics like topic metrics. This is useful for things
+      # like deployment to kubernetes, where a single integration instance is desired per broker.
+      local_only_collection: false
+
+      # See above for more information on topic collection
+      collect_broker_topic_data: true
+      topic_mode: "all"
+      collect_topic_size: false
