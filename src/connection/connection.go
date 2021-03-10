@@ -243,7 +243,7 @@ func configureSASL(config *sarama.Config) error {
 			return fmt.Errorf("all sasl_gssapi_* arguments must be set for GSSAPI auth")
 		}
 
-		// enable/disable FAST negotiation that doesn't causes issues with Active Directory
+		// enable/disable FAST negotiation that can cause issues with Active Directory
 		config.Net.SASL.GSSAPI.DisablePAFXFAST = ga.SaslGssapiDisableFASTNegotiation
 
 		config.Net.SASL.Mechanism = sarama.SASLTypeGSSAPI
