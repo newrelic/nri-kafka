@@ -58,11 +58,12 @@ type ArgumentList struct {
 	SaslPassword  string `default:"" help:"SASL password for use with the PLAIN and SCRAM mechanisms"`
 
 	// Kerberos auth args
-	SaslGssapiRealm              string `default:"" help:"Kerberos realm"`
-	SaslGssapiServiceName        string `default:"" help:"Kerberos service name"`
-	SaslGssapiUsername           string `default:"" help:"Kerberos username"`
-	SaslGssapiKeyTabPath         string `default:"" help:"Kerberos key tab path"`
-	SaslGssapiKerberosConfigPath string `default:"/etc/krb5.conf" help:"Kerberos config path"`
+	SaslGssapiRealm                  string `default:"" help:"Kerberos realm"`
+	SaslGssapiServiceName            string `default:"" help:"Kerberos service name"`
+	SaslGssapiUsername               string `default:"" help:"Kerberos username"`
+	SaslGssapiKeyTabPath             string `default:"" help:"Kerberos key tab path"`
+	SaslGssapiKerberosConfigPath     string `default:"/etc/krb5.conf" help:"Kerberos config path"`
+	SaslGssapiDisableFASTNegotiation bool   `default:"false" help:"Disable FAST negotiation."`
 
 	// Collection configuration
 	LocalOnlyCollection    bool   `default:"false" help:"Collect only the metrics related to the configured bootstrap broker. Useful for distributed metric collection"`

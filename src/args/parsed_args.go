@@ -71,11 +71,12 @@ type ParsedArguments struct {
 	SaslPassword  string
 
 	// Kerberos auth args
-	SaslGssapiRealm              string
-	SaslGssapiServiceName        string
-	SaslGssapiUsername           string
-	SaslGssapiKeyTabPath         string
-	SaslGssapiKerberosConfigPath string
+	SaslGssapiRealm                  string
+	SaslGssapiServiceName            string
+	SaslGssapiUsername               string
+	SaslGssapiKeyTabPath             string
+	SaslGssapiKerberosConfigPath     string
+	SaslGssapiDisableFASTNegotiation bool
 
 	// Collection configuration
 	LocalOnlyCollection   bool
@@ -259,48 +260,49 @@ func ParseArgs(a ArgumentList) (*ParsedArguments, error) {
 	}
 
 	parsedArgs := &ParsedArguments{
-		DefaultArgumentList:          a.DefaultArgumentList,
-		AutodiscoverStrategy:         a.AutodiscoverStrategy,
-		BootstrapBroker:              brokerHost,
-		TLSCaFile:                    a.TLSCaFile,
-		TLSCertFile:                  a.TLSCertFile,
-		TLSKeyFile:                   a.TLSKeyFile,
-		TLSInsecureSkipVerify:        a.TLSInsecureSkipVerify,
-		ClusterName:                  a.ClusterName,
-		KafkaVersion:                 version,
-		ZookeeperHosts:               zookeeperHosts,
-		ZookeeperAuthScheme:          a.ZookeeperAuthScheme,
-		ZookeeperAuthSecret:          a.ZookeeperAuthSecret,
-		ZookeeperPath:                a.ZookeeperPath,
-		PreferredListener:            a.PreferredListener,
-		DefaultJMXUser:               a.DefaultJMXUser,
-		DefaultJMXPassword:           a.DefaultJMXPassword,
-		NrJmx:                        a.NrJmx,
-		Producers:                    producers,
-		Consumers:                    consumers,
-		TopicMode:                    a.TopicMode,
-		TopicList:                    topics,
-		TopicRegex:                   a.TopicRegex,
-		TopicBucket:                  topicBucket,
-		Timeout:                      a.Timeout,
-		KeyStore:                     a.KeyStore,
-		KeyStorePassword:             a.KeyStorePassword,
-		TrustStore:                   a.TrustStore,
-		TrustStorePassword:           a.TrustStorePassword,
-		LocalOnlyCollection:          a.LocalOnlyCollection,
-		CollectTopicSize:             a.CollectTopicSize,
-		CollectTopicOffset:           a.CollectTopicOffset,
-		ConsumerOffset:               a.ConsumerOffset,
-		ConsumerGroups:               consumerGroups,
-		ConsumerGroupRegex:           consumerGroupRegex,
-		SaslMechanism:                a.SaslMechanism,
-		SaslUsername:                 a.SaslUsername,
-		SaslPassword:                 a.SaslPassword,
-		SaslGssapiRealm:              a.SaslGssapiRealm,
-		SaslGssapiServiceName:        a.SaslGssapiServiceName,
-		SaslGssapiUsername:           a.SaslGssapiUsername,
-		SaslGssapiKeyTabPath:         a.SaslGssapiKeyTabPath,
-		SaslGssapiKerberosConfigPath: a.SaslGssapiKerberosConfigPath,
+		DefaultArgumentList:              a.DefaultArgumentList,
+		AutodiscoverStrategy:             a.AutodiscoverStrategy,
+		BootstrapBroker:                  brokerHost,
+		TLSCaFile:                        a.TLSCaFile,
+		TLSCertFile:                      a.TLSCertFile,
+		TLSKeyFile:                       a.TLSKeyFile,
+		TLSInsecureSkipVerify:            a.TLSInsecureSkipVerify,
+		ClusterName:                      a.ClusterName,
+		KafkaVersion:                     version,
+		ZookeeperHosts:                   zookeeperHosts,
+		ZookeeperAuthScheme:              a.ZookeeperAuthScheme,
+		ZookeeperAuthSecret:              a.ZookeeperAuthSecret,
+		ZookeeperPath:                    a.ZookeeperPath,
+		PreferredListener:                a.PreferredListener,
+		DefaultJMXUser:                   a.DefaultJMXUser,
+		DefaultJMXPassword:               a.DefaultJMXPassword,
+		NrJmx:                            a.NrJmx,
+		Producers:                        producers,
+		Consumers:                        consumers,
+		TopicMode:                        a.TopicMode,
+		TopicList:                        topics,
+		TopicRegex:                       a.TopicRegex,
+		TopicBucket:                      topicBucket,
+		Timeout:                          a.Timeout,
+		KeyStore:                         a.KeyStore,
+		KeyStorePassword:                 a.KeyStorePassword,
+		TrustStore:                       a.TrustStore,
+		TrustStorePassword:               a.TrustStorePassword,
+		LocalOnlyCollection:              a.LocalOnlyCollection,
+		CollectTopicSize:                 a.CollectTopicSize,
+		CollectTopicOffset:               a.CollectTopicOffset,
+		ConsumerOffset:                   a.ConsumerOffset,
+		ConsumerGroups:                   consumerGroups,
+		ConsumerGroupRegex:               consumerGroupRegex,
+		SaslMechanism:                    a.SaslMechanism,
+		SaslUsername:                     a.SaslUsername,
+		SaslPassword:                     a.SaslPassword,
+		SaslGssapiRealm:                  a.SaslGssapiRealm,
+		SaslGssapiServiceName:            a.SaslGssapiServiceName,
+		SaslGssapiUsername:               a.SaslGssapiUsername,
+		SaslGssapiKeyTabPath:             a.SaslGssapiKeyTabPath,
+		SaslGssapiKerberosConfigPath:     a.SaslGssapiKerberosConfigPath,
+		SaslGssapiDisableFASTNegotiation: a.SaslGssapiDisableFASTNegotiation,
 	}
 
 	return parsedArgs, nil
