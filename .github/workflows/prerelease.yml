@@ -130,6 +130,8 @@ jobs:
     strategy:
       matrix:
         goarch: [ amd64 ] # 386 not supported in jmx integrations
+        # We need a clean runner to execute each test installation.
+        test-upgrade: [true,false]
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -161,6 +163,8 @@ jobs:
           arch: ${{ matrix.goarch }}
           upgrade: ${{ matrix.test-upgrade }}
       - name: Upload MSI to GH
+        # To avoid upload packages twice
+        if: startsWith(matrix.test-upgrade, 'false')
         shell: bash
         run: |
           build/windows/upload_msi.sh ${INTEGRATION} ${{ matrix.goarch }} ${TAG}
