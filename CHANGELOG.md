@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 2.14.0 (2021-03-17)
+### Changed
+- expose option to disable FAST negotiation to resolve issues with Active Directory
+- Adds a basic TCP connection check to JMX port of all brokers
+- Make nrjmx binary name relative to PATH
+
+## 2.13.9 (2020-12-07)
+### Changed
+- Added closing of Zookeeper connections to avoid having them timeout and flood Zookeeper logs
+
+
 ## 2.13.8 (2019-10-08)
 ### Changed
 - Removed the consumer group limit for consumer offset collection
