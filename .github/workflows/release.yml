@@ -38,7 +38,7 @@ jobs:
           app_name: "nri-${{env.INTEGRATION}}"
           repo_name: ${{ env.ORIGINAL_REPO_NAME }}
           # 'ohi' is for integrations
-          schema: "ohi"
+          schema: "ohi-jmx" # ohi-jmx for integrations that bundle JMX on windows installers
           aws_region: ${{ env.AWS_REGION }}
           aws_role_arn: ${{ secrets.OHAI_AWS_ROLE_ARN_PRODUCTION }}
           aws_role_session_name: ${{ secrets.OHAI_AWS_ROLE_SESSION_NAME_PRODUCTION }}
