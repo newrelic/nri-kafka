@@ -140,7 +140,7 @@ jobs:
       - name: Download nrjmx
         shell: bash
         env:
-          # override latest with 1.5.3 until a fix is released (2020-01-28)
+          # TODO: override latest with 1.5.3 until a fix is released (2020-01-28)
           NRJMX_URL: "https://download.newrelic.com/infrastructure_agent/windows/integrations/nrjmx/nrjmx-amd64.1.5.3.msi"
         run: |
           build/windows/download_nrjmx.sh
@@ -155,6 +155,7 @@ jobs:
           integration: nri-${{ env.INTEGRATION }}
           arch: ${{ matrix.goarch }}
           upgrade: ${{ matrix.test-upgrade }}
+          pkgType: "exe" # JMX integrations are shipped in .exe format
       - name: Upload MSI to GH
         # To avoid upload packages twice
         if: startsWith(matrix.test-upgrade, 'false')
