@@ -6,12 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## 2.15.0 (2021-03-24)
+### Changed
 - Upgraded github.com/newrelic/infra-integrations-sdk to v3.6.6
 - Switched to go modules
 - Upgraded pipeline to go 1.16
 - Replaced gometalinter with golangci-lint
-### Changed
-- Fixed a bug that prevented -sasl_gssapi_disable_fast_negotiation from working as expected
+
 ## 2.14.1 (2021-03-24)
 ### Changed
 - Fixed a bug that prevented -sasl_gssapi_disable_fast_negotiation from working as expected
