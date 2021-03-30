@@ -7,7 +7,7 @@ import (
 	"sync"
 
 	"github.com/Shopify/sarama"
-	"github.com/newrelic/infra-integrations-sdk/data/metric"
+	"github.com/newrelic/infra-integrations-sdk/data/attribute"
 	"github.com/newrelic/infra-integrations-sdk/integration"
 	"github.com/newrelic/infra-integrations-sdk/log"
 	"github.com/newrelic/nri-kafka/src/args"
@@ -109,9 +109,9 @@ func setMetrics(consumerGroup string, offsetData []*partitionOffsets, kafkaInteg
 
 	for _, offsetData := range offsetData {
 		metricSet := groupEntity.NewMetricSet("KafkaOffsetSample",
-			metric.Attribute{Key: "displayName", Value: groupEntity.Metadata.Name},
-			metric.Attribute{Key: "entityName", Value: "consumerGroup:" + groupEntity.Metadata.Name},
-			metric.Attribute{Key: "clusterName", Value: args.GlobalArgs.ClusterName},
+			attribute.Attribute{Key: "displayName", Value: groupEntity.Metadata.Name},
+			attribute.Attribute{Key: "entityName", Value: "consumerGroup:" + groupEntity.Metadata.Name},
+			attribute.Attribute{Key: "clusterName", Value: args.GlobalArgs.ClusterName},
 		)
 
 		if err := metricSet.MarshalMetrics(offsetData); err != nil {

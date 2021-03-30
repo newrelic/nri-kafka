@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/Shopify/sarama"
+	"github.com/newrelic/infra-integrations-sdk/data/attribute"
 	"github.com/newrelic/infra-integrations-sdk/data/inventory"
 	"github.com/newrelic/infra-integrations-sdk/data/metric"
 	"github.com/newrelic/infra-integrations-sdk/integration"
@@ -198,10 +199,10 @@ func TestCollectBrokerTopicMetrics(t *testing.T) {
 	}
 
 	sample := e.NewMetricSet("KafkaBrokerSample",
-		metric.Attribute{Key: "clusterName", Value: ""},
-		metric.Attribute{Key: "displayName", Value: "kafkabroker:9090"},
-		metric.Attribute{Key: "entityName", Value: "broker:kafkabroker:9090"},
-		metric.Attribute{Key: "topic", Value: "topic"},
+		attribute.Attribute{Key: "clusterName", Value: ""},
+		attribute.Attribute{Key: "displayName", Value: "kafkabroker:9090"},
+		attribute.Attribute{Key: "entityName", Value: "broker:kafkabroker:9090"},
+		attribute.Attribute{Key: "topic", Value: "topic"},
 	)
 
 	err := sample.SetMetric("broker.bytesWrittenToTopicPerSecond", float64(0), metric.GAUGE)
