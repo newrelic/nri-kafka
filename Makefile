@@ -7,9 +7,7 @@ INTEGRATION  := kafka
 BINARY_NAME   = nri-$(INTEGRATION)
 GO_PKGS      := $(shell go list ./... | grep -v "/vendor/")
 GO_FILES     := ./src/
-GOTOOLS       = github.com/kardianos/govendor \
-		gopkg.in/alecthomas/gometalinter.v2 \
-		github.com/axw/gocov/gocov \
+GOTOOLS       = github.com/axw/gocov/gocov \
 		github.com/AlekSi/gocov-xml \
 
 all: build
@@ -27,32 +25,28 @@ clean:
 tools: check-version
 	@echo "=== $(INTEGRATION) === [ tools ]: Installing tools required by the project..."
 	@go get $(GOTOOLS)
-	@gometalinter.v2 --install
+	@curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s v1.33.0
 
 tools-update: check-version
 	@echo "=== $(INTEGRATION) === [ tools-update ]: Updating tools required by the project..."
 	@go get -u $(GOTOOLS)
-	@gometalinter.v2 --install
+	@curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s v1.33.0
 
-deps: tools deps-only
-
-deps-only:
-	@echo "=== $(INTEGRATION) === [ deps ]: Installing package dependencies required by the project..."
-	@govendor sync
+deps: tools
 
 validate: deps
-	@echo "=== $(INTEGRATION) === [ validate ]: Validating source code running gometalinter..."
-	@gometalinter.v2 --config=.gometalinter.json ./...
+	@echo "=== $(INTEGRATION) === [ validate ]: Validating source code running golangci-lint..."
+	@./bin/golangci-lint run
 
 validate-all: deps
-	@echo "=== $(INTEGRATION) === [ validate ]: Validating source code running gometalinter..."
-	@gometalinter.v2 --config=.gometalinter.json --enable=interfacer --enable=gosimple ./...
+	@echo "=== $(INTEGRATION) === [ validate ]: Validating source code running golangci-lint..."
+	@./bin/golangci-lint run
 
 compile: deps
 	@echo "=== $(INTEGRATION) === [ compile ]: Building $(BINARY_NAME)..."
 	@go build -o bin/$(BINARY_NAME) ./src
 
-compile-only: deps-only
+compile-only:
 	@echo "=== $(INTEGRATION) === [ compile ]: Building $(BINARY_NAME)..."
 	@go build -o bin/$(BINARY_NAME) ./src
 

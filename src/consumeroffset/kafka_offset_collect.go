@@ -6,6 +6,7 @@ import (
 	"sync"
 
 	"github.com/Shopify/sarama"
+	"github.com/newrelic/infra-integrations-sdk/data/attribute"
 	"github.com/newrelic/infra-integrations-sdk/data/metric"
 	"github.com/newrelic/infra-integrations-sdk/integration"
 	"github.com/newrelic/infra-integrations-sdk/log"
@@ -354,9 +355,9 @@ func calculateLagTotals(partitionLagChan chan partitionLagResult, wg *sync.WaitG
 		}
 
 		ms := consumerGroupEntity.NewMetricSet("KafkaOffsetSample",
-			metric.Attribute{Key: "clusterName", Value: args.GlobalArgs.ClusterName},
-			metric.Attribute{Key: "consumerGroup", Value: consumerGroup},
-			metric.Attribute{Key: "clusterName", Value: args.GlobalArgs.ClusterName},
+			attribute.Attribute{Key: "clusterName", Value: args.GlobalArgs.ClusterName},
+			attribute.Attribute{Key: "consumerGroup", Value: consumerGroup},
+			attribute.Attribute{Key: "clusterName", Value: args.GlobalArgs.ClusterName},
 		)
 
 		err = ms.SetMetric("consumerGroup.totalLag", totalLag, metric.GAUGE)
@@ -382,9 +383,9 @@ func calculateLagTotals(partitionLagChan chan partitionLagResult, wg *sync.WaitG
 		}
 
 		ms := clientEntity.NewMetricSet("KafkaOffsetSample",
-			metric.Attribute{Key: "clusterName", Value: args.GlobalArgs.ClusterName},
-			metric.Attribute{Key: "clientID", Value: clientID},
-			metric.Attribute{Key: "clusterName", Value: args.GlobalArgs.ClusterName},
+			attribute.Attribute{Key: "clusterName", Value: args.GlobalArgs.ClusterName},
+			attribute.Attribute{Key: "clientID", Value: clientID},
+			attribute.Attribute{Key: "clusterName", Value: args.GlobalArgs.ClusterName},
 		)
 
 		err = ms.SetMetric("consumer.totalLag", totalLag, metric.GAUGE)
@@ -419,12 +420,12 @@ func collectPartitionOffsetMetrics(client connection.Client, consumerGroup strin
 	}
 
 	ms := partitionConsumerEntity.NewMetricSet("KafkaOffsetSample",
-		metric.Attribute{Key: "clusterName", Value: args.GlobalArgs.ClusterName},
-		metric.Attribute{Key: "consumerGroup", Value: consumerGroup},
-		metric.Attribute{Key: "topic", Value: topic},
-		metric.Attribute{Key: "partition", Value: strconv.Itoa(int(partition))},
-		metric.Attribute{Key: "clientID", Value: memberDescription.ClientId},
-		metric.Attribute{Key: "clientHost", Value: memberDescription.ClientHost},
+		attribute.Attribute{Key: "clusterName", Value: args.GlobalArgs.ClusterName},
+		attribute.Attribute{Key: "consumerGroup", Value: consumerGroup},
+		attribute.Attribute{Key: "topic", Value: topic},
+		attribute.Attribute{Key: "partition", Value: strconv.Itoa(int(partition))},
+		attribute.Attribute{Key: "clientID", Value: memberDescription.ClientId},
+		attribute.Attribute{Key: "clientHost", Value: memberDescription.ClientHost},
 	)
 
 	if block.Offset == -1 {

@@ -5,7 +5,7 @@ import (
 	"strconv"
 	"sync"
 
-	"github.com/newrelic/infra-integrations-sdk/data/metric"
+	"github.com/newrelic/infra-integrations-sdk/data/attribute"
 	"github.com/newrelic/infra-integrations-sdk/integration"
 	"github.com/newrelic/infra-integrations-sdk/jmx"
 	"github.com/newrelic/infra-integrations-sdk/log"
@@ -86,10 +86,10 @@ func ConsumerWorker(consumerChan <-chan *args.JMXHost, wg *sync.WaitGroup, i *in
 
 			// Create a sample for consumer metrics
 			sample := consumerEntity.NewMetricSet("KafkaConsumerSample",
-				metric.Attribute{Key: "clusterName", Value: args.GlobalArgs.ClusterName},
-				metric.Attribute{Key: "displayName", Value: jmxInfo.Name},
-				metric.Attribute{Key: "entityName", Value: "consumer:" + jmxInfo.Name},
-				metric.Attribute{Key: "host", Value: jmxInfo.Host},
+				attribute.Attribute{Key: "clusterName", Value: args.GlobalArgs.ClusterName},
+				attribute.Attribute{Key: "displayName", Value: jmxInfo.Name},
+				attribute.Attribute{Key: "entityName", Value: "consumer:" + jmxInfo.Name},
+				attribute.Attribute{Key: "host", Value: jmxInfo.Host},
 			)
 
 			// Collect the consumer metrics and populate the sample with them
@@ -148,10 +148,10 @@ func ProducerWorker(producerChan <-chan *args.JMXHost, wg *sync.WaitGroup, i *in
 
 			// Create a metric set for the producer
 			sample := producerEntity.NewMetricSet("KafkaProducerSample",
-				metric.Attribute{Key: "clusterName", Value: args.GlobalArgs.ClusterName},
-				metric.Attribute{Key: "displayName", Value: jmxInfo.Name},
-				metric.Attribute{Key: "entityName", Value: "producer:" + jmxInfo.Name},
-				metric.Attribute{Key: "host", Value: jmxInfo.Host},
+				attribute.Attribute{Key: "clusterName", Value: args.GlobalArgs.ClusterName},
+				attribute.Attribute{Key: "displayName", Value: jmxInfo.Name},
+				attribute.Attribute{Key: "entityName", Value: "producer:" + jmxInfo.Name},
+				attribute.Attribute{Key: "host", Value: jmxInfo.Host},
 			)
 
 			// Collect producer metrics and populate the metric set with them

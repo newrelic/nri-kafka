@@ -9,6 +9,7 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/newrelic/infra-integrations-sdk/data/attribute"
 	"github.com/newrelic/infra-integrations-sdk/data/metric"
 	"github.com/newrelic/infra-integrations-sdk/integration"
 	"github.com/newrelic/infra-integrations-sdk/jmx"
@@ -57,9 +58,9 @@ func CollectTopicSubMetrics(
 
 	for _, topicName := range topicList {
 		topicSample := entity.NewMetricSet("Kafka"+titleEntityType+"Sample",
-			metric.Attribute{Key: "displayName", Value: entity.Metadata.Name},
-			metric.Attribute{Key: "entityName", Value: fmt.Sprintf("%s:%s", strings.TrimPrefix(entity.Metadata.Namespace, "ka-"), entity.Metadata.Name)},
-			metric.Attribute{Key: "topic", Value: topicName},
+			attribute.Attribute{Key: "displayName", Value: entity.Metadata.Name},
+			attribute.Attribute{Key: "entityName", Value: fmt.Sprintf("%s:%s", strings.TrimPrefix(entity.Metadata.Namespace, "ka-"), entity.Metadata.Name)},
+			attribute.Attribute{Key: "topic", Value: topicName},
 		)
 
 		CollectMetricDefinitions(topicSample, metricSets, beanModifier(entity.Metadata.Name, topicName))

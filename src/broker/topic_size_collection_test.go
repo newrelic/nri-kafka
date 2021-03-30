@@ -4,6 +4,7 @@ import (
 	"errors"
 	"testing"
 
+	"github.com/newrelic/infra-integrations-sdk/data/attribute"
 	"github.com/newrelic/infra-integrations-sdk/data/metric"
 	"github.com/newrelic/infra-integrations-sdk/integration"
 	"github.com/newrelic/nri-kafka/src/connection"
@@ -40,9 +41,9 @@ func TestGatherTopicSize_Single(t *testing.T) {
 	e, _ := broker.Entity(i)
 	collectedTopics := map[string]*metric.Set{
 		"topic": e.NewMetricSet("KafkaBrokerSample",
-			metric.Attribute{Key: "displayName", Value: "testEntity"},
-			metric.Attribute{Key: "entityName", Value: "broker:testEntity"},
-			metric.Attribute{Key: "topic", Value: "topic"},
+			attribute.Attribute{Key: "displayName", Value: "testEntity"},
+			attribute.Attribute{Key: "entityName", Value: "broker:testEntity"},
+			attribute.Attribute{Key: "topic", Value: "topic"},
 		),
 	}
 
@@ -83,9 +84,9 @@ func TestGatherTopicSize_QueryError(t *testing.T) {
 
 	collectedTopics := map[string]*metric.Set{
 		"topic": e.NewMetricSet("KafkaBrokerSample",
-			metric.Attribute{Key: "displayName", Value: "testEntity"},
-			metric.Attribute{Key: "entityName", Value: "broker:testEntity"},
-			metric.Attribute{Key: "topic", Value: "topic"},
+			attribute.Attribute{Key: "displayName", Value: "testEntity"},
+			attribute.Attribute{Key: "entityName", Value: "broker:testEntity"},
+			attribute.Attribute{Key: "topic", Value: "topic"},
 		),
 	}
 
@@ -118,9 +119,9 @@ func TestGatherTopicSize_QueryBlank(t *testing.T) {
 
 	collectedTopics := map[string]*metric.Set{
 		"topic": e.NewMetricSet("KafkaBrokerSample",
-			metric.Attribute{Key: "displayName", Value: "testEntity"},
-			metric.Attribute{Key: "entityName", Value: "broker:testEntity"},
-			metric.Attribute{Key: "topic", Value: "topic"},
+			attribute.Attribute{Key: "displayName", Value: "testEntity"},
+			attribute.Attribute{Key: "entityName", Value: "broker:testEntity"},
+			attribute.Attribute{Key: "topic", Value: "topic"},
 		),
 	}
 
@@ -156,9 +157,9 @@ func TestGatherTopicSize_AggregateError(t *testing.T) {
 
 	collectedTopics := map[string]*metric.Set{
 		"topic": e.NewMetricSet("KafkaBrokerSample",
-			metric.Attribute{Key: "displayName", Value: "testEntity"},
-			metric.Attribute{Key: "entityName", Value: "broker:testEntity"},
-			metric.Attribute{Key: "topic", Value: "topic"},
+			attribute.Attribute{Key: "displayName", Value: "testEntity"},
+			attribute.Attribute{Key: "entityName", Value: "broker:testEntity"},
+			attribute.Attribute{Key: "topic", Value: "topic"},
 		),
 	}
 

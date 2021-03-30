@@ -9,6 +9,7 @@ import (
 	"sync"
 
 	"github.com/Shopify/sarama"
+	"github.com/newrelic/infra-integrations-sdk/data/attribute"
 	"github.com/newrelic/infra-integrations-sdk/data/metric"
 	"github.com/newrelic/infra-integrations-sdk/integration"
 	"github.com/newrelic/infra-integrations-sdk/log"
@@ -131,9 +132,9 @@ func topicWorker(topicChan <-chan *Topic, wg *sync.WaitGroup, client connection.
 			log.Debug("Collecting metrics for topic %s", topic.Name)
 			// Create metric set for topic
 			sample := topic.Entity.NewMetricSet("KafkaTopicSample",
-				metric.Attribute{Key: "displayName", Value: topic.Name},
-				metric.Attribute{Key: "entityName", Value: "topic:" + topic.Name},
-				metric.Attribute{Key: "clusterName", Value: args.GlobalArgs.ClusterName},
+				attribute.Attribute{Key: "displayName", Value: topic.Name},
+				attribute.Attribute{Key: "entityName", Value: "topic:" + topic.Name},
+				attribute.Attribute{Key: "clusterName", Value: args.GlobalArgs.ClusterName},
 			)
 
 			// Collect metrics and populate metric set with them

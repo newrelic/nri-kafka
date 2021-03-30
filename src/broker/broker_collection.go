@@ -9,6 +9,7 @@ import (
 
 	"github.com/Shopify/sarama"
 
+	"github.com/newrelic/infra-integrations-sdk/data/attribute"
 	"github.com/newrelic/infra-integrations-sdk/data/metric"
 	"github.com/newrelic/infra-integrations-sdk/integration"
 	"github.com/newrelic/infra-integrations-sdk/jmx"
@@ -158,9 +159,9 @@ func populateBrokerMetrics(b *connection.Broker, i *integration.Integration) {
 		return
 	}
 	sample := entity.NewMetricSet("KafkaBrokerSample",
-		metric.Attribute{Key: "displayName", Value: entity.Metadata.Name},
-		metric.Attribute{Key: "entityName", Value: "broker:" + entity.Metadata.Name},
-		metric.Attribute{Key: "clusterName", Value: args.GlobalArgs.ClusterName},
+		attribute.Attribute{Key: "displayName", Value: entity.Metadata.Name},
+		attribute.Attribute{Key: "entityName", Value: "broker:" + entity.Metadata.Name},
+		attribute.Attribute{Key: "clusterName", Value: args.GlobalArgs.ClusterName},
 	)
 
 	// Populate metrics set with broker metrics
@@ -179,10 +180,10 @@ func collectBrokerTopicMetrics(b *connection.Broker, collectedTopics []string, i
 
 	for _, topicName := range collectedTopics {
 		sample := entity.NewMetricSet("KafkaBrokerSample",
-			metric.Attribute{Key: "displayName", Value: entity.Metadata.Name},
-			metric.Attribute{Key: "entityName", Value: "broker:" + entity.Metadata.Name},
-			metric.Attribute{Key: "clusterName", Value: args.GlobalArgs.ClusterName},
-			metric.Attribute{Key: "topic", Value: topicName},
+			attribute.Attribute{Key: "displayName", Value: entity.Metadata.Name},
+			attribute.Attribute{Key: "entityName", Value: "broker:" + entity.Metadata.Name},
+			attribute.Attribute{Key: "clusterName", Value: args.GlobalArgs.ClusterName},
+			attribute.Attribute{Key: "topic", Value: topicName},
 		)
 
 		// Insert into map
