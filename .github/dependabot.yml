@@ -1,0 +1,14 @@
+version: 2
+updates:
+- package-ecosystem: gomod
+  directory: "/"
+  schedule:
+    interval: daily
+  open-pull-requests-limit: 4
+  ignore:
+  - dependency-name: github.com/Shopify/sarama
+    versions:
+    - ">= 1.28.a, < 1.29"
+  - dependency-name: github.com/newrelic/infra-integrations-sdk
+    versions:
+    - 3.6.7+incompatible
