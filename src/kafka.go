@@ -185,7 +185,8 @@ func coreCollection(kafkaIntegration *integration.Integration) {
 			os.Exit(2)
 		}
 
-		topics, err := topic.GetTopics(clusterClient)
+		//topics, err := topic.GetTopics(clusterClient)
+		topics, err := topic.GetTopicsFromZookeeper(args.GlobalArgs)
 		if err != nil {
 			log.Error("Failed to get a list of topics. Continuing with broker collection: %s", err)
 		}

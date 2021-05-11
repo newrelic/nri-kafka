@@ -4,6 +4,7 @@ package topic
 import (
 	"errors"
 	"fmt"
+	"github.com/newrelic/nri-kafka/src/zookeeper"
 	"regexp"
 	"strings"
 	"sync"
@@ -80,6 +81,24 @@ func GetTopics(client connection.Client) ([]string, error) {
 		log.Error("Invalid topic mode %s", args.GlobalArgs.TopicMode)
 		return nil, fmt.Errorf("invalid topic_mode '%s'", args.GlobalArgs.TopicMode)
 	}
+}
+
+// GetTopicsFromZookeeper gets a broker with given ID from zookeeper
+func GetTopicsFromZookeeper(arguments *args.ParsedArguments) ([]string, error) {
+	zkConn, err := zookeeper.NewConnection(arguments)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create zookeeper connection: %s", err)
+	}
+	defer zkConn.Close()
+
+	// Query Zookeeper for topic information
+	topics, _, err := zkConn.Children(zookeeper.Path("/brokers/topics"))
+	if err != nil {
+		return nil, fmt.Errorf("failed to retrieve topics from Zookeeper: %s", err)
+	}
+
+	log.Debug("list of topics from zookeeper: %v", topics)
+	return topics, nil
 }
 
 // FeedTopicPool sends Topic structs down the topicChan for workers to collect and build Topic structs
