@@ -15,6 +15,7 @@ type Connection interface {
 	Get(string) ([]byte, *zk.Stat, error)
 	Children(string) ([]string, *zk.Stat, error)
 	Close()
+	Server() string
 }
 
 type zookeeperConnection struct {
@@ -27,6 +28,10 @@ func (z zookeeperConnection) Children(s string) ([]string, *zk.Stat, error) {
 
 func (z zookeeperConnection) Get(s string) ([]byte, *zk.Stat, error) {
 	return z.inner.Get(s)
+}
+
+func (z zookeeperConnection) Server() string {
+	return z.inner.Server()
 }
 
 type zookeeperLogger struct{}

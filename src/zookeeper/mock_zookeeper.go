@@ -26,3 +26,9 @@ func (m *MockConnection) Children(s string) ([]string, *zk.Stat, error) {
 func (m *MockConnection) Close() {
 	// do nothing
 }
+
+// Server returns the hostname
+func (m *MockConnection) Server() string {
+	args := m.Called()
+	return args.String(0)
+}
