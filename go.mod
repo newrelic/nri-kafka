@@ -3,9 +3,7 @@ module github.com/newrelic/nri-kafka
 go 1.16
 
 require (
-	github.com/AlekSi/gocov-xml v0.0.0-20190121064608-3a14fb1c4737
 	github.com/Shopify/sarama v1.27.0
-	github.com/axw/gocov v1.0.0
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/eapache/go-resiliency v1.2.1-0.20190716143035-b98ce2825f72 // indirect
 	github.com/eapache/queue v1.1.1-0.20180227141424-093482f3f8ce // indirect
