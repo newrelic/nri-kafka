@@ -7,14 +7,14 @@ INTEGRATION  := kafka
 BINARY_NAME   = nri-$(INTEGRATION)
 GO_PKGS      := $(shell go list ./... | grep -v "/vendor/")
 GO_FILES     := ./src/
-GOTOOLS       = github.com/axw/gocov/gocov \
-		github.com/AlekSi/gocov-xml \
+GOFLAGS          = -mod=readonly
+GOLANGCI_LINT    = github.com/golangci/golangci-lint/cmd/golangci-lint
 
 all: build
 
-build: check-version clean validate test compile
+build: clean validate test compile
 
-generate: tools
+generate:
 	@echo "=== $(INTEGRATION) === [ generate ]: Generating mocks..."
 	@go generate ./src/connection/...
 
@@ -22,52 +22,22 @@ clean:
 	@echo "=== $(INTEGRATION) === [ clean ]: Removing binaries and coverage file..."
 	@rm -rfv bin coverage.xml $(TARGET)
 
-tools: check-version
-	@echo "=== $(INTEGRATION) === [ tools ]: Installing tools required by the project..."
-	@go get $(GOTOOLS)
-	@curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s v1.33.0
+validate:
+	@printf "=== $(INTEGRATION) === [ validate ]: running golangci-lint & semgrep... "
+	@go run  $(GOFLAGS) $(GOLANGCI_LINT) run --verbose
+	@[ -f .semgrep.yml ] && semgrep_config=".semgrep.yml" || semgrep_config="p/golang" ; \
+	docker run --rm -v "${PWD}:/src:ro" --workdir /src returntocorp/semgrep -c "$$semgrep_config"
 
-tools-update: check-version
-	@echo "=== $(INTEGRATION) === [ tools-update ]: Updating tools required by the project..."
-	@go get -u $(GOTOOLS)
-	@curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s v1.33.0
-
-deps: tools
-
-validate: deps
-	@echo "=== $(INTEGRATION) === [ validate ]: Validating source code running golangci-lint..."
-	@./bin/golangci-lint run
-
-validate-all: deps
-	@echo "=== $(INTEGRATION) === [ validate ]: Validating source code running golangci-lint..."
-	@./bin/golangci-lint run
-
-compile: deps
+compile:
 	@echo "=== $(INTEGRATION) === [ compile ]: Building $(BINARY_NAME)..."
 	@go build -o bin/$(BINARY_NAME) ./src
 
-compile-only:
-	@echo "=== $(INTEGRATION) === [ compile ]: Building $(BINARY_NAME)..."
-	@go build -o bin/$(BINARY_NAME) ./src
-
-test: deps
-	@echo "=== $(INTEGRATION) === [ test ]: Running unit tests..."
-	@gocov test -race $(GO_PKGS) | gocov-xml > coverage.xml
+test:
+	@echo "=== $(INTEGRATION) === [ test ]: running unit tests..."
+	@go test -race ./... -count=1
 
 # Include thematic Makefiles
 include $(CURDIR)/build/ci.mk
 include $(CURDIR)/build/release.mk
 
-check-version:
-ifdef GOOS
-ifneq "$(GOOS)" "$(NATIVEOS)"
-	$(error GOOS is not $(NATIVEOS). Cross-compiling is only allowed for 'clean', 'deps-only' and 'compile-only' targets)
-endif
-endif
-ifdef GOARCH
-ifneq "$(GOARCH)" "$(NATIVEARCH)"
-	$(error GOARCH variable is not $(NATIVEARCH). Cross-compiling is only allowed for 'clean', 'deps-only' and 'compile-only' targets)
-endif
-endif
-
-.PHONY: all build clean tools tools-update deps validate compile test check-version
+.PHONY: all build clean validate compile test
