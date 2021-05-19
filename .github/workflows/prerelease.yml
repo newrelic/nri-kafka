@@ -178,6 +178,7 @@ jobs:
           tag: ${{env.TAG}}
           app_name: "nri-${{env.INTEGRATION}}"
           repo_name: ${{ env.ORIGINAL_REPO_NAME }}
+          access_point_host: "staging"
           schema: "ohi-jmx" # ohi-jmx for integrations that bundle JMX on windows installers
           aws_region: "us-east-1"
           aws_role_arn: ${{ secrets.OHAI_AWS_ROLE_ARN_STAGING }}
