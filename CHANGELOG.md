@@ -5,6 +5,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 2.15.1 (2021-05-26)
+### Changed
+- Add debug broker logs from Zookeeper
+
 ## 2.15.0 (2021-03-24)
 ### Changed
 - Upgraded github.com/newrelic/infra-integrations-sdk to v3.6.6
