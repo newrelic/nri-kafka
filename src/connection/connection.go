@@ -358,7 +358,7 @@ func GetBrokerFromZookeeper(zkConn zookeeper.Connection, id, preferredListener s
 		// Check that the protocol map
 		protocol, ok := brokerDecoded.ProtocolMap[listener]
 		if !ok {
-			log.Error("Listener '%s' was not found in the protocol map", listener)
+			log.Error("Listener '%s' not found in protocol map with host %s and port %d", listener, host, port)
 			continue
 		}
 
