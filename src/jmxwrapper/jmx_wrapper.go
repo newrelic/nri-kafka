@@ -1,4 +1,4 @@
-// Package jmxwrapper contains varaibles for using github.com/newrelic/infra-integrations-sdk/jmx package
+// Package jmxwrapper contains variables for using github.com/newrelic/infra-integrations-sdk/jmx package
 // while allowing everything to be mocked for testing.
 package jmxwrapper
 
