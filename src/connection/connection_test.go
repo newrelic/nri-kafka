@@ -14,6 +14,7 @@ func Test_GetBrokerFromZookeeper(t *testing.T) {
 
 	zkConn := &zookeeper.MockConnection{}
 	zkConn.On("Get", "/brokers/ids/0").Return([]byte(`{"listener_security_protocol_map":{"SASL_SSL":"SASL_SSL","SSL":"SSL", "PLAINTEXT":"PLAINTEXT"},"endpoints":["SASL_SSL://my-broker.host:9193","SSL://my-broker.host:9093","PLAINTEXT://my-broker.host:9092"],"rack":"us-east-1d","jmx_port":9999,"host":null,"timestamp":"1542127633364","port":-1,"version":4}`), new(zk.Stat), nil)
+	zkConn.On("Server").Return("localhost:2181")
 
 	_, err := GetBrokerFromZookeeper(zkConn, "0", "PLAINTEXT")
 	assert.Error(t, err, "Expected error getting broker information from mock")

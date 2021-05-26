@@ -339,6 +339,7 @@ func GetBrokerFromZookeeper(zkConn zookeeper.Connection, id, preferredListener s
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal broker information from zookeeper: %s", err)
 	}
+	log.Debug("zookeeper instance %s is reporting broker %s with the following information %+v", zkConn.Server(), id, brokerDecoded)
 
 	// Go through the list of brokers until we find one that uses a protocol we know how to handle
 	for _, endpoint := range brokerDecoded.Endpoints {
@@ -357,7 +358,7 @@ func GetBrokerFromZookeeper(zkConn zookeeper.Connection, id, preferredListener s
 		// Check that the protocol map
 		protocol, ok := brokerDecoded.ProtocolMap[listener]
 		if !ok {
-			log.Error("Listener '%s' was not found in the protocol map")
+			log.Error("Listener '%s' not found in protocol map for %s:%d", listener, host, port)
 			continue
 		}
 
