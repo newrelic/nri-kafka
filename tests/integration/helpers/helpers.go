@@ -8,12 +8,14 @@ import (
 	"github.com/newrelic/infra-integrations-sdk/log"
 )
 
+const CMD_MIN_LENGTH = 3
+
 // ExecInContainer executes the given command inside the specified container. It returns three values:
 // 1st - Standard Output
 // 2nd - Standard Error
 // 3rd - Runtime error, if any
 func ExecInContainer(container string, command []string) (string, string, error) {
-	cmdLine := make([]string, 0, 3+len(command))
+	cmdLine := make([]string, 0, CMD_MIN_LENGTH+len(command))
 	cmdLine = append(cmdLine, "exec", "-i")
 	cmdLine = append(cmdLine, container)
 	cmdLine = append(cmdLine, command...)
