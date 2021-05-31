@@ -97,7 +97,9 @@ func ensureBrokerClusterReady(tries int) {
 		ensureBrokerClusterReady(tries)
 	}
 
-	if len(metadata.Brokers) < BROKERS_IN_CLUSTER {
+	if metadata == nil ||
+		metadata.Brokers == nil ||
+		(metadata != nil && metadata.Brokers != nil && len(metadata.Brokers) < BROKERS_IN_CLUSTER) {
 		tries += 1
 		if tries > BROKER_CONN_MAX_RETRIES {
 			log.Error("failed to start all brokers")
