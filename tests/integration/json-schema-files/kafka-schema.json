@@ -26,6 +26,7 @@
     "data": {
       "type": "array",
       "uniqueItems": true,
+      "minItems": 3,
       "items": [
         {
           "type": "object",
