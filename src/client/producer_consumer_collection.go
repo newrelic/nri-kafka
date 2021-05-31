@@ -83,6 +83,8 @@ func ConsumerWorker(consumerChan <-chan *args.JMXHost, wg *sync.WaitGroup, i *in
 				jmxwrapper.JMXLock.Unlock()
 				continue
 			}
+			jmxwrapper.JMXHost = jmxInfo.Host
+			jmxwrapper.JMXPort = jmxInfo.Port
 
 			// Create a sample for consumer metrics
 			sample := consumerEntity.NewMetricSet("KafkaConsumerSample",
@@ -145,6 +147,8 @@ func ProducerWorker(producerChan <-chan *args.JMXHost, wg *sync.WaitGroup, i *in
 				jmxwrapper.JMXLock.Unlock()
 				continue
 			}
+			jmxwrapper.JMXHost = jmxInfo.Host
+			jmxwrapper.JMXPort = jmxInfo.Port
 
 			// Create a metric set for the producer
 			sample := producerEntity.NewMetricSet("KafkaProducerSample",

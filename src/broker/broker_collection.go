@@ -127,6 +127,8 @@ func collectBrokerMetrics(b *connection.Broker, collectedTopics []string, i *int
 		jmxwrapper.JMXLock.Unlock()
 		return err
 	}
+	jmxwrapper.JMXHost = b.Host
+	jmxwrapper.JMXPort = b.JMXPort
 
 	// Collect broker metrics
 	populateBrokerMetrics(b, i)
