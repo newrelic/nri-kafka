@@ -10,7 +10,7 @@ services:
   kafka1:
     image: wurstmeister/kafka
     ports:
-      - "9092"
+      - "19092:9092"
       - "1099"
     environment:
       KAFKA_ADVERTISED_HOST_NAME: kafka1
