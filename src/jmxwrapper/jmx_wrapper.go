@@ -24,12 +24,4 @@ var (
 	// JMXClose is a wrapper around infra-integrations-sdk/jmx functions to allow
 	// easier mocking during tests
 	JMXClose = jmx.Close
-
-	// JMXHost is a wrapper around infra-integrations-sdk/jmx functions to allow
-	// easier mocking during tests
-	JMXHost = jmx.HostName
-
-	// JMXPort is a wrapper around infra-integrations-sdk/jmx functions to allow
-	// easier mocking during tests
-	JMXPort = jmx.Port
 )
