@@ -25,9 +25,11 @@ var (
 	// easier mocking during tests
 	JMXClose = jmx.Close
 
-	// JMXOpen stores the value of the host where a JMX connection has been opened
-	JMXHost string
+	// JMXHost is a wrapper around infra-integrations-sdk/jmx functions to allow
+	// easier mocking during tests
+	JMXHost = jmx.HostName
 
-	// JMXOpen stores the value of the port where a JMX connection has been opened
-	JMXPort int
+	// JMXPort is a wrapper around infra-integrations-sdk/jmx functions to allow
+	// easier mocking during tests
+	JMXPort = jmx.Port
 )
