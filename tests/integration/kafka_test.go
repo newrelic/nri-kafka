@@ -4,6 +4,7 @@ package integration
 
 import (
 	"flag"
+	"fmt"
 	"os"
 	"path/filepath"
 	"testing"
@@ -26,6 +27,8 @@ const (
 
 var (
 	iName = "kafka"
+
+	topicNames = []string{"topicA", "topicB", "topicC"}
 
 	defaultContainer = "integration_nri_kafka_1"
 	defaultBinPath   = "/nri-kafka"
@@ -157,9 +160,8 @@ func zookeeperDiscoverConfig(command []string) []string {
 		"--cluster_name", "kfk-cluster-zookeeper",
 		"--zookeeper_hosts", `[{"host": "zookeeper", "port": 2181}]`,
 		"--autodiscover_strategy", "zookeeper",
-		"--collect_broker_topic_data", "true",
+		"--collect_broker_topic_data",
 		"--topic_mode", "all",
-		"--topic_bucket", "3/3",
 	)
 }
 
@@ -186,6 +188,27 @@ func TestKafkaIntegration_zookeeper(t *testing.T) {
 	schemaPath := filepath.Join("json-schema-files", "kafka-schema.json")
 	err = jsonschema.Validate(schemaPath, stdout)
 	assert.NoError(t, err, "The output of kafka integration doesn't have expected format.")
+	for _, topic := range topicNames {
+		assert.Contains(t, stdout, topic, fmt.Sprintf("The output doesn't have the topic %s", topic))
+	}
+}
+
+func TestKafkaIntegration_zookeeper_with_zookeperTopics(t *testing.T) {
+	zookeeperDiscoverConfigTopicsZookeeperTopics := func(command []string) []string {
+		return append(zookeeperDiscoverConfig(command), "--zookeeper_topics")
+	}
+
+	stdout, stderr, err := runIntegration(t, zookeeperDiscoverConfigTopicsZookeeperTopics)
+
+	assert.NotNil(t, stderr, "unexpected stderr")
+	assert.NoError(t, err, "Unexpected error")
+
+	schemaPath := filepath.Join("json-schema-files", "kafka-schema.json")
+	err = jsonschema.Validate(schemaPath, stdout)
+	assert.NoError(t, err, "The output of kafka integration doesn't have expected format.")
+	for _, topic := range topicNames {
+		assert.Contains(t, stdout, topic, fmt.Sprintf("The output doesn't have the topic %s", topic))
+	}
 }
 
 func TestKafkaIntegration_bootstrap(t *testing.T) {
@@ -197,6 +220,9 @@ func TestKafkaIntegration_bootstrap(t *testing.T) {
 	schemaPath := filepath.Join("json-schema-files", "kafka-schema.json")
 	err = jsonschema.Validate(schemaPath, stdout)
 	assert.NoError(t, err, "The output of kafka integration doesn't have expected format.")
+	for _, topic := range topicNames {
+		assert.Contains(t, stdout, topic, fmt.Sprintf("The output doesn't have the topic %s", topic))
+	}
 }
 
 func TestKafkaIntegration_bootstrap_localOnlyCollection(t *testing.T) {
@@ -212,6 +238,9 @@ func TestKafkaIntegration_bootstrap_localOnlyCollection(t *testing.T) {
 	schemaPath := filepath.Join("json-schema-files", "kafka-schema-only-local.json")
 	err = jsonschema.Validate(schemaPath, stdout)
 	assert.NoError(t, err, "The output of kafka integration doesn't have expected format.")
+	for _, topic := range topicNames {
+		assert.Contains(t, stdout, topic, fmt.Sprintf("The output doesn't have the topic %s", topic))
+	}
 }
 
 func TestKafkaIntegration_bootstrap_metrics(t *testing.T) {
@@ -227,6 +256,9 @@ func TestKafkaIntegration_bootstrap_metrics(t *testing.T) {
 	schemaPath := filepath.Join("json-schema-files", "kafka-schema-metrics.json")
 	err = jsonschema.Validate(schemaPath, stdout)
 	assert.NoError(t, err, "The output of kafka integration doesn't have expected format.")
+	for _, topic := range topicNames {
+		assert.Contains(t, stdout, topic, fmt.Sprintf("The output doesn't have the topic %s", topic))
+	}
 }
 
 func TestKafkaIntegration_bootstrap_inventory(t *testing.T) {
@@ -242,4 +274,7 @@ func TestKafkaIntegration_bootstrap_inventory(t *testing.T) {
 	schemaPath := filepath.Join("json-schema-files", "kafka-schema-inventory.json")
 	err = jsonschema.Validate(schemaPath, stdout)
 	assert.NoError(t, err, "The output of kafka integration doesn't have expected format.")
+	for _, topic := range topicNames {
+		assert.Contains(t, stdout, topic, fmt.Sprintf("The output doesn't have the topic %s", topic))
+	}
 }
