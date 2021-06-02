@@ -7,6 +7,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/newrelic/nri-kafka/src/metrics"
+
 	"github.com/Shopify/sarama"
 	"github.com/newrelic/infra-integrations-sdk/data/attribute"
 	"github.com/newrelic/infra-integrations-sdk/data/inventory"
@@ -186,7 +188,12 @@ func TestCollectBrokerTopicMetrics(t *testing.T) {
 	}
 
 	i, _ := integration.New("test", "1.0.0")
-	e, _ := i.Entity("testEntity", "testNamespace", integration.IDAttribute{Key: "clusterName", Value: ""})
+	e, _ := i.Entity(
+		"kafkabroker:9090",
+		"ka-broker",
+		integration.IDAttribute{Key: "clusterName", Value: ""},
+		integration.IDAttribute{Key: "brokerID", Value: "0"},
+	)
 
 	mockBroker := &mocks.SaramaBroker{}
 	mockBroker.On("Addr").Return("kafkabroker:9090")
@@ -213,6 +220,8 @@ func TestCollectBrokerTopicMetrics(t *testing.T) {
 	}
 
 	out := collectBrokerTopicMetrics(testBroker, []string{"topic"}, i)
+
+	metrics.CollectMetricDefinitions(sample, metrics.BrokerTopicMetricDefs, metrics.ApplyTopicName("topic"))
 
 	assert.Equal(t, expected, out)
 }

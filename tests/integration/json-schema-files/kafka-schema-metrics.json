@@ -1,0 +1,553 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema",
+  "type": "object",
+  "required": [
+    "name",
+    "protocol_version",
+    "integration_version",
+    "data"
+  ],
+  "properties": {
+    "name": {
+      "minLength": 1,
+      "pattern": "^com.newrelic.kafka$",
+      "type": "string"
+    },
+    "protocol_version": {
+      "minLength": 1,
+      "pattern": "^3$",
+      "type": "string"
+    },
+    "integration_version": {
+      "minLength": 1,
+      "pattern": "^[0-9]+.[0-9]+.[0-9]+$",
+      "type": "string"
+    },
+    "data": {
+      "type": "array",
+      "uniqueItems": true,
+      "minItems": 3,
+      "items": [
+        {
+          "type": "object",
+          "required": [
+            "entity",
+            "metrics",
+            "inventory",
+            "events"
+          ],
+          "properties": {
+            "entity": {
+              "type": "object",
+              "required": [
+                "name",
+                "type",
+                "id_attributes"
+              ],
+              "properties": {
+                "name": {
+                  "minLength": 1,
+                  "pattern": "^kafka*",
+                  "type": "string"
+                },
+                "type": {
+                  "minLength": 1,
+                  "pattern": "^ka-broker$",
+                  "type": "string"
+                },
+                "id_attributes": {
+                  "type": "array",
+                  "uniqueItems": true,
+                  "items": [
+                    {
+                      "type": "object",
+                      "required": [
+                        "Key",
+                        "Value"
+                      ],
+                      "properties": {
+                        "Key": {
+                          "type": "string"
+                        },
+                        "Value": {
+                          "type": "string"
+                        }
+                      }
+                    },
+                    {
+                      "type": "object",
+                      "required": [
+                        "Key",
+                        "Value"
+                      ],
+                      "properties": {
+                        "Key": {
+                          "type": "string"
+                        },
+                        "Value": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            },
+            "metrics": {
+              "type": "array",
+              "uniqueItems": true,
+              "minItems": 1,
+              "items": {
+                "type": "object",
+                "required": [
+                  "broker.IOInPerSecond",
+                  "broker.IOOutPerSecond",
+                  "broker.messagesInPerSecond",
+                  "clusterName",
+                  "displayName",
+                  "entityName",
+                  "event_type",
+                  "net.bytesRejectedPerSecond",
+                  "replication.isrExpandsPerSecond",
+                  "replication.isrShrinksPerSecond",
+                  "replication.unreplicatedPartitions"
+                ],
+                "properties": {
+                  "broker.IOInPerSecond": {
+                    "type": "integer"
+                  },
+                  "broker.IOOutPerSecond": {
+                    "type": "integer"
+                  },
+                  "broker.messagesInPerSecond": {
+                    "type": "integer"
+                  },
+                  "clusterName": {
+                    "type": "string"
+                  },
+                  "displayName": {
+                    "type": "string"
+                  },
+                  "entityName": {
+                    "type": "string"
+                  },
+                  "event_type": {
+                    "type": "string"
+                  },
+                  "net.bytesRejectedPerSecond": {
+                    "type": "integer"
+                  },
+                  "replication.isrExpandsPerSecond": {
+                    "type": "integer"
+                  },
+                  "replication.isrShrinksPerSecond": {
+                    "type": "integer"
+                  },
+                  "replication.leaderElectionPerSecond": {
+                    "type": "integer"
+                  },
+                  "replication.uncleanLeaderElectionPerSecond": {
+                    "type": "integer"
+                  },
+                  "replication.unreplicatedPartitions": {
+                    "type": "integer"
+                  },
+                  "request.avgTimeFetch": {
+                    "type": "number"
+                  },
+                  "request.avgTimeMetadata": {
+                    "type": "number"
+                  },
+                  "request.avgTimeMetadata99Percentile": {
+                    "type": "number"
+                  },
+                  "request.avgTimeProduceRequest": {
+                    "type": "number"
+                  },
+                  "request.avgTimeUpdateMetadata": {
+                    "type": "number"
+                  },
+                  "request.avgTimeUpdateMetadata99Percentile": {
+                    "type": "number"
+                  },
+                  "request.clientFetchesFailedPerSecond": {
+                    "type": "number"
+                  },
+                  "request.fetchTime99Percentile": {
+                    "type": "number"
+                  },
+                  "request.handlerIdle": {
+                    "type": "number"
+                  },
+                  "request.metadataRequestsPerSecond": {
+                    "type": "number"
+                  },
+                  "request.produceRequestsFailedPerSecond": {
+                    "type": "number"
+                  },
+                  "request.produceTime99Percentile": {
+                    "type": "number"
+                  }
+                }
+              }
+            },
+            "inventory": {
+              "type": "object",
+              "required": [],
+              "properties": {}
+            },
+            "events": {
+              "type": "array",
+              "uniqueItems": true
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "entity",
+            "metrics",
+            "inventory",
+            "events"
+          ],
+          "properties": {
+            "entity": {
+              "type": "object",
+              "required": [
+                "name",
+                "type",
+                "id_attributes"
+              ],
+              "properties": {
+                "name": {
+                  "minLength": 1,
+                  "pattern": "^kafka*",
+                  "type": "string"
+                },
+                "type": {
+                  "minLength": 1,
+                  "pattern": "^ka-broker$",
+                  "type": "string"
+                },
+                "id_attributes": {
+                  "type": "array",
+                  "uniqueItems": true,
+                  "items": [
+                    {
+                      "type": "object",
+                      "required": [
+                        "Key",
+                        "Value"
+                      ],
+                      "properties": {
+                        "Key": {
+                          "type": "string"
+                        },
+                        "Value": {
+                          "type": "string"
+                        }
+                      }
+                    },
+                    {
+                      "type": "object",
+                      "required": [
+                        "Key",
+                        "Value"
+                      ],
+                      "properties": {
+                        "Key": {
+                          "type": "string"
+                        },
+                        "Value": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            },
+            "metrics": {
+              "type": "array",
+              "uniqueItems": true,
+              "minItems": 1,
+              "items": {
+                "type": "object",
+                "required": [
+                  "broker.IOInPerSecond",
+                  "broker.IOOutPerSecond",
+                  "broker.messagesInPerSecond",
+                  "clusterName",
+                  "displayName",
+                  "entityName",
+                  "event_type",
+                  "net.bytesRejectedPerSecond",
+                  "replication.isrExpandsPerSecond",
+                  "replication.isrShrinksPerSecond",
+                  "replication.unreplicatedPartitions"
+                ],
+                "properties": {
+                  "broker.IOInPerSecond": {
+                    "type": "integer"
+                  },
+                  "broker.IOOutPerSecond": {
+                    "type": "integer"
+                  },
+                  "broker.messagesInPerSecond": {
+                    "type": "integer"
+                  },
+                  "clusterName": {
+                    "type": "string"
+                  },
+                  "displayName": {
+                    "type": "string"
+                  },
+                  "entityName": {
+                    "type": "string"
+                  },
+                  "event_type": {
+                    "type": "string"
+                  },
+                  "net.bytesRejectedPerSecond": {
+                    "type": "integer"
+                  },
+                  "replication.isrExpandsPerSecond": {
+                    "type": "integer"
+                  },
+                  "replication.isrShrinksPerSecond": {
+                    "type": "integer"
+                  },
+                  "replication.leaderElectionPerSecond": {
+                    "type": "integer"
+                  },
+                  "replication.uncleanLeaderElectionPerSecond": {
+                    "type": "integer"
+                  },
+                  "replication.unreplicatedPartitions": {
+                    "type": "integer"
+                  },
+                  "request.avgTimeFetch": {
+                    "type": "number"
+                  },
+                  "request.avgTimeMetadata": {
+                    "type": "number"
+                  },
+                  "request.avgTimeMetadata99Percentile": {
+                    "type": "number"
+                  },
+                  "request.avgTimeProduceRequest": {
+                    "type": "number"
+                  },
+                  "request.avgTimeUpdateMetadata": {
+                    "type": "number"
+                  },
+                  "request.avgTimeUpdateMetadata99Percentile": {
+                    "type": "number"
+                  },
+                  "request.clientFetchesFailedPerSecond": {
+                    "type": "number"
+                  },
+                  "request.fetchTime99Percentile": {
+                    "type": "number"
+                  },
+                  "request.handlerIdle": {
+                    "type": "number"
+                  },
+                  "request.metadataRequestsPerSecond": {
+                    "type": "number"
+                  },
+                  "request.produceRequestsFailedPerSecond": {
+                    "type": "number"
+                  },
+                  "request.produceTime99Percentile": {
+                    "type": "number"
+                  }
+                }
+              }
+            },
+            "inventory": {
+              "type": "object",
+              "required": [],
+              "properties": {}
+            },
+            "events": {
+              "type": "array",
+              "uniqueItems": true
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "entity",
+            "metrics",
+            "inventory",
+            "events"
+          ],
+          "properties": {
+            "entity": {
+              "type": "object",
+              "required": [
+                "name",
+                "type",
+                "id_attributes"
+              ],
+              "properties": {
+                "name": {
+                  "minLength": 1,
+                  "pattern": "^kafka*",
+                  "type": "string"
+                },
+                "type": {
+                  "minLength": 1,
+                  "pattern": "^ka-broker$",
+                  "type": "string"
+                },
+                "id_attributes": {
+                  "type": "array",
+                  "uniqueItems": true,
+                  "items": [
+                    {
+                      "type": "object",
+                      "required": [
+                        "Key",
+                        "Value"
+                      ],
+                      "properties": {
+                        "Key": {
+                          "type": "string"
+                        },
+                        "Value": {
+                          "type": "string"
+                        }
+                      }
+                    },
+                    {
+                      "type": "object",
+                      "required": [
+                        "Key",
+                        "Value"
+                      ],
+                      "properties": {
+                        "Key": {
+                          "type": "string"
+                        },
+                        "Value": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            },
+            "metrics": {
+              "type": "array",
+              "uniqueItems": true,
+              "minItems": 1,
+              "items": {
+                "type": "object",
+                "required": [
+                  "broker.IOInPerSecond",
+                  "broker.IOOutPerSecond",
+                  "broker.messagesInPerSecond",
+                  "clusterName",
+                  "displayName",
+                  "entityName",
+                  "event_type",
+                  "net.bytesRejectedPerSecond",
+                  "replication.isrExpandsPerSecond",
+                  "replication.isrShrinksPerSecond",
+                  "replication.unreplicatedPartitions"
+                ],
+                "properties": {
+                  "broker.IOInPerSecond": {
+                    "type": "integer"
+                  },
+                  "broker.IOOutPerSecond": {
+                    "type": "integer"
+                  },
+                  "broker.messagesInPerSecond": {
+                    "type": "integer"
+                  },
+                  "clusterName": {
+                    "type": "string"
+                  },
+                  "displayName": {
+                    "type": "string"
+                  },
+                  "entityName": {
+                    "type": "string"
+                  },
+                  "event_type": {
+                    "type": "string"
+                  },
+                  "net.bytesRejectedPerSecond": {
+                    "type": "integer"
+                  },
+                  "replication.isrExpandsPerSecond": {
+                    "type": "integer"
+                  },
+                  "replication.isrShrinksPerSecond": {
+                    "type": "integer"
+                  },
+                  "replication.leaderElectionPerSecond": {
+                    "type": "integer"
+                  },
+                  "replication.uncleanLeaderElectionPerSecond": {
+                    "type": "integer"
+                  },
+                  "replication.unreplicatedPartitions": {
+                    "type": "integer"
+                  },
+                  "request.avgTimeFetch": {
+                    "type": "number"
+                  },
+                  "request.avgTimeMetadata": {
+                    "type": "number"
+                  },
+                  "request.avgTimeMetadata99Percentile": {
+                    "type": "number"
+                  },
+                  "request.avgTimeProduceRequest": {
+                    "type": "number"
+                  },
+                  "request.avgTimeUpdateMetadata": {
+                    "type": "number"
+                  },
+                  "request.avgTimeUpdateMetadata99Percentile": {
+                    "type": "number"
+                  },
+                  "request.clientFetchesFailedPerSecond": {
+                    "type": "number"
+                  },
+                  "request.fetchTime99Percentile": {
+                    "type": "number"
+                  },
+                  "request.handlerIdle": {
+                    "type": "number"
+                  },
+                  "request.produceRequestsFailedPerSecond": {
+                    "type": "number"
+                  },
+                  "request.produceTime99Percentile": {
+                    "type": "number"
+                  }
+                }
+              }
+            },
+            "inventory": {
+              "type": "object",
+              "required": [],
+              "properties": {}
+            },
+            "events": {
+              "type": "array",
+              "uniqueItems": true
+            }
+          }
+        }
+      ]
+    }
+  }
+}

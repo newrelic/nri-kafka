@@ -78,7 +78,7 @@ func CollectBrokerRequestMetrics(sample *metric.Set, metricSets []*JMXMetricSet)
 		results, err := jmxwrapper.JMXQuery(beanName, args.GlobalArgs.Timeout)
 		// If we fail we don't want a total failure as other metrics can be collected even if a single failure/timout occurs
 		if err != nil && err == jmx.ErrConnection {
-			log.Error("Connection error: %s", err)
+			log.Error("Connection error for %s:%s : %s", jmx.HostName(), jmx.Port(), err)
 			os.Exit(1)
 		} else if err != nil {
 			log.Error("Unable to execute JMX query for MBean '%s': %s", beanName, err)
@@ -134,7 +134,7 @@ func CollectMetricDefinitions(sample *metric.Set, metricSets []*JMXMetricSet, be
 		results, err := jmxwrapper.JMXQuery(beanName, args.GlobalArgs.Timeout)
 		// If we fail we don't want a total failure as other metrics can be collected even if a single failure/timout occurs
 		if err != nil && err == jmx.ErrConnection {
-			log.Error("Connection error: %s", err)
+			log.Error("Connection error for %s:%s : %s", jmx.HostName(), jmx.Port(), err)
 			os.Exit(1)
 		} else if err != nil {
 			log.Error("Unable to execute JMX query for MBean '%s': %s", beanName, err.Error())
@@ -208,7 +208,7 @@ func getTopicListFromJMX(producer string) ([]string, error) {
 func getAllTopicsFromJMX(producer string) ([]string, error) {
 	result, err := jmxwrapper.JMXQuery(fmt.Sprintf("kafka.producer:type=producer-topic-metrics,client-id=%s,topic=*", producer), args.GlobalArgs.Timeout)
 	if err != nil && err == jmx.ErrConnection {
-		log.Error("Connection error: %s", err)
+		log.Error("Connection error for %s:%s : %s", jmx.HostName(), jmx.Port(), err)
 		os.Exit(1)
 	} else if err != nil {
 		return nil, err
