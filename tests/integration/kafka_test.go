@@ -17,9 +17,11 @@ import (
 )
 
 const (
-	BROKER_CONN_MAX_RETRIES = 5
-	KAFKA1_PORT             = "19092"
-	BROKERS_IN_CLUSTER      = 3
+	BROKER_CONN_MAX_RETRIES   = 10
+	ENSURE_TOPICS_MAX_RETRIES = 20
+	KAFKA1_PORT               = "19092"
+	BROKERS_IN_CLUSTER        = 3
+	NUMBER_OF_TOPICS          = 3
 )
 
 var (
@@ -66,6 +68,8 @@ func ensureBrokerClusterReady(tries int) {
 		time.Sleep(500 * time.Millisecond)
 		ensureBrokerClusterReady(tries)
 	}
+	defer saramaBroker.Close()
+
 	connected, err := saramaBroker.Connected()
 	if err != nil {
 		tries += 1
@@ -110,9 +114,39 @@ func ensureBrokerClusterReady(tries int) {
 	}
 }
 
+func ensureTopicsCreated(tries int) {
+	config := sarama.NewConfig()
+	config.Version = sarama.V1_0_0_0
+	config.ClientID = "nri-kafka"
+
+	client, err := sarama.NewClient([]string{"localhost:" + KAFKA1_PORT}, config)
+	if err != nil {
+		tries += 1
+		if tries > ENSURE_TOPICS_MAX_RETRIES {
+			log.Error("failed to start client: %s", err)
+			os.Exit(1)
+		}
+		time.Sleep(500 * time.Millisecond)
+		ensureTopicsCreated(tries)
+	}
+	defer client.Close()
+
+	topics, err := client.Topics()
+	if err != nil || len(topics) < NUMBER_OF_TOPICS {
+		tries += 1
+		if tries > ENSURE_TOPICS_MAX_RETRIES {
+			log.Error("failed to get topics list")
+			os.Exit(1)
+		}
+		time.Sleep(500 * time.Millisecond)
+		ensureTopicsCreated(tries)
+	}
+}
+
 func TestMain(m *testing.M) {
 	flag.Parse()
 	ensureBrokerClusterReady(0)
+	ensureTopicsCreated(0)
 	result := m.Run()
 	os.Exit(result)
 }
