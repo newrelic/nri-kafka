@@ -185,7 +185,17 @@ func coreCollection(kafkaIntegration *integration.Integration) {
 			os.Exit(2)
 		}
 
-		topics, err := topic.GetTopics(clusterClient)
+		var zkConn zookeeper.Connection
+
+		if args.GlobalArgs.ZookeeperTopics {
+			zkConn, err = zookeeper.NewConnection(args.GlobalArgs)
+			if err != nil {
+				log.Error("failed to create zookeeper connection. Continuing with broker collection: %s", err)
+			}
+			defer zkConn.Close()
+		}
+
+		topics, err := topic.GetTopics(clusterClient, zkConn)
 		if err != nil {
 			log.Error("Failed to get a list of topics. Continuing with broker collection: %s", err)
 		}

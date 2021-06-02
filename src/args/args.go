@@ -83,4 +83,6 @@ type ArgumentList struct {
 	Timeout int `default:"10000" help:"Timeout in milliseconds per single JMX query."`
 
 	ShowVersion bool `default:"false" help:"Print build information and exit"`
+
+	ZookeeperTopics bool `default:"false" help:"Collect topics list from Zookeeper"`
 }

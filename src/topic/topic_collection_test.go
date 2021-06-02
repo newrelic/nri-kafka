@@ -5,6 +5,10 @@ import (
 	"testing"
 	"time"
 
+	"github.com/samuel/go-zookeeper/zk"
+
+	"github.com/newrelic/nri-kafka/src/zookeeper"
+
 	"github.com/Shopify/sarama"
 	"github.com/newrelic/infra-integrations-sdk/data/inventory"
 	"github.com/newrelic/infra-integrations-sdk/integration"
@@ -40,7 +44,43 @@ func TestGetTopics(t *testing.T) {
 		mockClient := &mocks.Client{}
 		mockClient.On("Topics", mock.Anything).Return(tc.topicNames, nil)
 
-		topicNames, err := GetTopics(mockClient)
+		topicNames, err := GetTopics(mockClient, nil)
+		if tc.expectedErr {
+			assert.Error(t, err, "Expected error for topicMode %s", tc.topicMode)
+		} else {
+			assert.NoError(t, err, "Unexpected error for topicMode %s", tc.topicMode)
+		}
+
+		assert.Equal(t, tc.expectedNames, topicNames, "Unexpected result for topicMode %s", tc.topicMode)
+	}
+}
+
+func TestGetTopicsZookeeper(t *testing.T) {
+	testutils.SetupTestArgs()
+
+	testCases := []struct {
+		topicMode     string
+		topicNames    []string
+		topicRegex    string
+		expectedNames []string
+		expectedErr   bool
+	}{
+		{"none", []string{}, "", []string{}, false},
+		{"all", []string{"test1", "test2", "test3"}, "", []string{"test1", "test2", "test3"}, false},
+		{"regex", []string{"test1a", "test2a", "test1b"}, `test.a`, []string{"test1a", "test2a"}, false},
+		{"list", []string{"test1", "test2"}, "", []string{"test1", "test2"}, false},
+		{"fakemode", []string{"test1", "test2"}, "", nil, true},
+	}
+
+	for _, tc := range testCases {
+		args.GlobalArgs.TopicMode = tc.topicMode
+		args.GlobalArgs.TopicList = tc.topicNames
+		args.GlobalArgs.TopicRegex = tc.topicRegex
+
+		mockClient := &mocks.Client{}
+		mockClient.On("Topics", mock.Anything).Return(tc.topicNames, nil)
+
+		topicNames, err := GetTopics(mockClient, nil)
 		if tc.expectedErr {
 			assert.Error(t, err, "Expected error for topicMode %s", tc.topicMode)
 		} else {
@@ -85,7 +125,46 @@ func TestFeedTopicPool(t *testing.T) {
 
 	topicChan := make(chan *Topic, 10)
 
-	collectedTopics, err := GetTopics(mockClient)
+	collectedTopics, err := GetTopics(mockClient, nil)
+	if err != nil {
+		t.Errorf("Unexpected error: %s", err.Error())
+		t.FailNow()
+	}
+
+	FeedTopicPool(topicChan, i, collectedTopics)
+
+	var topics []*Topic
+	for {
+		topic, ok := <-topicChan
+		if !ok {
+			break
+		}
+
+		topics = append(topics, topic)
+	}
+
+	for index, name := range []string{"test1", "test2", "test3"} {
+		if topics[index].Name != name {
+			t.Errorf("Expected topic name %s, got %s", name, topics[index].Name)
+		}
+	}
+
+}
+
+func TestFeedTopicPoolZookeeper(t *testing.T) {
+	testutils.SetupTestArgs()
+	args.GlobalArgs.TopicMode = "All"
+
+	i, err := integration.New("kafka", "1.0.0")
+	if err != nil {
+		t.Error("Failed to create integration")
+	}
+
+	mockZkp := &zookeeper.MockConnection{}
+	mockZkp.On("Children", "/brokers/topics").Return([]string{"test1", "test2", "test3"}, new(zk.Stat), nil)
+	topicChan := make(chan *Topic, 10)
+
+	collectedTopics, err := GetTopics(nil, mockZkp)
 	if err != nil {
 		t.Errorf("Unexpected error: %s", err.Error())
 		t.FailNow()
