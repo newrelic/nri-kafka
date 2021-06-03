@@ -15,7 +15,6 @@ import (
 	"github.com/newrelic/infra-integrations-sdk/log"
 	"github.com/newrelic/nri-kafka/src/args"
 	"github.com/newrelic/nri-kafka/src/connection"
-	"github.com/newrelic/nri-kafka/src/zookeeper"
 )
 
 // Topic is a storage struct for information about topics
@@ -26,6 +25,10 @@ type Topic struct {
 	ReplicationFactor int
 	Configs           []*sarama.ConfigEntry
 	Partitions        []*partition
+}
+
+type TopicGetter interface {
+	Topics() ([]string, error)
 }
 
 // StartTopicPool Starts a pool of topicWorkers to handle collecting data for Topic entities.
@@ -42,7 +45,7 @@ func StartTopicPool(poolSize int, wg *sync.WaitGroup, client connection.Client) 
 }
 
 // GetTopics retrieves the list of topics to collect based on the user-provided configuration
-func GetTopics(client connection.Client, zkConn zookeeper.Connection) ([]string, error) {
+func GetTopics(topicGetter TopicGetter) ([]string, error) {
 	switch strings.ToLower(args.GlobalArgs.TopicMode) {
 	case "none":
 		return []string{}, nil
@@ -58,9 +61,9 @@ func GetTopics(client connection.Client, zkConn zookeeper.Connection) ([]string,
 			return nil, fmt.Errorf("failed to compile topic regex: %s", err)
 		}
 
-		allTopics, err := getAllTopics(client, zkConn)
+		allTopics, err := topicGetter.Topics()
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("failed to get topics from client: %w", err)
 		}
 
 		filteredTopics := make([]string, 0, len(allTopics))
@@ -72,41 +75,15 @@ func GetTopics(client connection.Client, zkConn zookeeper.Connection) ([]string,
 
 		return filteredTopics, nil
 	case "all":
-		allTopics, err := getAllTopics(client, zkConn)
+		allTopics, err := topicGetter.Topics()
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("failed to get topics from client: %w", err)
 		}
 		return allTopics, nil
 	default:
 		log.Error("Invalid topic mode %s", args.GlobalArgs.TopicMode)
 		return nil, fmt.Errorf("invalid topic_mode '%s'", args.GlobalArgs.TopicMode)
 	}
-}
-
-func getAllTopics(client connection.Client, zkConn zookeeper.Connection) ([]string, error) {
-	if zkConn != nil {
-		allTopics, err := getTopicsFromZookeeper(zkConn)
-		if err != nil {
-			return nil, fmt.Errorf("failed to get topics from zookeeper: %w", err)
-		}
-		return allTopics, nil
-	}
-
-	allTopics, err := client.Topics()
-	if err != nil {
-		return nil, fmt.Errorf("failed to get topics from client: %w", err)
-	}
-	return allTopics, nil
-}
-
-func getTopicsFromZookeeper(zkConn zookeeper.Connection) ([]string, error) {
-	topics, _, err := zkConn.Children(zookeeper.Path("/brokers/topics"))
-	if err != nil {
-		return nil, fmt.Errorf("failed to retrieve topics from Zookeeper: %w", err)
-	}
-
-	log.Debug("list of topics from zookeeper: %v", topics)
-	return topics, nil
 }
 
 // FeedTopicPool sends Topic structs down the topicChan for workers to collect and build Topic structs

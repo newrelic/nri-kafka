@@ -187,18 +187,24 @@ func coreCollection(kafkaIntegration *integration.Integration) {
 			os.Exit(2)
 		}
 
-		var zkConn zookeeper.Connection
+		var topics []string
 		if args.GlobalArgs.ZookeeperTopics && args.GlobalArgs.AutodiscoverStrategy == discoverZookeeper {
+			var zkConn zookeeper.ZookeeperConnection
 			zkConn, err = zookeeper.NewConnection(args.GlobalArgs)
 			if err != nil {
 				log.Error("failed to create zookeeper connection. Continuing with broker collection: %s", err)
 			}
-			defer zkConn.Close()
-		}
+			topics, err = topic.GetTopics(zkConn)
+			if err != nil {
+				log.Error("Failed to get a list of topics. Continuing with broker collection: %s", err)
+			}
 
-		topics, err := topic.GetTopics(clusterClient, zkConn)
-		if err != nil {
-			log.Error("Failed to get a list of topics. Continuing with broker collection: %s", err)
+			defer zkConn.Close()
+		} else {
+			topics, err = topic.GetTopics(clusterClient)
+			if err != nil {
+				log.Error("Failed to get a list of topics. Continuing with broker collection: %s", err)
+			}
 		}
 
 		// Enforce hard limits on topics
