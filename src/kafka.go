@@ -188,7 +188,7 @@ func coreCollection(kafkaIntegration *integration.Integration) {
 		}
 
 		var topics []string
-		if args.GlobalArgs.ZookeeperTopics && args.GlobalArgs.AutodiscoverStrategy == discoverZookeeper {
+		if args.GlobalArgs.TopicSource == discoverZookeeper && args.GlobalArgs.AutodiscoverStrategy == discoverZookeeper {
 			var zkConn zookeeper.ZookeeperConnection
 			zkConn, err = zookeeper.NewConnection(args.GlobalArgs)
 			if err != nil {

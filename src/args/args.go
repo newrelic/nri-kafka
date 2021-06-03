@@ -84,5 +84,5 @@ type ArgumentList struct {
 
 	ShowVersion bool `default:"false" help:"Print build information and exit"`
 
-	ZookeeperTopics bool `default:"false" help:"Collect topics list from Zookeeper"`
+	TopicSource string `default:"broker" help:"Collect topics list from either the Broker or Zookeeper"`
 }

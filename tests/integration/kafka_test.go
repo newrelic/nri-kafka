@@ -201,12 +201,12 @@ func TestKafkaIntegration_zookeeper(t *testing.T) {
 	}
 }
 
-func TestKafkaIntegration_zookeeper_with_zookeperTopics(t *testing.T) {
-	zookeeperDiscoverConfigTopicsZookeeperTopics := func(command []string) []string {
-		return append(zookeeperDiscoverConfig(command), "--zookeeper_topics")
+func TestKafkaIntegration_zookeeper_with_topicSourceZookeeper(t *testing.T) {
+	zookeeperDiscoverConfigTopicSourceZookeeper := func(command []string) []string {
+		return append(zookeeperDiscoverConfig(command), "--topic_source", "zookeeper")
 	}
 
-	stdout, stderr, err := runIntegration(t, zookeeperDiscoverConfigTopicsZookeeperTopics)
+	stdout, stderr, err := runIntegration(t, zookeeperDiscoverConfigTopicSourceZookeeper)
 
 	assert.NotNil(t, stderr, "unexpected stderr")
 	assert.NoError(t, err, "Unexpected error")
@@ -233,12 +233,12 @@ func TestKafkaIntegration_bootstrap(t *testing.T) {
 	}
 }
 
-func TestKafkaIntegration_bootstrap_with_zookeperTopics(t *testing.T) {
-	bootstrapDiscoverConfigConfigTopicsZookeeperTopics := func(command []string) []string {
-		return append(bootstrapDiscoverConfig(command), "--zookeeper_topics")
+func TestKafkaIntegration_bootstrap_with_topicSourceZookeeper(t *testing.T) {
+	bootstrapDiscoverConfigConfigTopicSourceZookeeper := func(command []string) []string {
+		return append(bootstrapDiscoverConfig(command), "--topic_source", "zookeeper")
 	}
 
-	stdout, stderr, err := runIntegration(t, bootstrapDiscoverConfigConfigTopicsZookeeperTopics)
+	stdout, stderr, err := runIntegration(t, bootstrapDiscoverConfigConfigTopicSourceZookeeper)
 
 	assert.NotNil(t, stderr, "unexpected stderr")
 	assert.NoError(t, err, "Unexpected error")

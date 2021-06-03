@@ -155,6 +155,7 @@ func TestDefaultArgs(t *testing.T) {
 		SaslGssapiKerberosConfigPath:     "/etc/krb5.conf",
 		SaslMechanism:                    "GSSAPI",
 		SaslGssapiDisableFASTNegotiation: false,
+		TopicSource:                      "broker",
 	}
 
 	parsedArgs, err := ParseArgs(a)

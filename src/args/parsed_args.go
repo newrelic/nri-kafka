@@ -94,8 +94,7 @@ type ParsedArguments struct {
 
 	Timeout int `default:"10000" help:"Timeout in milliseconds per single JMX query."`
 
-	// Zookeeper topic discovery
-	ZookeeperTopics bool
+	TopicSource string
 }
 
 // CollectBrokers returns whether we should collect broker metrics
@@ -305,7 +304,7 @@ func ParseArgs(a ArgumentList) (*ParsedArguments, error) {
 		SaslGssapiKeyTabPath:             a.SaslGssapiKeyTabPath,
 		SaslGssapiKerberosConfigPath:     a.SaslGssapiKerberosConfigPath,
 		SaslGssapiDisableFASTNegotiation: a.SaslGssapiDisableFASTNegotiation,
-		ZookeeperTopics:                  a.ZookeeperTopics,
+		TopicSource:                      a.TopicSource,
 	}
 
 	return parsedArgs, nil
