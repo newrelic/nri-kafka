@@ -77,10 +77,10 @@ func TestGetTopicsZookeeper(t *testing.T) {
 		args.GlobalArgs.TopicList = tc.topicNames
 		args.GlobalArgs.TopicRegex = tc.topicRegex
 
-		mockClient := &mocks.Client{}
-		mockClient.On("Topics", mock.Anything).Return(tc.topicNames, nil)
+		mockZkp := &zookeeper.MockConnection{}
+		mockZkp.On("Children", "/brokers/topics").Return(tc.topicNames, new(zk.Stat), nil)
 
-		topicNames, err := GetTopics(mockClient, nil)
+		topicNames, err := GetTopics(nil, mockZkp)
 		if tc.expectedErr {
 			assert.Error(t, err, "Expected error for topicMode %s", tc.topicMode)
 		} else {
