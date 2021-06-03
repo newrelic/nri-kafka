@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 
@@ -68,10 +69,10 @@ func ensureBrokerClusterReady(tries int) {
 			log.Error("Failed opening connection: %s", err)
 			os.Exit(1)
 		}
+		saramaBroker.Close()
 		time.Sleep(500 * time.Millisecond)
 		ensureBrokerClusterReady(tries)
 	}
-	defer saramaBroker.Close()
 
 	connected, err := saramaBroker.Connected()
 	if err != nil {
@@ -80,6 +81,7 @@ func ensureBrokerClusterReady(tries int) {
 			log.Error("failed checking if connection opened successfully: %s", err)
 			os.Exit(1)
 		}
+		saramaBroker.Close()
 		time.Sleep(500 * time.Millisecond)
 		ensureBrokerClusterReady(tries)
 	}
@@ -89,6 +91,7 @@ func ensureBrokerClusterReady(tries int) {
 			log.Error("Broker is not connected: %s", err)
 			os.Exit(1)
 		}
+		saramaBroker.Close()
 		time.Sleep(500 * time.Millisecond)
 		ensureBrokerClusterReady(tries)
 	}
@@ -100,6 +103,7 @@ func ensureBrokerClusterReady(tries int) {
 			log.Error("failed to get metadata from broker: %s", err)
 			os.Exit(1)
 		}
+		saramaBroker.Close()
 		time.Sleep(500 * time.Millisecond)
 		ensureBrokerClusterReady(tries)
 	}
@@ -112,9 +116,11 @@ func ensureBrokerClusterReady(tries int) {
 			log.Error("failed to start all brokers")
 			os.Exit(1)
 		}
+		saramaBroker.Close()
 		time.Sleep(500 * time.Millisecond)
 		ensureBrokerClusterReady(tries)
 	}
+	saramaBroker.Close()
 }
 
 func ensureTopicsCreated(tries int) {
@@ -129,10 +135,10 @@ func ensureTopicsCreated(tries int) {
 			log.Error("failed to start client: %s", err)
 			os.Exit(1)
 		}
+		client.Close()
 		time.Sleep(500 * time.Millisecond)
 		ensureTopicsCreated(tries)
 	}
-	defer client.Close()
 
 	topics, err := client.Topics()
 	if err != nil || len(topics) < NUMBER_OF_TOPICS {
@@ -141,9 +147,11 @@ func ensureTopicsCreated(tries int) {
 			log.Error("failed to get topics list")
 			os.Exit(1)
 		}
+		client.Close()
 		time.Sleep(500 * time.Millisecond)
 		ensureTopicsCreated(tries)
 	}
+	client.Close()
 }
 
 func TestMain(m *testing.M) {
@@ -223,6 +231,47 @@ func TestKafkaIntegration_bootstrap(t *testing.T) {
 	for _, topic := range topicNames {
 		assert.Contains(t, stdout, topic, fmt.Sprintf("The output doesn't have the topic %s", topic))
 	}
+}
+
+func TestKafkaIntegration_bootstrap_with_zookeperTopics(t *testing.T) {
+	bootstrapDiscoverConfigConfigTopicsZookeeperTopics := func(command []string) []string {
+		return append(bootstrapDiscoverConfig(command), "--zookeeper_topics")
+	}
+
+	stdout, stderr, err := runIntegration(t, bootstrapDiscoverConfigConfigTopicsZookeeperTopics)
+
+	assert.NotNil(t, stderr, "unexpected stderr")
+	assert.NoError(t, err, "Unexpected error")
+
+	schemaPath := filepath.Join("json-schema-files", "kafka-schema.json")
+	err = jsonschema.Validate(schemaPath, stdout)
+	assert.NoError(t, err, "The output of kafka integration doesn't have expected format.")
+	for _, topic := range topicNames {
+		assert.Contains(t, stdout, topic, fmt.Sprintf("The output doesn't have the topic %s", topic))
+	}
+}
+
+func TestKafkaIntegration_bootstrap_topicBucket(t *testing.T) {
+	bootstrapDiscoverConfigConfigTopicBucket := func(command []string) []string {
+		return append(bootstrapDiscoverConfig(command), "--topic_bucket", "3/3")
+	}
+
+	stdout, stderr, err := runIntegration(t, bootstrapDiscoverConfigConfigTopicBucket)
+
+	assert.NotNil(t, stderr, "unexpected stderr")
+	assert.NoError(t, err, "Unexpected error")
+
+	schemaPath := filepath.Join("json-schema-files", "kafka-schema.json")
+	err = jsonschema.Validate(schemaPath, stdout)
+	assert.NoError(t, err, "The output of kafka integration doesn't have expected format.")
+
+	var topicsCount int
+	for _, topic := range topicNames {
+		if strings.Contains(stdout, topic) {
+			topicsCount++
+		}
+	}
+	assert.Equal(t, 1, topicsCount)
 }
 
 func TestKafkaIntegration_bootstrap_localOnlyCollection(t *testing.T) {

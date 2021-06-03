@@ -25,7 +25,9 @@ import (
 )
 
 const (
-	integrationName = "com.newrelic.kafka"
+	integrationName   = "com.newrelic.kafka"
+	discoverBootstrap = "bootstrap"
+	discoverZookeeper = "zookeeper"
 )
 
 var (
@@ -82,7 +84,7 @@ func main() {
 
 func getBrokerList(arguments *args.ParsedArguments) ([]*connection.Broker, error) {
 	switch arguments.AutodiscoverStrategy {
-	case "bootstrap":
+	case discoverBootstrap:
 		bootstrapBroker, err := connection.NewBroker(arguments.BootstrapBroker)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create boostrap broker: %s", err)
@@ -140,7 +142,7 @@ func getBrokerList(arguments *args.ParsedArguments) ([]*connection.Broker, error
 		}
 
 		return brokers, nil
-	case "zookeeper":
+	case discoverZookeeper:
 		zkConn, err := zookeeper.NewConnection(arguments)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create zookeeper connection: %s", err)
@@ -186,8 +188,7 @@ func coreCollection(kafkaIntegration *integration.Integration) {
 		}
 
 		var zkConn zookeeper.Connection
-
-		if args.GlobalArgs.ZookeeperTopics {
+		if args.GlobalArgs.ZookeeperTopics && args.GlobalArgs.AutodiscoverStrategy == discoverZookeeper {
 			zkConn, err = zookeeper.NewConnection(args.GlobalArgs)
 			if err != nil {
 				log.Error("failed to create zookeeper connection. Continuing with broker collection: %s", err)
