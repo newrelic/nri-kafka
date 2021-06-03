@@ -189,8 +189,7 @@ func coreCollection(kafkaIntegration *integration.Integration) {
 
 		var topics []string
 		if args.GlobalArgs.TopicSource == discoverZookeeper && args.GlobalArgs.AutodiscoverStrategy == discoverZookeeper {
-			var zkConn zookeeper.ZookeeperConnection
-			zkConn, err = zookeeper.NewConnection(args.GlobalArgs)
+			zkConn, err := zookeeper.NewConnection(args.GlobalArgs)
 			if err != nil {
 				log.Error("failed to create zookeeper connection. Continuing with broker collection: %s", err)
 			}
