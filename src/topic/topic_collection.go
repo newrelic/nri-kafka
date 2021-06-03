@@ -87,14 +87,14 @@ func getAllTopics(client connection.Client, zkConn zookeeper.Connection) ([]stri
 	if zkConn != nil {
 		allTopics, err := getTopicsFromZookeeper(zkConn)
 		if err != nil {
-			return nil, fmt.Errorf("failed to get topics from zookeeper: %s", err)
+			return nil, fmt.Errorf("failed to get topics from zookeeper: %w", err)
 		}
 		return allTopics, nil
 	}
 
 	allTopics, err := client.Topics()
 	if err != nil {
-		return nil, fmt.Errorf("failed to get topics from client: %s", err)
+		return nil, fmt.Errorf("failed to get topics from client: %w", err)
 	}
 	return allTopics, nil
 }
@@ -102,7 +102,7 @@ func getAllTopics(client connection.Client, zkConn zookeeper.Connection) ([]stri
 func getTopicsFromZookeeper(zkConn zookeeper.Connection) ([]string, error) {
 	topics, _, err := zkConn.Children(zookeeper.Path("/brokers/topics"))
 	if err != nil {
-		return nil, fmt.Errorf("failed to retrieve topics from Zookeeper: %s", err)
+		return nil, fmt.Errorf("failed to retrieve topics from Zookeeper: %w", err)
 	}
 
 	log.Debug("list of topics from zookeeper: %v", topics)

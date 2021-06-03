@@ -148,7 +148,6 @@ func TestFeedTopicPool(t *testing.T) {
 			t.Errorf("Expected topic name %s, got %s", name, topics[index].Name)
 		}
 	}
-
 }
 
 func TestFeedTopicPoolZookeeper(t *testing.T) {
@@ -187,7 +186,6 @@ func TestFeedTopicPoolZookeeper(t *testing.T) {
 			t.Errorf("Expected topic name %s, got %s", name, topics[index].Name)
 		}
 	}
-
 }
 
 func TestPopulateTopicInventory(t *testing.T) {
