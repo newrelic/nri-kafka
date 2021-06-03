@@ -37,7 +37,7 @@ func TestGetTopics(t *testing.T) {
 		args.GlobalArgs.TopicList = tc.topicNames
 		args.GlobalArgs.TopicRegex = tc.topicRegex
 
-		mockClient := &MockTopicGetter{}
+		mockClient := &MockGetter{}
 		mockClient.On("Topics", mock.Anything).Return(tc.topicNames, nil)
 
 		topicNames, err := GetTopics(mockClient)
@@ -80,7 +80,7 @@ func TestFeedTopicPool(t *testing.T) {
 	if err != nil {
 		t.Error("Failed to create integration")
 	}
-	mockClient := &MockTopicGetter{}
+	mockClient := &MockGetter{}
 	mockClient.On("Topics").Return([]string{"test1", "test2", "test3"}, nil)
 
 	topicChan := make(chan *Topic, 10)

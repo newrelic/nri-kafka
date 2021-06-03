@@ -27,7 +27,7 @@ type Topic struct {
 	Partitions        []*partition
 }
 
-type TopicGetter interface {
+type Getter interface {
 	Topics() ([]string, error)
 }
 
@@ -45,7 +45,7 @@ func StartTopicPool(poolSize int, wg *sync.WaitGroup, client connection.Client) 
 }
 
 // GetTopics retrieves the list of topics to collect based on the user-provided configuration
-func GetTopics(topicGetter TopicGetter) ([]string, error) {
+func GetTopics(topicGetter Getter) ([]string, error) {
 	switch strings.ToLower(args.GlobalArgs.TopicMode) {
 	case "none":
 		return []string{}, nil
