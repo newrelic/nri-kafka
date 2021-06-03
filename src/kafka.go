@@ -25,9 +25,10 @@ import (
 )
 
 const (
-	integrationName   = "com.newrelic.kafka"
-	discoverBootstrap = "bootstrap"
-	discoverZookeeper = "zookeeper"
+	integrationName      = "com.newrelic.kafka"
+	discoverBootstrap    = "bootstrap"
+	discoverZookeeper    = "zookeeper"
+	topicSourceZookeeper = "zookeeper"
 )
 
 var (
@@ -188,7 +189,7 @@ func coreCollection(kafkaIntegration *integration.Integration) {
 		}
 
 		var topics []string
-		if args.GlobalArgs.TopicSource == discoverZookeeper && args.GlobalArgs.AutodiscoverStrategy == discoverZookeeper {
+		if args.GlobalArgs.TopicSource == topicSourceZookeeper && args.GlobalArgs.AutodiscoverStrategy == discoverZookeeper {
 			var zkConn zookeeper.ZkConnection
 			zkConn, err = zookeeper.NewConnection(args.GlobalArgs)
 			if err != nil {
