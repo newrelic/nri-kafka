@@ -18,6 +18,7 @@ services:
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
       KAFKA_LOG_DIRS: /kafka/logs
       KAFKA_BROKER_ID: 500
+      KAFKA_CREATE_TOPICS: "topicA:1:1,topicB:1:1,topicC:1:1,topicB:1:1"
       KAFKA_offsets_topic_replication_factor: 3
       KAFKA_JMX_OPTS: "-Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false -Djava.rmi.server.hostname=kafka1 -Dcom.sun.management.jmxremote.rmi.port=1099"
       JMX_PORT: 1099
@@ -71,8 +72,6 @@ services:
       dockerfile: tests/integration/Dockerfile
       args:
         - NRJMX_VERSION=${NRJMX_VERSION}
-    dns:
-      - 8.8.8.8
     networks:
       - kfk
 

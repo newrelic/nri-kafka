@@ -25,7 +25,10 @@ import (
 )
 
 const (
-	integrationName = "com.newrelic.kafka"
+	integrationName      = "com.newrelic.kafka"
+	discoverBootstrap    = "bootstrap"
+	discoverZookeeper    = "zookeeper"
+	topicSourceZookeeper = "zookeeper"
 )
 
 var (
@@ -82,7 +85,7 @@ func main() {
 
 func getBrokerList(arguments *args.ParsedArguments) ([]*connection.Broker, error) {
 	switch arguments.AutodiscoverStrategy {
-	case "bootstrap":
+	case discoverBootstrap:
 		bootstrapBroker, err := connection.NewBroker(arguments.BootstrapBroker)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create boostrap broker: %s", err)
@@ -140,7 +143,7 @@ func getBrokerList(arguments *args.ParsedArguments) ([]*connection.Broker, error
 		}
 
 		return brokers, nil
-	case "zookeeper":
+	case discoverZookeeper:
 		zkConn, err := zookeeper.NewConnection(arguments)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create zookeeper connection: %s", err)
@@ -185,9 +188,24 @@ func coreCollection(kafkaIntegration *integration.Integration) {
 			os.Exit(2)
 		}
 
-		topics, err := topic.GetTopics(clusterClient)
-		if err != nil {
-			log.Error("Failed to get a list of topics. Continuing with broker collection: %s", err)
+		var topics []string
+		if args.GlobalArgs.TopicSource == topicSourceZookeeper && args.GlobalArgs.AutodiscoverStrategy == discoverZookeeper {
+			var zkConn zookeeper.ZkConnection
+			zkConn, err = zookeeper.NewConnection(args.GlobalArgs)
+			if err != nil {
+				log.Error("failed to create zookeeper connection. Continuing with broker collection: %s", err)
+			}
+			topics, err = topic.GetTopics(zkConn)
+			if err != nil {
+				log.Error("Failed to get a list of topics. Continuing with broker collection: %s", err)
+			}
+
+			defer zkConn.Close()
+		} else {
+			topics, err = topic.GetTopics(clusterClient)
+			if err != nil {
+				log.Error("Failed to get a list of topics. Continuing with broker collection: %s", err)
+			}
 		}
 
 		// Enforce hard limits on topics

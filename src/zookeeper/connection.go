@@ -10,6 +10,8 @@ import (
 	"github.com/samuel/go-zookeeper/zk"
 )
 
+var errNoZookeeperHostSpecified = errors.New("no Zookeeper hosts specified")
+
 // Connection interface to allow easy mocking of a Zookeeper connection
 type Connection interface {
 	Get(string) ([]byte, *zk.Stat, error)
@@ -18,19 +20,19 @@ type Connection interface {
 	Server() string
 }
 
-type zookeeperConnection struct {
+type ZkConnection struct {
 	inner *zk.Conn
 }
 
-func (z zookeeperConnection) Children(s string) ([]string, *zk.Stat, error) {
+func (z ZkConnection) Children(s string) ([]string, *zk.Stat, error) {
 	return z.inner.Children(s)
 }
 
-func (z zookeeperConnection) Get(s string) ([]byte, *zk.Stat, error) {
+func (z ZkConnection) Get(s string) ([]byte, *zk.Stat, error) {
 	return z.inner.Get(s)
 }
 
-func (z zookeeperConnection) Server() string {
+func (z ZkConnection) Server() string {
 	return z.inner.Server()
 }
 
@@ -41,20 +43,25 @@ func (z zookeeperLogger) Printf(format string, args ...interface{}) {
 }
 
 // Close closes the zookeeper connection. You will need to create a new connection after you close this one.
-func (z zookeeperConnection) Close() {
+func (z ZkConnection) Close() {
 	z.inner.Close()
 	z.inner = nil
 }
 
-// NewConnection creates a new Connection with the given arguments.
-// If not hosts are specified then a nil Connection and error will be returned
+func (z ZkConnection) Topics() ([]string, error) {
+	topics, _, err := z.Children(Path("/brokers/topics"))
+	return topics, err
+}
+
+// NewConnection creates a new ZookeeperConnection with the given arguments.
+// If not hosts are specified then an empty ZookeeperConnection and an error will be returned
 //
 // Waiting on issue https://github.com/samuel/go-zookeeper/issues/108 so we can change this function
 // and allow us to mock out the zk.Connect function
-func NewConnection(kafkaArgs *args.ParsedArguments) (Connection, error) {
+func NewConnection(kafkaArgs *args.ParsedArguments) (ZkConnection, error) {
 	// No Zookeeper hosts so can't make a connection
 	if len(kafkaArgs.ZookeeperHosts) == 0 {
-		return nil, errors.New("no Zookeeper hosts specified")
+		return ZkConnection{}, errNoZookeeperHostSpecified
 	}
 
 	// Create array of host:port strings for connecting
@@ -69,16 +76,16 @@ func NewConnection(kafkaArgs *args.ParsedArguments) (Connection, error) {
 	zkConn, _, err := zk.Connect(zkHosts, time.Second, zk.WithLogger(zookeeperLogger{}))
 	if err != nil {
 		log.Error("Failed to connect to Zookeeper: %s", err.Error())
-		return nil, err
+		return ZkConnection{}, err
 	}
 
 	if kafkaArgs.ZookeeperAuthScheme != "" {
 		if err = zkConn.AddAuth(kafkaArgs.ZookeeperAuthScheme, []byte(kafkaArgs.ZookeeperAuthSecret)); err != nil {
 			log.Error("Failed to Authenticate to Zookeeper: %s", err.Error())
 			zkConn.Close()
-			return nil, err
+			return ZkConnection{}, err
 		}
 	}
 
-	return zookeeperConnection{zkConn}, nil
+	return ZkConnection{zkConn}, nil
 }

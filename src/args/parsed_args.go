@@ -93,6 +93,8 @@ type ParsedArguments struct {
 	ConsumerGroupRegex *regexp.Regexp
 
 	Timeout int `default:"10000" help:"Timeout in milliseconds per single JMX query."`
+
+	TopicSource string
 }
 
 // CollectBrokers returns whether we should collect broker metrics
@@ -302,6 +304,7 @@ func ParseArgs(a ArgumentList) (*ParsedArguments, error) {
 		SaslGssapiKeyTabPath:             a.SaslGssapiKeyTabPath,
 		SaslGssapiKerberosConfigPath:     a.SaslGssapiKerberosConfigPath,
 		SaslGssapiDisableFASTNegotiation: a.SaslGssapiDisableFASTNegotiation,
+		TopicSource:                      a.TopicSource,
 	}
 
 	return parsedArgs, nil

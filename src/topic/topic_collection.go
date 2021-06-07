@@ -27,6 +27,10 @@ type Topic struct {
 	Partitions        []*partition
 }
 
+type Getter interface {
+	Topics() ([]string, error)
+}
+
 // StartTopicPool Starts a pool of topicWorkers to handle collecting data for Topic entities.
 // The channel returned is to be closed by the user.
 func StartTopicPool(poolSize int, wg *sync.WaitGroup, client connection.Client) chan *Topic {
@@ -41,7 +45,7 @@ func StartTopicPool(poolSize int, wg *sync.WaitGroup, client connection.Client) 
 }
 
 // GetTopics retrieves the list of topics to collect based on the user-provided configuration
-func GetTopics(client connection.Client) ([]string, error) {
+func GetTopics(topicGetter Getter) ([]string, error) {
 	switch strings.ToLower(args.GlobalArgs.TopicMode) {
 	case "none":
 		return []string{}, nil
@@ -57,9 +61,9 @@ func GetTopics(client connection.Client) ([]string, error) {
 			return nil, fmt.Errorf("failed to compile topic regex: %s", err)
 		}
 
-		allTopics, err := client.Topics()
+		allTopics, err := topicGetter.Topics()
 		if err != nil {
-			return nil, fmt.Errorf("failed to get topics from client: %s", err)
+			return nil, fmt.Errorf("failed to get topics from client: %w", err)
 		}
 
 		filteredTopics := make([]string, 0, len(allTopics))
@@ -71,9 +75,9 @@ func GetTopics(client connection.Client) ([]string, error) {
 
 		return filteredTopics, nil
 	case "all":
-		allTopics, err := client.Topics()
+		allTopics, err := topicGetter.Topics()
 		if err != nil {
-			return nil, fmt.Errorf("failed to get topics from client: %s", err)
+			return nil, fmt.Errorf("failed to get topics from client: %w", err)
 		}
 		return allTopics, nil
 	default:
