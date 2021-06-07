@@ -176,8 +176,6 @@ jobs:
         with:
           go-version: ${{env.GO_VERSION}}
       - name: Integration test
-        env:
-          GOPATH: ${{ github.workspace }}
         run: make integration-test
 
   publish-to-s3:
