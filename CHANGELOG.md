@@ -5,11 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
-## 2.16 (2021-06-07)
+## 2.16.1 (2021-06-07)
 ### Changed
 - New argument topic_source to be either broker or zookeeper (default broker)  
 
-## 2.16 (2021-06-02)
+## 2.16.0 (2021-06-02)
 ### Changed
 - Upgraded github.com/newrelic/infra-integrations-sdk to v3.6.7
 - Added integration tests
