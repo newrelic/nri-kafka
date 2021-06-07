@@ -37,13 +37,13 @@ test:
 	@go test -race ./... -count=1
 
 integration-test:
-	@echo "=== $(INTEGRATION) === [ test ]: running integration tests..."
+	@echo "=== $(INTEGRATION) === [ test ]: running godog tests..."
 	@if [ "$(NRJMX_VERSION)" = "" ]; then \
 	    echo "Error: missing required env-var: NRJMX_VERSION\n" ;\
         exit 1 ;\
 	fi
 	@docker-compose -f tests/integration/docker-compose.yml up -d --build
-	@go test -v -tags=integration ./tests/integration/. -count=1 ; (ret=$$?; docker-compose -f tests/integration/docker-compose.yml down && exit $$ret)
+	@cd ./tests/integration/; godog features/all.feature ; (ret=$$?; docker-compose -f docker-compose.yml down && exit $$ret)
 
 # Include thematic Makefiles
 include $(CURDIR)/build/ci.mk
