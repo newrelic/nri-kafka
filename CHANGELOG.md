@@ -5,6 +5,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 2.16.2 (2021-06-08)
+### Changed
+- Support for ARM
+
 ## 2.16.1 (2021-06-07)
 ### Changed
 - New argument topic_source to be either broker or zookeeper (default broker)  
