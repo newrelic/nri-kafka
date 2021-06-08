@@ -6,7 +6,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## 2.16.2 (2021-06-08)
-## Changed
+### Changed
 - Support for ARM
 
 ## 2.16.1 (2021-06-07)
