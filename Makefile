@@ -43,7 +43,7 @@ integration-test:
         exit 1 ;\
 	fi
 	@docker-compose -f tests/integration/docker-compose.yml up -d --build
-	@cd ./tests/integration/; godog features/all.feature ; (ret=$$?; docker-compose -f docker-compose.yml down && exit $$ret)
+	@cd ./tests/integration/; godog features/* ; (ret=$$?; docker-compose -f docker-compose.yml down && exit $$ret)
 
 # Include thematic Makefiles
 include $(CURDIR)/build/ci.mk

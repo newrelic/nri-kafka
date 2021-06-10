@@ -222,8 +222,20 @@ func (i *integrationFeature) setToAutodiscoverStrategyAndExecuted(strategy strin
 	return nil
 }
 
-func (i *integrationFeature) theResponseShouldMatchJSONSchema() error {
-	schemaPath := filepath.Join("json-schema-files", "kafka-schema.json")
+func (i *integrationFeature) setToAndExecuted(mode string) error {
+	command := make([]string, 0)
+	command = append(command, *binPath)
+
+	var err error
+	i.stdout, i.stderr, err = helpers.ExecInContainer(*container, append(bootstrapDiscoverConfig(command), fmt.Sprintf("--%s", mode)))
+	if err != nil {
+		return fmt.Errorf("unexpected error %w", err)
+	}
+	return nil
+}
+
+func (i *integrationFeature) theResponseShouldMatchJSONSchema(schema string) error {
+	schemaPath := filepath.Join("json-schema-files", fmt.Sprintf("kafka-schema-%s.json", schema))
 	err := jsonschema.Validate(schemaPath, i.stdout)
 	if err != nil {
 		return fmt.Errorf("the output of kafka integration doesn't have expected format: %w", err)
@@ -251,6 +263,7 @@ func InitializeScenario(ctx *godog.ScenarioContext) {
 	i := &integrationFeature{}
 	ctx.Step(`^a (\d+) node kafka is running and has (\d+) topics$`, func() error { return nil })
 	ctx.Step(`set to (zookeeper|bootstrap) autodiscover strategy and executed$`, i.setToAutodiscoverStrategyAndExecuted)
-	ctx.Step(`the response should match the json schema$`, i.theResponseShouldMatchJSONSchema)
+	ctx.Step(`set to (inventory) and executed$`, i.setToAndExecuted)
+	ctx.Step(`the response should match the (all|metrics|inventory) json schema$`, i.theResponseShouldMatchJSONSchema)
 	ctx.Step(`^the response should have the (\d+) topics metrics$`, i.theResponseShouldHaveTheTopicsMetrics)
 }
