@@ -38,7 +38,7 @@ func Collect(client connection.Client, kafkaIntegration *integration.Integration
 		if err != nil {
 			return fmt.Errorf("failed to get list of consumer groups: %s", err)
 		}
-		consumerGroupList := make([]string, len(consumerGroupMap))
+		consumerGroupList := make([]string, 0, len(consumerGroupMap))
 		for consumerGroup := range consumerGroupMap {
 			consumerGroupList = append(consumerGroupList, consumerGroup)
 		}
