@@ -1,30 +1,27 @@
 name: com.newrelic.kafka
-description: Reports status and metrics for Kafka services
+description: Reports status and metrics for Kafka services. Legacy file kept for compatibility.
 protocol_version: 2
-os: windows
+os: linux
 
 commands:
   metrics:
     command:
-      - .\bin\nri-kafka.exe
+      - ./bin/nri-kafka
       - --metrics
-      - --nr_jmx=C:\Program Files\New Relic\nrjmx\nrjmx.bat
     interval: 15
 
   inventory:
     command:
-      - .\bin\nri-kafka.exe
+      - ./bin/nri-kafka
       - --inventory
-      - --nr_jmx=C:\Program Files\New Relic\nrjmx\nrjmx.bat
     prefix: config/kafka
     interval: 15
 
   consumer_offset:
     command:
-      - .\bin\nri-kafka.exe
+      - ./bin/nri-kafka
       - --consumer_offset
       - --inventory=false
       - --metrics=false
-      - --nr_jmx=C:\Program Files\New Relic\nrjmx\nrjmx.bat
     prefix: config/kafka
     interval: 15
