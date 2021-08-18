@@ -2,6 +2,68 @@
 integration_name: com.newrelic.kafka
 
 instances:
+  # This instance gives an example of autodiscovery of brokers with a bootstrap broker, which is the recommended configuration.
+  - name: kafka-metrics-bootstrap-discovery
+    command: metrics
+    arguments:
+      # A cluster name is required to uniquely identify this collection result in Insights
+      cluster_name: "testcluster1"
+
+      # Kafka API version to target. Defaults to 1.0.0, which will work for all post-1.0.0 versions.
+      # It cannot be autodetected, so it must be set to the actual version in use in the cluster.
+      # Some features and metrics are not available in versions older than 1.0.0.
+      kafka_version: "1.0.0"
+
+      # Use bootstrap broker for discovery. The integration will connect to a fixed broker, described below, and retrieve
+      # all other brokers in the cluster from it.
+      autodiscover_strategy: "bootstrap"
+
+      # Bootstrap broker arguments. These configure a connection to a single broker. The rest of the brokers in the cluster
+      # will be discovered using that connection.
+      bootstrap_broker_host: "localhost"
+      bootstrap_broker_kafka_port: 9092
+      bootstrap_broker_kafka_protocol: PLAINTEXT # Currently support PLAINTEXT and SSL
+
+      # Whne bootstrap broker is used for discovery, JMX credentials and port must be the same for all brokers.
+      bootstrap_broker_jmx_port: 9999
+      bootstrap_broker_jmx_user: admin
+      bootstrap_broker_jmx_password: password
+
+      # Setting this to true will make the integration retrieve data only from the broker configured as bootstrap,
+      # and no other brokers will be discovered from it.
+      # Users will typically want to set this to false (default), unless a different discovery mechanism, such as Docker
+      # or Kubernetes, is used on top of the integration.
+      local_only_collection: false
+
+      # This field is used to toggle the collection of broker and topic metrics. This is on by default and should only be set to "false"
+      # for the specific case where only producers/consumers are being monitored and "topic_mode" is set to "All".
+      # Any other case this field can be omitted.
+      collect_broker_topic_data: true
+
+      # Below are the fields used to fine tune/toggle topic metric collection. Can be one of:
+      # - "all", where all topics found in all brokers will be collected.
+      # - "none", which will disable topic collection alltogether.
+      # - "list", which allows a fixed list of topics to be defined as topic_list: '["topic1", "topic2"]'
+      # - "regex", which allows to define a regex to select which topics will be monitored using topic_regex: 'topic\d+'
+      #
+      # topic_mode: "all"
+      # topic_mode: "none"
+      topic_mode: "regex"
+      topic_regex: 'topic\d+'
+      # topic_mode: "list"
+      # topic_list: `["topic1", "topic2", "topic3"]`
+
+      # Topic size can also be collected from brokers in the cluster. This operation is intensive and can take a while
+      # to collect for a larger number of topics. It is recommended to only enable this feature when collecting topics
+      # selectively, i.e. topic_mode is not "all" or a very permissive regex.
+      # If the field is omitted it will default to false.
+      collect_topic_size: false
+
+    # Additionally, custom labels can be added to further identify your data
+    labels:
+      env: production
+      role: kafka
+
   # This instance gives an example of autodiscovery of brokers with zookeeper
   - name: kafka-metrics-zookeeper-discovery
     command: metrics
@@ -11,7 +73,6 @@ instances:
 
       # Override the kafka API version to target. Defaults to 1.0.0, which will work for all post-1.0.0 versions. Older versions of the API may be missing features.
       kafka_version: "1.0.0"
-
 
       # How to find brokers. Either "bootstrap" or "zookeeper"
       autodiscover_strategy: "zookeeper"
@@ -41,76 +102,15 @@ instances:
       default_jmx_user: "username"
       default_jmx_password: "password"
 
-      # This field is used to toggle the collection of broker and topic metrics. This is on by default and should only be set to "false"
-      # for the specific case where only producers/consumers are being monitored and "topic_mode" is set to "All".
-      # Any other case this field can be omitted.
+      # See above for more information on topic collection
       collect_broker_topic_data: true
-
-      # Below are the fields used to fine tune/toggle topic metric collection.
-      # In order to collect topics the "topic_mode" field must be set to "all" or "list". If the field is set to "all"
-      # a Zookeeper connection is required, at least the "zookeeper_hosts" field is required, as topics are looked up via Zookeeper.
-      #
-      # It is recommended to use the "List" option to monitor a specific set of topics. If using "List" mode the "topic_list"
-      # field should be filled out. The "topic_list" is a JSON array of topic names to be monitored.
-      # Example of topic_list: '["topic1", "topic2"]'
-      #
-      # If monitoring topics via the "all" or "list" option for "topic_mode", the topic size can be collected from zookeeper by setting
-      # "collect_topic_size" to true. This operation is intensive and can take a while to collect for a larger number of topics.
-      # It is recommended to only enable this feature if using a small "topic_list".
-      # If the field is omitted it will default to false.
-      topic_mode: "regex"
-      # topic_list: `["topic1", "topic2", "topic3"]`
-      topic_regex: 'topic\d+'
-
-      # collect_topic_size collects the on-disk size for the topics collected. This can be very time intensive for large clusters,
-      # so it is disabled by default
+      topic_mode: "all"
       collect_topic_size: false
 
     # Additionally, custom labels can be added to further identify your data
     labels:
       env: production
       role: kafka
-
-  # This instance gives an example of autodiscovery of brokers with a bootstrap broker
-  - name: kafka-metrics-bootstrap-discovery
-    command: metrics
-    arguments:
-      # A cluster name is required to uniquely identify this collection result in Insights
-      cluster_name: "testcluster1"
-
-      autodiscover_strategy: "bootstrap"
-
-      # Bootstrap broker arguments. These configure a connection to a single broker. The rest of the brokers in the cluster
-      # will be discovered using that connection.
-      bootstrap_broker_host: "localhost"
-      bootstrap_broker_kafka_port: 9092
-      bootstrap_broker_kafka_protocol: PLAINTEXT # Currently support PLAINTEXT and SSL
-      bootstrap_broker_jmx_port: 9999
-      # JMX user and password default to `default_jmx_user` and `default_jmx_password` if unset
-      bootstrap_broker_jmx_user: admin
-      bootstrap_broker_jmx_password: password
-
-      # Only collect metrics from the bootstrap broker configured. The integration will not attempt to collect metrics
-      # for any other broker, nor will it collect cluster-level metrics like topic metrics. This is useful for things
-      # like deployment to kubernetes, where a single integration instance is desired per broker.
-      local_only_collection: false
-
-      # See above for more information on topic collection
-      collect_broker_topic_data: true
-      topic_mode: "all"
-      collect_topic_size: false
-
-  # This instance gives an example of collecting inventory with the integration
-  - name: kafka-inventory
-    command: inventory
-    arguments:
-      cluster_name: "testcluster2"
-      zookeeper_hosts: '[{"host": "localhost", "port": 2181}]'
-      zookeeper_auth_secret: "username:password"
-
-      # Below are the fields used to fine tune/toggle topic inventory collection.
-      # In order to collect topics the "topic_mode" field must be set to "all", "list", or "regex"
-      topic_mode: 'all'
 
   # Example configuration for collecting consumer offsets for the cluster
   - name: kafka-consumer-offsets
@@ -126,7 +126,9 @@ instances:
       # A regex pattern that matches the consumer groups to collect metrics from
       consumer_group_regex: '.*'
 
-  # Example configuration for collecting JMX metrics form consumers and producers
+  # Example configuration for collecting JMX metrics form consumers and producers.
+  # Please note that we use JMX to collect these metrics, which means that only producers and consumers written in Java
+  # are supported for collection.
   - name: kafka-producer-consumer-metrics
     command: metrics
     arguments:
@@ -188,3 +190,15 @@ instances:
       collect_broker_topic_data: true
       topic_mode: "all"
       collect_topic_size: false
+
+  # This instance gives an example of collecting inventory with the integration
+  - name: kafka-inventory
+    command: inventory
+    arguments:
+      cluster_name: "testcluster2"
+      zookeeper_hosts: '[{"host": "localhost", "port": 2181}]'
+      zookeeper_auth_secret: "username:password"
+
+      # Below are the fields used to fine tune/toggle topic inventory collection.
+      # In order to collect topics the "topic_mode" field must be set to "all", "list", or "regex"
+      topic_mode: 'all'
