@@ -3,13 +3,13 @@ integrations:
 # Example kafka-inventory. This gives an example of collecting inventory with the integration  
 - name: nri-kafka
   env:
-    inventory: "true"
-    cluster_name: "testcluster2"
-    zookeeper_hosts: '[{"host": "localhost", "port": 2181}]'
-    zookeeper_auth_secret: "username:password"
+    INVENTORY: "true"
+    CLUSTER_NAME: "testcluster2"
+    ZOOKEEPER_HOSTS: '[{"host": "localhost", "port": 2181}]'
+    ZOOKEEPER_AUTH_SECRET: "username:password"
     # Below are the fields used to fine tune/toggle topic inventory collection.
     # In order to collect topics the "topic_mode" field must be set to "all", "list", or "regex"
-    topic_mode: 'all'
+    TOPIC_MODE: 'all'
   interval: 15s
   labels:
     env: production
@@ -20,16 +20,16 @@ integrations:
 # Example kafka-consumer-offsets. This gives an example configuration for collecting consumer offsets for the cluster
 - name: nri-kafka
   env:
-    metrics: "false"
-    inventory: "false"
-    consumer_offset: "true"
-    cluster_name: "testcluster3"
-    autodiscover_strategy: "bootstrap"
-    bootstrap_broker_host: "localhost"
-    bootstrap_broker_kafka_port: 9092
-    bootstrap_broker_kafka_protocol: PLAINTEXT
+    METRICS: "false"
+    INVENTORY: "false"
+    CONSUMER_OFFSET: "true"
+    CLUSTER_NAME: "testcluster3"
+    AUTODISCOVER_STRATEGY: "bootstrap"
+    BOOTSTRAP_BROKER_HOST: "localhost"
+    BOOTSTRAP_BROKER_KAFKA_PORT: 9092
+    BOOTSTRAP_BROKER_KAFKA_PROTOCOL: PLAINTEXT
     # A regex pattern that matches the consumer groups to collect metrics from
-    consumer_group_regex: '.*'
+    CONSUMER_GROUP_REGEX: '.*'
   interval: 15s
   labels:
     env: production
@@ -40,13 +40,13 @@ integrations:
 # Example kafka-metrics-zookeeper-discovery. This gives an example of autodiscovery of brokers with zookeeper
 - name: nri-kafka
   env:
-    metrics: "true"
+    METRICS: "true"
     # A cluster name is required to uniquely identify this collection result in Insights
-    cluster_name: "testcluster1"
+    CLUSTER_NAME: "testcluster1"
     # Override the kafka API version to target. Defaults to 1.0.0, which will work for all post-1.0.0 versions. Older versions of the API may be missing features.
-    kafka_version: "1.0.0"
+    KAFKA_VERSION: "1.0.0"
     # How to find brokers. Either "bootstrap" or "zookeeper"
-    autodiscover_strategy: "zookeeper"
+    AUTODISCOVER_STRATEGY: "zookeeper"
     # A list of zookeeper hosts to discover brokers from.
     # Only required and used if `autodiscover_mechanism` is "zookeeper"
     #
@@ -54,24 +54,24 @@ integrations:
     # Each entry should have the following fields:
     # - host: The IP or Hostname of a Zookeeper node, if the New Relic agent is installed on a Zookeeper node "localhost" is an acceptable value
     # - port: The port Zookeeper is listening on for incoming requests. If omitted, a default port of 2181 will be used.
-    zookeeper_hosts: '[{"host": "localhost", "port": 2181}]'
+    ZOOKEEPER_HOSTS: '[{"host": "localhost", "port": 2181}]'
     # If using "user" authentication, the credentials must be specified as a string of the form "<user>:<password>"
     # Example: 'zookeeperuser:zookeeperpass'
-    zookeeper_auth_secret: "username:password"
+    ZOOKEEPER_AUTH_SECRET: "username:password"
     # If the Kafka configuration files are not in the root node of Zookeeper, an alternative root node can be specified.
     # The alternative root must have a leading slash.
-    zookeeper_path: "/kafka-root"
+    ZOOKEEPER_PATH: "/kafka-root"
     # It is common to use the same JMX configuration across a Kafka cluster
     # The default username and password are the credentials that will be used to make
     # a JMX connection to each broker found by Zookeeper. Theses values will also
     # be used when connecting to a consumer and/or producer if the "username" or "password"
     # field are omitted.
-    default_jmx_user: "username"
-    default_jmx_password: "password"
+    DEFAULT_JMX_USER: "username"
+    DEFAULT_JMX_PASSWORD: "password"
     # This field is used to toggle the collection of broker and topic metrics. This is on by default and should only be set to "false"
     # for the specific case where only producers/consumers are being monitored and "topic_mode" is set to "All".
     # Any other case this field can be omitted.
-    collect_broker_topic_data: true
+    COLLECT_BROKER_TOPIC_DATA: true
     # Below are the fields used to fine tune/toggle topic metric collection.
     # In order to collect topics the "topic_mode" field must be set to "all" or "list". If the field is set to "all"
     # a Zookeeper connection is required, at least the "zookeeper_hosts" field is required, as topics are looked up via Zookeeper.
@@ -84,18 +84,18 @@ integrations:
      "collect_topic_size" to true. This operation is intensive and can take a while to collect for a larger number of topics.
     # It is recommended to only enable this feature if using a small "topic_list".
     # If the field is omitted it will default to false.
-    topic_mode: "regex"
+    TOPIC_MODE: "regex"
     # topic_list: `["topic1", "topic2", "topic3"]`
-    topic_regex: 'topic\d+'
+    TOPIC_REGEX: 'topic\d+'
     # collect_topic_size collects the on-disk size for the topics collected. This can be very time intensive for large clusters,
     # so it is disabled by default
-    collect_topic_size: false
+    COLLECT_TOPIC_SIZE: false
     # topic_bucket is used to split topic metric collection across multiple instances. This is useful when the number of topics you want to collect
     # is too large for a single collection, and are not easily partitionable with regex. It works by hashing the topic name, then using it to split
     # the topics across a number of buckets. The first number is the index of the current instance, the second is the total number of instances the
     # topics are split across. For example, if you want the topics matched by `topic_regex: 'mytopic.*'` to be split across three instances, one
     # instance will be configured with `topic_bucket: 1/3`, one with `2/3`, and one with `3/3`
-    topic_bucket: '1/3'
+    TOPIC_BUCKET: '1/3'
   interval: 15s
   labels:
     env: production
@@ -106,27 +106,27 @@ integrations:
 # Example kafka-metrics-bootstrap-discovery. This gives an example of autodiscovery of brokers with a bootstrap broker
 - name: nri-kafka
   env:
-    metrics: "true"
+    METRICS: "true"
     # A cluster name is required to uniquely identify this collection result in Insights
-    cluster_name: "testcluster1"
-    autodiscover_strategy: "bootstrap"
+    CLUSTER_NAME: "testcluster1"
+    AUTODISCOVER_STRATEGY: "bootstrap"
     # Bootstrap broker arguments. These configure a connection to a single broker. The rest of the brokers in the cluster
     # will be discovered using that connection.
-    bootstrap_broker_host: "localhost"
-    bootstrap_broker_kafka_port: 9092
-    bootstrap_broker_kafka_protocol: PLAINTEXT # Currently support PLAINTEXT and SSL
-    bootstrap_broker_jmx_port: 9999
+    BOOTSTRAP_BROKER_HOST: "localhost"
+    BOOTSTRAP_BROKER_KAFKA_PORT: 9092
+    BOOTSTRAP_BROKER_KAFKA_PROTOCOL: PLAINTEXT # Currently support PLAINTEXT and SSL
+    BOOTSTRAP_BROKER_JMX_PORT: 9999
     # JMX user and password default to `default_jmx_user` and `default_jmx_password` if unset
-    bootstrap_broker_jmx_user: admin
-    bootstrap_broker_jmx_password: password
+    BOOTSTRAP_BROKER_JMX_USER: admin
+    BOOTSTRAP_BROKER_JMX_PASSWORD: password
     # Only collect metrics from the bootstrap broker configured. The integration will not attempt to collect metrics
     # for any other broker, nor will it collect cluster-level metrics like topic metrics. This is useful for things
     # like deployment to kubernetes, where a single integration instance is desired per broker.
-    local_only_collection: false
+    LOCAL_ONLY_COLLECTION: false
     # See above for more information on topic collection
-    collect_broker_topic_data: true
-    topic_mode: "all"
-    collect_topic_size: false
+    COLLECT_BROKER_TOPIC_DATA: true
+    TOPIC_MODE: "all"
+    COLLECT_TOPIC_SIZE: false
   interval: 15s
   labels:
     env: production
@@ -136,8 +136,8 @@ integrations:
 # Example kafka-producer-consumer-metrics. This gives an example for collecting JMX metrics form consumers and producers
 - name: nri-kafka
   env:
-    metrics: "true"
-    cluster_name: "testcluster3"
+    METRICS: "true"
+    CLUSTER_NAME: "testcluster3"
     # In order to collect Java producer and consumer metrics the "producers" and "consumers" fields should be filled out.
     # Both fields are JSON arrays with each entry being a separate JAVA producer or consumer, in it's respective field.
     # Each entry should have the following fields:
@@ -147,14 +147,14 @@ integrations:
     # - username: The username used to connect to JMX. If omitted, will use the value of the "default_jmx_user" field
     # - password: The password used to connect to JMX. If omitted, will use the value of the "default_jmx_password" field
     # Example: {"name": "myProducer", "host": "localhost", "port": 24, "username": "me', "password": "secret"}
-    producers: '[{"name": "myProducer", "host": "localhost", "port": 24, "username": "me", "password": "secret"}]'
-    consumers: '[{"name": "myConsumer", "host": "localhost", "port": 24, "username": "me", "password": "secret"}]'
+    PRODUCERS: '[{"name": "myProducer", "host": "localhost", "port": 24, "username": "me", "password": "secret"}]'
+    CONSUMERS: '[{"name": "myConsumer", "host": "localhost", "port": 24, "username": "me", "password": "secret"}]'
     # If several producers/consumers are on the same host an agent can be installed on that host and the
     # "default_jmx_host" and "default_jmx_port" field can be set once and used for all producers/consumers that
     # do not have the "host" or "port" field repsectively.
     # These fields can be removed if each producer/consumer has it's own "host" and/or "port" field filled out.
-    default_jmx_host: "localhost"
-    default_jmx_port: "9999"
+    DEFAULT_JMX_HOST: "localhost"
+    DEFAULT_JMX_PORT: "9999"
   interval: 15s
   labels:
     env: production
@@ -164,36 +164,36 @@ integrations:
 # Example kafka-kerberos-auth
 - name: nri-kafka
   env:
-    metrics: "true"
+    METRICS: "true"
     # A cluster name is required to uniquely identify this collection result in Insights
-    cluster_name: "testcluster1"
-    autodiscover_strategy: "bootstrap"
+    CLUSTER_NAME: "testcluster1"
+    AUTODISCOVER_STRATEGY: "bootstrap"
     # Bootstrap broker arguments. These configure a connection to a single broker. The rest of the brokers in the cluster
     # will be discovered using that connection.
-    bootstrap_broker_host: "localhost"
-    bootstrap_broker_kafka_port: 9092
-    bootstrap_broker_kafka_protocol: PLAINTEXT # Currently support PLAINTEXT and SSL
-    bootstrap_broker_jmx_port: 9999
+    BOOTSTRAP_BROKER_HOST: "localhost"
+    BOOTSTRAP_BROKER_KAFKA_PORT: 9092
+    BOOTSTRAP_BROKER_KAFKA_PROTOCOL: PLAINTEXT # Currently support PLAINTEXT and SSL
+    BOOTSTRAP_BROKER_JMX_PORT: 9999
     # JMX user and password default to `default_jmx_user` and `default_jmx_password` if unset
-    bootstrap_broker_jmx_user: admin
-    bootstrap_broker_jmx_password: password
+    BOOTSTRAP_BROKER_JMX_USER: admin
+    BOOTSTRAP_BROKER_JMX_PASSWORD: password
     # Kerberos authentication arguments
-    sasl_mechanism: GSSAPI
-    sasl_gssapi_realm: SOMECORP.COM
-    sasl_gssapi_service_name: Kafka
-    sasl_gssapi_username: kafka
-    sasl_gssapi_key_tab_path: /etc/newrelic-infra/kafka.keytab
-    sasl_gssapi_kerberos_config_path: /etc/krb5.conf
+    SASL_MECHANISM: GSSAPI
+    SASL_GSSAPI_REALM: SOMECORP.COM
+    SASL_GSSAPI_SERVICE_NAME: Kafka
+    SASL_GSSAPI_USERNAME: kafka
+    SASL_GSSAPI_KEY_TAB_PATH: /etc/newrelic-infra/kafka.keytab
+    SASL_GSSAPI_KERBEROS_CONFIG_PATH: /etc/krb5.conf
     # disables FAST negotiation that causes issues with Active Directory
     # sasl_gssapi_disable_fast_negotiation: false
     # Only collect metrics from the bootstrap broker configured. The integration will not attempt to collect metrics
     # for any other broker, nor will it collect cluster-level metrics like topic metrics. This is useful for things
     # like deployment to kubernetes, where a single integration instance is desired per broker.
-    local_only_collection: false
+    LOCAL_ONLY_COLLECTION: false
     # See above for more information on topic collection
-    collect_broker_topic_data: true
-    topic_mode: "all"
-    collect_topic_size: false
+    COLLECT_BROKER_TOPIC_DATA: true
+    TOPIC_MODE: "all"
+    COLLECT_TOPIC_SIZE: false
   interval: 15s
   labels:
     env: production
