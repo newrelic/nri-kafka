@@ -1,5 +1,5 @@
 name: com.newrelic.kafka
-description: Reports status and metrics for Kafka services. Legacy file kept for compatibility.
+description: Reports status and metrics for Kafka services
 protocol_version: 2
 os: linux
 
