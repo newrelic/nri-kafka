@@ -3,6 +3,7 @@ integrations:
 # Example kafka-inventory. This gives an example of collecting inventory with the integration  
 - name: nri-kafka
   env:
+    NR_JMX: "C:\\Program Files\\New Relic\\nrjmx\\nrjmx.bat"
     INVENTORY: "true"
     CLUSTER_NAME: "testcluster2"
     ZOOKEEPER_HOSTS: '[{"host": "localhost", "port": 2181}]'
@@ -20,6 +21,7 @@ integrations:
 # Example kafka-consumer-offsets. This gives an example configuration for collecting consumer offsets for the cluster
 - name: nri-kafka
   env:
+    NR_JMX: "C:\\Program Files\\New Relic\\nrjmx\\nrjmx.bat"
     METRICS: "false"
     INVENTORY: "false"
     CONSUMER_OFFSET: "true"
@@ -40,6 +42,7 @@ integrations:
 # Example kafka-metrics-zookeeper-discovery. This gives an example of autodiscovery of brokers with zookeeper
 - name: nri-kafka
   env:
+    NR_JMX: "C:\\Program Files\\New Relic\\nrjmx\\nrjmx.bat"
     METRICS: "true"
     # A cluster name is required to uniquely identify this collection result in Insights
     CLUSTER_NAME: "testcluster1"
@@ -106,6 +109,7 @@ integrations:
 # Example kafka-metrics-bootstrap-discovery. This gives an example of autodiscovery of brokers with a bootstrap broker
 - name: nri-kafka
   env:
+    NR_JMX: "C:\\Program Files\\New Relic\\nrjmx\\nrjmx.bat"
     METRICS: "true"
     # A cluster name is required to uniquely identify this collection result in Insights
     CLUSTER_NAME: "testcluster1"
@@ -136,6 +140,7 @@ integrations:
 # Example kafka-producer-consumer-metrics. This gives an example for collecting JMX metrics form consumers and producers
 - name: nri-kafka
   env:
+    NR_JMX: "C:\\Program Files\\New Relic\\nrjmx\\nrjmx.bat"
     METRICS: "true"
     CLUSTER_NAME: "testcluster3"
     # In order to collect Java producer and consumer metrics the "producers" and "consumers" fields should be filled out.
@@ -164,6 +169,7 @@ integrations:
 # Example kafka-kerberos-auth
 - name: nri-kafka
   env:
+    NR_JMX: "C:\\Program Files\\New Relic\\nrjmx\\nrjmx.bat"
     METRICS: "true"
     # A cluster name is required to uniquely identify this collection result in Insights
     CLUSTER_NAME: "testcluster1"
