@@ -1,109 +1,61 @@
-  kafka-config.yml: |
-    ---
-    # Run auto discovery to find pods with label "app=kafka"
-    # https://docs.newrelic.com/docs/integrations/host-integrations/installation/container-auto-discovery
-    discovery:
-      command:
-        # Use the following optional arguments:
-        # --namespaces: Comma separated list of namespaces to discover pods on
-        # --tls: Use secure (TLS) connection
-        # --port: Port used to connect to the kubelet. Default is 10255
-        exec: /var/db/newrelic-infra/nri-discovery-kubernetes
-        match:
-          label.app: "kafka"
-    integrations:
-      # This instance gives an example of autodiscovery of brokers with a bootstrap broker
-      - name: nri-kafka
-        env:
-          # A cluster name is required to uniquely identify this collection result in Insights
-          CLUSTER_NAME: testcluster1
+# This file includes a snippet ready to be added to the `integrations_config` section of the values.yml file for the
+# newrelic/infrastructure-k8s chart. For more details, please refer to our docs
+# https://docs.newrelic.com/docs/integrations/kubernetes-integration/link-apps-services/monitor-services-running-kubernetes/
+# or the source values.yml file for the chart:
+# https://github.com/newrelic/helm-charts/blob/e07ec10aada6dda68ba5cd6e71718217d6c01acc/charts/newrelic-infrastructure/values.yaml#L230
+# Labels and URLs have been set to be compatible with those as defined in bitnami's helm chart:
+# https://github.com/bitnami/charts/tree/master/bitnami/kafka
 
-          AUTODISCOVER_STRATEGY: bootstrap
-
-          # Bootstrap broker arguments. These configure a connection to a single broker. The rest of the brokers in the cluster
-          # will be discovered using that connection.
-          BOOTSTRAP_BROKER_HOST: ${discovery.ip}
-          # Ports can be autodiscovered. You can use an ordinal number like ${discovery.ports.0}
-          # for the first discovered port (they are sorted in ascending order)
-          # E.g. if the pod ports are {9092, 9999}, then ${discovery.ports.0} has the value 9092 and
-          # ${discovery.ports.1} equals 9999
-          # Named ports can also be used like this ${discovery.ports.<name>}. E.g. ${discovery.ports.kafka}
-          BOOTSTRAP_BROKER_KAFKA_PORT: 9092
-          BOOTSTRAP_BROKER_KAFKA_PROTOCOL: PLAINTEXT # Currently support PLAINTEXT and SSL
-          BOOTSTRAP_BROKER_JMX_PORT: 9999
-          # JMX user and password default to `default_jmx_user` and `default_jmx_password` if unset
-          BOOTSTRAP_BROKER_JMX_USER: username
-          BOOTSTRAP_BROKER_JMX_PASSWORD: password
-
-          # Only collect metrics from the bootstrap broker configured. The integration will not attempt to collect metrics
-          # for any other broker, nor will it collect cluster-level metrics like topic metrics. This is useful for things
-          # like deployment to kubernetes, where a single integration instance is desired per broker.
-          # In order to collect metrics from a single broker, you may need to set the KAFKA_ADVERTISED_HOST_NAME in your
-          # deployment file to the same value as in the BOOTSTRAP_BROKER_HOST config option. E.g. using the podIP:
-          # - name: KAFKA_ADVERTISED_HOST_NAME
-          #   valueFrom:
-          #     fieldRef:
-          #       apiVersion: "v1"
-          #       fieldPath: "status.podIP"
-          LOCAL_ONLY_COLLECTION: true
-
-          # See above for more information on topic collection
-          COLLECT_BROKER_TOPIC_DATA: true
-          TOPIC_MODE: all
-          COLLECT_TOPIC_SIZE: false
-
-          METRICS: 1
-  nri-kafka-producers.yaml: |
-    ---
-    # Run auto discovery to find pods with label "app=kafka"
-    # https://docs.newrelic.com/docs/integrations/host-integrations/installation/container-auto-discovery
-    discovery:
-      command:
-        exec: /var/db/newrelic-infra/nri-discovery-kubernetes
-        match:
-          label.app: kafka-producer
-    integrations:
-      - name: nri-kafka
-        env:
-          CONSUMER_OFFSET: 1
-          # A cluster name is required to uniquely identify this collection result in Insights
-          CLUSTER_NAME: testcluster1
-          # In order to collect Java producers metrics the "producers" field should be filled out.
-          # Each entry should have the following fields:
-          # - name: This is the actual name of the producer/consumer as it appears in Kafka
-          # - host: The IP or Hostname of the producer/consumser. If omitted, will use the value of the "default_jmx_host" field
-          # - port: The port in which JMX is setup for on the producer/consumer. If omitted will, use the value of the "default_jmx_port" field
-          # - username: The username used to connect to JMX. If omitted, will use the value of the "default_jmx_user" field
-          # - password: The password used to connect to JMX. If omitted, will use the value of the "default_jmx_password" field
-          PRODUCERS: '[{"name": "producer-1", "host": "${discovery.ip}", "port": ${discovery.ports.jmx} }]'
-          # A list of zookeeper hosts to discover brokers from.
-          ZOOKEEPER_HOSTS: '[{"host": "kafka-zookeeper.kafka.svc.cluster.local", "port": 2181}]'
-          # A regex pattern that matches the consumer groups to collect metrics from
-          CONSUMER_GROUP_REGEX: '.*'
-  nri-kafka-consumer.yaml: |
-    ---
-    # Run auto discovery to find pods with label "app=kafka"
-    # https://docs.newrelic.com/docs/integrations/host-integrations/installation/container-auto-discovery
-    discovery:
-      command:
-        exec: /var/db/newrelic-infra/nri-discovery-kubernetes --port 10255 --insecure
-        match:
-          label.app: kafka-consumer
-    integrations:
-      - name: nri-kafka
-        env:
-          CONSUMER_OFFSET: 1
-          # A cluster name is required to uniquely identify this collection result in Insights
-          CLUSTER_NAME: testcluster1
-          # In order to collect Java consumer metrics the "consumers" field should be filled out.
-          # Each entry should have the following fields:
-          # - name: This is the actual name of the producer/consumer as it appears in Kafka
-          # - host: The IP or Hostname of the producer/consumser. If omitted, will use the value of the "default_jmx_host" field
-          # - port: The port in which JMX is setup for on the producer/consumer. If omitted will, use the value of the "default_jmx_port" field
-          # - username: The username used to connect to JMX. If omitted, will use the value of the "default_jmx_user" field
-          # - password: The password used to connect to JMX. If omitted, will use the value of the "default_jmx_password" field
-          CONSUMERS: '[{"name": "consumer-1", "host": "${discovery.ip}", "port": ${discovery.ports.jmx} }]'
-          # A list of zookeeper hosts to discover brokers from.
-          ZOOKEEPER_HOSTS: '[{"host": "kafka-zookeeper.kafka.svc.cluster.local", "port": 2181}]'
-          # A regex pattern that matches the consumer groups to collect metrics from
-          CONSUMER_GROUP_REGEX: '.*'
+integrations_config:
+  - name: kafka-config-broker.yml
+    data:
+      discovery:
+        command:
+          exec: /var/db/newrelic-infra/nri-discovery-kubernetes --port 10250 --tls
+          match:
+            label.app.kubernetes.io/component: kafka
+            label.app.kubernetes.io/instance: kafka
+      integrations:
+        - name: nri-kafka
+          env:
+            CLUSTER_NAME: kafka-canary
+            AUTODISCOVER_STRATEGY: bootstrap
+            # Please note that the following URL must be tweaked according to the cluster's setup and broker
+            # configuration. It must point to exactly one pod (i.e. not being load-balanced), and it MUST MATCH the
+            # advertised name for that broker. Otherwise, collection will fail.
+            BOOTSTRAP_BROKER_HOST: ${discovery.podName}.kafka-headless.${discovery.namespace}.svc.cluster.local
+            BOOTSTRAP_BROKER_JMX_PORT: 5555
+            METRICS: 1
+            LOCAL_ONLY_COLLECTION: 1
+  - name: kafka-config-producer.yml
+    data:
+      discovery:
+        command:
+          exec: /var/db/newrelic-infra/nri-discovery-kubernetes --port 10250 --tls
+          match:
+            label.app.kubernetes.io/instance: kafka
+            label.role: producer
+      integrations:
+        - name: nri-kafka
+          env:
+            CLUSTER_NAME: kafka-canary
+            PRODUCERS: '[{"name": "${discovery.podName}", "host": "${discovery.ip}", "port": 5555}]'
+            TOPIC_MODE: list
+            TOPIC_LIST: '["test"]'
+            METRICS: 1
+  - name: kafka-config-consumer.yml
+    data:
+      discovery:
+        command:
+          exec: /var/db/newrelic-infra/nri-discovery-kubernetes --port 10250 --tls
+          match:
+            label.app.kubernetes.io/instance: kafka
+            label.role: consumer
+      integrations:
+        - name: nri-kafka
+          env:
+            CLUSTER_NAME: kafka-canary
+            CONSUMERS: '[{"name": "${discovery.podName}", "host": "${discovery.ip}", "port": 5555}]'
+            TOPIC_MODE: list
+            TOPIC_LIST: '["test"]'
+            METRICS: 1
