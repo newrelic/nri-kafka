@@ -1,6 +1,7 @@
 integrations:
 
 # This instance gives an example of autodiscovery of brokers with a bootstrap broker, which is the recommended configuration.
+# Collecting both metrics and inventory
 - name: nri-kafka
   env:
     # A cluster name is required to uniquely identify this collection result in Insights
@@ -67,6 +68,7 @@ integrations:
 
 
 # Example kafka-metrics-zookeeper-discovery. This gives an example of autodiscovery of brokers with zookeeper
+# It collects only metrics
 - name: nri-kafka
   env:
     METRICS: "true"
@@ -111,10 +113,8 @@ integrations:
   labels:
     env: production
     role: kafka
-  inventory_source: config/kafka
 
-
-# Example kafka-inventory. This gives an example of collecting inventory with the integration  
+# Example kafka-inventory. This gives an example of collecting only inventory with the integration
 - name: nri-kafka
   env:
     INVENTORY: "true"
@@ -149,8 +149,6 @@ integrations:
   labels:
     env: production
     role: kafka
-  inventory_source: config/kafka
-
 
 # Example configuration for collecting JMX metrics form consumers and producers.
 # Please note that we use JMX to collect these metrics, which means that only producers and consumers written in Java
@@ -180,9 +178,8 @@ integrations:
   labels:
     env: production
     role: kafka
-  inventory_source: config/kafka
 
-# Example kafka-kerberos-auth
+# Example kafka-kerberos-auth collecting only metrics
 - name: nri-kafka
   env:
     METRICS: "true"
@@ -219,4 +216,3 @@ integrations:
   labels:
     env: production
     role: kafka
-  inventory_source: config/kafka
