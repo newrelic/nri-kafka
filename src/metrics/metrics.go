@@ -5,7 +5,7 @@ package metrics
 import (
 	"errors"
 	"fmt"
-	"os"
+	"net"
 	"regexp"
 	"strings"
 
@@ -14,26 +14,47 @@ import (
 	"github.com/newrelic/infra-integrations-sdk/integration"
 	"github.com/newrelic/infra-integrations-sdk/jmx"
 	"github.com/newrelic/infra-integrations-sdk/log"
+
 	"github.com/newrelic/nri-kafka/src/args"
 	"github.com/newrelic/nri-kafka/src/jmxwrapper"
 )
 
+var (
+	ErrMetricNotFound   = errors.New("metric not found")
+	ErrInvalidTopicMode = errors.New("invalid topic mode")
+	ErrTopicRegexNotSet = errors.New("topic regex is not set")
+)
+
 // GetBrokerMetrics collects all Broker JMX metrics and stores them in sample
-func GetBrokerMetrics(sample *metric.Set) {
-	CollectMetricDefinitions(sample, brokerMetricDefs, nil)
-	CollectBrokerRequestMetrics(sample, brokerRequestMetricDefs)
+func GetBrokerMetrics(sample *metric.Set) (errors []error) {
+	for _, err := range CollectMetricDefinitions(sample, brokerMetricDefs, nil) {
+		errors = append(errors, fmt.Errorf("collecting metric definitions: %w", err))
+	}
+	for _, err := range CollectBrokerRequestMetrics(sample, brokerRequestMetricDefs) {
+		errors = append(errors, fmt.Errorf("collecting broker request metrics: %w", err))
+	}
+
+	return
 }
 
 // GetConsumerMetrics collects all Consumer metrics for the given
 // consumerName and stores them in sample.
-func GetConsumerMetrics(consumerName string, sample *metric.Set) {
-	CollectMetricDefinitions(sample, consumerMetricDefs, applyConsumerName(consumerName))
+func GetConsumerMetrics(consumerName string, sample *metric.Set) (errors []error) {
+	for _, err := range CollectMetricDefinitions(sample, consumerMetricDefs, applyConsumerName(consumerName)) {
+		errors = append(errors, fmt.Errorf("collecting consumer metrics: %w", err))
+	}
+
+	return
 }
 
 // GetProducerMetrics collects all Producer and Producer metrics for the given
 // producerName and stores them in sample.
-func GetProducerMetrics(producerName string, sample *metric.Set) {
-	CollectMetricDefinitions(sample, producerMetricDefs, applyProducerName(producerName))
+func GetProducerMetrics(producerName string, sample *metric.Set) (errors []error) {
+	for _, err := range CollectMetricDefinitions(sample, producerMetricDefs, applyProducerName(producerName)) {
+		errors = append(errors, fmt.Errorf("collecting producer metrics: %w", err))
+	}
+
+	return
 }
 
 // CollectTopicSubMetrics collects Topic metrics that are related to either a Producer or Consumer
@@ -45,15 +66,15 @@ func CollectTopicSubMetrics(
 	entityType string,
 	metricSets []*JMXMetricSet,
 	beanModifier func(string, string) BeanModifier,
-) {
-
+) (errors []error) {
 	// need to title case the type so it matches the metric set of the parent entity
 	titleEntityType := strings.Title(strings.TrimPrefix(entity.Metadata.Namespace, "ka-"))
 
 	topicList, err := getTopicListFromJMX(entity.Metadata.Name)
 	if err != nil {
-		log.Error("Failed to collect topic list for producer or consumer: %s", err)
-		return
+		return []error{
+			fmt.Errorf("getting topic list: %w", err),
+		}
 	}
 
 	for _, topicName := range topicList {
@@ -63,14 +84,19 @@ func CollectTopicSubMetrics(
 			attribute.Attribute{Key: "topic", Value: topicName},
 		)
 
-		CollectMetricDefinitions(topicSample, metricSets, beanModifier(entity.Metadata.Name, topicName))
+		metricDefErrs := CollectMetricDefinitions(topicSample, metricSets, beanModifier(entity.Metadata.Name, topicName))
+		for _, err := range metricDefErrs {
+			errors = append(errors,
+				fmt.Errorf("collecting topic sub metrics for %q: %w", topicName, err),
+			)
+		}
 	}
+
+	return errors
 }
 
 // CollectBrokerRequestMetrics collects request metrics from brokers
-func CollectBrokerRequestMetrics(sample *metric.Set, metricSets []*JMXMetricSet) {
-	notFoundMetrics := make([]string, 0)
-
+func CollectBrokerRequestMetrics(sample *metric.Set, metricSets []*JMXMetricSet) (errors []error) {
 	for _, metricSet := range metricSets {
 		beanName := metricSet.MBean
 
@@ -78,10 +104,10 @@ func CollectBrokerRequestMetrics(sample *metric.Set, metricSets []*JMXMetricSet)
 		results, err := jmxwrapper.JMXQuery(beanName, args.GlobalArgs.Timeout)
 		// If we fail we don't want a total failure as other metrics can be collected even if a single failure/timout occurs
 		if err != nil && err == jmx.ErrConnection {
-			log.Error("Connection error for %s:%s : %s", jmx.HostName(), jmx.Port(), err)
-			os.Exit(1)
+			errors = append(errors, fmt.Errorf("connecting to jmx endpoint %s: %w", net.JoinHostPort(jmx.HostName(), jmx.Port()), err))
+			return
 		} else if err != nil {
-			log.Error("Unable to execute JMX query for MBean '%s': %s", beanName, err)
+			errors = append(errors, fmt.Errorf("executing JMX query %q: %w", beanName, err))
 			continue
 		}
 
@@ -104,25 +130,21 @@ func CollectBrokerRequestMetrics(sample *metric.Set, metricSets []*JMXMetricSet)
 			}
 
 			if !found {
-				notFoundMetrics = append(notFoundMetrics, metricDef.Name)
+				errors = append(errors, fmt.Errorf("%q: %w", metricDef.Name, ErrMetricNotFound))
 				continue
 			}
 
 			if err := sample.SetMetric(metricDef.Name, versionRollup, metricDef.SourceType); err != nil {
-				log.Error("Error setting value: %s", err)
+				errors = append(errors, fmt.Errorf("setting value for metric %q: %w", metricDef.Name, err))
 			}
 		}
 	}
 
-	if len(notFoundMetrics) > 0 {
-		log.Warn("Can't find raw metrics in results for keys: %v", notFoundMetrics)
-	}
+	return
 }
 
 // CollectMetricDefinitions collects the set of metrics from the current open JMX connection and add them to the sample
-func CollectMetricDefinitions(sample *metric.Set, metricSets []*JMXMetricSet, beanModifier BeanModifier) {
-	notFoundMetrics := make([]string, 0)
-
+func CollectMetricDefinitions(sample *metric.Set, metricSets []*JMXMetricSet, beanModifier BeanModifier) (errors []error) {
 	for _, metricSet := range metricSets {
 		beanName := metricSet.MBean
 
@@ -134,10 +156,10 @@ func CollectMetricDefinitions(sample *metric.Set, metricSets []*JMXMetricSet, be
 		results, err := jmxwrapper.JMXQuery(beanName, args.GlobalArgs.Timeout)
 		// If we fail we don't want a total failure as other metrics can be collected even if a single failure/timout occurs
 		if err != nil && err == jmx.ErrConnection {
-			log.Error("Connection error for %s:%s : %s", jmx.HostName(), jmx.Port(), err)
-			os.Exit(1)
+			errors = append(errors, fmt.Errorf("connecting to jmx endpoint %s: %w", net.JoinHostPort(jmx.HostName(), jmx.Port()), err))
+			return
 		} else if err != nil {
-			log.Error("Unable to execute JMX query for MBean '%s': %s", beanName, err.Error())
+			errors = append(errors, fmt.Errorf("executing JMX query %q: %w", beanName, err))
 			continue
 		}
 
@@ -148,19 +170,20 @@ func CollectMetricDefinitions(sample *metric.Set, metricSets []*JMXMetricSet, be
 			if beanModifier != nil {
 				mBeanKey = beanModifier(mBeanKey)
 			}
-			if value, ok := results[mBeanKey]; !ok {
-				notFoundMetrics = append(notFoundMetrics, metricDef.Name)
-			} else {
-				if err := sample.SetMetric(metricDef.Name, value, metricDef.SourceType); err != nil {
-					log.Error("Error setting value: %s", err)
-				}
+
+			value, ok := results[mBeanKey]
+			if !ok {
+				errors = append(errors, fmt.Errorf("%q: %w", metricDef.Name, ErrMetricNotFound))
+				continue
+			}
+
+			if err := sample.SetMetric(metricDef.Name, value, metricDef.SourceType); err != nil {
+				errors = append(errors, fmt.Errorf("setting for metric %q: %w", metricDef.Name, err))
 			}
 		}
 	}
 
-	if len(notFoundMetrics) > 0 {
-		log.Warn("Can't find raw metrics in results for keys: %v", notFoundMetrics)
-	}
+	return
 }
 
 func getTopicListFromJMX(producer string) ([]string, error) {
@@ -171,17 +194,17 @@ func getTopicListFromJMX(producer string) ([]string, error) {
 		return args.GlobalArgs.TopicList, nil
 	case "regex":
 		if args.GlobalArgs.TopicRegex == "" {
-			return nil, errors.New("regex topic mode requires the topic_regex argument to be set")
+			return nil, ErrTopicRegexNotSet
 		}
 
 		pattern, err := regexp.Compile(args.GlobalArgs.TopicRegex)
 		if err != nil {
-			return nil, fmt.Errorf("failed to compile topic regex: %s", err)
+			return nil, fmt.Errorf("failed to compile topic regex: %w", err)
 		}
 
 		allTopics, err := getAllTopicsFromJMX(producer)
 		if err != nil {
-			return nil, fmt.Errorf("failed to get topics from client: %s", err)
+			return nil, fmt.Errorf("failed to get topics from client: %w", err)
 		}
 
 		filteredTopics := make([]string, 0, len(allTopics))
@@ -195,12 +218,11 @@ func getTopicListFromJMX(producer string) ([]string, error) {
 	case "all":
 		allTopics, err := getAllTopicsFromJMX(producer)
 		if err != nil {
-			return nil, fmt.Errorf("failed to get topics from client: %s", err)
+			return nil, fmt.Errorf("failed to get topics from client: %w", err)
 		}
 		return allTopics, nil
 	default:
-		log.Error("Invalid topic mode %s", args.GlobalArgs.TopicMode)
-		return nil, fmt.Errorf("invalid topic_mode '%s'", args.GlobalArgs.TopicMode)
+		return nil, fmt.Errorf("%q: %w", args.GlobalArgs.TopicMode, ErrInvalidTopicMode)
 	}
 
 }
@@ -208,10 +230,9 @@ func getTopicListFromJMX(producer string) ([]string, error) {
 func getAllTopicsFromJMX(producer string) ([]string, error) {
 	result, err := jmxwrapper.JMXQuery(fmt.Sprintf("kafka.producer:type=producer-topic-metrics,client-id=%s,topic=*", producer), args.GlobalArgs.Timeout)
 	if err != nil && err == jmx.ErrConnection {
-		log.Error("Connection error for %s:%s : %s", jmx.HostName(), jmx.Port(), err)
-		os.Exit(1)
+		return nil, fmt.Errorf("connecting to jmx endpoint %s: %w", net.JoinHostPort(jmx.HostName(), jmx.Port()), err)
 	} else if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("collecting topics from JMX: %w", err)
 	}
 
 	r := regexp.MustCompile(`topic="?([^,"]+)"?`)

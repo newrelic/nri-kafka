@@ -4,28 +4,21 @@ import (
 	"fmt"
 
 	"github.com/newrelic/infra-integrations-sdk/data/metric"
-	"github.com/newrelic/infra-integrations-sdk/integration"
-	"github.com/newrelic/infra-integrations-sdk/log"
+
 	"github.com/newrelic/nri-kafka/src/args"
-	"github.com/newrelic/nri-kafka/src/connection"
 	"github.com/newrelic/nri-kafka/src/jmxwrapper"
 	"github.com/newrelic/nri-kafka/src/metrics"
 )
 
-func gatherTopicSizes(b *connection.Broker, topicSampleLookup map[string]*metric.Set, i *integration.Integration) {
-	entity, err := b.Entity(i)
-	if err != nil {
-		log.Error("Failed to get broker entity: %s", err)
-		return
-	}
-
+// gatherTopicSizes Obtains the topic sizes for all topics using the currently open JMX connection
+func gatherTopicSizes(topicSampleLookup map[string]*metric.Set) (errors []error) {
 	for topicName, sample := range topicSampleLookup {
 		beanModifier := metrics.ApplyTopicName(topicName)
 
 		beanName := beanModifier(metrics.TopicSizeMetricDef.MBean)
 		results, err := jmxwrapper.JMXQuery(beanName, args.GlobalArgs.Timeout)
 		if err != nil {
-			log.Error("Broker '%s' failed to make JMX Query: %s", b.Host, err.Error())
+			errors = append(errors, fmt.Errorf("running query %q: %w", beanName, err))
 			continue
 		} else if len(results) == 0 {
 			continue
@@ -33,14 +26,16 @@ func gatherTopicSizes(b *connection.Broker, topicSampleLookup map[string]*metric
 
 		topicSize, err := aggregateTopicSize(results)
 		if err != nil {
-			log.Error("Unable to calculate size for Topic %s: %s", topicName, err.Error())
+			errors = append(errors, fmt.Errorf("aggregating topic size: %w", err))
 			continue
 		}
 
 		if err := sample.SetMetric("topic.diskSize", topicSize, metric.GAUGE); err != nil {
-			log.Error("Unable to collect topic size for Topic %s on Broker %s: %s", topicName, entity.Metadata.Name, err.Error())
+			errors = append(errors, fmt.Errorf("registering topic.diskSize metric: %w", err))
 		}
 	}
+
+	return
 }
 
 func aggregateTopicSize(jmxResult map[string]interface{}) (size float64, err error) {

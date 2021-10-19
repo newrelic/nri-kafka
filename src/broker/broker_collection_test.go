@@ -15,12 +15,13 @@ import (
 	"github.com/newrelic/infra-integrations-sdk/data/metric"
 	"github.com/newrelic/infra-integrations-sdk/integration"
 	"github.com/newrelic/infra-integrations-sdk/jmx"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
+
 	"github.com/newrelic/nri-kafka/src/connection"
 	"github.com/newrelic/nri-kafka/src/connection/mocks"
 	"github.com/newrelic/nri-kafka/src/jmxwrapper"
 	"github.com/newrelic/nri-kafka/src/testutils"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
 )
 
 func TestStartBrokerPool(t *testing.T) {
@@ -139,8 +140,8 @@ func TestPopulateBrokerMetrics_JMXOpenError(t *testing.T) {
 	}
 	i, _ := integration.New("kafka", "1.0.0")
 
-	err := collectBrokerMetrics(testBroker, []string{}, i)
-	assert.Equal(t, "jmx error", err.Error())
+	errs := collectBrokerMetrics(testBroker, []string{}, i)
+	assert.Len(t, errs, 1)
 }
 
 func TestPopulateBrokerMetrics_Normal(t *testing.T) {
@@ -219,7 +220,10 @@ func TestCollectBrokerTopicMetrics(t *testing.T) {
 		"topic": sample,
 	}
 
-	out := collectBrokerTopicMetrics(testBroker, []string{"topic"}, i)
+	out, errs := collectBrokerTopicMetrics(testBroker, []string{"topic"}, i)
+	for _, err := range errs {
+		assert.NoError(t, err)
+	}
 
 	metrics.CollectMetricDefinitions(sample, metrics.BrokerTopicMetricDefs, metrics.ApplyTopicName("topic"))
 

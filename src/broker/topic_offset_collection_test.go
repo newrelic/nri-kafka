@@ -7,11 +7,12 @@ import (
 	"github.com/newrelic/infra-integrations-sdk/data/attribute"
 	"github.com/newrelic/infra-integrations-sdk/data/metric"
 	"github.com/newrelic/infra-integrations-sdk/integration"
+	"github.com/stretchr/testify/assert"
+
 	"github.com/newrelic/nri-kafka/src/connection"
 	"github.com/newrelic/nri-kafka/src/connection/mocks"
 	"github.com/newrelic/nri-kafka/src/jmxwrapper"
 	"github.com/newrelic/nri-kafka/src/testutils"
-	"github.com/stretchr/testify/assert"
 )
 
 func TestGatherTopicOffset_Single(t *testing.T) {
@@ -47,7 +48,7 @@ func TestGatherTopicOffset_Single(t *testing.T) {
 		),
 	}
 
-	gatherTopicOffset(broker, collectedTopics, i)
+	gatherTopicOffset(collectedTopics)
 
 	expected := map[string]interface{}{
 		"topic.offset": float64(10),
@@ -90,7 +91,7 @@ func TestGatherTopicOffset_QueryError(t *testing.T) {
 		),
 	}
 
-	gatherTopicOffset(broker, collectedTopics, i)
+	gatherTopicOffset(collectedTopics)
 
 	assert.Len(t, e.Metrics, 1)
 	assert.NotContains(t, e.Metrics[0].Metrics, "topic.offset", "Metric was unexpectedly set after query error")
@@ -125,7 +126,7 @@ func TestGatherTopicOffset_QueryBlank(t *testing.T) {
 		),
 	}
 
-	gatherTopicOffset(broker, collectedTopics, i)
+	gatherTopicOffset(collectedTopics)
 
 	assert.Len(t, e.Metrics, 1)
 	assert.NotContains(t, e.Metrics[0].Metrics, "topic.offset", "Metric was unexpectedly set after empty query result")
@@ -163,7 +164,7 @@ func TestGatherTopicOffset_AggregateError(t *testing.T) {
 		),
 	}
 
-	gatherTopicOffset(broker, collectedTopics, i)
+	gatherTopicOffset(collectedTopics)
 
 	assert.Len(t, e.Metrics, 1)
 	assert.NotContains(t, e.Metrics[0].Metrics, "topic.offset", "Metric was unexpectedly set after aggregate error")

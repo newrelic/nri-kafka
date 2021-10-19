@@ -9,6 +9,7 @@ import (
 	"github.com/newrelic/infra-integrations-sdk/integration"
 	"github.com/newrelic/infra-integrations-sdk/jmx"
 	"github.com/newrelic/infra-integrations-sdk/log"
+
 	"github.com/newrelic/nri-kafka/src/args"
 	"github.com/newrelic/nri-kafka/src/jmxwrapper"
 	"github.com/newrelic/nri-kafka/src/metrics"
@@ -93,13 +94,18 @@ func ConsumerWorker(consumerChan <-chan *args.JMXHost, wg *sync.WaitGroup, i *in
 			)
 
 			// Collect the consumer metrics and populate the sample with them
-			log.Debug("Collecting metrics for Consumer '%s'", consumerEntity.Metadata.Name)
-			metrics.GetConsumerMetrics(consumerEntity.Metadata.Name, sample)
+			log.Debug("Collecting metrics for consumer %q", jmxInfo)
+
+			for _, err := range metrics.GetConsumerMetrics(consumerEntity.Metadata.Name, sample) {
+				log.Error("Collecting consumer metrics for %q: %v", jmxInfo, err)
+			}
 
 			// Collect metrics that are topic-specific per Consumer
-			metrics.CollectTopicSubMetrics(consumerEntity, "consumer", metrics.ConsumerTopicMetricDefs, metrics.ApplyConsumerTopicName)
+			for _, err := range metrics.CollectTopicSubMetrics(consumerEntity, "consumer", metrics.ConsumerTopicMetricDefs, metrics.ApplyConsumerTopicName) {
+				log.Error("Collecting consumer topic submetrics for %q (): %v", jmxInfo, err)
+			}
 
-			log.Debug("Collecting metrics for consumer %s", consumerEntity.Metadata.Name)
+			log.Debug("Done collecting metrics for consumer %q", jmxInfo)
 
 			// Close connection and release lock so another process can make JMX Connections
 			jmxwrapper.JMXClose()
@@ -155,13 +161,18 @@ func ProducerWorker(producerChan <-chan *args.JMXHost, wg *sync.WaitGroup, i *in
 			)
 
 			// Collect producer metrics and populate the metric set with them
-			log.Debug("Collecting metrics for Producer '%s'", producerEntity.Metadata.Name)
+			log.Debug("Collecting metrics for producer %q", jmxInfo)
 			metrics.GetProducerMetrics(producerEntity.Metadata.Name, sample)
+			for _, err := range metrics.GetProducerMetrics(producerEntity.Metadata.Name, sample) {
+				log.Error("Collecting producer metrics for %q: %v", jmxInfo, err)
+			}
 
 			// Collect metrics that are topic specific per Producer
-			metrics.CollectTopicSubMetrics(producerEntity, "producer", metrics.ProducerTopicMetricDefs, metrics.ApplyProducerTopicName)
+			for _, err := range metrics.CollectTopicSubMetrics(producerEntity, "producer", metrics.ProducerTopicMetricDefs, metrics.ApplyProducerTopicName) {
+				log.Error("Collecting producer topic submetrics for %q: %v", jmxInfo, err)
+			}
 
-			log.Debug("Done Collecting metrics for producer %s", producerEntity.Metadata.Name)
+			log.Debug("Finished collecting producer metrics for %q", jmxInfo)
 
 			// Close connection and release lock so another process can make JMX Connections
 			jmxwrapper.JMXClose()

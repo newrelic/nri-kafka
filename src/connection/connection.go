@@ -16,6 +16,7 @@ import (
 	"github.com/Shopify/sarama"
 	"github.com/newrelic/infra-integrations-sdk/integration"
 	"github.com/newrelic/infra-integrations-sdk/log"
+
 	"github.com/newrelic/nri-kafka/src/args"
 	"github.com/newrelic/nri-kafka/src/zookeeper"
 )
@@ -99,6 +100,10 @@ func (b *Broker) Entity(i *integration.Integration) (*integration.Entity, error)
 	clusterIDAttr := integration.NewIDAttribute("clusterName", args.GlobalArgs.ClusterName)
 	brokerIDAttr := integration.NewIDAttribute("brokerID", string(b.ID))
 	return i.Entity(b.Addr(), "ka-broker", clusterIDAttr, brokerIDAttr)
+}
+
+func (b *Broker) String() string {
+	return fmt.Sprintf("%s, ID: %s", b.Host, b.ID)
 }
 
 // NewBroker creates a new broker

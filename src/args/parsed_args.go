@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"net"
 	"regexp"
 	"strconv"
 
@@ -134,6 +135,10 @@ type JMXHost struct {
 	Port     int
 	User     string
 	Password string
+}
+
+func (j *JMXHost) String() string {
+	return fmt.Sprintf("%s (%s)", j.Name, net.JoinHostPort(j.Host, fmt.Sprint(j.Port)))
 }
 
 // ParseArgs validates the arguments in argumentList and parses them
