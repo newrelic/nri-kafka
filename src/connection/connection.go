@@ -1,4 +1,5 @@
-//go:generate mockery --name=Client --name=SaramaBroker
+//go:generate mockery --name=Client
+//go:generate mockery --name=SaramaBroker
 
 // Package connection implements connection code
 package connection
@@ -26,6 +27,7 @@ type Client interface {
 	Config() *sarama.Config
 	Controller() (*sarama.Broker, error)
 	Brokers() []*sarama.Broker
+	Broker(brokerID int32) (*sarama.Broker, error)
 	Topics() ([]string, error)
 	Partitions(topic string) ([]int32, error)
 	WritablePartitions(topic string) ([]int32, error)
@@ -33,6 +35,7 @@ type Client interface {
 	Replicas(topic string, partitionID int32) ([]int32, error)
 	InSyncReplicas(topic string, partitionID int32) ([]int32, error)
 	OfflineReplicas(topic string, partitionID int32) ([]int32, error)
+	RefreshBrokers(addrs []string) error
 	RefreshMetadata(topics ...string) error
 	GetOffset(topic string, partitionID int32, time int64) (int64, error)
 	Coordinator(consumerGroup string) (*sarama.Broker, error)
