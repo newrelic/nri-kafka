@@ -8577,6 +8577,399 @@
                 "properties": {
                   "name": {
                     "minLength": 1,
+                    "pattern": "^__consumer_offsets$",
+                    "type": "string"
+                  },
+                  "type": {
+                    "minLength": 1,
+                    "pattern": "^ka-topic$",
+                    "type": "string"
+                  },
+                  "id_attributes": {
+                    "type": "array",
+                    "uniqueItems": true,
+                    "items": {
+                      "type": "object",
+                      "required": [
+                        "Key",
+                        "Value"
+                      ],
+                      "properties": {
+                        "Key": {
+                          "type": "string"
+                        },
+                        "Value": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "metrics": {
+                "type": "array",
+                "uniqueItems": true
+              },
+              "inventory": {
+                "type": "object",
+                "required": [
+                  "topic.cleanup.policy",
+                  "topic.compression.type",
+                  "topic.delete.retention.ms",
+                  "topic.file.delete.delay.ms",
+                  "topic.flush.messages",
+                  "topic.flush.ms",
+                  "topic.follower.replication.throttled.replicas",
+                  "topic.index.interval.bytes",
+                  "topic.leader.replication.throttled.replicas",
+                  "topic.max.compaction.lag.ms",
+                  "topic.max.message.bytes",
+                  "topic.message.downconversion.enable",
+                  "topic.message.format.version",
+                  "topic.message.timestamp.difference.max.ms",
+                  "topic.message.timestamp.type",
+                  "topic.min.cleanable.dirty.ratio",
+                  "topic.min.compaction.lag.ms",
+                  "topic.min.insync.replicas",
+                  "topic.partitionScheme",
+                  "topic.preallocate",
+                  "topic.retention.bytes",
+                  "topic.retention.ms",
+                  "topic.segment.bytes",
+                  "topic.segment.index.bytes",
+                  "topic.segment.jitter.ms",
+                  "topic.segment.ms",
+                  "topic.unclean.leader.election.enable"
+                ],
+                "properties": {
+                  "topic.cleanup.policy": {
+                    "type": "object",
+                    "required": [
+                      "value"
+                    ],
+                    "properties": {
+                      "value": {
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "topic.compression.type": {
+                    "type": "object",
+                    "required": [
+                      "value"
+                    ],
+                    "properties": {
+                      "value": {
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "topic.delete.retention.ms": {
+                    "type": "object",
+                    "required": [
+                      "value"
+                    ],
+                    "properties": {
+                      "value": {
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "topic.file.delete.delay.ms": {
+                    "type": "object",
+                    "required": [
+                      "value"
+                    ],
+                    "properties": {
+                      "value": {
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "topic.flush.messages": {
+                    "type": "object",
+                    "required": [
+                      "value"
+                    ],
+                    "properties": {
+                      "value": {
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "topic.flush.ms": {
+                    "type": "object",
+                    "required": [
+                      "value"
+                    ],
+                    "properties": {
+                      "value": {
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "topic.follower.replication.throttled.replicas": {
+                    "type": "object",
+                    "required": [
+                      "value"
+                    ],
+                    "properties": {
+                      "value": {
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "topic.index.interval.bytes": {
+                    "type": "object",
+                    "required": [
+                      "value"
+                    ],
+                    "properties": {
+                      "value": {
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "topic.leader.replication.throttled.replicas": {
+                    "type": "object",
+                    "required": [
+                      "value"
+                    ],
+                    "properties": {
+                      "value": {
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "topic.max.compaction.lag.ms": {
+                    "type": "object",
+                    "required": [
+                      "value"
+                    ],
+                    "properties": {
+                      "value": {
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "topic.max.message.bytes": {
+                    "type": "object",
+                    "required": [
+                      "value"
+                    ],
+                    "properties": {
+                      "value": {
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "topic.message.downconversion.enable": {
+                    "type": "object",
+                    "required": [
+                      "value"
+                    ],
+                    "properties": {
+                      "value": {
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "topic.message.format.version": {
+                    "type": "object",
+                    "required": [
+                      "value"
+                    ],
+                    "properties": {
+                      "value": {
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "topic.message.timestamp.difference.max.ms": {
+                    "type": "object",
+                    "required": [
+                      "value"
+                    ],
+                    "properties": {
+                      "value": {
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "topic.message.timestamp.type": {
+                    "type": "object",
+                    "required": [
+                      "value"
+                    ],
+                    "properties": {
+                      "value": {
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "topic.min.cleanable.dirty.ratio": {
+                    "type": "object",
+                    "required": [
+                      "value"
+                    ],
+                    "properties": {
+                      "value": {
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "topic.min.compaction.lag.ms": {
+                    "type": "object",
+                    "required": [
+                      "value"
+                    ],
+                    "properties": {
+                      "value": {
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "topic.min.insync.replicas": {
+                    "type": "object",
+                    "required": [
+                      "value"
+                    ],
+                    "properties": {
+                      "value": {
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "topic.partitionScheme": {
+                    "type": "object",
+                    "required": [
+                      "Number of Partitions",
+                      "Replication Factor"
+                    ],
+                    "properties": {
+                      "Number of Partitions": {
+                        "type": "integer"
+                      },
+                      "Replication Factor": {
+                        "type": "integer"
+                      }
+                    }
+                  },
+                  "topic.preallocate": {
+                    "type": "object",
+                    "required": [
+                      "value"
+                    ],
+                    "properties": {
+                      "value": {
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "topic.retention.bytes": {
+                    "type": "object",
+                    "required": [
+                      "value"
+                    ],
+                    "properties": {
+                      "value": {
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "topic.retention.ms": {
+                    "type": "object",
+                    "required": [
+                      "value"
+                    ],
+                    "properties": {
+                      "value": {
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "topic.segment.bytes": {
+                    "type": "object",
+                    "required": [
+                      "value"
+                    ],
+                    "properties": {
+                      "value": {
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "topic.segment.index.bytes": {
+                    "type": "object",
+                    "required": [
+                      "value"
+                    ],
+                    "properties": {
+                      "value": {
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "topic.segment.jitter.ms": {
+                    "type": "object",
+                    "required": [
+                      "value"
+                    ],
+                    "properties": {
+                      "value": {
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "topic.segment.ms": {
+                    "type": "object",
+                    "required": [
+                      "value"
+                    ],
+                    "properties": {
+                      "value": {
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "topic.unclean.leader.election.enable": {
+                    "type": "object",
+                    "required": [
+                      "value"
+                    ],
+                    "properties": {
+                      "value": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              },
+              "events": {
+                "type": "array",
+                "uniqueItems": true
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "entity",
+              "metrics",
+              "inventory",
+              "events"
+            ],
+            "properties": {
+              "entity": {
+                "type": "object",
+                "required": [
+                  "name",
+                  "type",
+                  "id_attributes"
+                ],
+                "properties": {
+                  "name": {
+                    "minLength": 1,
                     "pattern": "^topicB$",
                     "type": "string"
                   },
