@@ -25,12 +25,12 @@
     },
     "data": {
       "type": "array",
-      "title": "The data schema",
+      "uniqueItems": true,
+      "minItems": 3,
       "items": {
         "anyOf": [
           {
             "type": "object",
-            "title": "The first anyOf schema",
             "required": [
               "entity",
               "metrics",
@@ -40,7 +40,6 @@
             "properties": {
               "entity": {
                 "type": "object",
-                "title": "The entity schema",
                 "required": [
                   "name",
                   "type",
@@ -48,33 +47,31 @@
                 ],
                 "properties": {
                   "name": {
-                    "type": "string",
-                    "title": "The name schema"
+                    "minLength": 1,
+                    "type": "string"
                   },
                   "type": {
-                    "type": "string",
-                    "title": "The type schema"
+                    "minLength": 1,
+                    "pattern": "^ka-partition-consumer*",
+                    "type": "string"
                   },
                   "id_attributes": {
                     "type": "array",
-                    "title": "The id_attributes schema",
+                    "uniqueItems": true,
                     "items": {
                       "anyOf": [
                         {
                           "type": "object",
-                          "title": "The first anyOf schema",
                           "required": [
                             "Key",
                             "Value"
                           ],
                           "properties": {
                             "Key": {
-                              "type": "string",
-                              "title": "The Key schema"
+                              "type": "string"
                             },
                             "Value": {
-                              "type": "string",
-                              "title": "The Value schema"
+                              "type": "string"
                             }
                           }
                         }
@@ -85,12 +82,12 @@
               },
               "metrics": {
                 "type": "array",
-                "title": "The metrics schema",
+                "uniqueItems": true,
+                "minItems": 1,
                 "items": {
                   "anyOf": [
                     {
                       "type": "object",
-                      "title": "The first anyOf schema",
                       "required": [
                         "clientHost",
                         "clientID",
@@ -105,44 +102,34 @@
                       ],
                       "properties": {
                         "clientHost": {
-                          "type": "string",
-                          "title": "The clientHost schema"
+                          "type": "string"
                         },
                         "clientID": {
-                          "type": "string",
-                          "title": "The clientID schema"
+                          "type": "string"
                         },
                         "clusterName": {
-                          "type": "string",
-                          "title": "The clusterName schema"
+                          "type": "string"
                         },
                         "consumer.hwm": {
-                          "type": "integer",
-                          "title": "The consumer.hwm schema"
+                          "type": "integer"
                         },
                         "consumer.lag": {
-                          "type": "integer",
-                          "title": "The consumer.lag schema"
+                          "type": "integer"
                         },
                         "consumer.offset": {
-                          "type": "integer",
-                          "title": "The consumer.offset schema"
+                          "type": "integer"
                         },
                         "consumerGroup": {
-                          "type": "string",
-                          "title": "The consumerGroup schema"
+                          "type": "string"
                         },
                         "event_type": {
-                          "type": "string",
-                          "title": "The event_type schema"
+                          "type": "string"
                         },
                         "partition": {
-                          "type": "string",
-                          "title": "The partition schema"
+                          "type": "string"
                         },
                         "topic": {
-                          "type": "string",
-                          "title": "The topic schema"
+                          "type": "string"
                         }
                       }
                     }
@@ -151,14 +138,186 @@
               },
               "inventory": {
                 "type": "object",
-                "title": "The inventory schema",
                 "required": []
               },
               "events": {
                 "type": "array",
-                "title": "The events schema",
-                "items": {
+                "uniqueItems": true,
+                "items": {}
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "entity",
+              "metrics",
+              "inventory",
+              "events"
+            ],
+            "properties": {
+              "entity": {
+                "type": "object",
+                "required": [
+                  "name",
+                  "type",
+                  "id_attributes"
+                ],
+                "properties": {
+                  "name": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "type": {
+                    "minLength": 1,
+                    "pattern": "^ka-consumer-group*",
+                    "type": "string"
+                  },
+                  "id_attributes": {
+                    "type": "array",
+                    "uniqueItems": true,
+                    "items": {
+                      "type": "object",
+                      "required": [
+                        "Key",
+                        "Value"
+                      ],
+                      "properties": {
+                        "Key": {
+                          "type": "string"
+                        },
+                        "Value": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
                 }
+              },
+              "metrics": {
+                "type": "array",
+                "uniqueItems": true,
+                "minItems": 1,
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "clusterName",
+                    "consumerGroup",
+                    "consumerGroup.maxLag",
+                    "consumerGroup.totalLag",
+                    "event_type"
+                  ],
+                  "properties": {
+                    "clusterName": {
+                      "type": "string"
+                    },
+                    "consumerGroup": {
+                      "type": "string"
+                    },
+                    "consumerGroup.maxLag": {
+                      "type": "integer"
+                    },
+                    "consumerGroup.totalLag": {
+                      "type": "integer"
+                    },
+                    "event_type": {
+                      "type": "string"
+                    }
+                  }
+                }
+              },
+              "inventory": {
+                "type": "object",
+                "required": []
+              },
+              "events": {
+                "type": "array",
+                "uniqueItems": true
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "entity",
+              "metrics",
+              "inventory",
+              "events"
+            ],
+            "properties": {
+              "entity": {
+                "type": "object",
+                "required": [
+                  "name",
+                  "type",
+                  "id_attributes"
+                ],
+                "properties": {
+                  "name": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "type": {
+                    "minLength": 1,
+                    "pattern": "^ka-consumer*",
+                    "type": "string"
+                  },
+                  "id_attributes": {
+                    "type": "array",
+                    "uniqueItems": true,
+                    "items": {
+                      "type": "object",
+                      "required": [
+                        "Key",
+                        "Value"
+                      ],
+                      "properties": {
+                        "Key": {
+                          "type": "string"
+                        },
+                        "Value": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "metrics": {
+                "type": "array",
+                "uniqueItems": true,
+                "minItems": 1,
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "clientID",
+                    "clusterName",
+                    "consumer.totalLag",
+                    "event_type"
+                  ],
+                  "properties": {
+                    "clientID": {
+                      "type": "string"
+                    },
+                    "clusterName": {
+                      "type": "string"
+                    },
+                    "consumer.totalLag": {
+                      "type": "integer"
+                    },
+                    "event_type": {
+                      "type": "string"
+                    }
+                  }
+                }
+              },
+              "inventory": {
+                "type": "object",
+                "required": []
+              },
+              "events": {
+                "type": "array",
+                "uniqueItems": true
               }
             }
           }
