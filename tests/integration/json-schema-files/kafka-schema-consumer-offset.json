@@ -1,0 +1,169 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema",
+  "type": "object",
+  "required": [
+    "name",
+    "protocol_version",
+    "integration_version",
+    "data"
+  ],
+  "properties": {
+    "name": {
+      "minLength": 1,
+      "pattern": "^com.newrelic.kafka$",
+      "type": "string"
+    },
+    "protocol_version": {
+      "minLength": 1,
+      "pattern": "^3$",
+      "type": "string"
+    },
+    "integration_version": {
+      "minLength": 1,
+      "pattern": "^[0-9]+.[0-9]+.[0-9]+$",
+      "type": "string"
+    },
+    "data": {
+      "type": "array",
+      "title": "The data schema",
+      "items": {
+        "anyOf": [
+          {
+            "type": "object",
+            "title": "The first anyOf schema",
+            "required": [
+              "entity",
+              "metrics",
+              "inventory",
+              "events"
+            ],
+            "properties": {
+              "entity": {
+                "type": "object",
+                "title": "The entity schema",
+                "required": [
+                  "name",
+                  "type",
+                  "id_attributes"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "title": "The name schema"
+                  },
+                  "type": {
+                    "type": "string",
+                    "title": "The type schema"
+                  },
+                  "id_attributes": {
+                    "type": "array",
+                    "title": "The id_attributes schema",
+                    "items": {
+                      "anyOf": [
+                        {
+                          "type": "object",
+                          "title": "The first anyOf schema",
+                          "required": [
+                            "Key",
+                            "Value"
+                          ],
+                          "properties": {
+                            "Key": {
+                              "type": "string",
+                              "title": "The Key schema"
+                            },
+                            "Value": {
+                              "type": "string",
+                              "title": "The Value schema"
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
+                }
+              },
+              "metrics": {
+                "type": "array",
+                "title": "The metrics schema",
+                "items": {
+                  "anyOf": [
+                    {
+                      "type": "object",
+                      "title": "The first anyOf schema",
+                      "required": [
+                        "clientHost",
+                        "clientID",
+                        "clusterName",
+                        "consumer.hwm",
+                        "consumer.lag",
+                        "consumer.offset",
+                        "consumerGroup",
+                        "event_type",
+                        "partition",
+                        "topic"
+                      ],
+                      "properties": {
+                        "clientHost": {
+                          "type": "string",
+                          "title": "The clientHost schema"
+                        },
+                        "clientID": {
+                          "type": "string",
+                          "title": "The clientID schema"
+                        },
+                        "clusterName": {
+                          "type": "string",
+                          "title": "The clusterName schema"
+                        },
+                        "consumer.hwm": {
+                          "type": "integer",
+                          "title": "The consumer.hwm schema"
+                        },
+                        "consumer.lag": {
+                          "type": "integer",
+                          "title": "The consumer.lag schema"
+                        },
+                        "consumer.offset": {
+                          "type": "integer",
+                          "title": "The consumer.offset schema"
+                        },
+                        "consumerGroup": {
+                          "type": "string",
+                          "title": "The consumerGroup schema"
+                        },
+                        "event_type": {
+                          "type": "string",
+                          "title": "The event_type schema"
+                        },
+                        "partition": {
+                          "type": "string",
+                          "title": "The partition schema"
+                        },
+                        "topic": {
+                          "type": "string",
+                          "title": "The topic schema"
+                        }
+                      }
+                    }
+                  ]
+                }
+              },
+              "inventory": {
+                "type": "object",
+                "title": "The inventory schema",
+                "required": []
+              },
+              "events": {
+                "type": "array",
+                "title": "The events schema",
+                "items": {
+                }
+              }
+            }
+          }
+        ]
+      }
+    }
+  }
+}
