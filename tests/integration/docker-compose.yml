@@ -80,9 +80,6 @@ services:
     container_name: kafka_dummy_consumer
     build:
       context: consumer-producer
-      args:
-        - JMX_HOST=kafka_dummy_consumer
-        - JMX_PORT=1087
     command: ["consumer","kafka1:9092","topicA","groupA"]
     networks:
       - kfk
@@ -93,9 +90,6 @@ services:
     container_name: kafka_dummy_producer
     build:
       context: consumer-producer
-      args:
-        - JMX_HOST=kafka_dummy_producer
-        - JMX_PORT=1088
     command: ["producer","kafka1:9092","topicA"]
     networks:
       - kfk
