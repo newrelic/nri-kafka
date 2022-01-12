@@ -1,0 +1,328 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema",
+  "type": "object",
+  "required": [
+    "name",
+    "protocol_version",
+    "integration_version",
+    "data"
+  ],
+  "properties": {
+    "name": {
+      "minLength": 1,
+      "pattern": "^com.newrelic.kafka$",
+      "type": "string"
+    },
+    "protocol_version": {
+      "minLength": 1,
+      "pattern": "^3$",
+      "type": "string"
+    },
+    "integration_version": {
+      "minLength": 1,
+      "pattern": "^[0-9]+.[0-9]+.[0-9]+$",
+      "type": "string"
+    },
+    "data": {
+      "type": "array",
+      "uniqueItems": true,
+      "minItems": 3,
+      "items": {
+        "anyOf": [
+          {
+            "type": "object",
+            "required": [
+              "entity",
+              "metrics",
+              "inventory",
+              "events"
+            ],
+            "properties": {
+              "entity": {
+                "type": "object",
+                "required": [
+                  "name",
+                  "type",
+                  "id_attributes"
+                ],
+                "properties": {
+                  "name": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "type": {
+                    "minLength": 1,
+                    "pattern": "^ka-partition-consumer*",
+                    "type": "string"
+                  },
+                  "id_attributes": {
+                    "type": "array",
+                    "uniqueItems": true,
+                    "items": {
+                      "anyOf": [
+                        {
+                          "type": "object",
+                          "required": [
+                            "Key",
+                            "Value"
+                          ],
+                          "properties": {
+                            "Key": {
+                              "type": "string"
+                            },
+                            "Value": {
+                              "type": "string"
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
+                }
+              },
+              "metrics": {
+                "type": "array",
+                "uniqueItems": true,
+                "minItems": 1,
+                "items": {
+                  "anyOf": [
+                    {
+                      "type": "object",
+                      "required": [
+                        "clientHost",
+                        "clientID",
+                        "clusterName",
+                        "consumer.hwm",
+                        "consumer.lag",
+                        "consumer.offset",
+                        "consumerGroup",
+                        "event_type",
+                        "partition",
+                        "topic"
+                      ],
+                      "properties": {
+                        "clientHost": {
+                          "type": "string"
+                        },
+                        "clientID": {
+                          "type": "string"
+                        },
+                        "clusterName": {
+                          "type": "string"
+                        },
+                        "consumer.hwm": {
+                          "type": "integer"
+                        },
+                        "consumer.lag": {
+                          "type": "integer"
+                        },
+                        "consumer.offset": {
+                          "type": "integer"
+                        },
+                        "consumerGroup": {
+                          "type": "string"
+                        },
+                        "event_type": {
+                          "type": "string"
+                        },
+                        "partition": {
+                          "type": "string"
+                        },
+                        "topic": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  ]
+                }
+              },
+              "inventory": {
+                "type": "object",
+                "required": []
+              },
+              "events": {
+                "type": "array",
+                "uniqueItems": true,
+                "items": {}
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "entity",
+              "metrics",
+              "inventory",
+              "events"
+            ],
+            "properties": {
+              "entity": {
+                "type": "object",
+                "required": [
+                  "name",
+                  "type",
+                  "id_attributes"
+                ],
+                "properties": {
+                  "name": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "type": {
+                    "minLength": 1,
+                    "pattern": "^ka-consumer-group*",
+                    "type": "string"
+                  },
+                  "id_attributes": {
+                    "type": "array",
+                    "uniqueItems": true,
+                    "items": {
+                      "type": "object",
+                      "required": [
+                        "Key",
+                        "Value"
+                      ],
+                      "properties": {
+                        "Key": {
+                          "type": "string"
+                        },
+                        "Value": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "metrics": {
+                "type": "array",
+                "uniqueItems": true,
+                "minItems": 1,
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "clusterName",
+                    "consumerGroup",
+                    "consumerGroup.maxLag",
+                    "consumerGroup.totalLag",
+                    "event_type"
+                  ],
+                  "properties": {
+                    "clusterName": {
+                      "type": "string"
+                    },
+                    "consumerGroup": {
+                      "type": "string"
+                    },
+                    "consumerGroup.maxLag": {
+                      "type": "integer"
+                    },
+                    "consumerGroup.totalLag": {
+                      "type": "integer"
+                    },
+                    "event_type": {
+                      "type": "string"
+                    }
+                  }
+                }
+              },
+              "inventory": {
+                "type": "object",
+                "required": []
+              },
+              "events": {
+                "type": "array",
+                "uniqueItems": true
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "entity",
+              "metrics",
+              "inventory",
+              "events"
+            ],
+            "properties": {
+              "entity": {
+                "type": "object",
+                "required": [
+                  "name",
+                  "type",
+                  "id_attributes"
+                ],
+                "properties": {
+                  "name": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "type": {
+                    "minLength": 1,
+                    "pattern": "^ka-consumer*",
+                    "type": "string"
+                  },
+                  "id_attributes": {
+                    "type": "array",
+                    "uniqueItems": true,
+                    "items": {
+                      "type": "object",
+                      "required": [
+                        "Key",
+                        "Value"
+                      ],
+                      "properties": {
+                        "Key": {
+                          "type": "string"
+                        },
+                        "Value": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "metrics": {
+                "type": "array",
+                "uniqueItems": true,
+                "minItems": 1,
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "clientID",
+                    "clusterName",
+                    "consumer.totalLag",
+                    "event_type"
+                  ],
+                  "properties": {
+                    "clientID": {
+                      "type": "string"
+                    },
+                    "clusterName": {
+                      "type": "string"
+                    },
+                    "consumer.totalLag": {
+                      "type": "integer"
+                    },
+                    "event_type": {
+                      "type": "string"
+                    }
+                  }
+                }
+              },
+              "inventory": {
+                "type": "object",
+                "required": []
+              },
+              "events": {
+                "type": "array",
+                "uniqueItems": true
+              }
+            }
+          }
+        ]
+      }
+    }
+  }
+}

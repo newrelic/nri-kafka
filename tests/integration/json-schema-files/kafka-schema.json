@@ -8712,6 +8712,104 @@
                 "properties": {
                   "name": {
                     "minLength": 1,
+                    "pattern": "^__consumer_offsets*",
+                    "type": "string"
+                  },
+                  "type": {
+                    "minLength": 1,
+                    "pattern": "^ka-topic$",
+                    "type": "string"
+                  },
+                  "id_attributes": {
+                    "type": "array",
+                    "uniqueItems": true,
+                    "items": {
+                      "type": "object",
+                      "required": [
+                        "Key",
+                        "Value"
+                      ],
+                      "properties": {
+                        "Key": {
+                          "type": "string"
+                        },
+                        "Value": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "metrics": {
+                "type": "array",
+                "uniqueItems": true,
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "clusterName",
+                    "displayName",
+                    "entityName",
+                    "event_type",
+                    "topic.partitionsWithNonPreferredLeader",
+                    "topic.respondsToMetadataRequests",
+                    "topic.underReplicatedPartitions"
+                  ],
+                  "properties": {
+                    "clusterName": {
+                      "type": "string"
+                    },
+                    "displayName": {
+                      "type": "string"
+                    },
+                    "entityName": {
+                      "type": "string"
+                    },
+                    "event_type": {
+                      "type": "string"
+                    },
+                    "topic.partitionsWithNonPreferredLeader": {
+                      "type": "integer"
+                    },
+                    "topic.respondsToMetadataRequests": {
+                      "type": "integer"
+                    },
+                    "topic.underReplicatedPartitions": {
+                      "type": "integer"
+                    }
+                  }
+                }
+              },
+              "inventory": {
+                "type": "object",
+                "required": [],
+                "properties": {}
+              },
+              "events": {
+                "type": "array",
+                "uniqueItems": true
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "entity",
+              "metrics",
+              "inventory",
+              "events"
+            ],
+            "properties": {
+              "entity": {
+                "type": "object",
+                "required": [
+                  "name",
+                  "type",
+                  "id_attributes"
+                ],
+                "properties": {
+                  "name": {
+                    "minLength": 1,
                     "pattern": "^topicA*",
                     "type": "string"
                   },

@@ -1,4 +1,5 @@
-//go:generate mockery --name=Client --name=SaramaBroker
+//go:generate mockery --name=Client
+//go:generate mockery --name=SaramaBroker
 
 // Package connection implements connection code
 package connection
@@ -23,24 +24,7 @@ import (
 // Client is a wrapper around sarama.Client so that we can generate mocks
 // See sarama.Client for documentation
 type Client interface {
-	Config() *sarama.Config
-	Controller() (*sarama.Broker, error)
-	Brokers() []*sarama.Broker
-	Topics() ([]string, error)
-	Partitions(topic string) ([]int32, error)
-	WritablePartitions(topic string) ([]int32, error)
-	Leader(topic string, partitionID int32) (*sarama.Broker, error)
-	Replicas(topic string, partitionID int32) ([]int32, error)
-	InSyncReplicas(topic string, partitionID int32) ([]int32, error)
-	OfflineReplicas(topic string, partitionID int32) ([]int32, error)
-	RefreshMetadata(topics ...string) error
-	GetOffset(topic string, partitionID int32, time int64) (int64, error)
-	Coordinator(consumerGroup string) (*sarama.Broker, error)
-	RefreshCoordinator(consumerGroup string) error
-	RefreshController() (*sarama.Broker, error)
-	InitProducerID() (*sarama.InitProducerIDResponse, error)
-	Close() error
-	Closed() bool
+	sarama.Client
 }
 
 // SaramaBroker is an interface over sarama.Broker for mocking

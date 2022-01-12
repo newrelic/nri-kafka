@@ -65,6 +65,37 @@ services:
     networks:
       - kfk
 
+  start_3party_dependencies:
+    image: dadarek/wait-for-dependencies
+    environment:
+      - SLEEP_LENGTH=5
+      - TIMEOUT_LENGTH=120
+    networks:
+      - kfk
+    depends_on:
+      - kafka1
+    command: kafka1:9092
+
+  kafka_dummy_consumer:
+    container_name: kafka_dummy_consumer
+    build:
+      context: consumer-producer
+    command: ["consumer","kafka1:9092","topicA","groupA"]
+    networks:
+      - kfk
+    depends_on:
+      - start_3party_dependencies
+
+  kafka_dummy_producer:
+    container_name: kafka_dummy_producer
+    build:
+      context: consumer-producer
+    command: ["producer","kafka1:9092","topicA"]
+    networks:
+      - kfk
+    depends_on:
+      - start_3party_dependencies
+
   nri-kafka:
     container_name: integration_nri_kafka_1
     build:

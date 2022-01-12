@@ -19,8 +19,8 @@ import (
 )
 
 const (
-	BROKER_CONN_MAX_RETRIES   = 10
-	ENSURE_TOPICS_MAX_RETRIES = 20
+	BROKER_CONN_MAX_RETRIES   = 60
+	ENSURE_TOPICS_MAX_RETRIES = 60
 	KAFKA1_PORT               = "19092"
 	BROKERS_IN_CLUSTER        = 3
 	NUMBER_OF_TOPICS          = 3
@@ -29,7 +29,7 @@ const (
 var (
 	iName = "kafka"
 
-	topicNames = []string{"topicA", "topicB", "topicC"}
+	topicNames = []string{"topicA", "topicB", "topicC", "__consumer_offsets"}
 
 	defaultContainer = "integration_nri_kafka_1"
 	defaultBinPath   = "/nri-kafka"
@@ -326,4 +326,23 @@ func TestKafkaIntegration_bootstrap_inventory(t *testing.T) {
 	for _, topic := range topicNames {
 		assert.Contains(t, stdout, topic, fmt.Sprintf("The output doesn't have the topic %s", topic))
 	}
+}
+
+func TestKafkaIntegration_consumer_offset(t *testing.T) {
+	bootstrapDiscoverConfigInventory := func(command []string) []string {
+		return append(
+			bootstrapDiscoverConfig(command),
+			"--consumer_offset",
+			"--consumer_group_regex", ".*",
+		)
+	}
+
+	stdout, stderr, err := runIntegration(t, bootstrapDiscoverConfigInventory)
+
+	assert.NotNil(t, stderr, "unexpected stderr")
+	assert.NoError(t, err, "Unexpected error")
+
+	schemaPath := filepath.Join("json-schema-files", "kafka-schema-consumer-offset.json")
+	err = jsonschema.Validate(schemaPath, stdout)
+	assert.NoError(t, err, "The output of kafka integration doesn't have expected format.")
 }

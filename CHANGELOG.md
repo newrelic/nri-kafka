@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 2.18.0 (2022-01-12)
+### Changed
+- Upgraded Sarama library to 1.30.1 in order to support Kafka latest versions (up to 3.0)
+- Added consumer-offset integration test
+
 ## 2.17.0 (2021-06-27)
 ### Changed
 - Moved default config.sample to [V4](https://docs.newrelic.com/docs/create-integrations/infrastructure-integrations-sdk/specifications/host-integrations-newer-configuration-format/), added a dependency for infra-agent version 1.20.0
