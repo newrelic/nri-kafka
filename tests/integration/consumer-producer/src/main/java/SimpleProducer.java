@@ -1,5 +1,7 @@
-package kafkaDummy;
+package kafka_dummy;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.Properties;
 import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.KafkaProducer;
@@ -20,6 +22,11 @@ public class SimpleProducer {
       props.put("acks", "all");
       props.put("retries", 0);
       props.put("batch.size", 16384);
+      try {
+          props.put("client.id", InetAddress.getLocalHost().getHostName());
+      } catch (UnknownHostException e) {
+          System.out.println("No host detected, client.id left default");
+      }
       props.put("linger.ms", 1);
       props.put("buffer.memory", 33554432);
       props.put("key.serializer",
@@ -34,9 +41,9 @@ public class SimpleProducer {
       while(true) {
         producer.send(new ProducerRecord<String, String>(topicName,
         Integer.toString(msg), Integer.toString(msg)));
-        System.out.println("Message sent successfully");
+        System.out.println("Message sent successfully "+msg);
         msg++;
-        wait(2000);
+        wait(500);
       }
 
       // never reached

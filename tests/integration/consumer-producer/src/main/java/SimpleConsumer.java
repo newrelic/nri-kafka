@@ -1,5 +1,7 @@
-package kafkaDummy;
+package kafka_dummy;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.Properties;
 import java.util.Arrays;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
@@ -20,6 +22,11 @@ public class SimpleConsumer {
       Properties props = new Properties();
       props.put("bootstrap.servers", bootstrapBroker);
       props.put("group.id", group);
+      try {
+          props.put("client.id", InetAddress.getLocalHost().getHostName());
+      } catch (UnknownHostException e) {
+          System.out.println("No host detected, client.id left default");
+      }
       props.put("enable.auto.commit", "true");
       props.put("auto.commit.interval.ms", "1000");
       props.put("session.timeout.ms", "30000");
@@ -34,7 +41,7 @@ public class SimpleConsumer {
       System.out.println("Subscribed to topic " + topic);
 
       while (true) {
-         ConsumerRecords<String, String> records = consumer.poll(10);
+         ConsumerRecords<String, String> records = consumer.poll(300);
          for (ConsumerRecord<String, String> record : records) {
             System.out.printf("offset = %d, key = %s, value = %s\n", record.offset(), record.key(), record.value());
          }

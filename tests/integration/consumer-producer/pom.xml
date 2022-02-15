@@ -4,7 +4,7 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <groupId>1</groupId>
-    <artifactId>kafka-dummy</artifactId>
+    <artifactId>kafka_dummy</artifactId>
     <version>1.0</version>
     <dependencies>
         <dependency>
@@ -43,7 +43,7 @@
                             <archive>
                                 <manifest>
                                     <mainClass>
-                                        kafkaDummy.Factory
+                                        kafka_dummy.Factory
                                     </mainClass>
                                 </manifest>
                             </archive>
