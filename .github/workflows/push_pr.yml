@@ -14,7 +14,7 @@ env:
   GO_VERSION: '1.16'
   NRJMX_VERSION: '1.5.3'
   DOCKER_LOGIN_AVAILABLE: ${{ secrets.OHAI_DOCKER_HUB_ID }}
-  CONSUMER_PRODUCER_DOCKER_IMAGE_NAME: ghcr.io/newrelic/nri-kafka-consumer-producer
+  CONSUMER_PRODUCER_DOCKER_IMAGE_NAME: ghcr.io/newrelic/kafka-consumer-producer
   CONSUMER_PRODUCER_DOCKER_PLATFORMS: "linux/amd64"
 
 jobs:
