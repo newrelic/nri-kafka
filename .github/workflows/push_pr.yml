@@ -135,6 +135,7 @@ jobs:
       - name: Build and push Docker image
         working-directory: ./tests/integration/consumer-producer
         run: |
+          echo $PWD
           docker buildx build --push --platform=CONSUMER_PRODUCER_DOCKER_PLATFORMS \
             -t CONSUMER_PRODUCER_DOCKER_IMAGE_NAME:latest \
             .
