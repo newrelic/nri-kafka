@@ -146,7 +146,7 @@ integrations:
     # In order to collect Java producer and consumer metrics the "producers" and "consumers" fields should be filled out.
     # Both fields are JSON arrays with each entry being a separate JAVA producer or consumer, in it's respective field.
     # Each entry should have the following fields:
-    # - name: This is the actual name of the producer/consumer as it appears in Kafka
+    # - name: This is the client.id of the producer/consumer as it appears in Kafka
     # - host: The IP or Hostname of the producer/consumser. If omitted, will use the value of the "default_jmx_host" field
     # - port: The port in which JMX is setup for on the producer/consumer. If omitted will, use the value of the "default_jmx_port" field
     # - username: The username used to connect to JMX. If omitted, will use the value of the "default_jmx_user" field

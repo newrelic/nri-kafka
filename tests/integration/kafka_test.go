@@ -24,7 +24,7 @@ const (
 	ENSURE_TOPICS_MAX_RETRIES = 60
 	KAFKA1_PORT               = "19092"
 	BROKERS_IN_CLUSTER        = 3
-	NUMBER_OF_TOPICS          = 3
+	NUMBER_OF_TOPICS          = 4
 )
 
 var (

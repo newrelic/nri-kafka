@@ -61,6 +61,24 @@ To run the tests execute:
 $ make test
 ```
 
+## Consumer/Producer container image
+
+A container image for testing purposes to create a simple Java consumer/producer exposing JMX metrics,
+[kafka-consumer-producer](https://github.com/newrelic/nri-kafka/pkgs/container/kafka-consumer-producer).
+
+The consumer/producer will be launched with the client.id set to the name of the hostname for easier matching when setting the nri-kafka config file.
+
+The container can be launched as a consumer with the command:
+```yaml
+command: ["consumer","broker:9092","topicA","groupA"]
+```
+And as a producer:
+```yaml
+command: ["producer","broker:9092","topicA"]
+```
+
+Refer to this example to see how to overwrite the JMX settings if you want to use it (note we set the hostname to not be auto-generated): [docker-compose-example](https://github.com/newrelic/nri-kafka/blob/b75de00b1a2d8045587ef15b90d9f7b6d1670d93/tests/integration/docker-compose.yml#L82).
+
 ## Support
 
 Should you need assistance with New Relic products, you are in good hands with several support diagnostic tools and support channels.
