@@ -133,7 +133,7 @@ jobs:
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: Build and push Docker image
-        working-directory: ./tests/integration/consumer-producer
+        working-directory: src/github.com/${{ env.ORIGINAL_REPO_NAME }}/tests/integration/consumer-producer
         run: |
           echo $PWD
           docker buildx build --push --platform=CONSUMER_PRODUCER_DOCKER_PLATFORMS \
