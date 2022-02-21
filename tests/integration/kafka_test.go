@@ -1,21 +1,22 @@
+//go:build integration
 // +build integration
 
 package integration
 
 import (
 	"flag"
-	"fmt"
 	"os"
 	"path/filepath"
-	"strings"
 	"testing"
 	"time"
 
+	"fmt"
 	"github.com/Shopify/sarama"
 	"github.com/newrelic/infra-integrations-sdk/log"
 	"github.com/newrelic/nri-kafka/tests/integration/helpers"
 	"github.com/newrelic/nri-kafka/tests/integration/jsonschema"
 	"github.com/stretchr/testify/assert"
+	"strings"
 )
 
 const (
@@ -23,7 +24,7 @@ const (
 	ENSURE_TOPICS_MAX_RETRIES = 60
 	KAFKA1_PORT               = "19092"
 	BROKERS_IN_CLUSTER        = 3
-	NUMBER_OF_TOPICS          = 3
+	NUMBER_OF_TOPICS          = 4
 )
 
 var (
@@ -343,6 +344,40 @@ func TestKafkaIntegration_consumer_offset(t *testing.T) {
 	assert.NoError(t, err, "Unexpected error")
 
 	schemaPath := filepath.Join("json-schema-files", "kafka-schema-consumer-offset.json")
+	err = jsonschema.Validate(schemaPath, stdout)
+	assert.NoError(t, err, "The output of kafka integration doesn't have expected format.")
+}
+
+func TestKafkaIntegration_producer_test(t *testing.T) {
+	consumerConfig := func(command []string) []string {
+		return append(
+			command,
+			"--producers", "[{\"name\": \"kafka_dummy_producer\", \"host\": \"kafka_dummy_producer\", \"port\": 1089}]",
+		)
+	}
+
+	stdout, stderr, err := runIntegration(t, consumerConfig)
+	assert.NotNil(t, stderr, "unexpected stderr")
+	assert.NoError(t, err, "Unexpected error")
+
+	schemaPath := filepath.Join("json-schema-files", "kafka-schema-producer.json")
+	err = jsonschema.Validate(schemaPath, stdout)
+	assert.NoError(t, err, "The output of kafka integration doesn't have expected format.")
+}
+
+func TestKafkaIntegration_consumer_test(t *testing.T) {
+	consumerConfig := func(command []string) []string {
+		return append(
+			command,
+			"--consumers", "[{\"name\": \"kafka_dummy_consumer\", \"host\": \"kafka_dummy_consumer\", \"port\": 1087},{\"name\": \"kafka_dummy_consumer2\", \"host\": \"kafka_dummy_consumer2\", \"port\": 1088}]",
+		)
+	}
+
+	stdout, stderr, err := runIntegration(t, consumerConfig)
+	assert.NotNil(t, stderr, "unexpected stderr")
+	assert.NoError(t, err, "Unexpected error")
+
+	schemaPath := filepath.Join("json-schema-files", "kafka-schema-consumer.json")
 	err = jsonschema.Validate(schemaPath, stdout)
 	assert.NoError(t, err, "The output of kafka integration doesn't have expected format.")
 }

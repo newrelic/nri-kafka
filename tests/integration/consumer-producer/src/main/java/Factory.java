@@ -1,4 +1,4 @@
-package kafkaDummy;
+package kafka_dummy;
 
 public class Factory {
     public static void main(String[] args) {

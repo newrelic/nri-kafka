@@ -19,7 +19,8 @@ services:
       KAFKA_LOG_DIRS: /kafka/logs
       KAFKA_BROKER_ID: 500
       KAFKA_CREATE_TOPICS: "topicA:1:1,topicB:1:1,topicC:1:1,topicB:1:1"
-      KAFKA_offsets_topic_replication_factor: 3
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 3
+      KAFKA_NUM_PARTITIONS: 3
       KAFKA_JMX_OPTS: "-Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false -Djava.rmi.server.hostname=kafka1 -Dcom.sun.management.jmxremote.rmi.port=1099"
       JMX_PORT: 1099
     volumes:
@@ -38,7 +39,8 @@ services:
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
       KAFKA_LOG_DIRS: /kafka/logs
       KAFKA_BROKER_ID: 501
-      KAFKA_offsets_topic_replication_factor: 3
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 3
+      KAFKA_NUM_PARTITIONS: 3
       KAFKA_JMX_OPTS: "-Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false -Djava.rmi.server.hostname=kafka2 -Dcom.sun.management.jmxremote.rmi.port=1099"
       JMX_PORT: 1099
     volumes:
@@ -57,7 +59,8 @@ services:
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
       KAFKA_LOG_DIRS: /kafka/logs
       KAFKA_BROKER_ID: 502
-      KAFKA_offsets_topic_replication_factor: 3
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 3
+      KAFKA_NUM_PARTITIONS: 3
       KAFKA_JMX_OPTS: "-Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false -Djava.rmi.server.hostname=kafka3 -Dcom.sun.management.jmxremote.rmi.port=1099"
       JMX_PORT: 1099
     volumes:
@@ -78,8 +81,44 @@ services:
 
   kafka_dummy_consumer:
     container_name: kafka_dummy_consumer
+    hostname: kafka_dummy_consumer
     build:
       context: consumer-producer
+    entrypoint: [
+        "java",
+        "-Dcom.sun.management.jmxremote",
+        "-Djava.rmi.server.hostname=kafka_dummy_consumer",
+        "-Dcom.sun.management.jmxremote.port=1087",
+        "-Dcom.sun.management.jmxremote.rmi.port=1087",
+        "-Dcom.sun.management.jmxremote.local.only=false",
+        "-Dcom.sun.management.jmxremote.authenticate=false",
+        "-Dcom.sun.management.jmxremote.ssl=false",
+        "-jar",
+        "./target/kafka_dummy-1.0-jar-with-dependencies.jar"
+    ]
+    command: ["consumer","kafka1:9092","topicA","groupA"]
+    networks:
+      - kfk
+    depends_on:
+      - start_3party_dependencies
+
+  kafka_dummy_consumer2:
+    container_name: kafka_dummy_consumer2
+    hostname: kafka_dummy_consumer2
+    build:
+      context: consumer-producer
+    entrypoint: [
+        "java",
+        "-Dcom.sun.management.jmxremote",
+        "-Djava.rmi.server.hostname=kafka_dummy_consumer2",
+        "-Dcom.sun.management.jmxremote.port=1088",
+        "-Dcom.sun.management.jmxremote.rmi.port=1088",
+        "-Dcom.sun.management.jmxremote.local.only=false",
+        "-Dcom.sun.management.jmxremote.authenticate=false",
+        "-Dcom.sun.management.jmxremote.ssl=false",
+        "-jar",
+        "./target/kafka_dummy-1.0-jar-with-dependencies.jar"
+    ]
     command: ["consumer","kafka1:9092","topicA","groupA"]
     networks:
       - kfk
@@ -88,8 +127,21 @@ services:
 
   kafka_dummy_producer:
     container_name: kafka_dummy_producer
+    hostname: kafka_dummy_producer
     build:
       context: consumer-producer
+    entrypoint: [
+        "java",
+        "-Dcom.sun.management.jmxremote",
+        "-Djava.rmi.server.hostname=kafka_dummy_producer",
+        "-Dcom.sun.management.jmxremote.port=1089",
+        "-Dcom.sun.management.jmxremote.rmi.port=1089",
+        "-Dcom.sun.management.jmxremote.local.only=false",
+        "-Dcom.sun.management.jmxremote.authenticate=false",
+        "-Dcom.sun.management.jmxremote.ssl=false",
+        "-jar",
+        "./target/kafka_dummy-1.0-jar-with-dependencies.jar"
+    ]
     command: ["producer","kafka1:9092","topicA"]
     networks:
       - kfk
