@@ -3,9 +3,10 @@ package broker
 
 import (
 	"fmt"
-	"github.com/newrelic/nrjmx/gojmx"
 	"strings"
 	"sync"
+
+	"github.com/newrelic/nrjmx/gojmx"
 
 	"github.com/Shopify/sarama"
 
@@ -117,7 +118,6 @@ func collectBrokerMetrics(b *connection.Broker, collectedTopics []string, i *int
 		Password:         args.GlobalArgs.DefaultJMXPassword,
 		RequestTimeoutMs: int64(args.GlobalArgs.Timeout),
 	}
-	//options = append(options, jmx.WithNrJmxTool(args.GlobalArgs.NrJmx))
 
 	if args.GlobalArgs.KeyStore != "" && args.GlobalArgs.KeyStorePassword != "" && args.GlobalArgs.TrustStore != "" && args.GlobalArgs.TrustStorePassword != "" {
 		config.KeyStore = args.GlobalArgs.KeyStore
@@ -128,13 +128,15 @@ func collectBrokerMetrics(b *connection.Broker, collectedTopics []string, i *int
 
 	conn, err := connection.GetJMXConnectionProvider().NewConnection(config)
 	if err != nil {
-		log.Error("Unable to make JMX connection for Broker '%s', %w", b.Host, err)
+		log.Error("Unable to make JMX connection for Broker '%s', %v", b.Host, err)
 		return err
 	}
 
 	// Close connection and release lock so another process can make JMX Connections.
 	defer func() {
-		_ = conn.Close()
+		if err := conn.Close(); err != nil {
+			log.Error("Unable to close JMX connection for Broker '%s', %v", b.Host, err)
+		}
 	}()
 
 	// Collect broker metrics

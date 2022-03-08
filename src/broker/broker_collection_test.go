@@ -2,14 +2,15 @@ package broker
 
 import (
 	"errors"
-	"github.com/newrelic/infra-integrations-sdk/data/attribute"
-	"github.com/newrelic/infra-integrations-sdk/data/metric"
-	"github.com/newrelic/nri-kafka/src/metrics"
-	"github.com/newrelic/nrjmx/gojmx"
 	"reflect"
 	"sync"
 	"testing"
 	"time"
+
+	"github.com/newrelic/infra-integrations-sdk/data/attribute"
+	"github.com/newrelic/infra-integrations-sdk/data/metric"
+	"github.com/newrelic/nri-kafka/src/metrics"
+	"github.com/newrelic/nrjmx/gojmx"
 
 	"github.com/Shopify/sarama"
 	"github.com/newrelic/infra-integrations-sdk/data/inventory"

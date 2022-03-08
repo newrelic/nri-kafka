@@ -72,7 +72,6 @@ func ConsumerWorker(consumerChan <-chan *args.JMXHost, wg *sync.WaitGroup, i *in
 				Password:         jmxInfo.Password,
 				RequestTimeoutMs: int64(args.GlobalArgs.Timeout),
 			}
-			//options = append(options, jmx.WithNrJmxTool(args.GlobalArgs.NrJmx))
 
 			if args.GlobalArgs.KeyStore != "" && args.GlobalArgs.KeyStorePassword != "" && args.GlobalArgs.TrustStore != "" && args.GlobalArgs.TrustStorePassword != "" {
 				config.KeyStore = args.GlobalArgs.KeyStore
@@ -141,7 +140,6 @@ func ProducerWorker(producerChan <-chan *args.JMXHost, wg *sync.WaitGroup, i *in
 				Password:         jmxInfo.Password,
 				RequestTimeoutMs: int64(args.GlobalArgs.Timeout),
 			}
-			//options = append(options, jmx.WithNrJmxTool(args.GlobalArgs.NrJmx))
 
 			if args.GlobalArgs.KeyStore != "" && args.GlobalArgs.KeyStorePassword != "" && args.GlobalArgs.TrustStore != "" && args.GlobalArgs.TrustStorePassword != "" {
 				config.KeyStore = args.GlobalArgs.KeyStore
