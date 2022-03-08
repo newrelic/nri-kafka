@@ -2,14 +2,15 @@ package client
 
 import (
 	"errors"
+	"github.com/newrelic/nri-kafka/src/connection"
+	"github.com/newrelic/nri-kafka/src/connection/mocks"
+	"github.com/newrelic/nrjmx/gojmx"
 	"sync"
 	"testing"
 	"time"
 
 	"github.com/newrelic/infra-integrations-sdk/integration"
-	"github.com/newrelic/infra-integrations-sdk/jmx"
 	"github.com/newrelic/nri-kafka/src/args"
-	"github.com/newrelic/nri-kafka/src/jmxwrapper"
 	"github.com/newrelic/nri-kafka/src/testutils"
 )
 
@@ -59,7 +60,6 @@ func TestFeedWorkerPool(t *testing.T) {
 }
 
 func TestConsumerWorker(t *testing.T) {
-	testutils.SetupJmxTesting()
 	consumerChan := make(chan *args.JMXHost, 10)
 	var wg sync.WaitGroup
 	i, err := integration.New("kafka", "1.0.0")
@@ -68,6 +68,17 @@ func TestConsumerWorker(t *testing.T) {
 	}
 
 	testutils.SetupTestArgs()
+
+	mockResponse := &mocks.MockJMXResponse{
+		Err:    nil,
+		Result: []*gojmx.AttributeResponse{},
+	}
+
+	mockJMXProvider := &mocks.MockJMXProvider{
+		Response: mockResponse,
+	}
+
+	connection.SetJMXConnectionProvider(mockJMXProvider)
 
 	wg.Add(1)
 	go ConsumerWorker(consumerChan, &wg, i)
@@ -83,10 +94,15 @@ func TestConsumerWorker(t *testing.T) {
 }
 
 func TestConsumerWorker_JmxOpenFuncErr(t *testing.T) {
-	testutils.SetupJmxTesting()
-	jmxwrapper.JMXOpen = func(hostname, port, username, password string, options ...jmx.Option) error {
-		return errors.New("test")
+	mockResponse := &mocks.MockJMXResponse{
+		Err: errors.New("test"),
 	}
+
+	mockJMXProvider := &mocks.MockJMXProvider{
+		Response: mockResponse,
+	}
+	connection.SetJMXConnectionProvider(mockJMXProvider)
+
 	consumerChan := make(chan *args.JMXHost, 10)
 	var wg sync.WaitGroup
 	i, err := integration.New("kafka", "1.0.0")
@@ -109,7 +125,6 @@ func TestConsumerWorker_JmxOpenFuncErr(t *testing.T) {
 }
 
 func TestProducerWorker(t *testing.T) {
-	testutils.SetupJmxTesting()
 	producerChan := make(chan *args.JMXHost, 10)
 	var wg sync.WaitGroup
 	i, err := integration.New("kafka", "1.0.0")
@@ -133,10 +148,16 @@ func TestProducerWorker(t *testing.T) {
 }
 
 func TestProducerWorker_JmxOpenFuncErr(t *testing.T) {
-	testutils.SetupJmxTesting()
-	jmxwrapper.JMXOpen = func(hostname, port, username, password string, options ...jmx.Option) error {
-		return errors.New("test")
+	mockResponse := &mocks.MockJMXResponse{
+		Err: errors.New("test"),
 	}
+
+	mockJMXProvider := &mocks.MockJMXProvider{
+		Response: mockResponse,
+	}
+
+	connection.SetJMXConnectionProvider(mockJMXProvider)
+
 	producerChan := make(chan *args.JMXHost, 10)
 	var wg sync.WaitGroup
 	i, err := integration.New("kafka", "1.0.0")

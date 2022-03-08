@@ -140,6 +140,7 @@ func TestDefaultArgs(t *testing.T) {
 		BootstrapBroker:                  nil,
 		DefaultJMXUser:                   "admin",
 		DefaultJMXPassword:               "admin",
+		MaxJMXConnections:                3,
 		NrJmx:                            "nrjmx",
 		Producers:                        []*JMXHost{},
 		Consumers:                        []*JMXHost{},

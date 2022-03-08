@@ -2,22 +2,20 @@ package broker
 
 import (
 	"errors"
+	"github.com/newrelic/infra-integrations-sdk/data/attribute"
+	"github.com/newrelic/infra-integrations-sdk/data/metric"
+	"github.com/newrelic/nri-kafka/src/metrics"
+	"github.com/newrelic/nrjmx/gojmx"
 	"reflect"
 	"sync"
 	"testing"
 	"time"
 
-	"github.com/newrelic/nri-kafka/src/metrics"
-
 	"github.com/Shopify/sarama"
-	"github.com/newrelic/infra-integrations-sdk/data/attribute"
 	"github.com/newrelic/infra-integrations-sdk/data/inventory"
-	"github.com/newrelic/infra-integrations-sdk/data/metric"
 	"github.com/newrelic/infra-integrations-sdk/integration"
-	"github.com/newrelic/infra-integrations-sdk/jmx"
 	"github.com/newrelic/nri-kafka/src/connection"
 	"github.com/newrelic/nri-kafka/src/connection/mocks"
-	"github.com/newrelic/nri-kafka/src/jmxwrapper"
 	"github.com/newrelic/nri-kafka/src/testutils"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -53,7 +51,6 @@ func TestBrokerWorker_Exits(t *testing.T) {
 	var wg sync.WaitGroup
 	brokerChan := make(chan *connection.Broker, 1)
 	i, _ := integration.New("kafka", "1.0.0")
-	testutils.SetupJmxTesting()
 	testutils.SetupTestArgs()
 
 	wg.Add(1)
@@ -126,12 +123,18 @@ func TestPopulateBrokerInventory(t *testing.T) {
 
 func TestPopulateBrokerMetrics_JMXOpenError(t *testing.T) {
 	testutils.SetupTestArgs()
-	testutils.SetupJmxTesting()
 	errorText := "jmx error"
 
-	jmxwrapper.JMXOpen = func(hostname, port, username, password string, options ...jmx.Option) error {
-		return errors.New(errorText)
+	mockResponse := &mocks.MockJMXResponse{
+		Err: errors.New(errorText),
 	}
+
+	mockJMXProvider := &mocks.MockJMXProvider{
+		Response: mockResponse,
+	}
+
+	connection.SetJMXConnectionProvider(mockJMXProvider)
+
 	testBroker := &connection.Broker{
 		Host:    "kafkabroker",
 		JMXPort: 9999,
@@ -145,7 +148,15 @@ func TestPopulateBrokerMetrics_JMXOpenError(t *testing.T) {
 
 func TestPopulateBrokerMetrics_Normal(t *testing.T) {
 	testutils.SetupTestArgs()
-	testutils.SetupJmxTesting()
+
+	mockResponse := &mocks.MockJMXResponse{
+		Err:    nil,
+		Result: []*gojmx.AttributeResponse{},
+	}
+
+	mockJMXProvider := &mocks.MockJMXProvider{
+		Response: mockResponse,
+	}
 
 	mockBroker := &mocks.SaramaBroker{}
 	mockBroker.On("Addr").Return("kafkabroker:9090")
@@ -158,7 +169,7 @@ func TestPopulateBrokerMetrics_Normal(t *testing.T) {
 	}
 	i, _ := integration.New("kafka", "1.0.0")
 
-	populateBrokerMetrics(testBroker, i)
+	populateBrokerMetrics(testBroker, i, mockJMXProvider)
 
 	entity, _ := testBroker.Entity(i)
 	assert.Len(t, entity.Metrics, 1, "Unexpected number of metrics")
@@ -177,14 +188,19 @@ func TestPopulateBrokerMetrics_Normal(t *testing.T) {
 
 func TestCollectBrokerTopicMetrics(t *testing.T) {
 	testutils.SetupTestArgs()
-	testutils.SetupJmxTesting()
 
-	jmxwrapper.JMXQuery = func(query string, timeout int) (map[string]interface{}, error) {
-		result := map[string]interface{}{
-			"kafka.server:type=BrokerTopicMetrics,name=BytesInPerSec,topic=topic,attr=Count": 24,
-		}
+	mockResponse := &mocks.MockJMXResponse{
+		Result: []*gojmx.AttributeResponse{
+			{
+				Name:         "kafka.server:type=BrokerTopicMetrics,name=BytesInPerSec,topic=topic,attr=Count",
+				ResponseType: gojmx.ResponseTypeInt,
+				IntValue:     24,
+			},
+		},
+	}
 
-		return result, nil
+	mockJMXProvider := &mocks.MockJMXProvider{
+		Response: mockResponse,
 	}
 
 	i, _ := integration.New("test", "1.0.0")
@@ -219,9 +235,9 @@ func TestCollectBrokerTopicMetrics(t *testing.T) {
 		"topic": sample,
 	}
 
-	out := collectBrokerTopicMetrics(testBroker, []string{"topic"}, i)
+	out := collectBrokerTopicMetrics(testBroker, []string{"topic"}, i, mockJMXProvider)
 
-	metrics.CollectMetricDefinitions(sample, metrics.BrokerTopicMetricDefs, metrics.ApplyTopicName("topic"))
+	metrics.CollectMetricDefinitions(sample, metrics.BrokerTopicMetricDefs, metrics.ApplyTopicName("topic"), mockJMXProvider)
 
 	assert.Equal(t, expected, out)
 }
