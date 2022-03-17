@@ -22,13 +22,20 @@ import (
 // StartBrokerPool starts a pool of brokerWorkers to handle collecting data for Broker entities.
 // The returned channel can be fed brokerIDs to collect, and is to be closed by the user
 // (or closed by feedBrokerPool)
-func StartBrokerPool(poolSize int, wg *sync.WaitGroup, integration *integration.Integration, collectedTopics []string) chan *connection.Broker {
+func StartBrokerPool(
+	poolSize int,
+	wg *sync.WaitGroup,
+	integration *integration.Integration,
+	collectedTopics []string,
+	jmxConnProvider connection.JMXProvider,
+) chan *connection.Broker {
+
 	brokerChan := make(chan *connection.Broker)
 
 	// Only spin off brokerWorkers if signaled
 	for i := 0; i < poolSize; i++ {
 		wg.Add(1)
-		go brokerWorker(brokerChan, collectedTopics, wg, integration)
+		go brokerWorker(brokerChan, collectedTopics, wg, integration, jmxConnProvider)
 	}
 
 	return brokerChan
@@ -47,7 +54,7 @@ func FeedBrokerPool(brokers []*connection.Broker, brokerChan chan<- *connection.
 // Reads brokerIDs from a channel, creates an entity for each broker, and collects
 // inventory and metrics data for that broker. Exits when it determines the channel has
 // been closed
-func brokerWorker(brokerChan <-chan *connection.Broker, collectedTopics []string, wg *sync.WaitGroup, i *integration.Integration) {
+func brokerWorker(brokerChan <-chan *connection.Broker, collectedTopics []string, wg *sync.WaitGroup, i *integration.Integration, jmxConnProvider connection.JMXProvider) {
 	defer wg.Done()
 
 	for {
@@ -62,7 +69,7 @@ func brokerWorker(brokerChan <-chan *connection.Broker, collectedTopics []string
 		}
 
 		if args.GlobalArgs.HasMetrics() {
-			err := collectBrokerMetrics(broker, collectedTopics, i)
+			err := collectBrokerMetrics(broker, collectedTopics, i, jmxConnProvider)
 			if err != nil {
 				log.Error("Failed to collect broker metrics for broker %s: %s", broker.ID, err)
 			}
@@ -108,9 +115,7 @@ func populateBrokerInventory(b *connection.Broker, integration *integration.Inte
 	}
 }
 
-func collectBrokerMetrics(b *connection.Broker, collectedTopics []string, i *integration.Integration) error {
-
-	// Lock since we can only make a single JMX connection at a time.
+func collectBrokerMetrics(b *connection.Broker, collectedTopics []string, i *integration.Integration, jmxConnProvider connection.JMXProvider) error {
 	config := &gojmx.JMXConfig{
 		Hostname:         b.Host,
 		Port:             int32(b.JMXPort),
@@ -126,13 +131,12 @@ func collectBrokerMetrics(b *connection.Broker, collectedTopics []string, i *int
 		config.TrustStorePassword = args.GlobalArgs.TrustStorePassword
 	}
 
-	conn, err := connection.GetJMXConnectionProvider().NewConnection(config)
+	conn, err := jmxConnProvider.NewConnection(config)
 	if err != nil {
 		log.Error("Unable to make JMX connection for Broker '%s', %v", b.Host, err)
 		return err
 	}
 
-	// Close connection and release lock so another process can make JMX Connections.
 	defer func() {
 		if err := conn.Close(); err != nil {
 			log.Error("Unable to close JMX connection for Broker '%s', %v", b.Host, err)

@@ -16,6 +16,14 @@ type MockJMXProvider struct {
 	MBeanNamePattern string
 }
 
+func NewEmptyMockJMXProvider() *MockJMXProvider {
+	return &MockJMXProvider{
+		Response: &MockJMXResponse{
+			Result: []*gojmx.AttributeResponse{},
+		},
+	}
+}
+
 func (m *MockJMXProvider) QueryMBeanAttributes(mBeanNamePattern string) ([]*gojmx.AttributeResponse, error) {
 	if m.MBeanNamePattern != "" && m.MBeanNamePattern != mBeanNamePattern {
 		return nil, fmt.Errorf("expected bean '%s' got '%s'", m.MBeanNamePattern, mBeanNamePattern)

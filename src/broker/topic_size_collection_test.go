@@ -143,8 +143,7 @@ func TestGatherTopicSize_QueryBlank(t *testing.T) {
 			attribute.Attribute{Key: "topic", Value: "topic"},
 		),
 	}
-
-	conn, _ := connection.GetJMXConnectionProvider().NewConnection(nil)
+	conn, _ := mocks.NewEmptyMockJMXProvider().NewConnection(nil)
 	gatherTopicSizes(broker, collectedTopics, i, conn)
 
 	assert.Len(t, e.Metrics, 1)

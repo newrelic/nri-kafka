@@ -2,6 +2,7 @@
 package main
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"hash/fnv"
@@ -63,8 +64,10 @@ func main() {
 
 	sarama.Logger = saramaLogger{}
 
+	jmxConnProvider := connection.NewJMXProviderWithLimit(context.Background(), args.GlobalArgs.MaxJMXConnections)
+
 	if !args.GlobalArgs.ConsumerOffset {
-		coreCollection(kafkaIntegration)
+		coreCollection(kafkaIntegration, jmxConnProvider)
 	} else {
 		brokers, err := getBrokerList(args.GlobalArgs)
 		ExitOnErr(err)
@@ -159,8 +162,9 @@ func getBrokerList(arguments *args.ParsedArguments) ([]*connection.Broker, error
 }
 
 // coreCollection is the main integration collection. Does not handle consumerOffset collection
-func coreCollection(kafkaIntegration *integration.Integration) {
+func coreCollection(kafkaIntegration *integration.Integration, jmxConnProvider connection.JMXProvider) {
 	var wg sync.WaitGroup
+
 	if args.GlobalArgs.CollectBrokers() {
 		log.Info("Running core collection")
 		brokers, err := getBrokerList(args.GlobalArgs)
@@ -213,7 +217,7 @@ func coreCollection(kafkaIntegration *integration.Integration) {
 		collectedTopics := enforceTopicLimit(bucketedTopics)
 
 		// Start and feed all worker pools
-		brokerChan := broker.StartBrokerPool(3, &wg, kafkaIntegration, collectedTopics)
+		brokerChan := broker.StartBrokerPool(3, &wg, kafkaIntegration, collectedTopics, jmxConnProvider)
 
 		if !args.GlobalArgs.LocalOnlyCollection {
 			topicChan := topic.StartTopicPool(5, &wg, clusterClient)
@@ -223,8 +227,8 @@ func coreCollection(kafkaIntegration *integration.Integration) {
 		go broker.FeedBrokerPool(brokers, brokerChan)
 	}
 
-	consumerChan := client.StartWorkerPool(3, &wg, kafkaIntegration, client.ConsumerWorker)
-	producerChan := client.StartWorkerPool(3, &wg, kafkaIntegration, client.ProducerWorker)
+	consumerChan := client.StartWorkerPool(3, &wg, kafkaIntegration, client.ConsumerWorker, jmxConnProvider)
+	producerChan := client.StartWorkerPool(3, &wg, kafkaIntegration, client.ProducerWorker, jmxConnProvider)
 
 	go client.FeedWorkerPool(consumerChan, args.GlobalArgs.Consumers)
 	go client.FeedWorkerPool(producerChan, args.GlobalArgs.Producers)

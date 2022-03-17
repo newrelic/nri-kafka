@@ -144,8 +144,7 @@ func TestGatherTopicOffset_QueryBlank(t *testing.T) {
 		),
 	}
 
-	conn, _ := connection.GetJMXConnectionProvider().NewConnection(nil)
-	gatherTopicOffset(broker, collectedTopics, i, conn)
+	gatherTopicOffset(broker, collectedTopics, i, mocks.NewEmptyMockJMXProvider())
 
 	assert.Len(t, e.Metrics, 1)
 	assert.NotContains(t, e.Metrics[0].Metrics, "topic.offset", "Metric was unexpectedly set after empty query result")

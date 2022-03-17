@@ -2,7 +2,6 @@ package client
 
 import (
 	"errors"
-	"github.com/newrelic/nri-kafka/src/connection"
 	"github.com/newrelic/nri-kafka/src/connection/mocks"
 	"github.com/newrelic/nrjmx/gojmx"
 	"sync"
@@ -21,7 +20,7 @@ func TestStartWorkerPool(t *testing.T) {
 		t.Error(err)
 	}
 
-	consumerHosts := StartWorkerPool(3, &wg, i, ConsumerWorker)
+	consumerHosts := StartWorkerPool(3, &wg, i, ConsumerWorker, nil)
 
 	c := make(chan int)
 	go func() {
@@ -78,10 +77,8 @@ func TestConsumerWorker(t *testing.T) {
 		Response: mockResponse,
 	}
 
-	connection.SetJMXConnectionProvider(mockJMXProvider)
-
 	wg.Add(1)
-	go ConsumerWorker(consumerChan, &wg, i)
+	go ConsumerWorker(consumerChan, &wg, i, mockJMXProvider)
 
 	newJmx := &args.JMXHost{
 		Name: "test",
@@ -101,7 +98,6 @@ func TestConsumerWorker_JmxOpenFuncErr(t *testing.T) {
 	mockJMXProvider := &mocks.MockJMXProvider{
 		Response: mockResponse,
 	}
-	connection.SetJMXConnectionProvider(mockJMXProvider)
 
 	consumerChan := make(chan *args.JMXHost, 10)
 	var wg sync.WaitGroup
@@ -113,7 +109,7 @@ func TestConsumerWorker_JmxOpenFuncErr(t *testing.T) {
 	testutils.SetupTestArgs()
 
 	wg.Add(1)
-	go ConsumerWorker(consumerChan, &wg, i)
+	go ConsumerWorker(consumerChan, &wg, i, mockJMXProvider)
 
 	newJmx := &args.JMXHost{
 		Name: "test",
@@ -135,7 +131,7 @@ func TestProducerWorker(t *testing.T) {
 	testutils.SetupTestArgs()
 
 	wg.Add(1)
-	go ProducerWorker(producerChan, &wg, i)
+	go ProducerWorker(producerChan, &wg, i, mocks.NewEmptyMockJMXProvider())
 
 	newJmx := &args.JMXHost{
 		Name: "test",
@@ -156,8 +152,6 @@ func TestProducerWorker_JmxOpenFuncErr(t *testing.T) {
 		Response: mockResponse,
 	}
 
-	connection.SetJMXConnectionProvider(mockJMXProvider)
-
 	producerChan := make(chan *args.JMXHost, 10)
 	var wg sync.WaitGroup
 	i, err := integration.New("kafka", "1.0.0")
@@ -168,7 +162,7 @@ func TestProducerWorker_JmxOpenFuncErr(t *testing.T) {
 	testutils.SetupTestArgs()
 
 	wg.Add(1)
-	go ProducerWorker(producerChan, &wg, i)
+	go ProducerWorker(producerChan, &wg, i, mockJMXProvider)
 
 	newJmx := &args.JMXHost{
 		Name: "test",

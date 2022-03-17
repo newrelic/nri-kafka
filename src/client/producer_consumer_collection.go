@@ -19,14 +19,15 @@ func StartWorkerPool(
 	poolSize int,
 	wg *sync.WaitGroup,
 	integration *integration.Integration,
-	worker func(<-chan *args.JMXHost, *sync.WaitGroup, *integration.Integration),
+	worker func(<-chan *args.JMXHost, *sync.WaitGroup, *integration.Integration, connection.JMXProvider),
+	jmxConnProvider connection.JMXProvider,
 ) chan *args.JMXHost {
 
 	jmxHostChan := make(chan *args.JMXHost)
 
 	for i := 0; i < poolSize; i++ {
 		wg.Add(1)
-		go worker(jmxHostChan, wg, integration)
+		go worker(jmxHostChan, wg, integration, jmxConnProvider)
 	}
 
 	return jmxHostChan
@@ -43,7 +44,7 @@ func FeedWorkerPool(jmxHostChan chan<- *args.JMXHost, jmxHosts []*args.JMXHost) 
 }
 
 // ConsumerWorker collects information for consumers sent down the consumerChan
-func ConsumerWorker(consumerChan <-chan *args.JMXHost, wg *sync.WaitGroup, i *integration.Integration) {
+func ConsumerWorker(consumerChan <-chan *args.JMXHost, wg *sync.WaitGroup, i *integration.Integration, jmxConnProvider connection.JMXProvider) {
 	defer wg.Done()
 
 	for {
@@ -80,7 +81,7 @@ func ConsumerWorker(consumerChan <-chan *args.JMXHost, wg *sync.WaitGroup, i *in
 				config.TrustStorePassword = args.GlobalArgs.TrustStorePassword
 			}
 
-			conn, err := connection.GetJMXConnectionProvider().NewConnection(config)
+			conn, err := jmxConnProvider.NewConnection(config)
 			if err != nil {
 				log.Error("Unable to make JMX connection for Consumer '%s': %s", consumerEntity.Metadata.Name, err.Error())
 				continue
@@ -110,7 +111,7 @@ func ConsumerWorker(consumerChan <-chan *args.JMXHost, wg *sync.WaitGroup, i *in
 }
 
 // ProducerWorker collect information for Producers sent down the producerChan
-func ProducerWorker(producerChan <-chan *args.JMXHost, wg *sync.WaitGroup, i *integration.Integration) {
+func ProducerWorker(producerChan <-chan *args.JMXHost, wg *sync.WaitGroup, i *integration.Integration, jmxConnProvider connection.JMXProvider) {
 	defer wg.Done()
 	for {
 		jmxInfo, ok := <-producerChan
@@ -132,7 +133,6 @@ func ProducerWorker(producerChan <-chan *args.JMXHost, wg *sync.WaitGroup, i *in
 			log.Debug("Collecting metrics for producer %s", producerEntity.Metadata.Name)
 
 			// Open a JMX connection to the producer
-			// Lock since we can only make a single JMX connection at a time.
 			config := &gojmx.JMXConfig{
 				Hostname:         jmxInfo.Host,
 				Port:             int32(jmxInfo.Port),
@@ -148,7 +148,7 @@ func ProducerWorker(producerChan <-chan *args.JMXHost, wg *sync.WaitGroup, i *in
 				config.TrustStorePassword = args.GlobalArgs.TrustStorePassword
 			}
 
-			conn, err := connection.GetJMXConnectionProvider().NewConnection(config)
+			conn, err := jmxConnProvider.NewConnection(config)
 			if err != nil {
 				log.Error("Unable to make JMX connection for Producer '%s': %v", producerEntity.Metadata.Name, err)
 				continue

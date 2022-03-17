@@ -51,6 +51,7 @@ func gatherTopicOffset(b *connection.Broker, topicSampleLookup map[string]*metri
 func aggregateTopicOffset(jmxResult []*gojmx.AttributeResponse) (offset float64, err error) {
 	for _, attr := range jmxResult {
 		if attr.ResponseType == gojmx.ResponseTypeErr {
+			log.Warn("Unable to process attribute for query: %s status: %s", attr.Name, attr.StatusMsg)
 			continue
 		}
 

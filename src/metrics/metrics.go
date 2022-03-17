@@ -147,7 +147,7 @@ func CollectMetricDefinitions(sample *metric.Set, metricSets []*JMXMetricSet, be
 		attrsByName := make(map[string]*gojmx.AttributeResponse)
 		for _, attr := range results {
 			if attr.ResponseType == gojmx.ResponseTypeErr {
-				log.Debug("Failed to process attribute for query: %s status: %s", attr.Name, attr.StatusMsg)
+				log.Warn("Failed to process attribute for query: %s status: %s", attr.Name, attr.StatusMsg)
 				continue
 			}
 			attrsByName[attr.Name] = attr

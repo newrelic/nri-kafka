@@ -32,7 +32,7 @@ func TestStartBrokerPool(t *testing.T) {
 		t.Error(err)
 	}
 
-	brokerChan := StartBrokerPool(3, &wg, i, collectedTopics)
+	brokerChan := StartBrokerPool(3, &wg, i, collectedTopics, nil)
 	close(brokerChan)
 
 	c := make(chan int)
@@ -56,7 +56,7 @@ func TestBrokerWorker_Exits(t *testing.T) {
 
 	wg.Add(1)
 	close(brokerChan)
-	brokerWorker(brokerChan, []string{}, &wg, i)
+	brokerWorker(brokerChan, []string{}, &wg, i, nil)
 
 	finished := make(chan *connection.Broker)
 	go func() {
@@ -124,17 +124,15 @@ func TestPopulateBrokerInventory(t *testing.T) {
 
 func TestPopulateBrokerMetrics_JMXOpenError(t *testing.T) {
 	testutils.SetupTestArgs()
-	errorText := "jmx error"
+	var expectedErr = errors.New("jmx error")
 
 	mockResponse := &mocks.MockJMXResponse{
-		Err: errors.New(errorText),
+		Err: expectedErr,
 	}
 
 	mockJMXProvider := &mocks.MockJMXProvider{
 		Response: mockResponse,
 	}
-
-	connection.SetJMXConnectionProvider(mockJMXProvider)
 
 	testBroker := &connection.Broker{
 		Host:    "kafkabroker",
@@ -143,8 +141,8 @@ func TestPopulateBrokerMetrics_JMXOpenError(t *testing.T) {
 	}
 	i, _ := integration.New("kafka", "1.0.0")
 
-	err := collectBrokerMetrics(testBroker, []string{}, i)
-	assert.Equal(t, "jmx error", err.Error())
+	err := collectBrokerMetrics(testBroker, []string{}, i, mockJMXProvider)
+	assert.Equal(t, expectedErr.Error(), err.Error())
 }
 
 func TestPopulateBrokerMetrics_Normal(t *testing.T) {
