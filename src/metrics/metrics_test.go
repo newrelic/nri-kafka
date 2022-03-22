@@ -2,15 +2,20 @@ package metrics
 
 import (
 	"errors"
-	"github.com/newrelic/nri-kafka/src/connection/mocks"
-	"github.com/newrelic/nrjmx/gojmx"
 	"reflect"
 	"strings"
 	"testing"
 
+	"github.com/newrelic/nri-kafka/src/connection/mocks"
+	"github.com/newrelic/nrjmx/gojmx"
+
 	"github.com/newrelic/infra-integrations-sdk/data/metric"
 	"github.com/newrelic/infra-integrations-sdk/integration"
 	"github.com/newrelic/nri-kafka/src/testutils"
+)
+
+var (
+	errTest = errors.New("this is an error")
 )
 
 func TestGetBrokerMetrics(t *testing.T) {
@@ -151,10 +156,9 @@ func TestGetProducerMetrics(t *testing.T) {
 
 func TestCollectMetricDefinitions_QueryError(t *testing.T) {
 	testutils.SetupTestArgs()
-	errString := "this is an error"
 
 	mockResponse := &mocks.MockJMXResponse{
-		Err: errors.New(errString),
+		Err: errTest,
 	}
 
 	mockJMXProvider := &mocks.MockJMXProvider{

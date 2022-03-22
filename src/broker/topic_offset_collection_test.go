@@ -1,8 +1,9 @@
 package broker
 
 import (
-	"github.com/newrelic/nrjmx/gojmx"
 	"testing"
+
+	"github.com/newrelic/nrjmx/gojmx"
 
 	"github.com/newrelic/infra-integrations-sdk/data/attribute"
 	"github.com/newrelic/infra-integrations-sdk/data/metric"
@@ -87,7 +88,7 @@ func TestGatherTopicOffset_QueryError(t *testing.T) {
 	i, _ := integration.New("test", "1.0.0")
 
 	mockResponse := &mocks.MockJMXResponse{
-		Err: expectedErr,
+		Err: errJMX,
 	}
 
 	mockJMXProvider := &mocks.MockJMXProvider{

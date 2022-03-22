@@ -14,6 +14,10 @@ import (
 	"github.com/newrelic/nri-kafka/src/testutils"
 )
 
+var (
+	errTest = errors.New("test")
+)
+
 func TestStartWorkerPool(t *testing.T) {
 	var wg sync.WaitGroup
 	i, err := integration.New("kafka", "1.0.0")
@@ -93,7 +97,7 @@ func TestConsumerWorker(t *testing.T) {
 
 func TestConsumerWorker_JmxOpenFuncErr(t *testing.T) {
 	mockResponse := &mocks.MockJMXResponse{
-		Err: errors.New("test"),
+		Err: errTest,
 	}
 
 	mockJMXProvider := &mocks.MockJMXProvider{
@@ -146,7 +150,7 @@ func TestProducerWorker(t *testing.T) {
 
 func TestProducerWorker_JmxOpenFuncErr(t *testing.T) {
 	mockResponse := &mocks.MockJMXResponse{
-		Err: errors.New("test"),
+		Err: errTest,
 	}
 
 	mockJMXProvider := &mocks.MockJMXProvider{

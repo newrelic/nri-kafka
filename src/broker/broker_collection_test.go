@@ -23,7 +23,7 @@ import (
 )
 
 var (
-	expectedErr = errors.New("jmx error")
+	errJMX = errors.New("jmx error")
 )
 
 func TestStartBrokerPool(t *testing.T) {
@@ -130,7 +130,7 @@ func TestPopulateBrokerMetrics_JMXOpenError(t *testing.T) {
 	testutils.SetupTestArgs()
 
 	mockResponse := &mocks.MockJMXResponse{
-		Err: expectedErr,
+		Err: errJMX,
 	}
 
 	mockJMXProvider := &mocks.MockJMXProvider{
@@ -140,7 +140,7 @@ func TestPopulateBrokerMetrics_JMXOpenError(t *testing.T) {
 	jmxClient, err := mockJMXProvider.NewConnection(nil)
 	assert.NotNil(t, jmxClient)
 
-	assert.Equal(t, expectedErr.Error(), err.Error())
+	assert.Equal(t, errJMX.Error(), err.Error())
 }
 
 func TestPopulateBrokerMetrics_Normal(t *testing.T) {

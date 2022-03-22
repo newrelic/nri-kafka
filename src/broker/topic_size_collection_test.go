@@ -1,7 +1,6 @@
 package broker
 
 import (
-	"errors"
 	"github.com/newrelic/nrjmx/gojmx"
 	"testing"
 
@@ -88,7 +87,7 @@ func TestGatherTopicSize_QueryError(t *testing.T) {
 	i, _ := integration.New("test", "1.0.0")
 
 	mockResponse := &mocks.MockJMXResponse{
-		Err: errors.New("error"),
+		Err: errJMX,
 	}
 
 	mockJMXProvider := &mocks.MockJMXProvider{

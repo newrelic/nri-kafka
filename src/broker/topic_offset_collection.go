@@ -2,8 +2,9 @@ package broker
 
 import (
 	"fmt"
-	"github.com/newrelic/nrjmx/gojmx"
 	"os"
+
+	"github.com/newrelic/nrjmx/gojmx"
 
 	"github.com/newrelic/infra-integrations-sdk/data/metric"
 	"github.com/newrelic/infra-integrations-sdk/integration"
