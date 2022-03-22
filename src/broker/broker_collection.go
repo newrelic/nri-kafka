@@ -27,7 +27,6 @@ func StartBrokerPool(
 	collectedTopics []string,
 	jmxConnProvider connection.JMXProvider,
 ) chan *connection.Broker {
-
 	brokerChan := make(chan *connection.Broker)
 
 	// Only spin off brokerWorkers if signaled
@@ -74,18 +73,14 @@ func brokerWorker(brokerChan <-chan *connection.Broker, collectedTopics []string
 
 			jmxConn, err := jmxConnProvider.NewConnection(jmxConfig)
 			if err != nil {
-				log.Error("Unable to make JMX connection for Broker '%s', %v", broker.Host, err)
+				log.Error("Failed to collect broker metrics for broker: '%s', error: %v", broker.Host, err)
 				continue
 			}
 
-			err = collectBrokerMetrics(broker, collectedTopics, i, jmxConn)
-			if err != nil {
-				log.Error("Failed to collect broker metrics for broker %s: %s", broker.ID, err)
-				continue
-			}
+			collectBrokerMetrics(broker, collectedTopics, i, jmxConn)
 
 			if err := jmxConn.Close(); err != nil {
-				log.Error("Unable to close JMX connection for Broker '%s', %v", broker.Host, err)
+				log.Error("Unable to close JMX connection for broker: '%s', error: %v", broker.Host, err)
 			}
 		}
 	}
@@ -129,7 +124,7 @@ func populateBrokerInventory(b *connection.Broker, integration *integration.Inte
 	}
 }
 
-func collectBrokerMetrics(b *connection.Broker, collectedTopics []string, i *integration.Integration, conn connection.JMXConnection) error {
+func collectBrokerMetrics(b *connection.Broker, collectedTopics []string, i *integration.Integration, conn connection.JMXConnection) {
 	// Collect broker metrics
 	populateBrokerMetrics(b, i, conn)
 
@@ -145,8 +140,6 @@ func collectBrokerMetrics(b *connection.Broker, collectedTopics []string, i *int
 	if args.GlobalArgs.CollectTopicOffset {
 		gatherTopicOffset(b, topicSampleLookup, i, conn)
 	}
-
-	return nil
 }
 
 // For a given broker struct, collect and populate its entity with broker metrics

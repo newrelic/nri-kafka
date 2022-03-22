@@ -134,14 +134,9 @@ func TestPopulateBrokerMetrics_JMXOpenError(t *testing.T) {
 		Response: mockResponse,
 	}
 
-	testBroker := &connection.Broker{
-		Host:    "kafkabroker",
-		JMXPort: 9999,
-		ID:      "0",
-	}
-	i, _ := integration.New("kafka", "1.0.0")
+	jmxClient, err := mockJMXProvider.NewConnection(nil)
+	assert.NotNil(t, jmxClient)
 
-	err := collectBrokerMetrics(testBroker, []string{}, i, mockJMXProvider)
 	assert.Equal(t, expectedErr.Error(), err.Error())
 }
 

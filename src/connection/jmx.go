@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+
 	"github.com/newrelic/nri-kafka/src/args"
 	"github.com/newrelic/nrjmx/gojmx"
 	"golang.org/x/sync/semaphore"

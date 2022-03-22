@@ -2,10 +2,11 @@ package connection
 
 import (
 	"context"
+	"testing"
+
 	"github.com/newrelic/nrjmx/gojmx"
 	"github.com/stretchr/testify/assert"
 	"golang.org/x/sync/semaphore"
-	"testing"
 )
 
 func Test_NewConnection(t *testing.T) {
@@ -38,7 +39,6 @@ func Test_NewConnection(t *testing.T) {
 }
 
 func Test_NewConnection_OnError(t *testing.T) {
-
 	// GIVEN a limit of 3 concurrent connections
 	var maxConnections int64 = 3
 	mockProvider := &JMXProviderWithConnectionsLimit{

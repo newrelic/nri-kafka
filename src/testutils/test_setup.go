@@ -1,4 +1,4 @@
-//// Package testutils contains setup functions for tests that initialize common variables in the utils package.
+// Package testutils contains setup functions for tests that initialize common variables in the utils package.
 package testutils
 
 import (

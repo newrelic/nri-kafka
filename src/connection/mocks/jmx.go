@@ -2,6 +2,7 @@ package mocks
 
 import (
 	"fmt"
+
 	"github.com/newrelic/nri-kafka/src/connection"
 	"github.com/newrelic/nrjmx/gojmx"
 )
