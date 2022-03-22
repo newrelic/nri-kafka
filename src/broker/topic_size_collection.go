@@ -45,7 +45,7 @@ func gatherTopicSizes(b *connection.Broker, topicSampleLookup map[string]*metric
 func aggregateTopicSize(jmxResult []*gojmx.AttributeResponse) (size float64, err error) {
 	for _, attr := range jmxResult {
 		if attr.ResponseType == gojmx.ResponseTypeErr {
-			log.Warn("Unable to process attribute for query: %s status: %s", attr.Name, attr.StatusMsg)
+			log.Warn("Unable to process attribute for query: %s status: %s, while aggregating TopicSize", attr.Name, attr.StatusMsg)
 			continue
 		}
 		value := attr.GetValue()

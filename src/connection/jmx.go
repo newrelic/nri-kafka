@@ -22,8 +22,9 @@ type JMXProvider interface {
 
 // JMXProviderWithConnectionsLimit will be able to allocate new JMX connections, as long as maxConnections is not reached.
 type JMXProviderWithConnectionsLimit struct {
-	ctx context.Context
-	sem *semaphore.Weighted
+	ctx       context.Context
+	sem       *semaphore.Weighted
+	jmxOpenFn func(*gojmx.JMXConfig) (*gojmx.Client, error)
 }
 
 // NewJMXProviderWithLimit creates a new instance of JMXProvider.
@@ -31,6 +32,9 @@ func NewJMXProviderWithLimit(ctx context.Context, maxConnections int) JMXProvide
 	return &JMXProviderWithConnectionsLimit{
 		ctx: ctx,
 		sem: semaphore.NewWeighted(int64(maxConnections)),
+		jmxOpenFn: func(config *gojmx.JMXConfig) (*gojmx.Client, error) {
+			return gojmx.NewClient(ctx).Open(config)
+		},
 	}
 }
 
@@ -42,7 +46,7 @@ func (p *JMXProviderWithConnectionsLimit) NewConnection(config *gojmx.JMXConfig)
 		return nil, fmt.Errorf("failed to open new connection, %w", err)
 	}
 
-	client, err := gojmx.NewClient(p.ctx).Open(config)
+	client, err := p.jmxOpenFn(config)
 	if err != nil {
 		// In case of error, we unlock a new connection.
 		p.sem.Release(1)
