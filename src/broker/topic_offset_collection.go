@@ -60,7 +60,7 @@ func aggregateTopicOffset(jmxResult []*gojmx.AttributeResponse) (offset float64,
 		partitionOffset, ok := value.(float64)
 		if !ok {
 			offset = float64(-1)
-			err = fmt.Errorf("unable to cast bean '%s' value '%v' as float64", attr.Name, value)
+			err = fmt.Errorf("%w bean '%s' value '%v' as float64", ErrUnableToCast, attr.Name, value)
 			return
 		}
 

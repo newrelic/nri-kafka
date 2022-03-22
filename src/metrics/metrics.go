@@ -5,11 +5,12 @@ package metrics
 import (
 	"errors"
 	"fmt"
-	"github.com/newrelic/nri-kafka/src/connection"
-	"github.com/newrelic/nrjmx/gojmx"
 	"os"
 	"regexp"
 	"strings"
+
+	"github.com/newrelic/nri-kafka/src/connection"
+	"github.com/newrelic/nrjmx/gojmx"
 
 	"github.com/newrelic/infra-integrations-sdk/data/attribute"
 	"github.com/newrelic/infra-integrations-sdk/data/metric"

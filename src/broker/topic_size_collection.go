@@ -52,7 +52,7 @@ func aggregateTopicSize(jmxResult []*gojmx.AttributeResponse) (size float64, err
 		partitionSize, ok := value.(float64)
 		if !ok {
 			size = float64(-1)
-			err = fmt.Errorf("unable to cast bean '%s' value '%v' as float64", attr.Name, value)
+			err = fmt.Errorf("%w bean '%s' value '%v' as float64", ErrUnableToCast, attr.Name, value)
 			return
 		}
 

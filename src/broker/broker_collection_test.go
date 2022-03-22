@@ -22,6 +22,10 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
+var (
+	expectedErr = errors.New("jmx error")
+)
+
 func TestStartBrokerPool(t *testing.T) {
 	testutils.SetupTestArgs()
 
@@ -124,7 +128,6 @@ func TestPopulateBrokerInventory(t *testing.T) {
 
 func TestPopulateBrokerMetrics_JMXOpenError(t *testing.T) {
 	testutils.SetupTestArgs()
-	var expectedErr = errors.New("jmx error")
 
 	mockResponse := &mocks.MockJMXResponse{
 		Err: expectedErr,

@@ -1,10 +1,15 @@
 package mocks
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/newrelic/nri-kafka/src/connection"
 	"github.com/newrelic/nrjmx/gojmx"
+)
+
+var (
+	ErrQuery = errors.New("query failed")
 )
 
 type MockJMXResponse struct {
@@ -27,7 +32,7 @@ func NewEmptyMockJMXProvider() *MockJMXProvider {
 
 func (m *MockJMXProvider) QueryMBeanAttributes(mBeanNamePattern string) ([]*gojmx.AttributeResponse, error) {
 	if m.MBeanNamePattern != "" && m.MBeanNamePattern != mBeanNamePattern {
-		return nil, fmt.Errorf("expected bean '%s' got '%s'", m.MBeanNamePattern, mBeanNamePattern)
+		return nil, fmt.Errorf("%w: expected bean '%s' got '%s'", ErrQuery, m.MBeanNamePattern, mBeanNamePattern)
 	}
 	return m.Response.Result, m.Response.Err
 }

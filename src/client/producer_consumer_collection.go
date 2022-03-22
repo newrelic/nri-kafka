@@ -2,8 +2,9 @@
 package client
 
 import (
-	"github.com/newrelic/nri-kafka/src/connection"
 	"sync"
+
+	"github.com/newrelic/nri-kafka/src/connection"
 
 	"github.com/newrelic/infra-integrations-sdk/data/attribute"
 	"github.com/newrelic/infra-integrations-sdk/integration"

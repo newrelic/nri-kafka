@@ -2,11 +2,12 @@ package client
 
 import (
 	"errors"
-	"github.com/newrelic/nri-kafka/src/connection/mocks"
-	"github.com/newrelic/nrjmx/gojmx"
 	"sync"
 	"testing"
 	"time"
+
+	"github.com/newrelic/nri-kafka/src/connection/mocks"
+	"github.com/newrelic/nrjmx/gojmx"
 
 	"github.com/newrelic/infra-integrations-sdk/integration"
 	"github.com/newrelic/nri-kafka/src/args"
