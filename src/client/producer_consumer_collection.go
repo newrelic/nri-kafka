@@ -3,7 +3,6 @@ package client
 
 import (
 	"github.com/newrelic/nri-kafka/src/connection"
-	"github.com/newrelic/nrjmx/gojmx"
 	"sync"
 
 	"github.com/newrelic/infra-integrations-sdk/data/attribute"
@@ -66,24 +65,15 @@ func ConsumerWorker(consumerChan <-chan *args.JMXHost, wg *sync.WaitGroup, i *in
 		if args.GlobalArgs.All() || args.GlobalArgs.Metrics {
 			log.Debug("Collecting metrics for consumer %s", consumerEntity.Metadata.Name)
 
-			config := &gojmx.JMXConfig{
-				Hostname:         jmxInfo.Host,
-				Port:             int32(jmxInfo.Port),
-				Username:         jmxInfo.User,
-				Password:         jmxInfo.Password,
-				RequestTimeoutMs: int64(args.GlobalArgs.Timeout),
-			}
+			jmxConfig := connection.NewConfigBuilder().
+				FromArgs().
+				WithHostname(jmxInfo.Host).WithPort(jmxInfo.Port).
+				WithUsername(jmxInfo.User).WithPassword(jmxInfo.Password).
+				Build()
 
-			if args.GlobalArgs.KeyStore != "" && args.GlobalArgs.KeyStorePassword != "" && args.GlobalArgs.TrustStore != "" && args.GlobalArgs.TrustStorePassword != "" {
-				config.KeyStore = args.GlobalArgs.KeyStore
-				config.KeyStorePassword = args.GlobalArgs.KeyStorePassword
-				config.TrustStore = args.GlobalArgs.TrustStore
-				config.TrustStorePassword = args.GlobalArgs.TrustStorePassword
-			}
-
-			conn, err := jmxConnProvider.NewConnection(config)
+			conn, err := jmxConnProvider.NewConnection(jmxConfig)
 			if err != nil {
-				log.Error("Unable to make JMX connection for Consumer '%s': %s", consumerEntity.Metadata.Name, err.Error())
+				log.Error("Unable to make JMX connection for Consumer '%s': %v", consumerEntity.Metadata.Name, err)
 				continue
 			}
 
@@ -133,22 +123,13 @@ func ProducerWorker(producerChan <-chan *args.JMXHost, wg *sync.WaitGroup, i *in
 			log.Debug("Collecting metrics for producer %s", producerEntity.Metadata.Name)
 
 			// Open a JMX connection to the producer
-			config := &gojmx.JMXConfig{
-				Hostname:         jmxInfo.Host,
-				Port:             int32(jmxInfo.Port),
-				Username:         jmxInfo.User,
-				Password:         jmxInfo.Password,
-				RequestTimeoutMs: int64(args.GlobalArgs.Timeout),
-			}
+			jmxConfig := connection.NewConfigBuilder().
+				FromArgs().
+				WithHostname(jmxInfo.Host).WithPort(jmxInfo.Port).
+				WithUsername(jmxInfo.User).WithPassword(jmxInfo.Password).
+				Build()
 
-			if args.GlobalArgs.KeyStore != "" && args.GlobalArgs.KeyStorePassword != "" && args.GlobalArgs.TrustStore != "" && args.GlobalArgs.TrustStorePassword != "" {
-				config.KeyStore = args.GlobalArgs.KeyStore
-				config.KeyStorePassword = args.GlobalArgs.KeyStorePassword
-				config.TrustStore = args.GlobalArgs.TrustStore
-				config.TrustStorePassword = args.GlobalArgs.TrustStorePassword
-			}
-
-			conn, err := jmxConnProvider.NewConnection(config)
+			conn, err := jmxConnProvider.NewConnection(jmxConfig)
 			if err != nil {
 				log.Error("Unable to make JMX connection for Producer '%s': %v", producerEntity.Metadata.Name, err)
 				continue

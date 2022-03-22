@@ -6,8 +6,6 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/newrelic/nrjmx/gojmx"
-
 	"github.com/Shopify/sarama"
 
 	"github.com/newrelic/infra-integrations-sdk/data/attribute"
@@ -69,9 +67,25 @@ func brokerWorker(brokerChan <-chan *connection.Broker, collectedTopics []string
 		}
 
 		if args.GlobalArgs.HasMetrics() {
-			err := collectBrokerMetrics(broker, collectedTopics, i, jmxConnProvider)
+			jmxConfig := connection.NewConfigBuilder().
+				FromArgs().
+				WithHostname(broker.Host).WithPort(broker.JMXPort).
+				Build()
+
+			jmxConn, err := jmxConnProvider.NewConnection(jmxConfig)
+			if err != nil {
+				log.Error("Unable to make JMX connection for Broker '%s', %v", broker.Host, err)
+				continue
+			}
+
+			err = collectBrokerMetrics(broker, collectedTopics, i, jmxConn)
 			if err != nil {
 				log.Error("Failed to collect broker metrics for broker %s: %s", broker.ID, err)
+				continue
+			}
+
+			if err := jmxConn.Close(); err != nil {
+				log.Error("Unable to close JMX connection for Broker '%s', %v", broker.Host, err)
 			}
 		}
 	}
@@ -115,34 +129,7 @@ func populateBrokerInventory(b *connection.Broker, integration *integration.Inte
 	}
 }
 
-func collectBrokerMetrics(b *connection.Broker, collectedTopics []string, i *integration.Integration, jmxConnProvider connection.JMXProvider) error {
-	config := &gojmx.JMXConfig{
-		Hostname:         b.Host,
-		Port:             int32(b.JMXPort),
-		Username:         args.GlobalArgs.DefaultJMXUser,
-		Password:         args.GlobalArgs.DefaultJMXPassword,
-		RequestTimeoutMs: int64(args.GlobalArgs.Timeout),
-	}
-
-	if args.GlobalArgs.KeyStore != "" && args.GlobalArgs.KeyStorePassword != "" && args.GlobalArgs.TrustStore != "" && args.GlobalArgs.TrustStorePassword != "" {
-		config.KeyStore = args.GlobalArgs.KeyStore
-		config.KeyStorePassword = args.GlobalArgs.KeyStorePassword
-		config.TrustStore = args.GlobalArgs.TrustStore
-		config.TrustStorePassword = args.GlobalArgs.TrustStorePassword
-	}
-
-	conn, err := jmxConnProvider.NewConnection(config)
-	if err != nil {
-		log.Error("Unable to make JMX connection for Broker '%s', %v", b.Host, err)
-		return err
-	}
-
-	defer func() {
-		if err := conn.Close(); err != nil {
-			log.Error("Unable to close JMX connection for Broker '%s', %v", b.Host, err)
-		}
-	}()
-
+func collectBrokerMetrics(b *connection.Broker, collectedTopics []string, i *integration.Integration, conn connection.JMXConnection) error {
 	// Collect broker metrics
 	populateBrokerMetrics(b, i, conn)
 

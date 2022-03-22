@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/newrelic/nri-kafka/src/args"
 	"github.com/newrelic/nrjmx/gojmx"
 	"golang.org/x/sync/semaphore"
 )
@@ -80,4 +81,60 @@ func (j *jmxConnection) Close() error {
 	// In case of error on closing the connection, gojmx will kill the subprocess, then we do the release anyway.
 	defer j.sem.Release(1)
 	return j.Client.Close()
+}
+
+// ConfigBuilder will be used to build the JMX connection config.
+type ConfigBuilder struct {
+	config *gojmx.JMXConfig
+}
+
+// NewConfigBuilder creates a new instance of a ConfigBuilder.
+func NewConfigBuilder() *ConfigBuilder {
+	return &ConfigBuilder{
+		config: &gojmx.JMXConfig{},
+	}
+}
+
+// FromArgs will extract configuration from global arguments.
+func (cb *ConfigBuilder) FromArgs() *ConfigBuilder {
+	config := cb.config
+	config.Username = args.GlobalArgs.DefaultJMXUser
+	config.Password = args.GlobalArgs.DefaultJMXPassword
+	config.RequestTimeoutMs = int64(args.GlobalArgs.Timeout)
+	if args.GlobalArgs.KeyStore != "" && args.GlobalArgs.KeyStorePassword != "" && args.GlobalArgs.TrustStore != "" && args.GlobalArgs.TrustStorePassword != "" {
+		config.KeyStore = args.GlobalArgs.KeyStore
+		config.KeyStorePassword = args.GlobalArgs.KeyStorePassword
+		config.TrustStore = args.GlobalArgs.TrustStore
+		config.TrustStorePassword = args.GlobalArgs.TrustStorePassword
+	}
+	return cb
+}
+
+// WithHostname will add the hostname to jmx config.
+func (cb *ConfigBuilder) WithHostname(hostname string) *ConfigBuilder {
+	cb.config.Hostname = hostname
+	return cb
+}
+
+// WithPort will add the port to jmx config.
+func (cb *ConfigBuilder) WithPort(port int) *ConfigBuilder {
+	cb.config.Port = int32(port)
+	return cb
+}
+
+// WithUsername will add the user to jmx config.
+func (cb *ConfigBuilder) WithUsername(user string) *ConfigBuilder {
+	cb.config.Username = user
+	return cb
+}
+
+// WithPassword will add the password to jmx config.
+func (cb *ConfigBuilder) WithPassword(password string) *ConfigBuilder {
+	cb.config.Password = password
+	return cb
+}
+
+// Build returns the jmx config.
+func (cb *ConfigBuilder) Build() *gojmx.JMXConfig {
+	return cb.config
 }
