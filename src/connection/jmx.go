@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-
 	"github.com/newrelic/nri-kafka/src/args"
 	"github.com/newrelic/nrjmx/gojmx"
 	"golang.org/x/sync/semaphore"
@@ -98,15 +97,14 @@ func NewConfigBuilder() *ConfigBuilder {
 
 // FromArgs will extract configuration from global arguments.
 func (cb *ConfigBuilder) FromArgs() *ConfigBuilder {
-	config := cb.config
-	config.Username = args.GlobalArgs.DefaultJMXUser
-	config.Password = args.GlobalArgs.DefaultJMXPassword
-	config.RequestTimeoutMs = int64(args.GlobalArgs.Timeout)
+	cb.config.Username = args.GlobalArgs.DefaultJMXUser
+	cb.config.Password = args.GlobalArgs.DefaultJMXPassword
+	cb.config.RequestTimeoutMs = int64(args.GlobalArgs.Timeout)
 	if args.GlobalArgs.KeyStore != "" && args.GlobalArgs.KeyStorePassword != "" && args.GlobalArgs.TrustStore != "" && args.GlobalArgs.TrustStorePassword != "" {
-		config.KeyStore = args.GlobalArgs.KeyStore
-		config.KeyStorePassword = args.GlobalArgs.KeyStorePassword
-		config.TrustStore = args.GlobalArgs.TrustStore
-		config.TrustStorePassword = args.GlobalArgs.TrustStorePassword
+		cb.config.KeyStore = args.GlobalArgs.KeyStore
+		cb.config.KeyStorePassword = args.GlobalArgs.KeyStorePassword
+		cb.config.TrustStore = args.GlobalArgs.TrustStore
+		cb.config.TrustStorePassword = args.GlobalArgs.TrustStorePassword
 	}
 	return cb
 }
