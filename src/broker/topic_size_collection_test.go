@@ -1,8 +1,9 @@
 package broker
 
 import (
-	"github.com/newrelic/nrjmx/gojmx"
 	"testing"
+
+	"github.com/newrelic/nrjmx/gojmx"
 
 	"github.com/newrelic/infra-integrations-sdk/data/attribute"
 	"github.com/newrelic/infra-integrations-sdk/data/metric"
