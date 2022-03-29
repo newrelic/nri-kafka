@@ -2,15 +2,20 @@ package metrics
 
 import (
 	"errors"
-	"fmt"
 	"reflect"
 	"strings"
 	"testing"
 
+	"github.com/newrelic/nri-kafka/src/connection/mocks"
+	"github.com/newrelic/nrjmx/gojmx"
+
 	"github.com/newrelic/infra-integrations-sdk/data/metric"
 	"github.com/newrelic/infra-integrations-sdk/integration"
-	"github.com/newrelic/nri-kafka/src/jmxwrapper"
 	"github.com/newrelic/nri-kafka/src/testutils"
+)
+
+var (
+	errTest = errors.New("this is an error")
 )
 
 func TestGetBrokerMetrics(t *testing.T) {
@@ -19,12 +24,19 @@ func TestGetBrokerMetrics(t *testing.T) {
 		"event_type":           "testMetrics",
 	}
 
-	jmxwrapper.JMXQuery = func(query string, timeout int) (map[string]interface{}, error) {
-		result := map[string]interface{}{
-			"kafka.network:type=RequestMetrics,name=TotalTimeMs,request=Fetch,attr=Mean": 24,
-		}
+	mockResponse := &mocks.MockJMXResponse{
+		Err: nil,
+		Result: []*gojmx.AttributeResponse{
+			{
+				Name:         "kafka.network:type=RequestMetrics,name=TotalTimeMs,request=Fetch,attr=Mean",
+				ResponseType: gojmx.ResponseTypeInt,
+				IntValue:     24,
+			},
+		},
+	}
 
-		return result, nil
+	mockJMXProvider := &mocks.MockJMXProvider{
+		Response: mockResponse,
 	}
 
 	testutils.SetupTestArgs()
@@ -43,7 +55,7 @@ func TestGetBrokerMetrics(t *testing.T) {
 
 	m := e.NewMetricSet("testMetrics")
 
-	GetBrokerMetrics(m)
+	GetBrokerMetrics(m, mockJMXProvider)
 
 	if !reflect.DeepEqual(expected, m.Metrics) {
 		t.Errorf("Expected %+v got %+v", expected, m.Metrics)
@@ -58,12 +70,19 @@ func TestGetConsumerMetrics(t *testing.T) {
 
 	consumerName := "consumer"
 
-	jmxwrapper.JMXQuery = func(query string, timeout int) (map[string]interface{}, error) {
-		result := map[string]interface{}{
-			"kafka.consumer:type=consumer-fetch-manager-metrics,client-id=" + consumerName + ",attr=records-lag-max": 24,
-		}
+	mockResponse := &mocks.MockJMXResponse{
+		Err: nil,
+		Result: []*gojmx.AttributeResponse{
+			{
+				Name:         "kafka.consumer:type=consumer-fetch-manager-metrics,client-id=" + consumerName + ",attr=records-lag-max",
+				ResponseType: gojmx.ResponseTypeInt,
+				IntValue:     24,
+			},
+		},
+	}
 
-		return result, nil
+	mockJMXProvider := &mocks.MockJMXProvider{
+		Response: mockResponse,
 	}
 
 	testutils.SetupTestArgs()
@@ -82,7 +101,7 @@ func TestGetConsumerMetrics(t *testing.T) {
 
 	m := e.NewMetricSet("testMetrics")
 
-	GetConsumerMetrics(consumerName, m)
+	GetConsumerMetrics(consumerName, m, mockJMXProvider)
 
 	if !reflect.DeepEqual(expected, m.Metrics) {
 		t.Errorf("Expected %+v got %+v", expected, m.Metrics)
@@ -97,12 +116,19 @@ func TestGetProducerMetrics(t *testing.T) {
 
 	producerName := "producer"
 
-	jmxwrapper.JMXQuery = func(query string, timeout int) (map[string]interface{}, error) {
-		result := map[string]interface{}{
-			"kafka.producer:type=producer-metrics,client-id=" + producerName + ",attr=metadata-age": 24,
-		}
+	mockResponse := &mocks.MockJMXResponse{
+		Err: nil,
+		Result: []*gojmx.AttributeResponse{
+			{
+				Name:         "kafka.producer:type=producer-metrics,client-id=" + producerName + ",attr=metadata-age",
+				ResponseType: gojmx.ResponseTypeInt,
+				IntValue:     24,
+			},
+		},
+	}
 
-		return result, nil
+	mockJMXProvider := &mocks.MockJMXProvider{
+		Response: mockResponse,
 	}
 
 	testutils.SetupTestArgs()
@@ -121,7 +147,7 @@ func TestGetProducerMetrics(t *testing.T) {
 
 	m := e.NewMetricSet("testMetrics")
 
-	GetProducerMetrics(producerName, m)
+	GetProducerMetrics(producerName, m, mockJMXProvider)
 
 	if !reflect.DeepEqual(expected, m.Metrics) {
 		t.Errorf("Expected %+v got %+v", expected, m.Metrics)
@@ -130,10 +156,13 @@ func TestGetProducerMetrics(t *testing.T) {
 
 func TestCollectMetricDefinitions_QueryError(t *testing.T) {
 	testutils.SetupTestArgs()
-	errString := "this is an error"
 
-	jmxwrapper.JMXQuery = func(query string, timeout int) (map[string]interface{}, error) {
-		return nil, errors.New(errString)
+	mockResponse := &mocks.MockJMXResponse{
+		Err: errTest,
+	}
+
+	mockJMXProvider := &mocks.MockJMXProvider{
+		Response: mockResponse,
 	}
 
 	i, err := integration.New("test", "1.0.0")
@@ -150,7 +179,7 @@ func TestCollectMetricDefinitions_QueryError(t *testing.T) {
 
 	m := e.NewMetricSet("testMetrics")
 
-	CollectMetricDefinitions(m, brokerMetricDefs, nil)
+	CollectMetricDefinitions(m, brokerMetricDefs, nil, mockJMXProvider)
 
 	if len(m.Metrics) != 1 {
 		t.Error("Metrics where inserted even with a bad query")
@@ -163,12 +192,19 @@ func TestCollectMetricDefinitions_MetricError(t *testing.T) {
 		"event_type": "testMetrics",
 	}
 
-	jmxwrapper.JMXQuery = func(query string, timeout int) (map[string]interface{}, error) {
-		result := map[string]interface{}{
-			"kafka.network:type=RequestMetrics,name=TotalTimeMs,request=Fetch,attr=Mean": "stuff",
-		}
+	mockResponse := &mocks.MockJMXResponse{
+		Err: nil,
+		Result: []*gojmx.AttributeResponse{
+			{
+				Name:         "kafka.network:type=RequestMetrics,name=TotalTimeMs,request=Fetch,attr=Mean",
+				ResponseType: gojmx.ResponseTypeString,
+				StringValue:  "stuff",
+			},
+		},
+	}
 
-		return result, nil
+	mockJMXProvider := &mocks.MockJMXProvider{
+		Response: mockResponse,
 	}
 
 	i, err := integration.New("test", "1.0.0")
@@ -185,7 +221,7 @@ func TestCollectMetricDefinitions_MetricError(t *testing.T) {
 
 	m := e.NewMetricSet("testMetrics")
 
-	CollectMetricDefinitions(m, brokerMetricDefs, nil)
+	CollectMetricDefinitions(m, brokerMetricDefs, nil, mockJMXProvider)
 
 	if !reflect.DeepEqual(expected, m.Metrics) {
 		t.Errorf("Expected %+v got %+v", expected, m.Metrics)
@@ -210,16 +246,20 @@ func TestCollectMetricDefinitions_BeanModifier(t *testing.T) {
 
 	expectedBean := "kafka.network:replace=Replaced"
 
-	jmxwrapper.JMXQuery = func(query string, timeout int) (map[string]interface{}, error) {
-		if query != expectedBean {
-			return nil, fmt.Errorf("expected bean '%s' got '%s'", expectedBean, query)
-		}
+	mockResponse := &mocks.MockJMXResponse{
+		Err: nil,
+		Result: []*gojmx.AttributeResponse{
+			{
+				Name:         "kafka.network:replace=Replaced,attr=Metric",
+				ResponseType: gojmx.ResponseTypeDouble,
+				DoubleValue:  float64(24),
+			},
+		},
+	}
 
-		result := map[string]interface{}{
-			"kafka.network:replace=Replaced,attr=Metric": 24,
-		}
-
-		return result, nil
+	mockJMXProvider := &mocks.MockJMXProvider{
+		Response:         mockResponse,
+		MBeanNamePattern: expectedBean,
 	}
 
 	expected := map[string]interface{}{
@@ -247,7 +287,7 @@ func TestCollectMetricDefinitions_BeanModifier(t *testing.T) {
 		}
 	}
 
-	CollectMetricDefinitions(m, testMetricSet, renameFunc("Replaced"))
+	CollectMetricDefinitions(m, testMetricSet, renameFunc("Replaced"), mockJMXProvider)
 
 	if !reflect.DeepEqual(expected, m.Metrics) {
 		t.Errorf("Expected %+v got %+v", expected, m.Metrics)

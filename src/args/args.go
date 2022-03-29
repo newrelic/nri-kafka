@@ -53,6 +53,8 @@ type ArgumentList struct {
 
 	NrJmx string `default:"nrjmx" help:"Path to the nrjmx executable"`
 
+	MaxJMXConnections int `default:"3" help:"Maximum concurrent JMX connections."`
+
 	SaslMechanism string `default:"GSSAPI" help:"SASL mechanism to use for authentication. One of 'PLAIN', 'SCRAM-SHA-256', 'SCRAM-SHA-512', or 'GSSAPI'"`
 	SaslUsername  string `default:"" help:"SASL username for use with the PLAIN and SCRAM mechanisms"`
 	SaslPassword  string `default:"" help:"SASL password for use with the PLAIN and SCRAM mechanisms"`

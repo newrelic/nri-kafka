@@ -2,17 +2,16 @@ package broker
 
 import (
 	"fmt"
+	"github.com/newrelic/nrjmx/gojmx"
 
 	"github.com/newrelic/infra-integrations-sdk/data/metric"
 	"github.com/newrelic/infra-integrations-sdk/integration"
 	"github.com/newrelic/infra-integrations-sdk/log"
-	"github.com/newrelic/nri-kafka/src/args"
 	"github.com/newrelic/nri-kafka/src/connection"
-	"github.com/newrelic/nri-kafka/src/jmxwrapper"
 	"github.com/newrelic/nri-kafka/src/metrics"
 )
 
-func gatherTopicSizes(b *connection.Broker, topicSampleLookup map[string]*metric.Set, i *integration.Integration) {
+func gatherTopicSizes(b *connection.Broker, topicSampleLookup map[string]*metric.Set, i *integration.Integration, conn connection.JMXConnection) {
 	entity, err := b.Entity(i)
 	if err != nil {
 		log.Error("Failed to get broker entity: %s", err)
@@ -23,7 +22,7 @@ func gatherTopicSizes(b *connection.Broker, topicSampleLookup map[string]*metric
 		beanModifier := metrics.ApplyTopicName(topicName)
 
 		beanName := beanModifier(metrics.TopicSizeMetricDef.MBean)
-		results, err := jmxwrapper.JMXQuery(beanName, args.GlobalArgs.Timeout)
+		results, err := conn.QueryMBeanAttributes(beanName)
 		if err != nil {
 			log.Error("Broker '%s' failed to make JMX Query: %s", b.Host, err.Error())
 			continue
@@ -43,12 +42,17 @@ func gatherTopicSizes(b *connection.Broker, topicSampleLookup map[string]*metric
 	}
 }
 
-func aggregateTopicSize(jmxResult map[string]interface{}) (size float64, err error) {
-	for key, value := range jmxResult {
+func aggregateTopicSize(jmxResult []*gojmx.AttributeResponse) (size float64, err error) {
+	for _, attr := range jmxResult {
+		if attr.ResponseType == gojmx.ResponseTypeErr {
+			log.Warn("Unable to process attribute for query: %s status: %s, while aggregating TopicSize", attr.Name, attr.StatusMsg)
+			continue
+		}
+		value := attr.GetValue()
 		partitionSize, ok := value.(float64)
 		if !ok {
 			size = float64(-1)
-			err = fmt.Errorf("unable to cast bean '%s' value '%v' as float64", key, value)
+			err = fmt.Errorf("%w bean '%s' value '%v' as float64", ErrUnableToCast, attr.Name, value)
 			return
 		}
 

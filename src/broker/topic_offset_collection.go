@@ -4,17 +4,17 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/newrelic/nrjmx/gojmx"
+
 	"github.com/newrelic/infra-integrations-sdk/data/metric"
 	"github.com/newrelic/infra-integrations-sdk/integration"
 	"github.com/newrelic/infra-integrations-sdk/jmx"
 	"github.com/newrelic/infra-integrations-sdk/log"
-	"github.com/newrelic/nri-kafka/src/args"
 	"github.com/newrelic/nri-kafka/src/connection"
-	"github.com/newrelic/nri-kafka/src/jmxwrapper"
 	"github.com/newrelic/nri-kafka/src/metrics"
 )
 
-func gatherTopicOffset(b *connection.Broker, topicSampleLookup map[string]*metric.Set, i *integration.Integration) {
+func gatherTopicOffset(b *connection.Broker, topicSampleLookup map[string]*metric.Set, i *integration.Integration, conn connection.JMXConnection) {
 	entity, err := b.Entity(i)
 	if err != nil {
 		log.Error("Failed to get broker entity: %s", err)
@@ -25,12 +25,13 @@ func gatherTopicOffset(b *connection.Broker, topicSampleLookup map[string]*metri
 		beanModifier := metrics.ApplyTopicName(topicName)
 
 		beanName := beanModifier(metrics.TopicOffsetMetricDef.MBean)
-		results, err := jmxwrapper.JMXQuery(beanName, args.GlobalArgs.Timeout)
-		if err != nil && err == jmx.ErrConnection {
-			log.Error("Connection error: %s", err)
-			os.Exit(1)
-		} else if err != nil {
-			log.Error("Broker '%s' failed to make JMX Query: %s", b.Host, err.Error())
+		results, err := conn.QueryMBeanAttributes(beanName)
+		if err != nil {
+			if jmxConnErr, ok := gojmx.IsJMXConnectionError(err); ok {
+				log.Error("Connection error for %s:%s : %s", jmx.HostName(), jmx.Port(), jmxConnErr)
+				os.Exit(1)
+			}
+			log.Error("Broker '%s' failed to make JMX Query: %v", b.Host, err)
 			continue
 		} else if len(results) == 0 {
 			continue
@@ -48,12 +49,19 @@ func gatherTopicOffset(b *connection.Broker, topicSampleLookup map[string]*metri
 	}
 }
 
-func aggregateTopicOffset(jmxResult map[string]interface{}) (offset float64, err error) {
-	for key, value := range jmxResult {
+func aggregateTopicOffset(jmxResult []*gojmx.AttributeResponse) (offset float64, err error) {
+	for _, attr := range jmxResult {
+		if attr.ResponseType == gojmx.ResponseTypeErr {
+			log.Warn("Unable to process attribute for query: %s status: %s, while aggregating TopicOffset", attr.Name, attr.StatusMsg)
+			continue
+		}
+
+		value := attr.GetValue()
+
 		partitionOffset, ok := value.(float64)
 		if !ok {
 			offset = float64(-1)
-			err = fmt.Errorf("unable to cast bean '%s' value '%v' as float64", key, value)
+			err = fmt.Errorf("%w bean '%s' value '%v' as float64", ErrUnableToCast, attr.Name, value)
 			return
 		}
 

@@ -1,32 +1,51 @@
 package broker
 
 import (
-	"errors"
 	"testing"
+
+	"github.com/newrelic/nrjmx/gojmx"
 
 	"github.com/newrelic/infra-integrations-sdk/data/attribute"
 	"github.com/newrelic/infra-integrations-sdk/data/metric"
 	"github.com/newrelic/infra-integrations-sdk/integration"
 	"github.com/newrelic/nri-kafka/src/connection"
 	"github.com/newrelic/nri-kafka/src/connection/mocks"
-	"github.com/newrelic/nri-kafka/src/jmxwrapper"
 	"github.com/newrelic/nri-kafka/src/testutils"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestGatherTopicSize_Single(t *testing.T) {
-	testutils.SetupJmxTesting()
 	testutils.SetupTestArgs()
 
 	i, _ := integration.New("test", "1.0.0")
 
-	jmxwrapper.JMXQuery = func(query string, timeout int) (map[string]interface{}, error) {
-		return map[string]interface{}{
-			"one":   float64(1),
-			"two":   float64(2),
-			"three": float64(3),
-			"four":  float64(4),
-		}, nil
+	mockResponse := &mocks.MockJMXResponse{
+		Result: []*gojmx.AttributeResponse{
+			{
+				Name:         "one",
+				ResponseType: gojmx.ResponseTypeDouble,
+				DoubleValue:  float64(1),
+			},
+			{
+				Name:         "two",
+				ResponseType: gojmx.ResponseTypeDouble,
+				DoubleValue:  float64(2),
+			},
+			{
+				Name:         "three",
+				ResponseType: gojmx.ResponseTypeDouble,
+				DoubleValue:  float64(3),
+			},
+			{
+				Name:         "four",
+				ResponseType: gojmx.ResponseTypeDouble,
+				DoubleValue:  float64(4),
+			},
+		},
+	}
+
+	mockJMXProvider := &mocks.MockJMXProvider{
+		Response: mockResponse,
 	}
 
 	mockBroker := &mocks.SaramaBroker{}
@@ -47,7 +66,7 @@ func TestGatherTopicSize_Single(t *testing.T) {
 		),
 	}
 
-	gatherTopicSizes(broker, collectedTopics, i)
+	gatherTopicSizes(broker, collectedTopics, i, mockJMXProvider)
 
 	expected := map[string]interface{}{
 		"topic.diskSize": float64(10),
@@ -64,12 +83,17 @@ func TestGatherTopicSize_Single(t *testing.T) {
 }
 
 func TestGatherTopicSize_QueryError(t *testing.T) {
-	testutils.SetupJmxTesting()
 	testutils.SetupTestArgs()
 
 	i, _ := integration.New("test", "1.0.0")
 
-	jmxwrapper.JMXQuery = func(query string, timeout int) (map[string]interface{}, error) { return nil, errors.New("error") }
+	mockResponse := &mocks.MockJMXResponse{
+		Err: errJMX,
+	}
+
+	mockJMXProvider := &mocks.MockJMXProvider{
+		Response: mockResponse,
+	}
 
 	mockBroker := &mocks.SaramaBroker{}
 	mockBroker.On("Addr").Return("kafkabroker:9090")
@@ -90,21 +114,16 @@ func TestGatherTopicSize_QueryError(t *testing.T) {
 		),
 	}
 
-	gatherTopicSizes(broker, collectedTopics, i)
+	gatherTopicSizes(broker, collectedTopics, i, mockJMXProvider)
 
 	assert.Len(t, e.Metrics, 1)
 	assert.NotContains(t, e.Metrics[0].Metrics, "topic.diskSize", "Metric was unexpectedly set after query error")
 }
 
 func TestGatherTopicSize_QueryBlank(t *testing.T) {
-	testutils.SetupJmxTesting()
 	testutils.SetupTestArgs()
 
 	i, _ := integration.New("test", "1.0.0")
-
-	jmxwrapper.JMXQuery = func(query string, timeout int) (map[string]interface{}, error) {
-		return make(map[string]interface{}), nil
-	}
 
 	mockBroker := &mocks.SaramaBroker{}
 	mockBroker.On("Addr").Return("kafkabroker:9090")
@@ -124,24 +143,35 @@ func TestGatherTopicSize_QueryBlank(t *testing.T) {
 			attribute.Attribute{Key: "topic", Value: "topic"},
 		),
 	}
-
-	gatherTopicSizes(broker, collectedTopics, i)
+	conn, _ := mocks.NewEmptyMockJMXProvider().NewConnection(nil)
+	gatherTopicSizes(broker, collectedTopics, i, conn)
 
 	assert.Len(t, e.Metrics, 1)
 	assert.NotContains(t, e.Metrics[0].Metrics, "topic.diskSize", "Metric was unexpectedly set after empty query result")
 }
 
 func TestGatherTopicSize_AggregateError(t *testing.T) {
-	testutils.SetupJmxTesting()
 	testutils.SetupTestArgs()
 
 	i, _ := integration.New("test", "1.0.0")
 
-	jmxwrapper.JMXQuery = func(query string, timeout int) (map[string]interface{}, error) {
-		return map[string]interface{}{
-			"one":  "nope",
-			"four": float64(4),
-		}, nil
+	mockResponse := &mocks.MockJMXResponse{
+		Result: []*gojmx.AttributeResponse{
+			{
+				Name:         "one",
+				ResponseType: gojmx.ResponseTypeString,
+				StringValue:  "nope",
+			},
+			{
+				Name:         "four",
+				ResponseType: gojmx.ResponseTypeDouble,
+				DoubleValue:  float64(4),
+			},
+		},
+	}
+
+	mockJMXProvider := &mocks.MockJMXProvider{
+		Response: mockResponse,
 	}
 
 	mockBroker := &mocks.SaramaBroker{}
@@ -163,7 +193,7 @@ func TestGatherTopicSize_AggregateError(t *testing.T) {
 		),
 	}
 
-	gatherTopicSizes(broker, collectedTopics, i)
+	gatherTopicSizes(broker, collectedTopics, i, mockJMXProvider)
 
 	assert.Len(t, e.Metrics, 1)
 	assert.NotContains(t, e.Metrics[0].Metrics, "topic.diskSize", "Metric was unexpectedly set after aggregate error")

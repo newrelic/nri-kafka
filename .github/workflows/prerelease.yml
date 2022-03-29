@@ -10,7 +10,7 @@ on:
 env:
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   GO_VERSION: '1.16'
-  NRJMX_VERSION: '1.5.3'
+  NRJMX_VERSION: '2.0.1'
   INTEGRATION: "kafka"
   ORIGINAL_REPO_NAME: ${{ github.event.repository.full_name }}
   REPO_FULL_NAME: ${{ github.event.repository.full_name }}

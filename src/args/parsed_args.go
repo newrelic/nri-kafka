@@ -63,7 +63,8 @@ type ParsedArguments struct {
 	TrustStore         string
 	TrustStorePassword string
 
-	NrJmx string
+	MaxJMXConnections int
+	NrJmx             string
 
 	SaslMechanism string
 	SaslUsername  string
@@ -277,6 +278,7 @@ func ParseArgs(a ArgumentList) (*ParsedArguments, error) {
 		PreferredListener:                a.PreferredListener,
 		DefaultJMXUser:                   a.DefaultJMXUser,
 		DefaultJMXPassword:               a.DefaultJMXPassword,
+		MaxJMXConnections:                a.MaxJMXConnections,
 		NrJmx:                            a.NrJmx,
 		Producers:                        producers,
 		Consumers:                        consumers,
