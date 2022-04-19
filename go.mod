@@ -3,7 +3,7 @@ module github.com/newrelic/nri-kafka
 go 1.16
 
 require (
-	github.com/Shopify/sarama v1.31.1
+	github.com/Shopify/sarama v1.32.0
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/eapache/go-resiliency v1.2.1-0.20190716143035-b98ce2825f72 // indirect
 	github.com/eapache/queue v1.1.1-0.20180227141424-093482f3f8ce // indirect
@@ -18,5 +18,4 @@ require (
 	github.com/xdg/stringprep v1.0.1-0.20180714160509-73f8eece6fdc // indirect
 	github.com/xeipuuv/gojsonschema v1.2.0
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
-	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c // indirect
 )
