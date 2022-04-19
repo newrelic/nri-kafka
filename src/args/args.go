@@ -69,7 +69,7 @@ type ArgumentList struct {
 
 	// Collection configuration
 	LocalOnlyCollection    bool   `default:"false" help:"Collect only the metrics related to the configured bootstrap broker. Useful for distributed metric collection"`
-	CollectBrokerTopicData bool   `default:"true" help:"DEPRECATED -- Signals to collect Broker and Topic inventory and metrics. Should only be turned off when specifying a Zookeeper Host and not intending to collect Broker or detailed Topic data."`
+	CollectBrokerTopicData bool   `default:"true" help:"DEPRECATED -- currently it has no effect"`
 	TopicMode              string `default:"None" help:"Possible options are All, None, or List. If List, must also specify the list of topics to collect with the topic_list option."`
 	TopicList              string `default:"[]" help:"JSON array of strings with the names of topics to monitor. Only used if collect_topics is set to 'List'"`
 	TopicRegex             string `default:"" help:"A regex pattern that matches the list of topics to collect. Only used if collect_topics is set to 'Regex'"`

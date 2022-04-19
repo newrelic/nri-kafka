@@ -33,11 +33,6 @@ integrations:
     # or Kubernetes, is used on top of the integration.
     LOCAL_ONLY_COLLECTION: false
 
-    # This field is used to toggle the collection of broker and topic metrics. This is on by default and should only be set to "false"
-    # for the specific case where only producers/consumers are being monitored and "topic_mode" is set to "All".
-    # Any other case this field can be omitted.
-    COLLECT_BROKER_TOPIC_DATA: true
-
     # Below are the fields used to fine tune/toggle topic metric collection. Can be one of:
     # - "all", where all topics found in all brokers will be collected.
     # - "none", which will disable topic collection alltogether.
@@ -106,8 +101,6 @@ integrations:
     DEFAULT_JMX_USER: "username"
     DEFAULT_JMX_PASSWORD: "password"
 
-    # See above for more information on topic collection
-    COLLECT_BROKER_TOPIC_DATA: true
     TOPIC_MODE: "all"
   interval: 15s
   labels:
@@ -208,8 +201,6 @@ integrations:
     # for any other broker, nor will it collect cluster-level metrics like topic metrics. This is useful for things
     # like deployment to kubernetes, where a single integration instance is desired per broker.
     LOCAL_ONLY_COLLECTION: false
-    # See above for more information on topic collection
-    COLLECT_BROKER_TOPIC_DATA: true
     TOPIC_MODE: "all"
     COLLECT_TOPIC_SIZE: false
   interval: 15s
