@@ -169,7 +169,6 @@ func zookeeperDiscoverConfig(command []string) []string {
 		"--cluster_name", "kfk-cluster-zookeeper",
 		"--zookeeper_hosts", `[{"host": "zookeeper", "port": 2181}]`,
 		"--autodiscover_strategy", "zookeeper",
-		"--collect_broker_topic_data",
 		"--topic_mode", "all",
 	)
 }
@@ -183,7 +182,6 @@ func bootstrapDiscoverConfig(command []string) []string {
 		"--bootstrap_broker_kafka_port", "9092",
 		"--bootstrap_broker_kafka_protocol", "PLAINTEXT",
 		"--bootstrap_broker_jmx_port", "1099",
-		"--collect_broker_topic_data",
 		"--topic_mode", "all",
 	)
 }

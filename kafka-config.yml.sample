@@ -33,11 +33,6 @@ integrations:
     # or Kubernetes, is used on top of the integration.
     LOCAL_ONLY_COLLECTION: false
 
-    # This field is used to toggle the collection of broker and topic metrics. This is on by default and should only be set to "false"
-    # for the specific case where only producers/consumers are being monitored and "topic_mode" is set to "All".
-    # Any other case this field can be omitted.
-    COLLECT_BROKER_TOPIC_DATA: true
-
     # Below are the fields used to fine tune/toggle topic metric collection. Can be one of:
     # - "all", where all topics found in all brokers will be collected.
     # - "none", which will disable topic collection alltogether.
@@ -90,9 +85,14 @@ integrations:
     # - port: The port Zookeeper is listening on for incoming requests. If omitted, a default port of 2181 will be used.
     ZOOKEEPER_HOSTS: '[{"host": "localhost", "port": 2181}]'
 
+    # The only supported value is digest. If empty, no authentication is used.
+    # ZOOKEEPER_AUTH_SCHEME: "digest"
+
+    # Only honored if ZOOKEEPER_AUTH_SCHEME is not empty.
     # If using "user" authentication, the credentials must be specified as a string of the form "<user>:<password>"
     # Example: 'zookeeperuser:zookeeperpass'
-    ZOOKEEPER_AUTH_SECRET: "username:password"
+    # ZOOKEEPER_AUTH_SECRET: "username:password"
+
 
     # If the Kafka configuration files are not in the root node of Zookeeper, an alternative root node can be specified.
     # The alternative root must have a leading slash.
@@ -106,8 +106,6 @@ integrations:
     DEFAULT_JMX_USER: "username"
     DEFAULT_JMX_PASSWORD: "password"
 
-    # See above for more information on topic collection
-    COLLECT_BROKER_TOPIC_DATA: true
     TOPIC_MODE: "all"
   interval: 15s
   labels:
@@ -120,7 +118,14 @@ integrations:
     INVENTORY: "true"
     CLUSTER_NAME: "testcluster2"
     ZOOKEEPER_HOSTS: '[{"host": "localhost", "port": 2181}]'
-    ZOOKEEPER_AUTH_SECRET: "username:password"
+
+    # The only supported value is digest. If empty, no authentication is used.
+    # ZOOKEEPER_AUTH_SCHEME: "digest"
+
+    # Only honored if ZOOKEEPER_AUTH_SCHEME is not empty.
+    # If using "user" authentication, the credentials must be specified as a string of the form "<user>:<password>"
+    # Example: 'zookeeperuser:zookeeperpass'
+    # ZOOKEEPER_AUTH_SECRET: "username:password"
 
     # Below are the fields used to fine tune/toggle topic inventory collection.
     # In order to collect topics the "topic_mode" field must be set to "all", "list", or "regex"
@@ -208,8 +213,6 @@ integrations:
     # for any other broker, nor will it collect cluster-level metrics like topic metrics. This is useful for things
     # like deployment to kubernetes, where a single integration instance is desired per broker.
     LOCAL_ONLY_COLLECTION: false
-    # See above for more information on topic collection
-    COLLECT_BROKER_TOPIC_DATA: true
     TOPIC_MODE: "all"
     COLLECT_TOPIC_SIZE: false
   interval: 15s
