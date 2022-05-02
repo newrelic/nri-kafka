@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 2.18.1 (2022-05-02)
+### Changed
+- Upgrade pipeline to Go 1.18
+- Bump dependencies:
+  `sarama` v1.31.1 -> v1.32.0
+  `infra-integrations-sdk` v3.7.1+incompatible -> v3.7.2+incompatible
+  `gojmx` v0.0.0-20220119164809-485b71bffc97 -> v0.0.0-20220422131558-879b33f09229
+  `go-zookeeper` v0.0.0-20190923202752-2cc03de413da -> v0.0.0-20201211165307-7117e9ea2414
+
+## 2.18.1 (2022-02-22)
+### Changed
+- Add the creation of the consumer image for testing/canaries.
+
 ## 2.18.0 (2022-01-12)
 ### Changed
 - Upgraded Sarama library to 1.30.1 in order to support Kafka latest versions (up to 3.0)
