@@ -3,17 +3,17 @@ module github.com/newrelic/nri-kafka
 go 1.16
 
 require (
-	github.com/Shopify/sarama v1.31.1
+	github.com/Shopify/sarama v1.32.0
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/eapache/go-resiliency v1.2.1-0.20190716143035-b98ce2825f72 // indirect
 	github.com/eapache/queue v1.1.1-0.20180227141424-093482f3f8ce // indirect
 	github.com/frankban/quicktest v1.14.2 // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
-	github.com/newrelic/infra-integrations-sdk v3.7.1+incompatible
-	github.com/newrelic/nrjmx/gojmx v0.0.0-20220119164809-485b71bffc97
+	github.com/newrelic/infra-integrations-sdk v3.7.2+incompatible
+	github.com/newrelic/nrjmx/gojmx v0.0.0-20220422131558-879b33f09229
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
 	github.com/rogpeppe/go-internal v1.8.1 // indirect
-	github.com/samuel/go-zookeeper v0.0.0-20190923202752-2cc03de413da
+	github.com/samuel/go-zookeeper v0.0.0-20201211165307-7117e9ea2414
 	github.com/shirou/gopsutil/v3 v3.22.2 // indirect
 	github.com/stretchr/objx v0.3.0 // indirect
 	github.com/stretchr/testify v1.7.1
