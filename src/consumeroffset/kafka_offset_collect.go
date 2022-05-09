@@ -221,55 +221,6 @@ func createFetchRequest(topicPartitions TopicPartitions, client connection.Clien
 	return request
 }
 
-// populateOffsetStructs takes a map of offsets and high water marks and
-// populates an array of partitionOffsets which can then be marshalled into metric
-// sets
-func populateOffsetStructs(offsets, hwms groupOffsets) []*partitionOffsets {
-
-	var poffsets []*partitionOffsets
-	for topic, partitions := range hwms {
-		for partition, hwm := range partitions {
-			offsetPointer := func() *int64 {
-				topicOffsets, ok := offsets[topic]
-				if !ok || len(topicOffsets) == 0 {
-					log.Error("Offset not collected for topic %s", topic, partition)
-					return nil
-				}
-
-				offset, ok := topicOffsets[partition]
-				if !ok || offset == -1 {
-					log.Error("Offset not collected for topic %s, partition %d", topic, partition)
-					return nil
-				}
-
-				return &offset
-			}()
-
-			lag := func() *int64 {
-				if offsetPointer == nil {
-					return nil
-				}
-
-				returnLag := hwm - *offsetPointer
-				return &returnLag
-			}()
-
-			poffset := &partitionOffsets{
-				Topic:          topic,
-				Partition:      strconv.Itoa(int(partition)),
-				ConsumerOffset: offsetPointer,
-				HighWaterMark:  &hwm,
-				ConsumerLag:    lag,
-			}
-
-			poffsets = append(poffsets, poffset)
-		}
-	}
-
-	return poffsets
-
-}
-
 func collectOffsetsForConsumerGroup(client connection.Client, clusterAdmin sarama.ClusterAdmin, consumerGroup string, members map[string]*sarama.GroupMemberDescription, kafkaIntegration *integration.Integration, wg *sync.WaitGroup) {
 	defer wg.Done()
 	log.Debug("Collecting offsets for consumer group '%s'", consumerGroup)
@@ -298,13 +249,14 @@ func collectOffsetsForConsumerGroup(client connection.Client, clusterAdmin saram
 
 	for topicName, topic := range topicMap {
 		topicPartitions := map[string][]int32{}
-		for partitionID, _ := range topic.ReplicaAssignment {
-			topicPartitions[topicName] = append(topicPartitions[topicName], partitionID)
+		for i := int32(0); i < topic.NumPartitions; i++ {
+			topicPartitions[topicName] = append(topicPartitions[topicName], i)
 		}
 
 		listGroupsResponse, _ := clusterAdmin.ListConsumerGroupOffsets(consumerGroup, topicPartitions)
 
 		for _, partitionMap := range listGroupsResponse.Blocks {
+
 			for partition, block := range partitionMap {
 
 				if block.Offset == -1 {
@@ -319,17 +271,22 @@ func collectOffsetsForConsumerGroup(client connection.Client, clusterAdmin saram
 					log.Error("Failed to get hwm for topic %s, partition %d: %s", topic, partition, err)
 					return
 				}
+
+				log.Error("%q %d %d %d", topicName, partition, offSetPartition[topicName][partition], block.Offset)
+
 				lag := offSetPartition[topicName][partition] - block.Offset
 
 				// Calculate the max lag for the consumer group
 				if lag > maxLag {
 					maxLag = lag
 				}
+
 				// Add lag to the total lag for the consumer group
-				totalLag += totalLag + lag
+				totalLag = totalLag + lag
+				log.Error("lag %d total %d", lag, totalLag)
+
 			}
 		}
-
 	}
 
 	err = ms.SetMetric("consumerGroup.totalLag", totalLag, metric.GAUGE)

@@ -119,7 +119,7 @@ services:
         "-jar",
         "./target/kafka_dummy-1.0-jar-with-dependencies.jar"
     ]
-    command: ["consumer","kafka1:9092","topicA","groupA"]
+    command: ["consumer","kafka1:9092","topicB","groupA"]
     networks:
       - kfk
     depends_on:
