@@ -92,7 +92,6 @@ type ParsedArguments struct {
 
 	// Consumer offset arguments
 	ConsumerOffset     bool
-	ConsumerGroups     ConsumerGroups
 	ConsumerGroupRegex *regexp.Regexp
 
 	Timeout int `default:"10000" help:"Timeout in milliseconds per single JMX query."`
@@ -236,13 +235,6 @@ func ParseArgs(a ArgumentList) (*ParsedArguments, error) {
 		NumBuckets:   numBuckets,
 	}
 
-	// Parse consumser offset args
-	consumerGroups, err := unmarshalConsumerGroups(a.ConsumerOffset, a.ConsumerGroups)
-	if err != nil {
-		log.Error("Error with Consumer Group configuration: %s", err.Error())
-		return nil, err
-	}
-
 	var consumerGroupRegex *regexp.Regexp
 	if a.ConsumerGroupRegex != "" {
 		consumerGroupRegex, err = regexp.Compile(a.ConsumerGroupRegex)
@@ -250,10 +242,6 @@ func ParseArgs(a ArgumentList) (*ParsedArguments, error) {
 			log.Error("Error parsing consumer_group_regex as a regex pattern")
 			return nil, err
 		}
-	}
-
-	if !a.CollectBrokerTopicData {
-		log.Warn("CollectBrokerTopicData has been deprecated. Currently it has no effect")
 	}
 
 	version, err := sarama.ParseKafkaVersion(a.KafkaVersion)
@@ -295,7 +283,6 @@ func ParseArgs(a ArgumentList) (*ParsedArguments, error) {
 		CollectTopicSize:                 a.CollectTopicSize,
 		CollectTopicOffset:               a.CollectTopicOffset,
 		ConsumerOffset:                   a.ConsumerOffset,
-		ConsumerGroups:                   consumerGroups,
 		ConsumerGroupRegex:               consumerGroupRegex,
 		SaslMechanism:                    a.SaslMechanism,
 		SaslUsername:                     a.SaslUsername,

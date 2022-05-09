@@ -43,7 +43,7 @@ integration-test:
         exit 1 ;\
 	fi
 	@docker-compose -f tests/integration/docker-compose.yml up -d --build
-	@go test -v -tags=integration ./tests/integration/. -count=1 ; (ret=$$?; docker-compose -f tests/integration/docker-compose.yml down && exit $$ret)
+	@go test -v -tags=integration ./tests/integration/. -count=1
 
 # Include thematic Makefiles
 include $(CURDIR)/build/ci.mk

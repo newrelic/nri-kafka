@@ -51,7 +51,7 @@ func runIntegration(t *testing.T, config func([]string) []string) (string, strin
 	stdout, stderr, err := helpers.ExecInContainer(*container, command)
 
 	if stderr != "" {
-		log.Debug("Integration command Standard Error: ", stderr)
+		log.Debug("Integration command Standard Error: %s", stderr)
 	}
 
 	return stdout, stderr, err

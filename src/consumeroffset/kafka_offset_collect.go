@@ -275,6 +275,73 @@ func collectOffsetsForConsumerGroup(client connection.Client, clusterAdmin saram
 	log.Debug("Collecting offsets for consumer group '%s'", consumerGroup)
 	defer log.Debug("Finished collecting offsets for consumer group '%s'", consumerGroup)
 
+	consumerGroupEntity, err := kafkaIntegration.Entity(consumerGroup, "ka-consumer-group", integration.NewIDAttribute("clusterName", args.GlobalArgs.ClusterName))
+	if err != nil {
+		log.Error("Failed to get entity for consumer group: %s", err)
+		return
+	}
+
+	ms := consumerGroupEntity.NewMetricSet("KafkaOffsetSample",
+		attribute.Attribute{Key: "clusterName", Value: args.GlobalArgs.ClusterName},
+		attribute.Attribute{Key: "consumerGroup", Value: consumerGroup},
+		attribute.Attribute{Key: "clusterName", Value: args.GlobalArgs.ClusterName},
+	)
+
+	topicMap, err := clusterAdmin.ListTopics()
+	if err != nil {
+		log.Error("Failed to list topics for consumerGroup: %s", consumerGroup, err)
+		return
+	}
+
+	var maxLag, totalLag int64
+	offSetPartition := map[string]map[int32]int64{}
+
+	for topicName, topic := range topicMap {
+		topicPartitions := map[string][]int32{}
+		for partitionID, _ := range topic.ReplicaAssignment {
+			topicPartitions[topicName] = append(topicPartitions[topicName], partitionID)
+		}
+
+		listGroupsResponse, _ := clusterAdmin.ListConsumerGroupOffsets(consumerGroup, topicPartitions)
+
+		for _, partitionMap := range listGroupsResponse.Blocks {
+			for partition, block := range partitionMap {
+
+				if block.Offset == -1 {
+					continue
+				}
+
+				if _, ok := offSetPartition[topicName]; !ok {
+					offSetPartition[topicName] = map[int32]int64{}
+				}
+				offSetPartition[topicName][partition], err = client.GetOffset(topicName, partition, sarama.OffsetNewest)
+				if err != nil {
+					log.Error("Failed to get hwm for topic %s, partition %d: %s", topic, partition, err)
+					return
+				}
+				lag := offSetPartition[topicName][partition] - block.Offset
+
+				// Calculate the max lag for the consumer group
+				if lag > maxLag {
+					maxLag = lag
+				}
+				// Add lag to the total lag for the consumer group
+				totalLag += totalLag + lag
+			}
+		}
+
+	}
+
+	err = ms.SetMetric("consumerGroup.totalLag", totalLag, metric.GAUGE)
+	if err != nil {
+		log.Error("Failed to set metric consumerGroup.totalLag: %s", err)
+	}
+
+	err = ms.SetMetric("consumerGroup.maxLag", maxLag, metric.GAUGE)
+	if err != nil {
+		log.Error("Failed to set metric consumerGroup.maxLag: %s", err)
+	}
+
 	var partitionWg sync.WaitGroup
 	partitionLagChan := make(chan partitionLagResult, 1000)
 	for memberName, description := range members {
@@ -297,7 +364,7 @@ func collectOffsetsForConsumerGroup(client connection.Client, clusterAdmin saram
 					log.Error("Error in consumer group offset reponse for topic %s, partition %d: %s", block.Err.Error())
 				}
 				partitionWg.Add(1)
-				go collectPartitionOffsetMetrics(client, consumerGroup, description, topic, partition, block, partitionLagChan, &partitionWg, kafkaIntegration)
+				go collectPartitionOffsetMetrics(offSetPartition, consumerGroup, description, topic, partition, block, partitionLagChan, &partitionWg, kafkaIntegration)
 			}
 		}
 	}
@@ -314,8 +381,6 @@ type partitionLagResult struct {
 }
 
 func calculateLagTotals(partitionLagChan chan partitionLagResult, wg *sync.WaitGroup, kafkaIntegration *integration.Integration, consumerGroup string) {
-	consumerGroupRollup := make(map[string]int)
-	consumerGroupMaxLagRollup := make(map[string]int)
 	consumerClientRollup := make(map[string]int)
 	log.Debug("Calculating consumer lag rollup metrics for consumer group '%s'", consumerGroup)
 	defer log.Debug("Finished calculating consumer lag rollup metrics for consumer group '%s'", consumerGroup)
@@ -332,44 +397,8 @@ func calculateLagTotals(partitionLagChan chan partitionLagResult, wg *sync.WaitG
 			break // channel has been closed
 		}
 
-		// Add lag to the total lag for the consumer group
-		consumerGroupRollup[result.ConsumerGroup] = consumerGroupRollup[result.ConsumerGroup] + result.Lag
-
-		// Calculate the max lag for the consumer group
-		if result.Lag > consumerGroupMaxLagRollup[result.ConsumerGroup] {
-			consumerGroupMaxLagRollup[result.ConsumerGroup] = result.Lag
-		}
-
 		// Add lag to the total lag for the client
 		consumerClientRollup[result.ClientID] = consumerClientRollup[result.ClientID] + result.Lag
-	}
-
-	// Submit consumer group rollup metrics
-	for consumerGroup, totalLag := range consumerGroupRollup {
-		clusterIDAttr := integration.NewIDAttribute("clusterName", args.GlobalArgs.ClusterName)
-
-		consumerGroupEntity, err := kafkaIntegration.Entity(consumerGroup, "ka-consumer-group", clusterIDAttr)
-		if err != nil {
-			log.Error("Failed to get entity for consumer group: %s", err)
-			continue
-		}
-
-		ms := consumerGroupEntity.NewMetricSet("KafkaOffsetSample",
-			attribute.Attribute{Key: "clusterName", Value: args.GlobalArgs.ClusterName},
-			attribute.Attribute{Key: "consumerGroup", Value: consumerGroup},
-			attribute.Attribute{Key: "clusterName", Value: args.GlobalArgs.ClusterName},
-		)
-
-		err = ms.SetMetric("consumerGroup.totalLag", totalLag, metric.GAUGE)
-		if err != nil {
-			log.Error("Failed to set metric consumerGroup.totalLag: %s", err)
-		}
-
-		maxLag := consumerGroupMaxLagRollup[consumerGroup]
-		err = ms.SetMetric("consumerGroup.maxLag", maxLag, metric.GAUGE)
-		if err != nil {
-			log.Error("Failed to set metric consumerGroup.maxLag: %s", err)
-		}
 	}
 
 	// Submit client rollup metrics
@@ -395,18 +424,12 @@ func calculateLagTotals(partitionLagChan chan partitionLagResult, wg *sync.WaitG
 	}
 }
 
-func collectPartitionOffsetMetrics(client connection.Client, consumerGroup string, memberDescription *sarama.GroupMemberDescription, topic string, partition int32, block *sarama.OffsetFetchResponseBlock, partitionLagChan chan partitionLagResult, wg *sync.WaitGroup, kafkaIntegration *integration.Integration) {
+func collectPartitionOffsetMetrics(offSetPartition map[string]map[int32]int64, consumerGroup string, memberDescription *sarama.GroupMemberDescription, topic string, partition int32, block *sarama.OffsetFetchResponseBlock, partitionLagChan chan partitionLagResult, wg *sync.WaitGroup, kafkaIntegration *integration.Integration) {
 	defer wg.Done()
 	log.Debug("Collecting offsets for consumerGroup '%s', member '%s', topic '%s', partition '%d'", consumerGroup, memberDescription.ClientId, topic, partition)
 	defer log.Debug("Finished collecting offsets for consumerGroup '%s', member '%s', topic '%s', partition '%d'", consumerGroup, memberDescription.ClientId, topic, partition)
 
-	hwm, err := client.GetOffset(topic, partition, sarama.OffsetNewest)
-	if err != nil {
-		log.Error("Failed to get hwm for topic %s, partition %d: %s", topic, partition, err)
-		return
-	}
-
-	lag := hwm - block.Offset
+	lag := offSetPartition[topic][partition] - block.Offset
 
 	clusterIDAttr := integration.NewIDAttribute("clusterName", args.GlobalArgs.ClusterName)
 	consumerGroupIDAttr := integration.NewIDAttribute("consumerGroup", consumerGroup)
@@ -450,7 +473,7 @@ func collectPartitionOffsetMetrics(client connection.Client, consumerGroup strin
 		}
 	}
 
-	err = ms.SetMetric("consumer.hwm", hwm, metric.GAUGE)
+	err = ms.SetMetric("consumer.hwm", offSetPartition[topic][partition], metric.GAUGE)
 	if err != nil {
 		log.Error("Failed to set metric consumer.hwm: %s", err)
 	}
