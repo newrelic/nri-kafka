@@ -100,15 +100,21 @@ func getBrokerList(arguments *args.ParsedArguments) ([]*connection.Broker, error
 		}
 
 		brokers := make([]*connection.Broker, 0, len(metadata.Brokers))
+		log.Debug("Found %d brokers in the metadata", len(metadata.Brokers))
+
 		for _, broker := range metadata.Brokers {
+			log.Debug("Connecting to broker %d got from bootstrapBroker metadata", broker.ID())
 			if arguments.LocalOnlyCollection {
 				// TODO figure out a way to get ID on this broker without trying to match addresses
 				// This is really hacky, but there doesn't appear to be any way to get the ID off of
 				// a broker that we create with NewBroker.
 				if broker.Addr() == bootstrapBroker.Addr() {
+					log.Debug("BootstrapBroker's ID detected: %d", broker.ID())
 					bootstrapBroker.ID = fmt.Sprintf("%d", broker.ID())
 					return []*connection.Broker{bootstrapBroker}, nil
 				}
+				log.Debug("Broker address %s not matching BootstrapBroker's address %s", broker.Addr(), bootstrapBroker.Addr())
+				log.Debug("Skipping for local-only collection")
 			} else {
 				err := broker.Open(bootstrapBroker.Config)
 				if err != nil {
@@ -137,7 +143,7 @@ func getBrokerList(arguments *args.ParsedArguments) ([]*connection.Broker, error
 					Config:       bootstrapBroker.Config,
 				}
 				brokers = append(brokers, newBroker)
-
+				log.Debug("Broker %d with address %s connected", broker.ID(), broker.Addr())
 			}
 		}
 

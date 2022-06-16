@@ -5,7 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
-## 2.18.1 (2022-05-02)
+## 2.19.1 (2022-05-16)
+### Added
+- Extra logging for broker collection on verbose mode
+
+## 2.19.0 (2022-05-02)
 ### Changed
 - Upgrade pipeline to Go 1.18
 - Bump dependencies:
