@@ -100,6 +100,8 @@ func getBrokerList(arguments *args.ParsedArguments) ([]*connection.Broker, error
 		}
 
 		brokers := make([]*connection.Broker, 0, len(metadata.Brokers))
+		log.Debug("Found %d brokers in the metadata", len(metadata.Brokers))
+
 		for _, broker := range metadata.Brokers {
 			log.Debug("Connecting to broker %d got from bootstrapBroker metadata", broker.ID())
 			if arguments.LocalOnlyCollection {
