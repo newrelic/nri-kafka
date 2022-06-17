@@ -139,6 +139,13 @@ func (cb *ConfigBuilder) WithPassword(password string) *ConfigBuilder {
 	return cb
 }
 
+// WithJMXHostSettings is a helper to set all attributes from the provided JMXHost.
+func (cb *ConfigBuilder) WithJMXHostSettings(jmxInfo *args.JMXHost) *ConfigBuilder {
+	return cb.
+		WithHostname(jmxInfo.Host).WithPort(jmxInfo.Port).
+		WithUsername(jmxInfo.User).WithPassword(jmxInfo.Password)
+}
+
 // Build returns the jmx config.
 func (cb *ConfigBuilder) Build() *gojmx.JMXConfig {
 	return cb.config
