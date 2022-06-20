@@ -39,7 +39,7 @@ func TestIdFromAppInfoMBean(t *testing.T) {
 
 	for _, c := range cases {
 		t.Run(c.MBeanName, func(t *testing.T) {
-			assert.Equal(t, c.Expected, idFromMBeanWithClientIdField(c.MBeanName))
+			assert.Equal(t, c.Expected, idFromMBeanWithClientIDField(c.MBeanName))
 		})
 	}
 }
@@ -81,6 +81,6 @@ func TestGetClientIDs(t *testing.T) {
 	assert.Equal(t, []string{"D"}, ids, "Expected only the JMXHost.Name when it is defined")
 
 	jmxInfo = &args.JMXHost{}
-	ids, err = getClientIDS(jmxInfo, pattern, strings.ToUpper, conn)
+	ids, _ = getClientIDS(jmxInfo, pattern, strings.ToUpper, conn)
 	assert.Equal(t, []string{"A", "B", "C"}, ids, "Detect clients should be executed when JMXHost.Name is not defined")
 }

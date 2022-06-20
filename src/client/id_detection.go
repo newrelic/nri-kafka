@@ -40,8 +40,8 @@ func idsFromMBeanNames(mBeanNames []string, idExtractor idFromMBeanNameFn) []str
 	return ids
 }
 
-// idFromMBeanWithClientIdField Gets the identifier given a type=app-info MBean name. Example: "name:type=app-info,client-id=my-id"
-func idFromMBeanWithClientIdField(mBeanName string) string {
+// idFromMBeanWithClientIDField Gets the identifier given a type=app-info MBean name. Example: "name:type=app-info,client-id=my-id"
+func idFromMBeanWithClientIDField(mBeanName string) string {
 	_, info, valid := strings.Cut(mBeanName, ":")
 	if !valid {
 		return ""

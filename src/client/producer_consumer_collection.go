@@ -70,7 +70,7 @@ func CollectConsumerMetrics(i *integration.Integration, jmxInfo *args.JMXHost, j
 	}
 	defer conn.Close()
 	// Get client identifiers for all the consumers
-	clientIDs, err := getClientIDS(jmxInfo, consumerDetectionPattern, idFromMBeanWithClientIdField, conn)
+	clientIDs, err := getClientIDS(jmxInfo, consumerDetectionPattern, idFromMBeanWithClientIDField, conn)
 	if err != nil {
 		log.Error("Unable to detect consumer/producers for '%s:%s': %s", jmxInfo.Host, jmxInfo.Port, err)
 		return
@@ -115,7 +115,7 @@ func CollectProducerMetrics(i *integration.Integration, jmxInfo *args.JMXHost, j
 	}
 	defer conn.Close()
 	// Get client identifiers for all the producers
-	clientIDs, err := getClientIDS(jmxInfo, producerDetectionPattern, idFromMBeanWithClientIdField, conn)
+	clientIDs, err := getClientIDS(jmxInfo, producerDetectionPattern, idFromMBeanWithClientIDField, conn)
 	if err != nil {
 		log.Error("Unable to detect producers for '%s:%s': %s", jmxInfo.Host, jmxInfo.Port, err)
 		return
