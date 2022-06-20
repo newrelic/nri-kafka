@@ -322,9 +322,6 @@ func unmarshalJMXHosts(data []byte, a *ArgumentList) ([]*JMXHost, error) {
 
 	// Set default values
 	for _, p := range v {
-		if p.Name == "" {
-			return nil, errors.New("must specify a name for each producer in the list")
-		}
 		if p.User == "" {
 			p.User = a.DefaultJMXUser
 		}
