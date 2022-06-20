@@ -8,6 +8,8 @@ import (
 
 	"github.com/newrelic/nri-kafka/src/connection/mocks"
 	"github.com/newrelic/nrjmx/gojmx"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/newrelic/infra-integrations-sdk/integration"
 	"github.com/newrelic/nri-kafka/src/args"
@@ -25,7 +27,7 @@ func TestStartWorkerPool(t *testing.T) {
 		t.Error(err)
 	}
 
-	consumerHosts := StartWorkerPool(3, &wg, i, ConsumerWorker, nil)
+	consumerHosts := StartWorkerPool(3, &wg, i, Worker(CollectConsumerMetrics), nil)
 
 	c := make(chan int)
 	go func() {
@@ -83,7 +85,8 @@ func TestConsumerWorker(t *testing.T) {
 	}
 
 	wg.Add(1)
-	go ConsumerWorker(consumerChan, &wg, i, mockJMXProvider)
+	consumerWorker := Worker(CollectConsumerMetrics)
+	go consumerWorker(consumerChan, &wg, i, mockJMXProvider)
 
 	newJmx := &args.JMXHost{
 		Name: "test",
@@ -114,7 +117,8 @@ func TestConsumerWorker_JmxOpenFuncErr(t *testing.T) {
 	testutils.SetupTestArgs()
 
 	wg.Add(1)
-	go ConsumerWorker(consumerChan, &wg, i, mockJMXProvider)
+	consumerWorker := Worker(CollectConsumerMetrics)
+	go consumerWorker(consumerChan, &wg, i, mockJMXProvider)
 
 	newJmx := &args.JMXHost{
 		Name: "test",
@@ -136,7 +140,8 @@ func TestProducerWorker(t *testing.T) {
 	testutils.SetupTestArgs()
 
 	wg.Add(1)
-	go ProducerWorker(producerChan, &wg, i, mocks.NewEmptyMockJMXProvider())
+	producerWorker := Worker(CollectProducerMetrics)
+	go producerWorker(producerChan, &wg, i, mocks.NewEmptyMockJMXProvider())
 
 	newJmx := &args.JMXHost{
 		Name: "test",
@@ -167,7 +172,8 @@ func TestProducerWorker_JmxOpenFuncErr(t *testing.T) {
 	testutils.SetupTestArgs()
 
 	wg.Add(1)
-	go ProducerWorker(producerChan, &wg, i, mockJMXProvider)
+	producerWorker := Worker(CollectProducerMetrics)
+	go producerWorker(producerChan, &wg, i, mockJMXProvider)
 
 	newJmx := &args.JMXHost{
 		Name: "test",
@@ -176,4 +182,74 @@ func TestProducerWorker_JmxOpenFuncErr(t *testing.T) {
 	close(producerChan)
 
 	wg.Wait()
+}
+
+func TestCollectConsumerMetricsNameProvided(t *testing.T) {
+	i, err := integration.New(t.Name(), "1.0.0")
+	require.NoError(t, err)
+	connProvider := mocks.NewEmptyMockJMXProvider()
+	connProvider.Names = []string{
+		"kafka.consumer:type=consumer-fetch-manager-metrics,client-id=consumer-1",
+		"kafka.consumer:type=consumer-fetch-manager-metrics,client-id=consumer-2",
+	}
+	clientID := "consumer-1"
+	jmxInfo := &args.JMXHost{Name: clientID}
+	testutils.SetupTestArgs()
+	CollectConsumerMetrics(i, jmxInfo, connProvider)
+	require.Len(t, i.Entities, 1, "only metrics from the provided consumer should be fetched")
+	assert.Equal(t, clientID, i.Entities[0].Metadata.Name)
+}
+
+func TestCollectProducerMetricsCreateEntity(t *testing.T) {
+	i, err := integration.New(t.Name(), "1.0.0")
+	require.NoError(t, err)
+	connProvider := mocks.NewEmptyMockJMXProvider()
+	connProvider.Names = []string{
+		"kafka.producer:type=producer-metrics,client-id=producer-1",
+		"kafka.producer:type=producer-metrics,client-id=producer-2",
+	}
+	clientID := "producer-1"
+	jmxInfo := &args.JMXHost{Name: clientID}
+	testutils.SetupTestArgs()
+	CollectProducerMetrics(i, jmxInfo, connProvider)
+	require.Len(t, i.Entities, 1, "only metrics from the provided producer should be fetched")
+	assert.Equal(t, clientID, i.Entities[0].Metadata.Name)
+}
+
+func TestCollectConsumerMetricsNoNameProvided(t *testing.T) {
+	i, err := integration.New(t.Name(), "1.0.0")
+	require.NoError(t, err)
+	connProvider := mocks.NewEmptyMockJMXProvider()
+	connProvider.Names = []string{
+		"kafka.consumer:type=consumer-fetch-manager-metrics,client-id=consumer-1",
+		"kafka.consumer:type=consumer-fetch-manager-metrics,client-id=consumer-2",
+	}
+	jmxInfo := &args.JMXHost{}
+	testutils.SetupTestArgs()
+	CollectConsumerMetrics(i, jmxInfo, connProvider)
+	require.Len(t, i.Entities, 2)
+	var entityNames []string
+	for _, entity := range i.Entities {
+		entityNames = append(entityNames, entity.Metadata.Name)
+	}
+	assert.ElementsMatch(t, []string{"consumer-1", "consumer-2"}, entityNames)
+}
+
+func TestCollectProducerMetricsNoNameProvided(t *testing.T) {
+	i, err := integration.New(t.Name(), "1.0.0")
+	require.NoError(t, err)
+	connProvider := mocks.NewEmptyMockJMXProvider()
+	connProvider.Names = []string{
+		"kafka.producer:type=producer-metrics,client-id=producer-1",
+		"kafka.producer:type=producer-metrics,client-id=producer-2",
+	}
+	jmxInfo := &args.JMXHost{}
+	testutils.SetupTestArgs()
+	CollectProducerMetrics(i, jmxInfo, connProvider)
+	require.Len(t, i.Entities, 2)
+	var entityNames []string
+	for _, entity := range i.Entities {
+		entityNames = append(entityNames, entity.Metadata.Name)
+	}
+	assert.ElementsMatch(t, []string{"producer-1", "producer-2"}, entityNames)
 }
