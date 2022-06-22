@@ -14,6 +14,8 @@ import (
 	"github.com/newrelic/nri-kafka/src/connection"
 )
 
+const noOffset = -1
+
 // getConsumerOffsets collects consumer offsets from Kafka brokers rather than Zookeeper
 func getConsumerOffsets(groupName string, topicPartitions TopicPartitions, client connection.Client) (groupOffsets, error) {
 
@@ -256,10 +258,8 @@ func collectOffsetsForConsumerGroup(client connection.Client, clusterAdmin saram
 		listGroupsResponse, _ := clusterAdmin.ListConsumerGroupOffsets(consumerGroup, topicPartitions)
 
 		for _, partitionMap := range listGroupsResponse.Blocks {
-
 			for partition, block := range partitionMap {
-
-				if block.Offset == -1 {
+				if block.Offset == noOffset {
 					continue
 				}
 
@@ -272,7 +272,7 @@ func collectOffsetsForConsumerGroup(client connection.Client, clusterAdmin saram
 					return
 				}
 
-				log.Error("%q %d %d %d", topicName, partition, offSetPartition[topicName][partition], block.Offset)
+				log.Error("%s %q %d %d %d", consumerGroup, topicName, partition, offSetPartition[topicName][partition], block.Offset)
 
 				lag := offSetPartition[topicName][partition] - block.Offset
 
@@ -408,7 +408,7 @@ func collectPartitionOffsetMetrics(offSetPartition map[string]map[int32]int64, c
 		attribute.Attribute{Key: "clientHost", Value: memberDescription.ClientHost},
 	)
 
-	if block.Offset == -1 {
+	if block.Offset == noOffset {
 		log.Warn("Offset for topic %s, partition %d has expired (past retention period). Skipping offset and lag metrics", topic, partition)
 	} else {
 		err = ms.SetMetric("consumer.offset", block.Offset, metric.GAUGE)
