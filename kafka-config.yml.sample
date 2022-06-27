@@ -165,8 +165,8 @@ integrations:
     # In order to collect Java producer and consumer metrics the "producers" and "consumers" fields should be filled out.
     # Both fields are JSON arrays with each entry being a separate JAVA producer or consumer, in it's respective field.
     # Each entry should have the following fields:
-    # - name: This is the client.id of the producer/consumer as it appears in Kafka.
-    # - host: The IP or Hostname of the producer/consumser. If omitted, will use the value of the "default_jmx_host" field
+    # - name: This is the client.id of the producer/consumer as it appears in Kafka. If omitted, metrics from all clients in the JMX host:port will be reported.
+    # - host: The IP or Hostname of the producer/consumer. If omitted, will use the value of the "default_jmx_host" field
     # - port: The port in which JMX is setup for on the producer/consumer. If omitted will, use the value of the "default_jmx_port" field
     # - username: The username used to connect to JMX. If omitted, will use the value of the "default_jmx_user" field
     # - password: The password used to connect to JMX. If omitted, will use the value of the "default_jmx_password" field
@@ -175,7 +175,10 @@ integrations:
     CONSUMERS: '[{"name": "myConsumer", "host": "localhost", "port": 24, "username": "me", "password": "secret"}]'
     # If several producers/consumers are on the same host an agent can be installed on that host and the
     # "default_jmx_host" and "default_jmx_port" field can be set once and used for all producers/consumers that
-    # do not have the "host" or "port" field repsectively.
+    # do not have the "host" or "port" field respectively.
+    # When defaults are set it is also possible to use the string "default" to gather metrics from all producers /
+    # consumers in the "default_jmx_host:default_jmx_port". Example:
+    # PRODUCERS: default
     # These fields can be removed if each producer/consumer has it's own "host" and/or "port" field filled out.
     DEFAULT_JMX_HOST: "localhost"
     DEFAULT_JMX_PORT: "9999"

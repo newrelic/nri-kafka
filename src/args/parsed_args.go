@@ -19,6 +19,8 @@ var GlobalArgs *ParsedArguments
 const (
 	defaultZookeeperPort = 2181
 	defaultJMXPort       = 9999
+
+	jmxHostDefaultAlias = "default"
 )
 
 // ParsedArguments is an special version of the config arguments that has advanced parsing
@@ -313,10 +315,11 @@ func ParseArgs(a ArgumentList) (*ParsedArguments, error) {
 // unmarshalJMXHosts parses the user-provided JSON map for a producer
 // or consumers into a jmxHost structs and sets default values
 func unmarshalJMXHosts(data []byte, a *ArgumentList) ([]*JMXHost, error) {
-
 	// Parse the producer or consumer
 	var v []*JMXHost
-	if err := json.Unmarshal([]byte(data), &v); err != nil {
+	if string(data) == jmxHostDefaultAlias {
+		v = []*JMXHost{{}}
+	} else if err := json.Unmarshal(data, &v); err != nil {
 		return nil, err
 	}
 
