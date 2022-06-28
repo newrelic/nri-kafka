@@ -91,8 +91,10 @@ type ParsedArguments struct {
 	CollectTopicOffset    bool
 
 	// Consumer offset arguments
-	ConsumerOffset     bool
-	ConsumerGroupRegex *regexp.Regexp
+	ConsumerOffset              bool
+	ConsumerGroupRegex          *regexp.Regexp
+	ConsumerGroupOffsetByTopic  bool
+	InactiveConsumerGroupOffset bool
 
 	Timeout int `default:"10000" help:"Timeout in milliseconds per single JMX query."`
 
@@ -284,6 +286,8 @@ func ParseArgs(a ArgumentList) (*ParsedArguments, error) {
 		CollectTopicOffset:               a.CollectTopicOffset,
 		ConsumerOffset:                   a.ConsumerOffset,
 		ConsumerGroupRegex:               consumerGroupRegex,
+		ConsumerGroupOffsetByTopic:       a.ConsumerGroupOffsetByTopic,
+		InactiveConsumerGroupOffset:      a.InactiveConsumerGroupOffset,
 		SaslMechanism:                    a.SaslMechanism,
 		SaslUsername:                     a.SaslUsername,
 		SaslPassword:                     a.SaslPassword,
