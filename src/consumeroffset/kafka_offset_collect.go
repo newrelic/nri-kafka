@@ -27,7 +27,7 @@ type partitionLagResult struct {
 }
 
 func collectOffsetsForConsumerGroup(
-	clusterAdmin sarama.ClusterAdmin,
+	cGroupTopicLister ConsumerGroupTopicLister,
 	consumerGroup string,
 	members map[string]*sarama.GroupMemberDescription,
 	kafkaIntegration *integration.Integration,
@@ -53,7 +53,7 @@ func collectOffsetsForConsumerGroup(
 		}
 		log.Debug("Retrieved assignment for consumer group '%s' member '%s': %#v", consumerGroup, memberName, assignment)
 
-		listGroupsResponse, err := clusterAdmin.ListConsumerGroupOffsets(consumerGroup, assignment.Topics)
+		listGroupsResponse, err := cGroupTopicLister.ListConsumerGroupOffsets(consumerGroup, assignment.Topics)
 		if err != nil {
 			log.Error("Failed to get consumer group offsets for member %s: %s", memberName, err)
 			continue
@@ -90,7 +90,7 @@ func collectOffsetsForConsumerGroup(
 	}
 
 	if args.GlobalArgs.InactiveConsumerGroupOffset {
-		collectInactiveConsumerGroupOffsets(clusterAdmin, consumerGroup, topicExclussions, &consumerGroupPartitionWg, topicOffsetGetter, cGroupPartitionLagChan)
+		collectInactiveConsumerGroupOffsets(cGroupTopicLister, consumerGroup, topicExclussions, &consumerGroupPartitionWg, topicOffsetGetter, cGroupPartitionLagChan)
 	}
 
 	calculateClientLagTotals(clientPartitionLagChan, &clientPartitionWg, kafkaIntegration, consumerGroup)
@@ -177,14 +177,14 @@ func collectClientPartitionOffsetMetrics(
 }
 
 func collectInactiveConsumerGroupOffsets(
-	clusterAdmin sarama.ClusterAdmin,
+	cGroupTopicLister ConsumerGroupTopicLister,
 	consumerGroup string,
 	topicExclussions map[string]struct{},
 	consumerGroupPartitionWg *sync.WaitGroup,
 	topicOffsetGetter TopicOffsetGetter,
 	cGroupPartitionLagChan chan partitionLagResult,
 ) {
-	topicMap, err := clusterAdmin.ListTopics()
+	topicMap, err := cGroupTopicLister.ListTopics()
 	if err != nil {
 		log.Error("Failed to list topics for consumerGroup: %s", consumerGroup, err)
 		return
@@ -200,7 +200,7 @@ func collectInactiveConsumerGroupOffsets(
 			topicPartitions[topicName] = append(topicPartitions[topicName], i)
 		}
 
-		listGroupsResponse, _ := clusterAdmin.ListConsumerGroupOffsets(consumerGroup, topicPartitions)
+		listGroupsResponse, _ := cGroupTopicLister.ListConsumerGroupOffsets(consumerGroup, topicPartitions)
 
 		for _, partitionMap := range listGroupsResponse.Blocks {
 			for partition, block := range partitionMap {

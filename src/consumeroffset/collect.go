@@ -54,6 +54,7 @@ func Collect(client connection.Client, kafkaIntegration *integration.Integration
 	log.Debug("Retrieved the descriptions of all consumer groups")
 
 	topicOffsetGetter := NewSaramaTopicOffsetGetter(client)
+	cAdminConsumerGroupTopicLister := NewCAdminConsumerGroupTopicLister(clusterAdmin)
 
 	var unmatchedConsumerGroups []string
 	var wg sync.WaitGroup
@@ -62,7 +63,7 @@ func Collect(client connection.Client, kafkaIntegration *integration.Integration
 			wg.Add(1)
 			go func(consumerGroup *sarama.GroupDescription) {
 				collectOffsetsForConsumerGroup(
-					clusterAdmin,
+					cAdminConsumerGroupTopicLister,
 					consumerGroup.GroupId,
 					consumerGroup.Members,
 					kafkaIntegration,
