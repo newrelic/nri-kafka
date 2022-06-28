@@ -112,7 +112,7 @@ func collectClientPartitionOffsetMetrics(
 	defer log.Debug("Finished collecting offsets for consumerGroup '%s', member '%s', topic '%s', partition '%d'", consumerGroup, memberDescription.ClientId, topic, partition)
 
 	// high watermark last partition offset
-	hwm, err := topicOffsetGetter.getFromTopicPartition(topic, partition)
+	hwm, err := topicOffsetGetter.GetFromTopicPartition(topic, partition)
 	if err != nil {
 		log.Error("Failed to get hwm for topic %s, partition %d: %s", topic, partition, err)
 		return
@@ -212,7 +212,7 @@ func collectInactiveConsumerGroupOffsets(
 						return
 					}
 
-					offset, err := topicOffsetGetter.getFromTopicPartition(topicName, partition)
+					offset, err := topicOffsetGetter.GetFromTopicPartition(topicName, partition)
 					if err != nil {
 						log.Error("Failed to get hwm for topic %s, partition %d: %s", topicName, partition, err)
 						return

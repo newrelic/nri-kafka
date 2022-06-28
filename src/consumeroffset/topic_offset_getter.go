@@ -7,7 +7,7 @@ import (
 )
 
 type TopicOffsetGetter interface {
-	getFromTopicPartition(topicName string, partition int32) (int64, error)
+	GetFromTopicPartition(topicName string, partition int32) (int64, error)
 }
 
 type SaramaTopicOffsetGetter struct {
@@ -20,7 +20,7 @@ func NewSaramaTopicOffsetGetter(client connection.Client) *SaramaTopicOffsetGett
 	return &SaramaTopicOffsetGetter{client: client, topicPartitionOffset: map[string]map[int32]int64{}}
 }
 
-func (h *SaramaTopicOffsetGetter) getFromTopicPartition(topicName string, partition int32) (int64, error) {
+func (h *SaramaTopicOffsetGetter) GetFromTopicPartition(topicName string, partition int32) (int64, error) {
 	var err error
 	h.mux.Lock()
 	defer h.mux.Unlock()

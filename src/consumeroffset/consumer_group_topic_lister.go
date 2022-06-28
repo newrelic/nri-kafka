@@ -1,8 +1,9 @@
 package consumeroffset
 
 import (
-	"github.com/Shopify/sarama"
 	"sync"
+
+	"github.com/Shopify/sarama"
 )
 
 type ConsumerGroupTopicLister interface {

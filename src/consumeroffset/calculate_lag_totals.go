@@ -1,12 +1,13 @@
 package consumeroffset
 
 import (
+	"sync"
+
 	"github.com/newrelic/infra-integrations-sdk/data/attribute"
 	"github.com/newrelic/infra-integrations-sdk/data/metric"
 	"github.com/newrelic/infra-integrations-sdk/integration"
 	"github.com/newrelic/infra-integrations-sdk/log"
 	"github.com/newrelic/nri-kafka/src/args"
-	"sync"
 )
 
 func calculateClientLagTotals(
