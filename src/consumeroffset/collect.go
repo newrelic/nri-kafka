@@ -53,12 +53,23 @@ func Collect(client connection.Client, kafkaIntegration *integration.Integration
 	}
 	log.Debug("Retrieved the descriptions of all consumer groups")
 
+	topicOffsetGetter := NewTopicOffsetGetter(client)
+
 	var unmatchedConsumerGroups []string
 	var wg sync.WaitGroup
 	for _, consumerGroup := range consumerGroups {
 		if args.GlobalArgs.ConsumerGroupRegex.MatchString(consumerGroup.GroupId) {
 			wg.Add(1)
-			go collectOffsetsForConsumerGroup(client, clusterAdmin, consumerGroup.GroupId, consumerGroup.Members, kafkaIntegration, &wg)
+			go func(consumerGroup *sarama.GroupDescription) {
+				collectOffsetsForConsumerGroup(
+					clusterAdmin,
+					consumerGroup.GroupId,
+					consumerGroup.Members,
+					kafkaIntegration,
+					topicOffsetGetter,
+				)
+				wg.Done()
+			}(consumerGroup)
 		} else {
 			unmatchedConsumerGroups = append(unmatchedConsumerGroups, consumerGroup.GroupId)
 		}
