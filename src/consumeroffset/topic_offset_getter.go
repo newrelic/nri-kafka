@@ -6,17 +6,21 @@ import (
 	"sync"
 )
 
-type topicOffsetGetter struct {
+type TopicOffsetGetter interface {
+	getFromTopicPartition(topicName string, partition int32) (int64, error)
+}
+
+type SaramaTopicOffsetGetter struct {
 	client               connection.Client
 	topicPartitionOffset map[string]map[int32]int64
 	mux                  sync.Mutex
 }
 
-func NewTopicOffsetGetter(client connection.Client) *topicOffsetGetter {
-	return &topicOffsetGetter{client: client, topicPartitionOffset: map[string]map[int32]int64{}}
+func NewSaramaTopicOffsetGetter(client connection.Client) *SaramaTopicOffsetGetter {
+	return &SaramaTopicOffsetGetter{client: client, topicPartitionOffset: map[string]map[int32]int64{}}
 }
 
-func (h *topicOffsetGetter) getFromTopicPartition(topicName string, partition int32) (int64, error) {
+func (h *SaramaTopicOffsetGetter) getFromTopicPartition(topicName string, partition int32) (int64, error) {
 	var err error
 	h.mux.Lock()
 	defer h.mux.Unlock()

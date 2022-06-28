@@ -53,7 +53,7 @@ func Collect(client connection.Client, kafkaIntegration *integration.Integration
 	}
 	log.Debug("Retrieved the descriptions of all consumer groups")
 
-	topicOffsetGetter := NewTopicOffsetGetter(client)
+	topicOffsetGetter := NewSaramaTopicOffsetGetter(client)
 
 	var unmatchedConsumerGroups []string
 	var wg sync.WaitGroup

@@ -31,7 +31,7 @@ func collectOffsetsForConsumerGroup(
 	consumerGroup string,
 	members map[string]*sarama.GroupMemberDescription,
 	kafkaIntegration *integration.Integration,
-	topicOffsetGetter *topicOffsetGetter,
+	topicOffsetGetter TopicOffsetGetter,
 ) {
 	log.Debug("Collecting offsets for consumer group '%s'", consumerGroup)
 	defer log.Debug("Finished collecting offsets for consumer group '%s'", consumerGroup)
@@ -98,7 +98,7 @@ func collectOffsetsForConsumerGroup(
 }
 
 func collectClientPartitionOffsetMetrics(
-	topicOffsetGetter *topicOffsetGetter,
+	topicOffsetGetter TopicOffsetGetter,
 	consumerGroup string,
 	memberDescription *sarama.GroupMemberDescription,
 	topic string,
@@ -181,7 +181,7 @@ func collectInactiveConsumerGroupOffsets(
 	consumerGroup string,
 	topicExclussions map[string]struct{},
 	consumerGroupPartitionWg *sync.WaitGroup,
-	topicOffsetGetter *topicOffsetGetter,
+	topicOffsetGetter TopicOffsetGetter,
 	cGroupPartitionLagChan chan partitionLagResult,
 ) {
 	topicMap, err := clusterAdmin.ListTopics()
