@@ -8,18 +8,62 @@ import (
 )
 
 const (
-	consumerDetectionPattern = "kafka.consumer:type=consumer-fetch-manager-metrics,client-id=*"
-	producerDetectionPattern = "kafka.producer:type=producer-metrics,client-id=*"
+	consumerAppInfoPattern = "kafka.consumer:type=app-info,id=*"
+	consumerMetricsPattern = "kafka.consumer:type=consumer-fetch-manager-metrics,client-id=*"
+
+	producerAppInfoPattern = "kafka.producer:type=app-info,id=*"
+	producerMetricsPattern = "kafka.producer:type=producer-metrics,client-id=*"
 )
 
 // idFromMBeanNameFn defines a function to extract the identifier from an MBean name.
 type idFromMBeanNameFn func(string) string
 
-func getClientIDS(jmxInfo *args.JMXHost, mBeanPattern string, idExtractor idFromMBeanNameFn, conn connection.JMXConnection) ([]string, error) {
+type clientIDExtractInfo struct {
+	pattern   string
+	extractor idFromMBeanNameFn
+}
+
+func detectConsumerIDs(jmxInfo *args.JMXHost, conn connection.JMXConnection) ([]string, error) {
+	// consumerAppInfoPatter is defined to detect consumer clientIDs, in case it is not found it will use
+	// consumerMetricsPattern which is also being used to fetch consumer metrics.
+	return getClientIDS(
+		[]clientIDExtractInfo{
+			{pattern: consumerAppInfoPattern, extractor: idFromAppInfo},
+			{pattern: consumerMetricsPattern, extractor: idFromMBeanWithClientIDField},
+		},
+		jmxInfo,
+		conn,
+	)
+}
+
+func detectProducerIDs(jmxInfo *args.JMXHost, conn connection.JMXConnection) ([]string, error) {
+	// producerAppInfoPatter is defined to detect consumer clientIDs, in case it is not found it will use
+	// ProducerMetricsPattern which is also being used to fetch consumer metrics.
+	return getClientIDS(
+		[]clientIDExtractInfo{
+			{pattern: producerAppInfoPattern, extractor: idFromAppInfo},
+			{pattern: producerMetricsPattern, extractor: idFromMBeanWithClientIDField},
+		},
+		jmxInfo,
+		conn,
+	)
+}
+
+// getClientIDs tries to obtain clientIDs from JMX connection using each extractInfo entry until it success or items are over.
+// this allows implementing a primary extractor and one or many fallbacks.
+func getClientIDS(extractInfo []clientIDExtractInfo, jmxInfo *args.JMXHost, conn connection.JMXConnection) ([]string, error) {
 	if jmxInfo.Name != "" {
 		return []string{jmxInfo.Name}, nil
 	}
-	return detectClientIDs(mBeanPattern, idExtractor, conn)
+	var err error
+	var names []string
+	for _, info := range extractInfo {
+		names, err = detectClientIDs(info.pattern, info.extractor, conn)
+		if err == nil && len(names) > 0 {
+			return names, nil
+		}
+	}
+	return names, err
 }
 
 func detectClientIDs(pattern string, idExtractor idFromMBeanNameFn, conn connection.JMXConnection) ([]string, error) {
@@ -40,14 +84,23 @@ func idsFromMBeanNames(mBeanNames []string, idExtractor idFromMBeanNameFn) []str
 	return ids
 }
 
-// idFromMBeanWithClientIDField Gets the identifier given a type=app-info MBean name. Example: "name:type=app-info,client-id=my-id"
+// idFromAppInfo Gets the identifier given a type=app-info MBean name. Example "name:type=app-info,id=my-id"
+func idFromAppInfo(mBeanName string) string {
+	return idFromMBean(mBeanName, "id")
+}
+
+// idFromMBeanWithClientIDField Gets the identifier given a MBean name including the client-id field. Example: "name:type=producer-metrics,client-id=my-id"
 func idFromMBeanWithClientIDField(mBeanName string) string {
+	return idFromMBean(mBeanName, "client-id")
+}
+
+func idFromMBean(mBeanName string, idField string) string {
 	_, info, valid := strings.Cut(mBeanName, ":")
 	if !valid {
 		return ""
 	}
 	for _, field := range strings.Split(info, ",") {
-		if _, id, isIDField := strings.Cut(field, "client-id="); isIDField {
+		if _, id, isIDField := strings.Cut(field, idField+"="); isIDField {
 			return id
 		}
 	}
