@@ -13,9 +13,10 @@ import (
 )
 
 const (
-	kfkNoOffset             = -1
-	kfkConsumerOffsetsTopic = "__consumer_offsets"
-	kfkSchemaTopic          = "_schema"
+	kfkNoOffset                = -1
+	partitionLagChannelsBuffer = 1000
+	kfkConsumerOffsetsTopic    = "__consumer_offsets"
+	kfkSchemaTopic             = "_schema"
 )
 
 type partitionLagResult struct {
@@ -42,8 +43,8 @@ func collectOffsetsForConsumerGroup(
 	)
 	// topics to be excluded from InactiveConsumerGroupsOffset calculation
 	topicExclussions := map[string]struct{}{kfkConsumerOffsetsTopic: {}, kfkSchemaTopic: {}}
-	clientPartitionLagChan := make(chan partitionLagResult, 1000)
-	cGroupPartitionLagChan := make(chan partitionLagResult, 1000)
+	clientPartitionLagChan := make(chan partitionLagResult, partitionLagChannelsBuffer)
+	cGroupPartitionLagChan := make(chan partitionLagResult, partitionLagChannelsBuffer)
 
 	for memberName, description := range members {
 		assignment, err := description.GetMemberAssignment()

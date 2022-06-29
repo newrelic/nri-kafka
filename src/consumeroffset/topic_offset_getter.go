@@ -1,9 +1,11 @@
 package consumeroffset
 
 import (
-	"github.com/Shopify/sarama"
-	"github.com/newrelic/nri-kafka/src/connection"
 	"sync"
+
+	"github.com/Shopify/sarama"
+
+	"github.com/newrelic/nri-kafka/src/connection"
 )
 
 type TopicOffsetGetter interface {

@@ -7,6 +7,7 @@ import (
 	"sync"
 
 	"github.com/Shopify/sarama"
+
 	"github.com/newrelic/infra-integrations-sdk/data/attribute"
 	"github.com/newrelic/infra-integrations-sdk/integration"
 	"github.com/newrelic/infra-integrations-sdk/log"
