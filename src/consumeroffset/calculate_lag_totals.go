@@ -33,7 +33,7 @@ func calculateClientLagTotals(
 		}
 
 		// Add lag to the total lag for the client
-		consumerClientRollup[result.ClientID] = consumerClientRollup[result.ClientID] + result.Lag
+		consumerClientRollup[result.ClientID] += result.Lag
 	}
 
 	// Submit client rollup metrics
@@ -84,7 +84,7 @@ func calculateConsumerGroupLagTotals(partitionLagChan chan partitionLagResult, w
 		}
 
 		// Add lag to the total lag for the consumer group
-		consumerGroupRollup[result.ConsumerGroup] = consumerGroupRollup[result.ConsumerGroup] + result.Lag
+		consumerGroupRollup[result.ConsumerGroup] += result.Lag
 
 		// Calculate the max lag for the consumer group
 		if result.Lag > consumerGroupMaxLagRollup[result.ConsumerGroup] {
@@ -98,7 +98,7 @@ func calculateConsumerGroupLagTotals(partitionLagChan chan partitionLagResult, w
 
 		// Add aggregation by topic
 		if args.GlobalArgs.ConsumerGroupOffsetByTopic {
-			topicRollup[result.Topic] = topicRollup[result.Topic] + result.Lag
+			topicRollup[result.Topic] += result.Lag
 
 			// Calculate the max lag for the consumer group in this topic
 			if result.Lag > topicMaxLagRollup[result.Topic] {

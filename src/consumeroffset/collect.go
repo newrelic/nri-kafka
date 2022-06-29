@@ -22,6 +22,8 @@ const (
 	nrPartitionConsumerEntity  = "ka-partition-consumer"
 )
 
+var ErrNoConsumerGroupRegex = errors.New("if consumer_offset is set, consumer_group_regex must also be set")
+
 type partitionOffsets struct {
 	Topic          string `metric_name:"topic" source_type:"attribute"`
 	Partition      string `metric_name:"partition" source_type:"attribute"`
@@ -37,17 +39,17 @@ type TopicPartitions map[string][]int32
 func Collect(client connection.Client, kafkaIntegration *integration.Integration) error {
 	clusterAdmin, err := sarama.NewClusterAdminFromClient(client)
 	if err != nil {
-		return fmt.Errorf("failed to create cluster admin: %s", err)
+		return fmt.Errorf("failed to create cluster admin: %w", err)
 	}
 
 	// Use the more modern collection method if the configuration exists
 	if args.GlobalArgs.ConsumerGroupRegex == nil {
-		return errors.New("if consumer_offset is set, consumer_group_regex must also be set")
+		return ErrNoConsumerGroupRegex
 	}
 
 	consumerGroupMap, err := clusterAdmin.ListConsumerGroups()
 	if err != nil {
-		return fmt.Errorf("failed to get list of consumer groups: %s", err)
+		return fmt.Errorf("failed to get list of consumer groups: %w", err)
 	}
 	consumerGroupList := make([]string, 0, len(consumerGroupMap))
 	for consumerGroup := range consumerGroupMap {
@@ -57,7 +59,7 @@ func Collect(client connection.Client, kafkaIntegration *integration.Integration
 
 	consumerGroups, err := clusterAdmin.DescribeConsumerGroups(consumerGroupList)
 	if err != nil {
-		return fmt.Errorf("failed to get consumer group descriptions: %s", err)
+		return fmt.Errorf("failed to get consumer group descriptions: %w", err)
 	}
 	log.Debug("Retrieved the descriptions of all consumer groups")
 
