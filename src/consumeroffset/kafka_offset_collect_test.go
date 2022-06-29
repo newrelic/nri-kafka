@@ -41,7 +41,7 @@ func (cm *ConsumerGroupTopicListerMock) ListConsumerGroupOffsets(group string, t
 	offsetFetchResponse := &sarama.OffsetFetchResponse{
 		Blocks: map[string]map[int32]*sarama.OffsetFetchResponseBlock{},
 	}
-	for topic, _ := range topicPartitions {
+	for topic := range topicPartitions {
 		offsetFetchResponse.Blocks[topic] = map[int32]*sarama.OffsetFetchResponseBlock{
 			0: {Offset: 10},
 			1: {Offset: 10},
