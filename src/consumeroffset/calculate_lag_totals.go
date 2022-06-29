@@ -40,7 +40,7 @@ func calculateClientLagTotals(
 	for clientID, totalLag := range consumerClientRollup {
 		clusterIDAttr := integration.NewIDAttribute("clusterName", args.GlobalArgs.ClusterName)
 
-		clientEntity, err := kafkaIntegration.Entity(clientID, "ka-consumer", clusterIDAttr)
+		clientEntity, err := kafkaIntegration.Entity(clientID, nrConsumerEntity, clusterIDAttr)
 		if err != nil {
 			log.Error("Failed to get entity for client: %v", err)
 			continue
@@ -119,7 +119,7 @@ func calculateConsumerGroupLagTotals(partitionLagChan chan partitionLagResult, w
 	for consumerGroup, totalLag := range consumerGroupRollup {
 		clusterIDAttr := integration.NewIDAttribute("clusterName", args.GlobalArgs.ClusterName)
 
-		consumerGroupEntity, err := kafkaIntegration.Entity(consumerGroup, "ka-consumer-group", clusterIDAttr)
+		consumerGroupEntity, err := kafkaIntegration.Entity(consumerGroup, nrConsumerGroupEntity, clusterIDAttr)
 		if err != nil {
 			log.Error("Failed to get entity for consumer group: %s", err)
 			continue
@@ -153,7 +153,7 @@ func calculateConsumerGroupLagTotals(partitionLagChan chan partitionLagResult, w
 		consumerGroupIDAttr := integration.NewIDAttribute("consumerGroup", consumerGroup)
 		topicIDAttr := integration.NewIDAttribute("topic", topic)
 
-		partitionConsumerEntity, err := kafkaIntegration.Entity(topic, "ka-consumer-group-topic", clusterIDAttr, consumerGroupIDAttr, topicIDAttr)
+		partitionConsumerEntity, err := kafkaIntegration.Entity(topic, nrConsumerGroupTopicEntity, clusterIDAttr, consumerGroupIDAttr, topicIDAttr)
 		if err != nil {
 			log.Error("Failed to get entity for partition consumer: %s in topic %s", err, topic)
 			return

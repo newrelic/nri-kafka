@@ -14,6 +14,13 @@ import (
 	"github.com/newrelic/nri-kafka/src/connection"
 )
 
+const (
+	nrConsumerGroupEntity      = "ka-consumer-group"
+	nrConsumerGroupTopicEntity = "ka-consumer-group-topic"
+	nrConsumerEntity           = "ka-consumer"
+	nrPartitionConsumerEntity  = "ka-partition-consumer"
+)
+
 type partitionOffsets struct {
 	Topic          string `metric_name:"topic" source_type:"attribute"`
 	Partition      string `metric_name:"partition" source_type:"attribute"`

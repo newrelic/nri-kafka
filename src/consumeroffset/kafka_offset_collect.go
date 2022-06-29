@@ -125,7 +125,7 @@ func collectClientPartitionOffsetMetrics(
 	topicIDAttr := integration.NewIDAttribute("topic", topic)
 	partitionIDAttr := integration.NewIDAttribute("partition", strconv.Itoa(int(partition)))
 
-	partitionConsumerEntity, err := kafkaIntegration.Entity(strconv.Itoa(int(partition)), "ka-partition-consumer", clusterIDAttr, consumerGroupIDAttr, topicIDAttr, partitionIDAttr)
+	partitionConsumerEntity, err := kafkaIntegration.Entity(strconv.Itoa(int(partition)), nrPartitionConsumerEntity, clusterIDAttr, consumerGroupIDAttr, topicIDAttr, partitionIDAttr)
 	if err != nil {
 		log.Error("Failed to get entity for partition consumer: %s", err)
 		return
