@@ -1,50 +1,64 @@
 package consumeroffset
 
 import (
+	"fmt"
+	"testing"
+
 	"github.com/Shopify/sarama"
+	"github.com/stretchr/testify/assert"
+
 	"github.com/newrelic/infra-integrations-sdk/integration"
 	"github.com/newrelic/nri-kafka/src/args"
-	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 const (
 	consumerGroupOne = "consumer-one"
 	topicOne         = "one"
+	topicTwo         = "two"
+	clientID         = "consumer-1"
 )
 
 type ConsumerGroupTopicListerMock struct{}
 
 func (cm *ConsumerGroupTopicListerMock) ListTopics() (map[string]sarama.TopicDetail, error) {
-	return nil, nil
+	return map[string]sarama.TopicDetail{
+		topicOne: sarama.TopicDetail{
+			NumPartitions:     2,
+			ReplicationFactor: 0,
+			ReplicaAssignment: nil,
+			ConfigEntries:     nil,
+		},
+		topicTwo: sarama.TopicDetail{
+			NumPartitions:     2,
+			ReplicationFactor: 0,
+			ReplicaAssignment: nil,
+			ConfigEntries:     nil,
+		},
+	}, nil
 }
 
-func (cm *ConsumerGroupTopicListerMock) ListConsumerGroupOffsets(group string, _ map[string][]int32) (*sarama.OffsetFetchResponse, error) {
-	if group == consumerGroupOne {
-		return &sarama.OffsetFetchResponse{
-			Blocks: map[string]map[int32]*sarama.OffsetFetchResponseBlock{
-				"one": {
-					0: {Offset: 10},
-					1: {Offset: 10},
-				},
-			},
-		}, nil
+func (cm *ConsumerGroupTopicListerMock) ListConsumerGroupOffsets(group string, topicPartitions map[string][]int32) (*sarama.OffsetFetchResponse, error) {
+	offsetFetchResponse := &sarama.OffsetFetchResponse{
+		Blocks: map[string]map[int32]*sarama.OffsetFetchResponseBlock{},
+	}
+	for topic, _ := range topicPartitions {
+		offsetFetchResponse.Blocks[topic] = map[int32]*sarama.OffsetFetchResponseBlock{
+			0: {Offset: 10},
+			1: {Offset: 10},
+		}
 	}
 
-	return nil, nil
+	return offsetFetchResponse, nil
 }
 
 type TopicOffsetGetterMock struct{}
 
 func (tm *TopicOffsetGetterMock) GetFromTopicPartition(topicName string, partition int32) (int64, error) {
-	// data for "consumer-1"
-	if topicName == topicOne {
-		switch partition {
-		case 0:
-			return 25, nil
-		case 1:
-			return 30, nil
-		}
+	switch partition {
+	case 0:
+		return 25, nil
+	case 1:
+		return 30, nil
 	}
 	return 0, nil
 }
@@ -52,7 +66,7 @@ func (tm *TopicOffsetGetterMock) GetFromTopicPartition(topicName string, partiti
 func TestCollectOffsetsForConsumerGroup(t *testing.T) {
 	// MemberAssignment mock created as in sarama's consumer_group_member_test.go
 	members := map[string]*sarama.GroupMemberDescription{
-		"consumer-1": {
+		clientID: {
 			ClientId:       "consumer-1",
 			ClientHost:     "a-host",
 			MemberMetadata: nil,
@@ -68,31 +82,122 @@ func TestCollectOffsetsForConsumerGroup(t *testing.T) {
 	}
 
 	args.GlobalArgs = &args.ParsedArguments{}
-	args.GlobalArgs.InactiveConsumerGroupOffset = false
 
-	kafkaIntegration, _ := integration.New("test", "test")
+	testCases := []struct {
+		name                        string
+		inactiveConsumerGroupOffset bool
+		consumerGroupOffsetByTopic  bool
+		consumerGroup               string
+		cGroupEntities              map[string]map[string]float64
+		topicEntities               map[string]map[string]float64
+		numEntites                  int
+	}{
+		{
+			name:                        "Only active consumers",
+			inactiveConsumerGroupOffset: false,
+			consumerGroupOffsetByTopic:  false,
+			consumerGroup:               consumerGroupOne,
+			cGroupEntities: map[string]map[string]float64{
+				consumerGroupOne: {
+					// comes from: 25 - 10 + 30 - 10
+					"totalLag": 35,
+					// comes from max: 30 - 10
+					"maxLag":          20,
+					"activeConsumers": 1,
+				},
+			},
+			topicEntities: nil,
+			numEntites:    4,
+		},
+		{
+			name:                        "With inactive consumers",
+			inactiveConsumerGroupOffset: true,
+			consumerGroupOffsetByTopic:  false,
+			consumerGroup:               consumerGroupOne,
+			cGroupEntities: map[string]map[string]float64{
+				consumerGroupOne: {
+					// comes from: (25 - 10 + 30 - 10) + (25 - 10 + 30 - 10)
+					"totalLag": 70,
+					// comes from max: 30 - 10
+					"maxLag":          20,
+					"activeConsumers": 1,
+				},
+			},
+			topicEntities: nil,
+			numEntites:    4,
+		},
+		{
+			name:                        "With inactive consumers and topic aggregation",
+			inactiveConsumerGroupOffset: true,
+			consumerGroupOffsetByTopic:  true,
+			consumerGroup:               consumerGroupOne,
+			cGroupEntities: map[string]map[string]float64{
+				consumerGroupOne: {
+					// comes from: (25 - 10 + 30 - 10) + (25 - 10 + 30 - 10)
+					"totalLag": 70,
+					// comes from max: 30 - 10
+					"maxLag":          20,
+					"activeConsumers": 1,
+				},
+			},
+			topicEntities: map[string]map[string]float64{
+				topicOne: {
+					// comes from: 25 - 10 + 30 - 10
+					"totalLag": 35,
+					// comes from max: 30 - 10
+					"maxLag":          20,
+					"activeConsumers": 1,
+				},
+				topicTwo: {
+					// comes from: 25 - 10 + 30 - 10
+					"totalLag": 35,
+					// comes from max: 30 - 10
+					"maxLag":          20,
+					"activeConsumers": 0,
+				},
+			},
+			numEntites: 6,
+		},
+	}
 
-	collectOffsetsForConsumerGroup(
-		&ConsumerGroupTopicListerMock{},
-		consumerGroupOne,
-		members,
-		kafkaIntegration,
-		&TopicOffsetGetterMock{},
-	)
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			args.GlobalArgs.InactiveConsumerGroupOffset = tc.inactiveConsumerGroupOffset
+			args.GlobalArgs.ConsumerGroupOffsetByTopic = tc.consumerGroupOffsetByTopic
 
-	assert.Equal(t, 4, len(kafkaIntegration.Entities))
-	for _, entity := range kafkaIntegration.Entities {
-		switch entity.Metadata.Namespace {
-		case nrConsumerGroupEntity:
-			// comes from: 25 - 10 + 30 - 10
-			assert.Equal(t, float64(35), entity.Metrics[0].Metrics["consumerGroup.totalLag"])
-			// comes from max: 30 - 10
-			assert.Equal(t, float64(20), entity.Metrics[0].Metrics["consumerGroup.maxLag"])
-			assert.Equal(t, float64(1), entity.Metrics[0].Metrics["consumerGroup.activeConsumers"])
-		case nrConsumerGroupTopicEntity:
-		case nrConsumerEntity:
-		case nrPartitionConsumerEntity:
-		}
-		assert.NotEmpty(t, entity)
+			kafkaIntegration, _ := integration.New("test", "test")
+
+			collectOffsetsForConsumerGroup(
+				&ConsumerGroupTopicListerMock{},
+				tc.consumerGroup,
+				members,
+				kafkaIntegration,
+				&TopicOffsetGetterMock{},
+			)
+
+			assert.Equal(t, tc.numEntites, len(kafkaIntegration.Entities))
+			for _, entity := range kafkaIntegration.Entities {
+				switch entity.Metadata.Namespace {
+				case nrConsumerGroupEntity:
+					if entity.Metrics[0].Metrics["consumerGroup"] == tc.consumerGroup {
+						assert.Equal(t, tc.cGroupEntities[tc.consumerGroup]["totalLag"], entity.Metrics[0].Metrics["consumerGroup.totalLag"])
+						assert.Equal(t, tc.cGroupEntities[tc.consumerGroup]["maxLag"], entity.Metrics[0].Metrics["consumerGroup.maxLag"])
+						assert.Equal(t, tc.cGroupEntities[tc.consumerGroup]["activeConsumers"], entity.Metrics[0].Metrics["consumerGroup.activeConsumers"])
+					}
+				case nrConsumerGroupTopicEntity:
+					topicName := fmt.Sprintf("%v", entity.Metrics[0].Metrics["topic"])
+					assert.Equal(t, tc.topicEntities[topicName]["totalLag"], entity.Metrics[0].Metrics["consumerGroup.totalLag"])
+					assert.Equal(t, tc.topicEntities[topicName]["maxLag"], entity.Metrics[0].Metrics["consumerGroup.maxLag"])
+					assert.Equal(t, tc.topicEntities[topicName]["activeConsumers"], entity.Metrics[0].Metrics["consumerGroup.activeConsumers"])
+				case nrConsumerEntity:
+					assert.Equal(t, clientID, entity.Metrics[0].Metrics["clientID"])
+				case nrPartitionConsumerEntity:
+					// this entity only for topicOne that has member clientID
+					assert.Equal(t, clientID, entity.Metrics[0].Metrics["clientID"])
+					assert.Equal(t, topicOne, entity.Metrics[0].Metrics["topic"])
+				}
+				assert.NotEmpty(t, entity)
+			}
+		})
 	}
 }
