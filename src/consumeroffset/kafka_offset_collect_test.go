@@ -63,11 +63,11 @@ func (tm *TopicOffsetGetterMock) GetFromTopicPartition(topicName string, partiti
 	return 0, nil
 }
 
-func TestCollectOffsetsForConsumerGroup(t *testing.T) {
+func TestCollectOffsetsForConsumerGroup(t *testing.T) { // nolint: funlen
 	// MemberAssignment mock created as in sarama's consumer_group_member_test.go
 	members := map[string]*sarama.GroupMemberDescription{
 		clientID: {
-			ClientId:       "consumer-1",
+			ClientId:       clientID,
 			ClientHost:     "a-host",
 			MemberMetadata: nil,
 			MemberAssignment: []byte{
