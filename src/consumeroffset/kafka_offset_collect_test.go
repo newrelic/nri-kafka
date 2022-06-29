@@ -162,8 +162,6 @@ func TestCollectOffsetsForConsumerGroup(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			t.Parallel()
-
 			args.GlobalArgs.InactiveConsumerGroupOffset = tc.inactiveConsumerGroupOffset
 			args.GlobalArgs.ConsumerGroupOffsetByTopic = tc.consumerGroupOffsetByTopic
 
