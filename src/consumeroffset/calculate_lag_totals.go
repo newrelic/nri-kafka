@@ -116,6 +116,16 @@ func calculateConsumerGroupLagTotals(partitionLagChan chan partitionLagResult, w
 		}
 	}
 
+	consumerGroupMetrics(consumerGroupRollup, kafkaIntegration, consumerGroupMaxLagRollup, cGroupActiveClientsRollup)
+	consumerGroupByTopicMetrics(topicRollup, consumerGroup, kafkaIntegration, topicMaxLagRollup, topicActiveClientsRollup)
+}
+
+func consumerGroupMetrics(
+	consumerGroupRollup map[string]int,
+	kafkaIntegration *integration.Integration,
+	consumerGroupMaxLagRollup map[string]int,
+	cGroupActiveClientsRollup map[string]struct{},
+) {
 	for consumerGroup, totalLag := range consumerGroupRollup {
 		clusterIDAttr := integration.NewIDAttribute("clusterName", args.GlobalArgs.ClusterName)
 
@@ -147,7 +157,15 @@ func calculateConsumerGroupLagTotals(partitionLagChan chan partitionLagResult, w
 			log.Error("Failed to set metric consumerGroup.activeConsumers: %s", err)
 		}
 	}
+}
 
+func consumerGroupByTopicMetrics(
+	topicRollup map[string]int,
+	consumerGroup string,
+	kafkaIntegration *integration.Integration,
+	topicMaxLagRollup map[string]int,
+	topicActiveClientsRollup map[string]map[string]struct{},
+) {
 	for topic, totalLag := range topicRollup {
 		clusterIDAttr := integration.NewIDAttribute("clusterName", args.GlobalArgs.ClusterName)
 		consumerGroupIDAttr := integration.NewIDAttribute("consumerGroup", consumerGroup)

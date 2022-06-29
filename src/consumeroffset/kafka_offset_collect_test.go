@@ -22,13 +22,13 @@ type ConsumerGroupTopicListerMock struct{}
 
 func (cm *ConsumerGroupTopicListerMock) ListTopics() (map[string]sarama.TopicDetail, error) {
 	return map[string]sarama.TopicDetail{
-		topicOne: sarama.TopicDetail{
+		topicOne: {
 			NumPartitions:     2,
 			ReplicationFactor: 0,
 			ReplicaAssignment: nil,
 			ConfigEntries:     nil,
 		},
-		topicTwo: sarama.TopicDetail{
+		topicTwo: {
 			NumPartitions:     2,
 			ReplicationFactor: 0,
 			ReplicaAssignment: nil,
