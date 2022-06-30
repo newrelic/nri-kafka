@@ -40,6 +40,7 @@ func collectOffsetsForConsumerGroup(
 	var (
 		clientPartitionWg        sync.WaitGroup
 		consumerGroupPartitionWg sync.WaitGroup
+		lagResultsWg             sync.WaitGroup
 	)
 	// topics to be excluded from InactiveConsumerGroupsOffset calculation
 	topicExclusions := map[string]struct{}{kfkConsumerOffsetsTopic: {}, kfkSchemaTopic: {}}
@@ -98,8 +99,36 @@ func collectOffsetsForConsumerGroup(
 		collectInactiveConsumerGroupOffsets(cGroupTopicLister, consumerGroup, topicExclusions, &consumerGroupPartitionWg, topicOffsetGetter, cGroupPartitionLagChan)
 	}
 
-	calculateClientLagTotals(clientPartitionLagChan, &clientPartitionWg, kafkaIntegration, consumerGroup)
-	calculateConsumerGroupLagTotals(cGroupPartitionLagChan, &consumerGroupPartitionWg, kafkaIntegration, consumerGroup)
+	clientMetricsAggregator := NewClientMetricsAggregator(consumerGroup)
+	lagResultsWg.Add(1)
+
+	go func() {
+		go func() {
+			clientPartitionWg.Wait()
+			log.Debug("Finished retrieving offsets for all member partitions in consumer group '%s'", consumerGroup)
+			close(clientPartitionLagChan)
+		}()
+		clientMetricsAggregator.waitAndAggregateMetrics(clientPartitionLagChan)
+		lagResultsWg.Done()
+	}()
+
+	cGroupMetricsAggregator := NewCGroupMetricsAggregator(consumerGroup, args.GlobalArgs.ConsumerGroupOffsetByTopic)
+	lagResultsWg.Add(1)
+
+	go func() {
+		go func() {
+			consumerGroupPartitionWg.Wait()
+			log.Debug("Finished retrieving offsets for all partitions in consumer group '%s'", consumerGroup)
+			close(cGroupPartitionLagChan)
+		}()
+		cGroupMetricsAggregator.waitAndAggregateMetrics(cGroupPartitionLagChan)
+		lagResultsWg.Done()
+	}()
+
+	lagResultsWg.Wait()
+
+	generateConsumerNRMetrics(kafkaIntegration, clientMetricsAggregator.getAggregatedMetrics())
+	generateConsumerGroupNRMetrics(kafkaIntegration, cGroupMetricsAggregator.getAggregatedMetrics(), consumerGroup)
 }
 
 func collectClientPartitionOffsetMetrics(
@@ -221,6 +250,115 @@ func collectInactiveConsumerGroupOffsets(
 					}
 				}(partition, block, topicName)
 			}
+		}
+	}
+}
+
+func generateConsumerNRMetrics(kafkaIntegration *integration.Integration, consumerClientRollup map[clientID]int) {
+	for clientID, totalLag := range consumerClientRollup {
+		clusterIDAttr := integration.NewIDAttribute("clusterName", args.GlobalArgs.ClusterName)
+
+		clientEntity, err := kafkaIntegration.Entity(string(clientID), nrConsumerEntity, clusterIDAttr)
+		if err != nil {
+			log.Error("Failed to get entity for client: %v", err)
+			continue
+		}
+
+		ms := clientEntity.NewMetricSet("KafkaOffsetSample",
+			attribute.Attribute{Key: "clusterName", Value: args.GlobalArgs.ClusterName},
+			attribute.Attribute{Key: "clientID", Value: string(clientID)},
+			attribute.Attribute{Key: "clusterName", Value: args.GlobalArgs.ClusterName},
+		)
+
+		err = ms.SetMetric("consumer.totalLag", totalLag, metric.GAUGE)
+		if err != nil {
+			log.Error("Failed to set metric consumer.totalLag: %v", err)
+		}
+	}
+}
+
+func generateConsumerGroupNRMetrics(kafkaIntegration *integration.Integration, cGroupAggregations cGroupAggregations, consumerGroup string) {
+	consumerGroupMetrics(cGroupAggregations.consumerGroupRollup, kafkaIntegration, cGroupAggregations.consumerGroupMaxLagRollup, cGroupAggregations.cGroupActiveClientsRollup)
+	consumerGroupByTopicMetrics(cGroupAggregations.topicRollup, consumerGroup, kafkaIntegration, cGroupAggregations.topicMaxLagRollup, cGroupAggregations.topicActiveClientsRollup)
+}
+
+func consumerGroupMetrics(
+	consumerGroupRollup map[consumerGroupID]int,
+	kafkaIntegration *integration.Integration,
+	consumerGroupMaxLagRollup map[consumerGroupID]int,
+	cGroupActiveClientsRollup map[clientID]struct{},
+) {
+	for consumerGroup, totalLag := range consumerGroupRollup {
+		clusterIDAttr := integration.NewIDAttribute("clusterName", args.GlobalArgs.ClusterName)
+
+		consumerGroupEntity, err := kafkaIntegration.Entity(string(consumerGroup), nrConsumerGroupEntity, clusterIDAttr)
+		if err != nil {
+			log.Error("Failed to get entity for consumer group: %s", err)
+			continue
+		}
+
+		ms := consumerGroupEntity.NewMetricSet("KafkaOffsetSample",
+			attribute.Attribute{Key: "clusterName", Value: args.GlobalArgs.ClusterName},
+			attribute.Attribute{Key: "consumerGroup", Value: string(consumerGroup)},
+			attribute.Attribute{Key: "clusterName", Value: args.GlobalArgs.ClusterName},
+		)
+
+		err = ms.SetMetric("consumerGroup.totalLag", totalLag, metric.GAUGE)
+		if err != nil {
+			log.Error("Failed to set metric consumerGroup.totalLag: %s", err)
+		}
+
+		maxLag := consumerGroupMaxLagRollup[consumerGroup]
+		err = ms.SetMetric("consumerGroup.maxLag", maxLag, metric.GAUGE)
+		if err != nil {
+			log.Error("Failed to set metric consumerGroup.maxLag: %s", err)
+		}
+
+		err = ms.SetMetric("consumerGroup.activeConsumers", len(cGroupActiveClientsRollup), metric.GAUGE)
+		if err != nil {
+			log.Error("Failed to set metric consumerGroup.activeConsumers: %s", err)
+		}
+	}
+}
+
+func consumerGroupByTopicMetrics(
+	topicRollup map[topic]int,
+	consumerGroup string,
+	kafkaIntegration *integration.Integration,
+	topicMaxLagRollup map[topic]int,
+	topicActiveClientsRollup map[topic]map[clientID]struct{},
+) {
+	for topic, totalLag := range topicRollup {
+		clusterIDAttr := integration.NewIDAttribute("clusterName", args.GlobalArgs.ClusterName)
+		consumerGroupIDAttr := integration.NewIDAttribute("consumerGroup", consumerGroup)
+		topicIDAttr := integration.NewIDAttribute("topic", string(topic))
+
+		partitionConsumerEntity, err := kafkaIntegration.Entity(string(topic), nrConsumerGroupTopicEntity, clusterIDAttr, consumerGroupIDAttr, topicIDAttr)
+		if err != nil {
+			log.Error("Failed to get entity for partition consumer: %s in topic %s", err, topic)
+			return
+		}
+
+		ms := partitionConsumerEntity.NewMetricSet("KafkaOffsetSample",
+			attribute.Attribute{Key: "clusterName", Value: args.GlobalArgs.ClusterName},
+			attribute.Attribute{Key: "consumerGroup", Value: consumerGroup},
+			attribute.Attribute{Key: "topic", Value: string(topic)},
+		)
+
+		err = ms.SetMetric("consumerGroup.totalLag", totalLag, metric.GAUGE)
+		if err != nil {
+			log.Error("Failed to set metric consumerGroup.totalLag: %s for topic: %s", err, topic)
+		}
+
+		maxLag := topicMaxLagRollup[topic]
+		err = ms.SetMetric("consumerGroup.maxLag", maxLag, metric.GAUGE)
+		if err != nil {
+			log.Error("Failed to set metric consumerGroup.maxLag: %s for topic: %s", err, topic)
+		}
+
+		err = ms.SetMetric("consumerGroup.activeConsumers", len(topicActiveClientsRollup[topic]), metric.GAUGE)
+		if err != nil {
+			log.Error("Failed to set metric consumerGroup.activeConsumers: %s for topic: %s", err, topic)
 		}
 	}
 }
