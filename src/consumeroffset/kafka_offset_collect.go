@@ -42,7 +42,7 @@ func collectOffsetsForConsumerGroup(
 		consumerGroupPartitionWg sync.WaitGroup
 	)
 	// topics to be excluded from InactiveConsumerGroupsOffset calculation
-	topicExclussions := map[string]struct{}{kfkConsumerOffsetsTopic: {}, kfkSchemaTopic: {}}
+	topicExclusions := map[string]struct{}{kfkConsumerOffsetsTopic: {}, kfkSchemaTopic: {}}
 	clientPartitionLagChan := make(chan partitionLagResult, partitionLagChannelsBuffer)
 	cGroupPartitionLagChan := make(chan partitionLagResult, partitionLagChannelsBuffer)
 
@@ -62,7 +62,7 @@ func collectOffsetsForConsumerGroup(
 
 		for topic, partitionMap := range listGroupsResponse.Blocks {
 			// we add it to topic exclusions to not be recalculated in InactiveConsumerGroupOffset
-			topicExclussions[topic] = struct{}{}
+			topicExclusions[topic] = struct{}{}
 			for partition, block := range partitionMap {
 				if block.Err != sarama.ErrNoError {
 					log.Error("Error in consumer group offset response for topic %s, partition %d: %s", block.Err.Error())
@@ -91,7 +91,7 @@ func collectOffsetsForConsumerGroup(
 	}
 
 	if args.GlobalArgs.InactiveConsumerGroupOffset {
-		collectInactiveConsumerGroupOffsets(cGroupTopicLister, consumerGroup, topicExclussions, &consumerGroupPartitionWg, topicOffsetGetter, cGroupPartitionLagChan)
+		collectInactiveConsumerGroupOffsets(cGroupTopicLister, consumerGroup, topicExclusions, &consumerGroupPartitionWg, topicOffsetGetter, cGroupPartitionLagChan)
 	}
 
 	calculateClientLagTotals(clientPartitionLagChan, &clientPartitionWg, kafkaIntegration, consumerGroup)
@@ -180,7 +180,7 @@ func collectClientPartitionOffsetMetrics(
 func collectInactiveConsumerGroupOffsets(
 	cGroupTopicLister ConsumerGroupTopicLister,
 	consumerGroup string,
-	topicExclussions map[string]struct{},
+	topicExclusions map[string]struct{},
 	consumerGroupPartitionWg *sync.WaitGroup,
 	topicOffsetGetter TopicOffsetGetter,
 	cGroupPartitionLagChan chan partitionLagResult,
@@ -192,7 +192,7 @@ func collectInactiveConsumerGroupOffsets(
 	}
 
 	for topicName, topic := range topicMap {
-		if _, ok := topicExclussions[topicName]; ok {
+		if _, ok := topicExclusions[topicName]; ok {
 			continue
 		}
 
