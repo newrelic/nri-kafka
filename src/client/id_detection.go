@@ -24,8 +24,6 @@ type clientIDExtractInfo struct {
 }
 
 func detectConsumerIDs(jmxInfo *args.JMXHost, conn connection.JMXConnection) ([]string, error) {
-	// consumerAppInfoPatter is defined to detect consumer clientIDs, in case it is not found it will use
-	// consumerMetricsPattern which is also being used to fetch consumer metrics.
 	return getClientIDS(
 		[]clientIDExtractInfo{
 			{pattern: consumerMetricsPattern, extractor: idFromMBeanWithClientIDField},
@@ -37,8 +35,6 @@ func detectConsumerIDs(jmxInfo *args.JMXHost, conn connection.JMXConnection) ([]
 }
 
 func detectProducerIDs(jmxInfo *args.JMXHost, conn connection.JMXConnection) ([]string, error) {
-	// producerAppInfoPatter is defined to detect consumer clientIDs, in case it is not found it will use
-	// ProducerMetricsPattern which is also being used to fetch consumer metrics.
 	return getClientIDS(
 		[]clientIDExtractInfo{
 			{pattern: producerMetricsPattern, extractor: idFromMBeanWithClientIDField},
