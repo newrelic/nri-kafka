@@ -15,7 +15,7 @@ const (
 	consumerGroupOne = "consumer-one"
 	topicOne         = "one"
 	topicTwo         = "two"
-	clientID         = "consumer-1"
+	testClientID     = "consumer-1"
 )
 
 type ConsumerGroupTopicListerMock struct{}
@@ -66,8 +66,8 @@ func (tm *TopicOffsetGetterMock) GetFromTopicPartition(topicName string, partiti
 func TestCollectOffsetsForConsumerGroup(t *testing.T) { // nolint: funlen
 	// MemberAssignment mock created as in sarama's consumer_group_member_test.go
 	members := map[string]*sarama.GroupMemberDescription{
-		clientID: {
-			ClientId:       clientID,
+		testClientID: {
+			ClientId:       testClientID,
 			ClientHost:     "a-host",
 			MemberMetadata: nil,
 			MemberAssignment: []byte{
@@ -108,6 +108,31 @@ func TestCollectOffsetsForConsumerGroup(t *testing.T) { // nolint: funlen
 			},
 			topicEntities: nil,
 			numEntities:   4,
+		},
+		{
+			name:                        "Only active consumers with topic Aggregation",
+			inactiveConsumerGroupOffset: false,
+			consumerGroupOffsetByTopic:  true,
+			consumerGroup:               consumerGroupOne,
+			cGroupEntities: map[string]map[string]float64{
+				consumerGroupOne: {
+					// comes from: 25 - 10 + 30 - 10
+					"totalLag": 35,
+					// comes from max: 30 - 10
+					"maxLag":          20,
+					"activeConsumers": 1,
+				},
+			},
+			topicEntities: map[string]map[string]float64{
+				topicOne: {
+					// comes from: 25 - 10 + 30 - 10
+					"totalLag": 35,
+					// comes from max: 30 - 10
+					"maxLag":          20,
+					"activeConsumers": 1,
+				},
+			},
+			numEntities: 5,
 		},
 		{
 			name:                        "With inactive consumers",
@@ -190,10 +215,10 @@ func TestCollectOffsetsForConsumerGroup(t *testing.T) { // nolint: funlen
 					assert.Equal(t, tc.topicEntities[topicName]["maxLag"], entity.Metrics[0].Metrics["consumerGroup.maxLag"])
 					assert.Equal(t, tc.topicEntities[topicName]["activeConsumers"], entity.Metrics[0].Metrics["consumerGroup.activeConsumers"])
 				case nrConsumerEntity:
-					assert.Equal(t, clientID, entity.Metrics[0].Metrics["clientID"])
+					assert.Equal(t, testClientID, entity.Metrics[0].Metrics["clientID"])
 				case nrPartitionConsumerEntity:
 					// this entity only for topicOne that has member clientID
-					assert.Equal(t, clientID, entity.Metrics[0].Metrics["clientID"])
+					assert.Equal(t, testClientID, entity.Metrics[0].Metrics["clientID"])
 					assert.Equal(t, topicOne, entity.Metrics[0].Metrics["topic"])
 				}
 				assert.NotEmpty(t, entity)
