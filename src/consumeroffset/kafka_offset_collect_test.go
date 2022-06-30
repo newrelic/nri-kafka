@@ -90,7 +90,7 @@ func TestCollectOffsetsForConsumerGroup(t *testing.T) { // nolint: funlen
 		consumerGroup               string
 		cGroupEntities              map[string]map[string]float64
 		topicEntities               map[string]map[string]float64
-		numEntites                  int
+		numEntities                 int
 	}{
 		{
 			name:                        "Only active consumers",
@@ -107,7 +107,7 @@ func TestCollectOffsetsForConsumerGroup(t *testing.T) { // nolint: funlen
 				},
 			},
 			topicEntities: nil,
-			numEntites:    4,
+			numEntities:   4,
 		},
 		{
 			name:                        "With inactive consumers",
@@ -124,7 +124,7 @@ func TestCollectOffsetsForConsumerGroup(t *testing.T) { // nolint: funlen
 				},
 			},
 			topicEntities: nil,
-			numEntites:    4,
+			numEntities:   4,
 		},
 		{
 			name:                        "With inactive consumers and topic aggregation",
@@ -156,7 +156,7 @@ func TestCollectOffsetsForConsumerGroup(t *testing.T) { // nolint: funlen
 					"activeConsumers": 0,
 				},
 			},
-			numEntites: 6,
+			numEntities: 6,
 		},
 	}
 
@@ -175,7 +175,7 @@ func TestCollectOffsetsForConsumerGroup(t *testing.T) { // nolint: funlen
 				&TopicOffsetGetterMock{},
 			)
 
-			assert.Equal(t, tc.numEntites, len(kafkaIntegration.Entities))
+			assert.Equal(t, tc.numEntities, len(kafkaIntegration.Entities))
 			for _, entity := range kafkaIntegration.Entities {
 				switch entity.Metadata.Namespace {
 				case nrConsumerGroupEntity:
