@@ -28,8 +28,8 @@ func detectConsumerIDs(jmxInfo *args.JMXHost, conn connection.JMXConnection) ([]
 	// consumerMetricsPattern which is also being used to fetch consumer metrics.
 	return getClientIDS(
 		[]clientIDExtractInfo{
-			{pattern: consumerAppInfoPattern, extractor: idFromAppInfo},
 			{pattern: consumerMetricsPattern, extractor: idFromMBeanWithClientIDField},
+			{pattern: consumerAppInfoPattern, extractor: idFromAppInfo},
 		},
 		jmxInfo,
 		conn,
@@ -41,8 +41,8 @@ func detectProducerIDs(jmxInfo *args.JMXHost, conn connection.JMXConnection) ([]
 	// ProducerMetricsPattern which is also being used to fetch consumer metrics.
 	return getClientIDS(
 		[]clientIDExtractInfo{
-			{pattern: producerAppInfoPattern, extractor: idFromAppInfo},
 			{pattern: producerMetricsPattern, extractor: idFromMBeanWithClientIDField},
+			{pattern: producerAppInfoPattern, extractor: idFromAppInfo},
 		},
 		jmxInfo,
 		conn,

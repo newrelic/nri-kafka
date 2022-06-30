@@ -103,7 +103,7 @@ func TestDetectConsumerAndProducerIDs(t *testing.T) {
 		Expected []string
 	}{
 		{
-			Name: "consumer app-info pattern",
+			Name: "consumer app-info pattern", // app-info fallback
 			Conn: &mocks.MockJMXProvider{
 				MBeanNamePattern: consumerAppInfoPattern,
 				Names:            []string{"kafka.consumer:type=app-info,id=consumer-id"},
@@ -112,7 +112,7 @@ func TestDetectConsumerAndProducerIDs(t *testing.T) {
 			Expected: []string{"consumer-id"},
 		},
 		{
-			Name: "consumer metrics pattern", // When app-info is tried and fails, the metrics fallback should be used
+			Name: "consumer metrics pattern",
 			Conn: &mocks.MockJMXProvider{
 				MBeanNamePattern: consumerMetricsPattern,
 				Names:            []string{"kafka.consumer:type=consumer-fetch-manager-metrics,client-id=consumer-id"},
@@ -121,7 +121,7 @@ func TestDetectConsumerAndProducerIDs(t *testing.T) {
 			Expected: []string{"consumer-id"},
 		},
 		{
-			Name: "producer app-info pattern",
+			Name: "producer app-info pattern", // app-info fallback
 			Conn: &mocks.MockJMXProvider{
 				MBeanNamePattern: producerAppInfoPattern,
 				Names:            []string{"kafka.producer:type=app-info,id=my-id"},
@@ -130,7 +130,7 @@ func TestDetectConsumerAndProducerIDs(t *testing.T) {
 			Expected: []string{"my-id"},
 		},
 		{
-			Name: "producer metrics pattern", // When app-info is tried and fails, the metrics fallback should be used
+			Name: "producer metrics pattern",
 			Conn: &mocks.MockJMXProvider{
 				MBeanNamePattern: producerMetricsPattern,
 				Names:            []string{"kafka.producer:type=producer-metrics,client-id=producer-id"},
