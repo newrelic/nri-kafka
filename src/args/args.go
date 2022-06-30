@@ -79,7 +79,7 @@ type ArgumentList struct {
 	// Consumer offset arguments
 	ConsumerOffset              bool   `default:"false" help:"Populate consumer offset data"`
 	ConsumerGroupRegex          string `default:"" help:"A regex pattern matching the consumer groups to collect"`
-	ConsumerGroupOffsetByTopic  bool   `default:"false" help:"Add consumer-group offsets by topic"`
+	ConsumerGroupOffsetByTopic  bool   `default:"false" help:"Report consumer-group offset metrics by topic"`
 	InactiveConsumerGroupOffset bool   `default:"false" help:"Collect offset from consumer-groups with inactive consumers"`
 
 	Timeout int `default:"10000" help:"Timeout in milliseconds per single JMX query."`
