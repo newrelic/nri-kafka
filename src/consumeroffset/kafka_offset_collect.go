@@ -103,7 +103,7 @@ func collectOffsetsForConsumerGroup(
 }
 
 func collectClientPartitionOffsetMetrics(
-	lagResult *partitionLagResult,
+	partitionLagResult *partitionLagResult,
 	topicOffsetGetter TopicOffsetGetter,
 	consumerGroup string,
 	memberDescription *sarama.GroupMemberDescription,
@@ -157,11 +157,11 @@ func collectClientPartitionOffsetMetrics(
 			log.Error("Failed to set metric consumer.lag: %s", err)
 		}
 
-		lagResult.ConsumerGroup = consumerGroup
-		lagResult.Topic = topic
-		lagResult.PartitionID = strconv.Itoa(int(partition))
-		lagResult.ClientID = memberDescription.ClientId
-		lagResult.Lag = int(lag)
+		partitionLagResult.ConsumerGroup = consumerGroup
+		partitionLagResult.Topic = topic
+		partitionLagResult.PartitionID = strconv.Itoa(int(partition))
+		partitionLagResult.ClientID = memberDescription.ClientId
+		partitionLagResult.Lag = int(lag)
 	}
 
 	err = ms.SetMetric("consumer.hwm", hwm, metric.GAUGE)
