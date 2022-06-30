@@ -74,17 +74,21 @@ func collectOffsetsForConsumerGroup(
 						clientPartitionWg.Done()
 						consumerGroupPartitionWg.Done()
 					}()
+					var partitionLag partitionLagResult
 					collectClientPartitionOffsetMetrics(
+						&partitionLag,
 						topicOffsetGetter,
 						consumerGroup,
 						description,
 						topic,
 						partition,
 						block,
-						clientPartitionLagChan,
-						cGroupPartitionLagChan,
 						kafkaIntegration,
 					)
+					if partitionLag.Topic == topic {
+						clientPartitionLagChan <- partitionLag
+						cGroupPartitionLagChan <- partitionLag
+					}
 				}(topic, partition, description, block)
 			}
 		}
@@ -99,14 +103,13 @@ func collectOffsetsForConsumerGroup(
 }
 
 func collectClientPartitionOffsetMetrics(
+	lagResult *partitionLagResult,
 	topicOffsetGetter TopicOffsetGetter,
 	consumerGroup string,
 	memberDescription *sarama.GroupMemberDescription,
 	topic string,
 	partition int32,
 	block *sarama.OffsetFetchResponseBlock,
-	clientPartitionLagChan chan partitionLagResult,
-	consumerPartitionLagChan chan partitionLagResult,
 	kafkaIntegration *integration.Integration,
 ) {
 	log.Debug("Collecting offsets for consumerGroup '%s', member '%s', topic '%s', partition '%d'", consumerGroup, memberDescription.ClientId, topic, partition)
@@ -154,21 +157,11 @@ func collectClientPartitionOffsetMetrics(
 			log.Error("Failed to set metric consumer.lag: %s", err)
 		}
 
-		clientPartitionLagChan <- partitionLagResult{
-			ConsumerGroup: consumerGroup,
-			Topic:         topic,
-			PartitionID:   strconv.Itoa(int(partition)),
-			ClientID:      memberDescription.ClientId,
-			Lag:           int(lag),
-		}
-
-		consumerPartitionLagChan <- partitionLagResult{
-			ConsumerGroup: consumerGroup,
-			Topic:         topic,
-			PartitionID:   strconv.Itoa(int(partition)),
-			ClientID:      memberDescription.ClientId,
-			Lag:           int(lag),
-		}
+		lagResult.ConsumerGroup = consumerGroup
+		lagResult.Topic = topic
+		lagResult.PartitionID = strconv.Itoa(int(partition))
+		lagResult.ClientID = memberDescription.ClientId
+		lagResult.Lag = int(lag)
 	}
 
 	err = ms.SetMetric("consumer.hwm", hwm, metric.GAUGE)
