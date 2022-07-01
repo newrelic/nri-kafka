@@ -16,13 +16,13 @@ func NewClientMetricsAggregator(consumerGroup string) *ClientMetricsAggregator {
 	}
 }
 
-// getConsumerClientRollup waits for data from clientPartitionLagChan and aggregates it, returning it when the waitGroup finishes
-func (cma *ClientMetricsAggregator) waitAndAggregateMetrics(clientPartitionLagChan chan partitionLagResult) {
+// WaitAndAggregateMetrics waits for data from partitionLagChan and aggregates it, returning it when the channel closes
+func (cma *ClientMetricsAggregator) WaitAndAggregateMetrics(partitionLagChan chan partitionLagResult) {
 	log.Debug("Calculating consumer lag rollup metrics for consumer group '%s'", cma.consumerGroup)
 	defer log.Debug("Finished calculating consumer lag rollup metrics for consumer group '%s'", cma.consumerGroup)
 
 	for {
-		result, ok := <-clientPartitionLagChan
+		result, ok := <-partitionLagChan
 		if !ok {
 			break // channel has been closed
 		}
@@ -32,6 +32,6 @@ func (cma *ClientMetricsAggregator) waitAndAggregateMetrics(clientPartitionLagCh
 	}
 }
 
-func (cma *ClientMetricsAggregator) getAggregatedMetrics() map[clientID]int {
+func (cma *ClientMetricsAggregator) GetAggregatedMetrics() map[clientID]int {
 	return cma.clientMetrics
 }

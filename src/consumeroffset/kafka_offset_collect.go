@@ -27,6 +27,10 @@ type partitionLagResult struct {
 	Lag           int
 }
 
+type MetricsAggregator interface {
+	WaitAndAggregateMetrics(partitionLagChan chan partitionLagResult)
+}
+
 func collectOffsetsForConsumerGroup(
 	cGroupTopicLister ConsumerGroupTopicLister,
 	consumerGroup string,
@@ -101,34 +105,32 @@ func collectOffsetsForConsumerGroup(
 
 	clientMetricsAggregator := NewClientMetricsAggregator(consumerGroup)
 	lagResultsWg.Add(1)
-
-	go func() {
-		go func() {
-			clientPartitionWg.Wait()
-			log.Debug("Finished retrieving offsets for all member partitions in consumer group '%s'", consumerGroup)
-			close(clientPartitionLagChan)
-		}()
-		clientMetricsAggregator.waitAndAggregateMetrics(clientPartitionLagChan)
-		lagResultsWg.Done()
-	}()
+	go aggregateLagData(&clientPartitionWg, consumerGroup, clientPartitionLagChan, clientMetricsAggregator, &lagResultsWg)
 
 	cGroupMetricsAggregator := NewCGroupMetricsAggregator(consumerGroup, args.GlobalArgs.ConsumerGroupOffsetByTopic)
 	lagResultsWg.Add(1)
-
-	go func() {
-		go func() {
-			consumerGroupPartitionWg.Wait()
-			log.Debug("Finished retrieving offsets for all partitions in consumer group '%s'", consumerGroup)
-			close(cGroupPartitionLagChan)
-		}()
-		cGroupMetricsAggregator.waitAndAggregateMetrics(cGroupPartitionLagChan)
-		lagResultsWg.Done()
-	}()
+	go aggregateLagData(&consumerGroupPartitionWg, consumerGroup, cGroupPartitionLagChan, cGroupMetricsAggregator, &lagResultsWg)
 
 	lagResultsWg.Wait()
 
-	generateConsumerNRMetrics(kafkaIntegration, clientMetricsAggregator.getAggregatedMetrics())
-	generateConsumerGroupNRMetrics(kafkaIntegration, cGroupMetricsAggregator.getAggregatedMetrics(), consumerGroup)
+	generateConsumerNRMetrics(kafkaIntegration, clientMetricsAggregator.GetAggregatedMetrics())
+	generateConsumerGroupNRMetrics(kafkaIntegration, cGroupMetricsAggregator.GetAggregatedMetrics(), consumerGroup)
+}
+
+func aggregateLagData(
+	partitionWg *sync.WaitGroup,
+	consumerGroup string,
+	partitionLagChan chan partitionLagResult,
+	metricsAggregator MetricsAggregator,
+	lagResultsWg *sync.WaitGroup,
+) {
+	go func() {
+		partitionWg.Wait()
+		log.Debug("Finished retrieving offsets for all member partitions in consumer group '%s'", consumerGroup)
+		close(partitionLagChan)
+	}()
+	metricsAggregator.WaitAndAggregateMetrics(partitionLagChan)
+	lagResultsWg.Done()
 }
 
 func collectClientPartitionOffsetMetrics(
@@ -277,7 +279,7 @@ func generateConsumerNRMetrics(kafkaIntegration *integration.Integration, consum
 	}
 }
 
-func generateConsumerGroupNRMetrics(kafkaIntegration *integration.Integration, cGroupAggregations cGroupAggregations, consumerGroup string) {
+func generateConsumerGroupNRMetrics(kafkaIntegration *integration.Integration, cGroupAggregations CGroupAggregations, consumerGroup string) {
 	consumerGroupMetrics(cGroupAggregations.consumerGroupRollup, kafkaIntegration, cGroupAggregations.consumerGroupMaxLagRollup, cGroupAggregations.cGroupActiveClientsRollup)
 	consumerGroupByTopicMetrics(cGroupAggregations.topicRollup, consumerGroup, kafkaIntegration, cGroupAggregations.topicMaxLagRollup, cGroupAggregations.topicActiveClientsRollup)
 }

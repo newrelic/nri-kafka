@@ -9,7 +9,7 @@ type (
 	topic           string
 )
 
-type cGroupAggregations struct {
+type CGroupAggregations struct {
 	consumerGroupRollup       map[consumerGroupID]int
 	consumerGroupMaxLagRollup map[consumerGroupID]int
 	cGroupActiveClientsRollup map[clientID]struct{}
@@ -20,7 +20,7 @@ type cGroupAggregations struct {
 }
 
 type CGroupMetricsAggregator struct {
-	cgroupMetrics              cGroupAggregations
+	cgroupMetrics              CGroupAggregations
 	consumerGroup              string
 	consumerGroupOffsetByTopic bool
 }
@@ -29,7 +29,7 @@ func NewCGroupMetricsAggregator(consumerGroup string, consumerGroupOffsetByTopic
 	return &CGroupMetricsAggregator{
 		consumerGroup:              consumerGroup,
 		consumerGroupOffsetByTopic: consumerGroupOffsetByTopic,
-		cgroupMetrics: cGroupAggregations{
+		cgroupMetrics: CGroupAggregations{
 			consumerGroupRollup:       make(map[consumerGroupID]int),
 			consumerGroupMaxLagRollup: make(map[consumerGroupID]int),
 			cGroupActiveClientsRollup: make(map[clientID]struct{}),
@@ -40,13 +40,13 @@ func NewCGroupMetricsAggregator(consumerGroup string, consumerGroupOffsetByTopic
 	}
 }
 
-// getConsumerClientRollup waits for data from clientPartitionLagChan and aggregates it, returning it when the waitGroup finishes
-func (cma *CGroupMetricsAggregator) waitAndAggregateMetrics(cGroupPartitionLagChan chan partitionLagResult) {
+// WaitAndAggregateMetrics waits for data from partitionLagChan and aggregates it, returning it when the channel closes
+func (cma *CGroupMetricsAggregator) WaitAndAggregateMetrics(partitionLagChan chan partitionLagResult) {
 	log.Debug("Calculating consumer group lag rollup metrics for consumer group '%s'", cma.consumerGroup)
 	defer log.Debug("Finished calculating consumer group lag rollup metrics for consumer group '%s'", cma.consumerGroup)
 
 	for {
-		result, ok := <-cGroupPartitionLagChan
+		result, ok := <-partitionLagChan
 		if !ok {
 			break // channel has been closed
 		}
@@ -88,6 +88,6 @@ func (cma *CGroupMetricsAggregator) waitAndAggregateMetrics(cGroupPartitionLagCh
 	}
 }
 
-func (cma *CGroupMetricsAggregator) getAggregatedMetrics() cGroupAggregations {
+func (cma *CGroupMetricsAggregator) GetAggregatedMetrics() CGroupAggregations {
 	return cma.cgroupMetrics
 }
