@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+
 	"github.com/newrelic/nri-kafka/src/args"
 	"github.com/newrelic/nrjmx/gojmx"
 	"golang.org/x/sync/semaphore"
@@ -63,6 +64,7 @@ func (p *JMXProviderWithConnectionsLimit) NewConnection(config *gojmx.JMXConfig)
 // JMXConnection interface for JMX connection.
 type JMXConnection interface {
 	QueryMBeanAttributes(mBeanNamePattern string) ([]*gojmx.AttributeResponse, error)
+	QueryMBeanNames(mBeanPattern string) ([]string, error)
 	Close() error
 }
 
@@ -75,6 +77,10 @@ type jmxConnection struct {
 
 func (j *jmxConnection) QueryMBeanAttributes(mBeanNamePattern string) ([]*gojmx.AttributeResponse, error) {
 	return j.Client.QueryMBeanAttributes(mBeanNamePattern)
+}
+
+func (j *jmxConnection) QueryMBeanNames(mBeanPattern string) ([]string, error) {
+	return j.Client.QueryMBeanNames(mBeanPattern)
 }
 
 func (j *jmxConnection) Close() error {
@@ -131,6 +137,13 @@ func (cb *ConfigBuilder) WithUsername(user string) *ConfigBuilder {
 func (cb *ConfigBuilder) WithPassword(password string) *ConfigBuilder {
 	cb.config.Password = password
 	return cb
+}
+
+// WithJMXHostSettings is a helper to set all attributes from the provided JMXHost.
+func (cb *ConfigBuilder) WithJMXHostSettings(jmxInfo *args.JMXHost) *ConfigBuilder {
+	return cb.
+		WithHostname(jmxInfo.Host).WithPort(jmxInfo.Port).
+		WithUsername(jmxInfo.User).WithPassword(jmxInfo.Password)
 }
 
 // Build returns the jmx config.

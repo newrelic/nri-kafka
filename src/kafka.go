@@ -30,6 +30,9 @@ const (
 	discoverBootstrap    = "bootstrap"
 	discoverZookeeper    = "zookeeper"
 	topicSourceZookeeper = "zookeeper"
+
+	numberOfConsumerWorkers = 3
+	numberOfProducerWorkers = 3
 )
 
 var (
@@ -233,8 +236,8 @@ func coreCollection(kafkaIntegration *integration.Integration, jmxConnProvider c
 		go broker.FeedBrokerPool(brokers, brokerChan)
 	}
 
-	consumerChan := client.StartWorkerPool(3, &wg, kafkaIntegration, client.ConsumerWorker, jmxConnProvider)
-	producerChan := client.StartWorkerPool(3, &wg, kafkaIntegration, client.ProducerWorker, jmxConnProvider)
+	consumerChan := client.StartWorkerPool(numberOfConsumerWorkers, &wg, kafkaIntegration, client.Worker(client.CollectConsumerMetrics), jmxConnProvider)
+	producerChan := client.StartWorkerPool(numberOfProducerWorkers, &wg, kafkaIntegration, client.Worker(client.CollectProducerMetrics), jmxConnProvider)
 
 	go client.FeedWorkerPool(consumerChan, args.GlobalArgs.Consumers)
 	go client.FeedWorkerPool(producerChan, args.GlobalArgs.Producers)

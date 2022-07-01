@@ -9,6 +9,7 @@ import (
 	sdkArgs "github.com/newrelic/infra-integrations-sdk/args"
 	"github.com/newrelic/infra-integrations-sdk/integration"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestParseArgs(t *testing.T) {
@@ -215,5 +216,95 @@ func Test_unmarshalConsumerGroups_NoTopics(t *testing.T) {
 	_, err := unmarshalConsumerGroups(true, input)
 	if err == nil {
 		t.Error("Expected error")
+	}
+}
+
+func TestUnMarshalJMXHosts(t *testing.T) {
+	arguments := &ArgumentList{
+		DefaultJMXUser:     "user",
+		DefaultJMXPassword: "password",
+		DefaultJMXPort:     42,
+		DefaultJMXHost:     "host",
+	}
+	cases := []struct {
+		Name     string
+		Input    string
+		Expected []*JMXHost
+	}{
+		{
+			Name:     "Empty",
+			Input:    `[]`,
+			Expected: []*JMXHost{},
+		},
+		{
+			Name:  "Default with no alias",
+			Input: `[{}]`,
+			Expected: []*JMXHost{
+				{
+					User:     arguments.DefaultJMXUser,
+					Password: arguments.DefaultJMXPassword,
+					Port:     arguments.DefaultJMXPort,
+					Host:     arguments.DefaultJMXHost,
+				},
+			},
+		},
+		{
+			Name:  "Default with alias",
+			Input: `default`,
+			Expected: []*JMXHost{
+				{
+					User:     arguments.DefaultJMXUser,
+					Password: arguments.DefaultJMXPassword,
+					Port:     arguments.DefaultJMXPort,
+					Host:     arguments.DefaultJMXHost,
+				},
+			},
+		},
+		{
+			Name:  "Only name set",
+			Input: `[{"name": "client.id"}]`,
+			Expected: []*JMXHost{
+				{
+					Name:     "client.id",
+					User:     arguments.DefaultJMXUser,
+					Password: arguments.DefaultJMXPassword,
+					Port:     arguments.DefaultJMXPort,
+					Host:     arguments.DefaultJMXHost,
+				},
+			},
+		},
+		{
+			Name:  "No name set",
+			Input: `[{"user": "my.user", "password": "my.pass", "port": 1088, "host": "localhost"}]`,
+			Expected: []*JMXHost{
+				{
+					User:     "my.user",
+					Password: "my.pass",
+					Port:     1088,
+					Host:     "localhost",
+				},
+			},
+		},
+		{
+			Name:  "All values set",
+			Input: `[{"name": "my.name", "user": "my.user", "password": "my.pass", "port": 1088, "host": "localhost"}]`,
+			Expected: []*JMXHost{
+				{
+					Name:     "my.name",
+					User:     "my.user",
+					Password: "my.pass",
+					Port:     1088,
+					Host:     "localhost",
+				},
+			},
+		},
+	}
+
+	for _, c := range cases {
+		t.Run(c.Name, func(t *testing.T) {
+			parsed, err := unmarshalJMXHosts([]byte(c.Input), arguments)
+			require.NoError(t, err)
+			require.Equal(t, c.Expected, parsed)
+		})
 	}
 }
