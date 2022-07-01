@@ -2,10 +2,13 @@ package consumeroffset
 
 import "github.com/newrelic/infra-integrations-sdk/log"
 
-type clientID string
+type (
+	clientID           string
+	ClientAggregations map[clientID]int
+)
 
 type ClientMetricsAggregator struct {
-	clientMetrics map[clientID]int
+	clientMetrics ClientAggregations
 	consumerGroup string
 }
 
@@ -32,6 +35,6 @@ func (cma *ClientMetricsAggregator) WaitAndAggregateMetrics(partitionLagChan cha
 	}
 }
 
-func (cma *ClientMetricsAggregator) GetAggregatedMetrics() map[clientID]int {
+func (cma *ClientMetricsAggregator) GetAggregatedMetrics() ClientAggregations {
 	return cma.clientMetrics
 }
