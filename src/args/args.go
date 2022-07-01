@@ -68,19 +68,19 @@ type ArgumentList struct {
 	SaslGssapiDisableFASTNegotiation bool   `default:"false" help:"Disable FAST negotiation."`
 
 	// Collection configuration
-	LocalOnlyCollection    bool   `default:"false" help:"Collect only the metrics related to the configured bootstrap broker. Useful for distributed metric collection"`
-	CollectBrokerTopicData bool   `default:"true" help:"DEPRECATED -- currently it has no effect"`
-	TopicMode              string `default:"None" help:"Possible options are All, None, or List. If List, must also specify the list of topics to collect with the topic_list option."`
-	TopicList              string `default:"[]" help:"JSON array of strings with the names of topics to monitor. Only used if collect_topics is set to 'List'"`
-	TopicRegex             string `default:"" help:"A regex pattern that matches the list of topics to collect. Only used if collect_topics is set to 'Regex'"`
-	TopicBucket            string `default:"1/1" help:"Allows the partitioning of topic collection across multiple instances. The second number is the number of instances topics are partitioned across. The first number is the bucket number of the current instance, which should be between 1 and the second number."`
-	CollectTopicSize       bool   `default:"false" help:"Enablement of on disk Topic size metric collection. This metric can be very resource intensive to collect especially against many topics."`
-	CollectTopicOffset     bool   `default:"false" help:"Enablement of Topic offsets collection. This metric can be very resource intensive to collect especially against many topics."`
+	LocalOnlyCollection bool   `default:"false" help:"Collect only the metrics related to the configured bootstrap broker. Useful for distributed metric collection"`
+	TopicMode           string `default:"None" help:"Possiblex options are All, None, or List. If List, must also specify the list of topics to collect with the topic_list option."`
+	TopicList           string `default:"[]" help:"JSON array of strings with the names of topics to monitor. Only used if collect_topics is set to 'List'"`
+	TopicRegex          string `default:"" help:"A regex pattern that matches the list of topics to collect. Only used if collect_topics is set to 'Regex'"`
+	TopicBucket         string `default:"1/1" help:"Allows the partitioning of topic collection across multiple instances. The second number is the number of instances topics are partitioned across. The first number is the bucket number of the current instance, which should be between 1 and the second number."`
+	CollectTopicSize    bool   `default:"false" help:"Enablement of on disk Topic size metric collection. This metric can be very resource intensive to collect especially against many topics."`
+	CollectTopicOffset  bool   `default:"false" help:"Enablement of Topic offsets collection. This metric can be very resource intensive to collect especially against many topics."`
 
 	// Consumer offset arguments
-	ConsumerOffset     bool   `default:"false" help:"Populate consumer offset data"`
-	ConsumerGroups     string `default:"{}" help:"DEPRECATED -- JSON Object whitelist of consumer groups to their topics and topics to their partitions, in which to collect consumer offsets for."`
-	ConsumerGroupRegex string `default:"" help:"A regex pattern matching the consumer groups to collect"`
+	ConsumerOffset              bool   `default:"false" help:"Populate consumer offset data"`
+	ConsumerGroupRegex          string `default:"" help:"A regex pattern matching the consumer groups to collect"`
+	ConsumerGroupOffsetByTopic  bool   `default:"false" help:"Report consumer-group offset metrics by topic"`
+	InactiveConsumerGroupOffset bool   `default:"false" help:"Collect offset from consumer-groups with inactive consumers"`
 
 	Timeout int `default:"10000" help:"Timeout in milliseconds per single JMX query."`
 

@@ -5,18 +5,18 @@ package integration
 
 import (
 	"flag"
+	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 
-	"fmt"
 	"github.com/Shopify/sarama"
 	"github.com/newrelic/infra-integrations-sdk/log"
 	"github.com/newrelic/nri-kafka/tests/integration/helpers"
 	"github.com/newrelic/nri-kafka/tests/integration/jsonschema"
 	"github.com/stretchr/testify/assert"
-	"strings"
 )
 
 const (
@@ -51,7 +51,7 @@ func runIntegration(t *testing.T, config func([]string) []string) (string, strin
 	stdout, stderr, err := helpers.ExecInContainer(*container, command)
 
 	if stderr != "" {
-		log.Debug("Integration command Standard Error: ", stderr)
+		log.Debug("Integration command Standard Error: %s", stderr)
 	}
 
 	return stdout, stderr, err
