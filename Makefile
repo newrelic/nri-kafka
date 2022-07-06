@@ -43,6 +43,7 @@ integration-test:
         exit 1 ;\
 	fi
 	@cp tests/integration/jmxremote/jmxremote.password.unencoded tests/integration/jmxremote/jmxremote.password
+	@chmod 0600 tests/integration/jmxremote/jmxremote.password
 	@docker-compose -f tests/integration/docker-compose.yml up -d --build
 	@go test -v -tags=integration ./tests/integration/. -count=1 ; (ret=$$?; docker-compose -f tests/integration/docker-compose.yml down && exit $$ret)
 
