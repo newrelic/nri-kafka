@@ -182,6 +182,8 @@ func bootstrapDiscoverConfig(command []string) []string {
 		"--bootstrap_broker_kafka_port", "9092",
 		"--bootstrap_broker_kafka_protocol", "PLAINTEXT",
 		"--bootstrap_broker_jmx_port", "1099",
+		"--bootstrap_broker_jmx_user", "admin",
+		"--bootstrap_broker_jmx_password", "nrone",
 		"--topic_mode", "all",
 	)
 }

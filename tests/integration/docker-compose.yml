@@ -21,10 +21,11 @@ services:
       KAFKA_CREATE_TOPICS: "topicA:1:1,topicB:1:1,topicC:1:1,topicB:1:1"
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 3
       KAFKA_NUM_PARTITIONS: 3
-      KAFKA_JMX_OPTS: "-Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false -Djava.rmi.server.hostname=kafka1 -Dcom.sun.management.jmxremote.rmi.port=1099"
+      KAFKA_JMX_OPTS: "-Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.authenticate=true -Dcom.sun.management.jmxremote.access.file=/etc/jmxremote/jmxremote.access -Dcom.sun.management.jmxremote.password.file=/etc/jmxremote/jmxremote.password -Dcom.sun.management.jmxremote.ssl=false -Djava.rmi.server.hostname=kafka1 -Dcom.sun.management.jmxremote.rmi.port=1099"
       JMX_PORT: 1099
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
+      - ./jmxremote:/etc/jmxremote
     networks:
       - kfk
 
@@ -41,10 +42,11 @@ services:
       KAFKA_BROKER_ID: 501
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 3
       KAFKA_NUM_PARTITIONS: 3
-      KAFKA_JMX_OPTS: "-Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false -Djava.rmi.server.hostname=kafka2 -Dcom.sun.management.jmxremote.rmi.port=1099"
+      KAFKA_JMX_OPTS: "-Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.authenticate=true -Dcom.sun.management.jmxremote.access.file=/etc/jmxremote/jmxremote.access -Dcom.sun.management.jmxremote.password.file=/etc/jmxremote/jmxremote.password -Dcom.sun.management.jmxremote.ssl=false -Djava.rmi.server.hostname=kafka2 -Dcom.sun.management.jmxremote.rmi.port=1099"
       JMX_PORT: 1099
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
+      - ./jmxremote:/etc/jmxremote
     networks:
       - kfk
 
@@ -61,10 +63,11 @@ services:
       KAFKA_BROKER_ID: 502
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 3
       KAFKA_NUM_PARTITIONS: 3
-      KAFKA_JMX_OPTS: "-Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false -Djava.rmi.server.hostname=kafka3 -Dcom.sun.management.jmxremote.rmi.port=1099"
+      KAFKA_JMX_OPTS: "-Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.authenticate=true -Dcom.sun.management.jmxremote.access.file=/etc/jmxremote/jmxremote.access -Dcom.sun.management.jmxremote.password.file=/etc/jmxremote/jmxremote.password -Dcom.sun.management.jmxremote.ssl=false -Djava.rmi.server.hostname=kafka3 -Dcom.sun.management.jmxremote.rmi.port=1099"
       JMX_PORT: 1099
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
+      - ./jmxremote:/etc/jmxremote
     networks:
       - kfk
 

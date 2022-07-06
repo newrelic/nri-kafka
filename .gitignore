@@ -52,3 +52,6 @@ dist/
 # build files
 src/versioninfo.json
 src/resource.syso
+
+# kafka encoded password
+tests/integration/jmxremote/jmxremote.password
