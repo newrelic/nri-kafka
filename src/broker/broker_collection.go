@@ -75,6 +75,7 @@ func brokerWorker(brokerChan <-chan *connection.Broker, collectedTopics []string
 			jmxConfig := connection.NewConfigBuilder().
 				FromArgs().
 				WithHostname(broker.Host).WithPort(broker.JMXPort).
+				WithUsername(broker.JMXUser).WithPassword(broker.JMXPassword).
 				Build()
 
 			jmxConn, err := jmxConnProvider.NewConnection(jmxConfig)
