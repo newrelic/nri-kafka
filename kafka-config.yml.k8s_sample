@@ -39,7 +39,7 @@ integrations_config:
         - name: nri-kafka
           env:
             CLUSTER_NAME: kafka-canary
-            PRODUCERS: '[{"name": "${discovery.podName}", "host": "${discovery.ip}", "port": 5555}]'
+            PRODUCERS: '[{"host": "${discovery.ip}", "port": 5555}]'
             TOPIC_MODE: list
             TOPIC_LIST: '["test"]'
             METRICS: 1
@@ -55,7 +55,7 @@ integrations_config:
         - name: nri-kafka
           env:
             CLUSTER_NAME: kafka-canary
-            CONSUMERS: '[{"name": "${discovery.podName}", "host": "${discovery.ip}", "port": 5555}]'
+            CONSUMERS: '[{"host": "${discovery.ip}", "port": 5555}]'
             TOPIC_MODE: list
             TOPIC_LIST: '["test"]'
             METRICS: 1

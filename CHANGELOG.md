@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 3.0.0 (2022-07-12)
+
+This new version adds two new features to monitor inactive consumers. We encourage you to take a look at this new features in [here](https://docs.newrelic.com/docs/infrastructure/host-integrations/host-integrations-list/kafka/kafka-integration/#offset-monitoring).
+
+### Breaking changes
+- CONSUMER_GROUPS flag removed, CONSUMER_GROUP_REGEX should be used instead.
+- COLLECT_BROKER_TOPIC_DATA has been removed (It was not having any effect).
+- BOOTSTRAP_BROKER_JMX_USER and BOOTSTRAP_BROKER_JMX_PASSWORD are honored taking precedence to DEFAULT_JMX_USER and DEFAULT_JMX_BROKER on Bootsrap discovery.
+
+### Added
+- Autodetect Consumer/Producer names (clientID) (https://github.com/newrelic/nri-kafka/pull/178) 
+- Offset collection for consumer groups with inactive consumers using flag INACTIVE_CONSUMER_GROUP_OFFSET (https://github.com/newrelic/nri-kafka/pull/172)
+- Report consumer-group offset metrics by topic using flag CONSUMER_GROUP_OFFSET_BY_TOPIC (https://github.com/newrelic/nri-kafka/pull/172)
+
 ## 2.19.1 (2022-05-16)
 ### Added
 - Extra logging for broker collection on verbose mode
