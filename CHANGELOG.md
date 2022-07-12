@@ -19,9 +19,6 @@ This new version adds two new features to monitor inactive consumers. We encoura
 - Offset collection for consumer groups with inactive consumers using flag INACTIVE_CONSUMER_GROUP_OFFSET (https://github.com/newrelic/nri-kafka/pull/172)
 - Report consumer-group offset metrics by topic using flag CONSUMER_GROUP_OFFSET_BY_TOPIC (https://github.com/newrelic/nri-kafka/pull/172)
 
-### Added
-- Extra logging for broker collection on verbose mode
-
 ## 2.19.1 (2022-05-16)
 ### Added
 - Extra logging for broker collection on verbose mode
