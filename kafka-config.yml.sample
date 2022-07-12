@@ -171,8 +171,8 @@ integrations:
     # - username: The username used to connect to JMX. If omitted, will use the value of the "default_jmx_user" field
     # - password: The password used to connect to JMX. If omitted, will use the value of the "default_jmx_password" field
     # Example: {"name": "myProducer", "host": "localhost", "port": 24, "username": "me', "password": "secret"}
-    PRODUCERS: '[{"name": "myProducer", "host": "localhost", "port": 24, "username": "me", "password": "secret"}]'
-    CONSUMERS: '[{"name": "myConsumer", "host": "localhost", "port": 24, "username": "me", "password": "secret"}]'
+    PRODUCERS: '[{"host": "localhost", "port": 24, "username": "me", "password": "secret"}]'
+    CONSUMERS: '[{"host": "localhost", "port": 24, "username": "me", "password": "secret"}]'
     # If several producers/consumers are on the same host an agent can be installed on that host and the
     # "default_jmx_host" and "default_jmx_port" field can be set once and used for all producers/consumers that
     # do not have the "host" or "port" field respectively.
