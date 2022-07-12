@@ -16,8 +16,8 @@ This new version adds two new features to monitor inactive consumers. We encoura
 
 ### Added
 - Autodetect Consumer/Producer names (clientID) (https://github.com/newrelic/nri-kafka/pull/178) 
-- Offset collection for consumer groups with inactive consumers with flag INACTIVE_CONSUMER_GROUP_OFFSET (https://github.com/newrelic/nri-kafka/pull/172)
-- Report consumer-group offset metrics by topic with flag CONSUMER_GROUP_OFFSET_BY_TOPIC (https://github.com/newrelic/nri-kafka/pull/172)
+- Offset collection for consumer groups with inactive consumers using flag INACTIVE_CONSUMER_GROUP_OFFSET (https://github.com/newrelic/nri-kafka/pull/172)
+- Report consumer-group offset metrics by topic using flag CONSUMER_GROUP_OFFSET_BY_TOPIC (https://github.com/newrelic/nri-kafka/pull/172)
 
 ### Added
 - Extra logging for broker collection on verbose mode
