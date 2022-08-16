@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 3.1.0 (2022-08-16)
+### Changed
+- Bump dependencies:
+  `sarama` v1.34.1 -> v1.36.0
+  `gojmx` v0.0.0-20220422131558-879b33f09229 -> v0.0.0-20220801092610-d842b96425bf
+  `sync` v0.0.0-20210220032951-036812b2e83c -> v0.0.0-20220722155255-886fb9371eb4
+
 ## 3.0.0 (2022-07-12)
 
 This new version adds two new features to monitor inactive consumers. We encourage you to take a look at this new features in [here](https://docs.newrelic.com/docs/infrastructure/host-integrations/host-integrations-list/kafka/kafka-integration/#offset-monitoring).
