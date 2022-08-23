@@ -2,7 +2,6 @@
 package broker
 
 import (
-	"errors"
 	"fmt"
 	"strings"
 	"sync"
@@ -16,11 +15,6 @@ import (
 	"github.com/newrelic/nri-kafka/src/args"
 	"github.com/newrelic/nri-kafka/src/connection"
 	"github.com/newrelic/nri-kafka/src/metrics"
-)
-
-var (
-	// ErrUnableToCast error is returned when the value cast fails.
-	ErrUnableToCast = errors.New("unable to cast")
 )
 
 // StartBrokerPool starts a pool of brokerWorkers to handle collecting data for Broker entities.

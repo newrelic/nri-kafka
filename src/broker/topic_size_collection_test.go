@@ -23,23 +23,23 @@ func TestGatherTopicSize_Single(t *testing.T) {
 		Result: []*gojmx.AttributeResponse{
 			{
 				Name:         "one",
-				ResponseType: gojmx.ResponseTypeDouble,
-				DoubleValue:  float64(1),
+				ResponseType: gojmx.ResponseTypeString,
+				StringValue:  "1",
 			},
 			{
 				Name:         "two",
 				ResponseType: gojmx.ResponseTypeDouble,
-				DoubleValue:  float64(2),
+				DoubleValue:  2,
 			},
 			{
 				Name:         "three",
-				ResponseType: gojmx.ResponseTypeDouble,
-				DoubleValue:  float64(3),
+				ResponseType: gojmx.ResponseTypeString,
+				StringValue:  "3",
 			},
 			{
 				Name:         "four",
 				ResponseType: gojmx.ResponseTypeDouble,
-				DoubleValue:  float64(4),
+				DoubleValue:  4,
 			},
 		},
 	}

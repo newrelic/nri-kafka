@@ -185,6 +185,8 @@ func bootstrapDiscoverConfig(command []string) []string {
 		"--bootstrap_broker_jmx_user", "admin",
 		"--bootstrap_broker_jmx_password", "nrone",
 		"--topic_mode", "all",
+		"--collect_topic_size",
+		"--collect_topic_offset",
 	)
 }
 
