@@ -354,7 +354,7 @@ func TestKafkaIntegration_producer_test(t *testing.T) {
 	consumerConfig := func(command []string) []string {
 		return append(
 			command,
-			"--producers", "[{\"name\": \"kafka_dummy_producer\", \"host\": \"kafka_dummy_producer\", \"port\": 1089}]",
+			"--producers", "[{\"host\": \"kafka-dummy-producer.local\", \"port\": 1089}]",
 		)
 	}
 
@@ -371,7 +371,7 @@ func TestKafkaIntegration_consumer_test(t *testing.T) {
 	consumerConfig := func(command []string) []string {
 		return append(
 			command,
-			"--consumers", "[{\"host\": \"kafka_dummy_consumer\", \"port\": 1087},{\"name\": \"kafka_dummy_consumer2\", \"host\": \"kafka_dummy_consumer2\", \"port\": 1088}]",
+			"--consumers", "[{\"host\": \"kafka-dummy-consumer.local\", \"port\": 1087},{\"host\": \"kafka-dummy-consumer2.local\", \"port\": 1088}]",
 		)
 	}
 
