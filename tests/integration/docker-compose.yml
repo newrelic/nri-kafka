@@ -84,13 +84,12 @@ services:
 
   kafka_dummy_consumer:
     container_name: kafka_dummy_consumer
-    hostname: kafka_dummy_consumer
     build:
       context: consumer-producer
     entrypoint: [
         "java",
         "-Dcom.sun.management.jmxremote",
-        "-Djava.rmi.server.hostname=kafka_dummy_consumer",
+        "-Djava.rmi.server.hostname=kafka-dummy-consumer.local",
         "-Dcom.sun.management.jmxremote.port=1087",
         "-Dcom.sun.management.jmxremote.rmi.port=1087",
         "-Dcom.sun.management.jmxremote.local.only=false",
@@ -101,19 +100,20 @@ services:
     ]
     command: ["consumer","kafka1:9092","topicA","groupA"]
     networks:
-      - kfk
+      kfk:
+        aliases:
+          - kafka-dummy-consumer.local
     depends_on:
       - start_3party_dependencies
 
   kafka_dummy_consumer2:
     container_name: kafka_dummy_consumer2
-    hostname: kafka_dummy_consumer2
     build:
       context: consumer-producer
     entrypoint: [
         "java",
         "-Dcom.sun.management.jmxremote",
-        "-Djava.rmi.server.hostname=kafka_dummy_consumer2",
+        "-Djava.rmi.server.hostname=kafka-dummy-consumer2.local",
         "-Dcom.sun.management.jmxremote.port=1088",
         "-Dcom.sun.management.jmxremote.rmi.port=1088",
         "-Dcom.sun.management.jmxremote.local.only=false",
@@ -124,19 +124,20 @@ services:
     ]
     command: ["consumer","kafka1:9092","topicA","groupA"]
     networks:
-      - kfk
+      kfk:
+        aliases:
+          - kafka-dummy-consumer2.local
     depends_on:
       - start_3party_dependencies
 
   kafka_dummy_producer:
     container_name: kafka_dummy_producer
-    hostname: kafka_dummy_producer
     build:
       context: consumer-producer
     entrypoint: [
         "java",
         "-Dcom.sun.management.jmxremote",
-        "-Djava.rmi.server.hostname=kafka_dummy_producer",
+        "-Djava.rmi.server.hostname=kafka-dummy-producer.local",
         "-Dcom.sun.management.jmxremote.port=1089",
         "-Dcom.sun.management.jmxremote.rmi.port=1089",
         "-Dcom.sun.management.jmxremote.local.only=false",
@@ -147,7 +148,9 @@ services:
     ]
     command: ["producer","kafka1:9092","topicA"]
     networks:
-      - kfk
+      kfk:
+        aliases:
+          - kafka-dummy-producer.local
     depends_on:
       - start_3party_dependencies
 

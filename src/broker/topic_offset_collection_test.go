@@ -23,8 +23,8 @@ func TestGatherTopicOffset_Single(t *testing.T) {
 		Result: []*gojmx.AttributeResponse{
 			{
 				Name:         "one",
-				ResponseType: gojmx.ResponseTypeDouble,
-				DoubleValue:  float64(1),
+				ResponseType: gojmx.ResponseTypeString,
+				StringValue:  "1",
 			},
 			{
 				Name:         "two",
@@ -33,8 +33,8 @@ func TestGatherTopicOffset_Single(t *testing.T) {
 			},
 			{
 				Name:         "three",
-				ResponseType: gojmx.ResponseTypeDouble,
-				DoubleValue:  float64(3),
+				ResponseType: gojmx.ResponseTypeString,
+				StringValue:  "3",
 			},
 			{
 				Name:         "four",

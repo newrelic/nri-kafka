@@ -48,12 +48,11 @@ func aggregateTopicSize(jmxResult []*gojmx.AttributeResponse) (size float64, err
 			log.Warn("Unable to process attribute for query: %s status: %s, while aggregating TopicSize", attr.Name, attr.StatusMsg)
 			continue
 		}
-		value := attr.GetValue()
-		partitionSize, ok := value.(float64)
-		if !ok {
+		partitionSize, err := attr.GetValueAsFloat()
+		if err != nil {
 			size = float64(-1)
-			err = fmt.Errorf("%w bean '%s' value '%v' as float64", ErrUnableToCast, attr.Name, value)
-			return
+			err = fmt.Errorf("bean '%s' error getting value: %w", attr.Name, err)
+			return size, err
 		}
 
 		size += partitionSize
