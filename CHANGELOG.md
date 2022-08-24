@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 3.2.0 (2022-08-24)
+### Changed
+- Fixed a bug that prevented -collect_topic_size and -collect_topic_offset from working as expected 
+- Bump dependencies:
+  `gojmx` v0.0.0-20220801092610-d842b96425bf -> v0.0.0-20220818135048-2c786ece1d31
+
 ## 3.1.0 (2022-08-16)
 ### Changed
 - Bump dependencies:
