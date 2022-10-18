@@ -5,7 +5,7 @@ import (
 	"crypto/sha512"
 	"hash"
 
-	"github.com/xdg/scram"
+	"github.com/xdg-go/scram"
 )
 
 // SHA256 is a scram.HashGeneratorFcn
