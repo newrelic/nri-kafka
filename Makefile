@@ -7,12 +7,11 @@ INTEGRATION  := kafka
 BINARY_NAME   = nri-$(INTEGRATION)
 GO_PKGS      := $(shell go list ./... | grep -v "/vendor/")
 GO_FILES     := ./src/
-GOFLAGS          = -mod=readonly
-GOLANGCI_LINT    = github.com/golangci/golangci-lint/cmd/golangci-lint
+GOFLAGS       = -mod=readonly
 
 all: build
 
-build: clean validate test compile
+build: clean test compile
 
 generate:
 	@echo "=== $(INTEGRATION) === [ generate ]: Generating mocks..."
@@ -21,12 +20,6 @@ generate:
 clean:
 	@echo "=== $(INTEGRATION) === [ clean ]: Removing binaries and coverage file..."
 	@rm -rfv bin coverage.xml $(TARGET)
-
-validate:
-	@printf "=== $(INTEGRATION) === [ validate ]: running golangci-lint & semgrep... "
-	@go run  $(GOFLAGS) $(GOLANGCI_LINT) run --verbose
-	@[ -f .semgrep.yml ] && semgrep_config=".semgrep.yml" || semgrep_config="p/golang" ; \
-	docker run --rm -v "${PWD}:/src:ro" --workdir /src returntocorp/semgrep -c "$$semgrep_config"
 
 compile:
 	@echo "=== $(INTEGRATION) === [ compile ]: Building $(BINARY_NAME)..."
@@ -51,4 +44,4 @@ integration-test:
 include $(CURDIR)/build/ci.mk
 include $(CURDIR)/build/release.mk
 
-.PHONY: all build clean validate compile test
+.PHONY: all build clean compile test
