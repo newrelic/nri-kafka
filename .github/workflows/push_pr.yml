@@ -11,7 +11,6 @@ env:
   TAG: "v0.0.0" # needed for goreleaser windows builds
   REPO_FULL_NAME: ${{ github.event.repository.full_name }}
   ORIGINAL_REPO_NAME: "newrelic/nri-kafka"
-  GO_VERSION: '1.18'
   NRJMX_VERSION: '2.0.1'
   DOCKER_LOGIN_AVAILABLE: ${{ secrets.OHAI_DOCKER_HUB_ID }}
 
@@ -21,9 +20,9 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v2
-      - uses: actions/setup-go@v2
+      - uses: actions/setup-go@v3
         with:
-          go-version: ${{ env.GO_VERSION }}
+          go-version-file: 'go.mod'
       - uses: newrelic/newrelic-infra-checkers@v1
         with:
           golangci-lint-config: golangci-lint-limited
@@ -65,9 +64,9 @@ jobs:
         with:
           path: src/github.com/${{ env.ORIGINAL_REPO_NAME }}
       - name: Install Go
-        uses: actions/setup-go@v2
+        uses: actions/setup-go@v3
         with:
-          go-version: ${{ env.GO_VERSION }}
+          go-version-file: 'go.mod'
       - name: Running unit tests
         shell: pwsh
         run: |
@@ -87,9 +86,9 @@ jobs:
           fetch-depth: 1
           path: src/github.com/${{env.ORIGINAL_REPO_NAME}}
       - name: Install Go
-        uses: actions/setup-go@v2
+        uses: actions/setup-go@v3
         with:
-          go-version: ${{env.GO_VERSION}}
+          go-version-file: 'go.mod'
       - name: Integration test
         run: make integration-test
 
