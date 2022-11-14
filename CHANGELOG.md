@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 3.2.2 (2022-11-14)
+### Fixed
+- Fixed a bug caused by the sarama library in some scenarios. It can return a nil assigment and nil error for an unassigned consumer in a topic.
+
+## 3.2.1 (2022-10-18)
+### Changed
+- Bump dependencies:
+  `sarama` v1.36.0 -> v1.37.2
+  `gojmx` v0.0.0-20220818135048-2c786ece1d31 -> v0.0.0-20221004104925-6819f176e889
+  `sync` v0.0.0-20220722155255-886fb9371eb4 -> v0.0.0-20220923202941-7f9b1623fab7
+- Changed Dependency:
+  `github.com/xdg/scram` v0.0.0-20180814205039-7eeb5667e42c -> `github.com/xdg-go/scram` v1.1.1
+
 ## 3.2.0 (2022-08-24)
 ### Changed
 - Fixed a bug that prevented -collect_topic_size and -collect_topic_offset from working as expected 
