@@ -57,6 +57,10 @@ func collectOffsetsForConsumerGroup(
 			log.Error("Failed to get group member assignment for member %s: %s", memberName, err)
 			continue
 		}
+		if assignment == nil || assignment.Topics == nil {
+			log.Error("Assignment for consumer group '%s' member '%s' is empty", consumerGroup, memberName)
+			continue
+		}
 		log.Debug("Retrieved assignment for consumer group '%s' member '%s': %#v", consumerGroup, memberName, assignment)
 
 		listGroupsResponse, err := cGroupTopicLister.ListConsumerGroupOffsets(consumerGroup, assignment.Topics)

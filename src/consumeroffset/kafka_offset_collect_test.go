@@ -226,3 +226,33 @@ func TestCollectOffsetsForConsumerGroup(t *testing.T) { // nolint: funlen
 		})
 	}
 }
+
+func TestCollectOffsetsForConsumerGroup_Error(t *testing.T) { // nolint: funlen
+	// MemberAssignment mock created as in sarama's consumer_group_member_test.go
+	members := map[string]*sarama.GroupMemberDescription{
+		testClientID: {
+			ClientId:         testClientID,
+			ClientHost:       "a-host",
+			MemberMetadata:   nil,
+			MemberAssignment: []byte{},
+		},
+	}
+
+	args.GlobalArgs = &args.ParsedArguments{}
+
+	t.Run("It should continue if a member has an empty assignment", func(t *testing.T) {
+		args.GlobalArgs.InactiveConsumerGroupOffset = true
+		args.GlobalArgs.ConsumerGroupOffsetByTopic = true
+
+		kafkaIntegration, _ := integration.New("test", "test")
+
+		collectOffsetsForConsumerGroup(
+			&ConsumerGroupTopicListerMock{},
+			consumerGroupOne,
+			members,
+			kafkaIntegration,
+			&TopicOffsetGetterMock{},
+		)
+		assert.True(t, true, "collectOffsetsForConsumerGroup continued without error")
+	})
+}
