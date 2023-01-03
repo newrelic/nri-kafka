@@ -5,7 +5,7 @@ go 1.18
 require (
 	github.com/Shopify/sarama v1.37.2
 	github.com/newrelic/infra-integrations-sdk v3.7.3+incompatible
-	github.com/newrelic/nrjmx/gojmx v0.0.0-20221004104925-6819f176e889
+	github.com/newrelic/nrjmx/gojmx v0.0.0-20221114105432-46c05232c4f8
 	github.com/samuel/go-zookeeper v0.0.0-20201211165307-7117e9ea2414
 	github.com/stretchr/testify v1.8.1
 	github.com/xdg-go/scram v1.1.2

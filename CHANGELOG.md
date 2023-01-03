@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 3.2.3 (2022-12-1)
+### Changed
+- Bump dependencies:
+  `nrjmx` v2.0.1 -> v2.3.2
+
 ## 3.2.2 (2022-11-14)
 ### Fixed
 - Fixed a bug caused by the sarama library in some scenarios. It can return a nil assigment and nil error for an unassigned consumer in a topic.
