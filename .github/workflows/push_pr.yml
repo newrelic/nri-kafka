@@ -22,7 +22,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
         with:
-          fetch: 0
+          fetch-depth: 0
       - id: release
         uses: newrelic/release-toolkit/contrib/ohi-release@feat/contrib/ohi-release
       - run: |
