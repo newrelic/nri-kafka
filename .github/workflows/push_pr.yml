@@ -16,6 +16,20 @@ env:
   DOCKER_LOGIN_AVAILABLE: ${{ secrets.OHAI_DOCKER_HUB_ID }}
 
 jobs:
+  test-changelog:
+    name: Test workflow to see if the changelog is properly generated and updated
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch: 0
+      - id: release
+        uses: newrelic/release-toolkit/contrib/ohi-release@feat/contrib/ohi-release
+      - run: |
+          cat CHANGELOG.md
+          cat CHANGELOG.partial.md
+          echo ${{ steps.release.outputs.release-title }}
+
   static-analysis:
     name: Run all static analysis checks
     runs-on: ubuntu-20.04
