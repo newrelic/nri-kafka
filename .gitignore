@@ -55,3 +55,6 @@ src/resource.syso
 
 # kafka encoded password
 tests/integration/jmxremote/jmxremote.password
+
+# Release toolkit
+CHANGELOG.partial.md
