@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+## v3.3.0 - 2023-02-20
+
+### 🛡️ Security notices
+- Bump dependencies: `github.com/Shopify/sarama` v1.37.2 --> v1.38.1
+
+### Dependencies
+- Bump to golang 1.19
+- `golang.org/x/sync` v0.0.0-20220923202941-7f9b1623fab7 --> v0.1.0
+
 ## 3.2.3 (2022-12-1)
 ### Changed
 - Bump dependencies:
