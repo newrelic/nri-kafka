@@ -1,4 +1,4 @@
-name: Push/PR pipeline
+name: Push/PR
 
 on:
   push:

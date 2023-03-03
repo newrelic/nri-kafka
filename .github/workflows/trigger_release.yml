@@ -1,0 +1,47 @@
+name: Trigger Release
+
+# This workflow triggers a release creation with changelog and the release notes created by the release toolkit.
+# This workflow should be triggered merely from the master branch.
+# If you wish to be 100% free creating a pre-release, just create it manually.
+
+on:
+  workflow_dispatch:
+## TODO here we will need a cronjob.
+
+jobs:
+  release:
+    name: Create release
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.next-version }}
+      image-tag: ${{ steps.image-tag.outputs.tag }}
+    steps:
+      - name: Check is triggered for master branch
+        run: |
+          if [ ${{ env.GITHUB_REF_NAME }} != "master" ] || [ ${{ env.GITHUB_REF_TYPE }} != "branch" ];then
+            echo This workflow should only be triggered for the 'master' branch
+            exit 1
+          fi
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          ref: master
+          token: "${{ secrets.COREINT_BOT_TOKEN }}"
+      - uses: newrelic/release-toolkit/contrib/ohi-release-notes@v1
+        id: release-data
+      ## TODO here in case the release is empty or on hold we should stop gracefully.
+      - name: Configure Git
+        run: |
+          git config user.name newrelic-coreint-team
+          git config user.email coreint-dev@newrelic.com
+      - name: Commit updated changelog
+        run: |
+          git add CHANGELOG.md
+          git commit -m "Update changelog with changes from ${{ steps.release-data.outputs.next-version }}"
+          git push -u origin master
+      - uses: newrelic/release-toolkit/render@v1
+      - name: Create Release
+        env:
+          GH_TOKEN: "${{ secrets.COREINT_BOT_TOKEN }}"
+        run: |
+          gh release create ${{ steps.release-data.outputs.next-version }} --target $(git rev-parse HEAD) --notes-file CHANGELOG.partial.md --prerelease
