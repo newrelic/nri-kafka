@@ -71,7 +71,6 @@ jobs:
       - name: Running unit tests
         shell: pwsh
         run: |
-          go version
           .\build\windows\unit_tests.ps1
 
   # can't run this step inside of container because of tests specific
