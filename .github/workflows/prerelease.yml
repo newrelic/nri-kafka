@@ -159,7 +159,7 @@ jobs:
       - name: Install Go
         uses: actions/setup-go@v3
         with:
-          go-version-file: 'go.mod'
+          go-version-file: 'src/github.com/${{env.ORIGINAL_REPO_NAME}}/go.mod'
       - name: Integration test
         run: make integration-test
 
