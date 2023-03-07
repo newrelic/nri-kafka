@@ -12,9 +12,6 @@ jobs:
   prerelease:
     name: Create prerelease
     runs-on: ubuntu-latest
-    outputs:
-      version: ${{ steps.version.outputs.next-version }}
-      image-tag: ${{ steps.image-tag.outputs.tag }}
     steps:
       - name: Check is triggered for default branch
         run: |
