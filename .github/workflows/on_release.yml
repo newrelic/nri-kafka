@@ -1,4 +1,4 @@
-name: Release pipeline
+name: Create release artifacts
 
 on:
   release:

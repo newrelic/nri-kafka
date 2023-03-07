@@ -1,4 +1,4 @@
-name: Prerelease pipeline
+name: Create prerelease artifacts
 
 on:
   release:
