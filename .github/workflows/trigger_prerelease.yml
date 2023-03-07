@@ -1,16 +1,16 @@
-name: Trigger Release
+name: Trigger prerelease creation
 
-# This workflow triggers a release creation with changelog and the release notes created by the release toolkit.
+# This workflow triggers a prerelease creation with changelog and the release notes created by the release toolkit.
 # This workflow should be triggered merely from the default branch.
-# If you wish to be 100% free creating a pre-release, just create it manually.
+# If you wish to be 100% free creating a prerelease, just create it manually.
 
 on:
   workflow_dispatch:
 ## TODO here we will need a cronjob.
 
 jobs:
-  release:
-    name: Create release
+  prerelease:
+    name: Create prerelease
     runs-on: ubuntu-latest
     outputs:
       version: ${{ steps.version.outputs.next-version }}
@@ -39,7 +39,7 @@ jobs:
           git add CHANGELOG.md
           git commit -m "Update changelog with changes from ${{ steps.release-data.outputs.next-version }}"
           git push -u origin ${{ github.event.repository.default_branch }}
-      - name: Create Release
+      - name: Create preelease
         env:
           GH_TOKEN: "${{ secrets.COREINT_BOT_TOKEN }}"
         run: |
