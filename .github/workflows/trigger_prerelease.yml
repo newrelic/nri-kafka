@@ -26,17 +26,19 @@ jobs:
           token: "${{ secrets.COREINT_BOT_TOKEN }}"
       - uses: newrelic/release-toolkit/contrib/ohi-release-notes@v1
         id: release-data
-      ## TODO here in case the release is empty or on hold we should stop gracefully.
       - name: Configure Git
+        if: ${{ steps.release-data.outputs.skip-release != 'true' }}
         run: |
           git config user.name newrelic-coreint-team
           git config user.email coreint-dev@newrelic.com
       - name: Commit updated changelog
+        if: ${{ steps.release-data.outputs.skip-release != 'true' }}
         run: |
           git add CHANGELOG.md
           git commit -m "Update changelog with changes from ${{ steps.release-data.outputs.next-version }}"
           git push -u origin ${{ github.event.repository.default_branch }}
-      - name: Create preelease
+      - name: Create prerelease
+        if: ${{ steps.release-data.outputs.skip-release != 'true' }}
         env:
           GH_TOKEN: "${{ secrets.COREINT_BOT_TOKEN }}"
         run: |
