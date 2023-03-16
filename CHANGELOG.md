@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+## v3.4.0 - 2023-03-16
+
+### 🛡️ Security notices
+- Bump dependencies: `golang.org/x/net` v0.6.0 --> v0.7.0
+
+### Dependencies
+- Bump to golang 1.20
+- Bump github.com/stretchr/testify from 1.8.1 to 1.8.2 (#212)
+
 ## v3.3.0 - 2023-02-20
 
 ### 🛡️ Security notices
