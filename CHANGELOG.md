@@ -7,10 +7,6 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
-### Dependencies
-- Bump to golang 1.20
-- `golang.org/x/net` v0.6.0 --> v0.7.0
-
 ## v3.3.0 - 2023-02-20
 
 ### 🛡️ Security notices
