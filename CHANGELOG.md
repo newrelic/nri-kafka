@@ -7,7 +7,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
-### Bugfix
+## v3.4.1 - 2023-03-20
+
+### 🐞 Bug fixes
 - Compile the integration statically
 
 ## v3.4.0 - 2023-03-16
