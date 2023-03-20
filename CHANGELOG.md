@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+## v3.5.0 - 2023-03-20
+
+### Dependencies
+- Downgrade to golang 1.19 to fix issue found in docker image.
+
 ## v3.4.0 - 2023-03-16
 
 ### 🛡️ Security notices
