@@ -1,14 +1,9 @@
 name: . 🚀 🐧 🦺 Testing Prerelease Linux On Demand
 
 on:
-  workflow_dispatch:
-    inputs:
-      dest_prefix:
-        description: 'Repo prefix'
-        required: true
-      tag:
-        description: 'tag'
-        required: true
+  push:
+    branches:
+      - test_publish
 
 env:
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -36,7 +31,7 @@ jobs:
         with:
           disable_lock: false
           run_id: ${{ github.run_id }}
-          tag: ${{env.TAG}}
+          tag: v3.4.1
           app_name: "nri-${{env.INTEGRATION}}"
           repo_name: ${{ env.ORIGINAL_REPO_NAME }}
           access_point_host: "testing"
@@ -52,4 +47,4 @@ jobs:
           # used for signing package stuff
           gpg_passphrase: ${{ secrets.OHAI_GPG_PASSPHRASE }}
           gpg_private_key_base64: ${{ secrets.OHAI_GPG_PRIVATE_KEY_BASE64 }}
-          dest_prefix: ${{ env.DEST_PREFIX }}
+          dest_prefix: coreint-lock-
