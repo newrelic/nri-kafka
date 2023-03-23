@@ -31,7 +31,7 @@ jobs:
         with:
           disable_lock: false
           run_id: ${{ github.run_id }}
-          tag: v3.2.2
+          tag: v3.2.3
           app_name: "nri-${{env.INTEGRATION}}"
           repo_name: ${{ env.ORIGINAL_REPO_NAME }}
           access_point_host: "testing"
