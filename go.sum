@@ -68,6 +68,8 @@ github.com/newrelic/infra-integrations-sdk v3.7.3+incompatible h1:+o/MxTzFsC3BRV
 github.com/newrelic/infra-integrations-sdk v3.7.3+incompatible/go.mod h1:tMUHRMq6mJS0YyBnbWrTXAnREnQqC1AGO6Lu45u5xAM=
 github.com/newrelic/nrjmx/gojmx v0.0.0-20221214125236-0c14c767d10c h1:bwWYDUSZUZWcUlNpupqtF1Sm+HPJ94mmhN17JipMuBY=
 github.com/newrelic/nrjmx/gojmx v0.0.0-20221214125236-0c14c767d10c/go.mod h1:zd01rBtry4cfiVBXpUhBeEjolk86vMczWd/d7QQHGK8=
+github.com/newrelic/nrjmx/gojmx v0.0.0-20230328105658-176501e60193 h1:2qG47I3FP06LqktFM12JnfOvqk0ve962X315zzQ/YH0=
+github.com/newrelic/nrjmx/gojmx v0.0.0-20230328105658-176501e60193/go.mod h1:tDD9KR/voGBWOlqnTdXfo+oDVXhg2HD0KrYwBrgd04s=
 github.com/opencontainers/go-digest v1.0.0 h1:apOUWs51W5PlhuyGyz9FCeeBIOUDA/6nW8Oi/yOhh5U=
 github.com/opencontainers/image-spec v1.0.3-0.20211202183452-c5a74bcca799 h1:rc3tiVYb5z54aKaDfakKn0dDjIyPpTtszkjuMzyt7ec=
 github.com/opencontainers/runc v1.1.2 h1:2VSZwLx5k/BfsBxMMipG/LYUnmqOD/BPkIVgQUcTlLw=
