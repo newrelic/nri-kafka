@@ -209,6 +209,8 @@ func TestKafkaIntegration_consumer_offset(t *testing.T) {
 		err = jsonschema.Validate(schemaPath, stdout)
 		if err != nil {
 			t.Logf("There was an errror in the iteration number %d", i)
+			t.Logf("Stderr: %s", stderr)
+			t.Logf("Payload: %s", stdout)
 			fail = true
 			time.Sleep(time.Second)
 		}
