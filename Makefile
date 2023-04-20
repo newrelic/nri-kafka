@@ -38,7 +38,7 @@ integration-test:
 	@cp tests/integration/jmxremote/jmxremote.password.unencoded tests/integration/jmxremote/jmxremote.password
 	@chmod 0600 tests/integration/jmxremote/jmxremote.password
 	@docker-compose -f tests/integration/docker-compose.yml up -d --build
-	@go test -v -tags=integration ./tests/integration/. -count=1 ; (ret=$$?; docker-compose -f tests/integration/docker-compose.yml down && exit $$ret)
+	@go test -v -tags=integration ./tests/integration/. -count=1; docker logs kafka_dummy_consumer;docker logs kafka_dummy_consumer2  ; (ret=$$?; docker-compose -f tests/integration/docker-compose.yml down && exit $$ret)
 
 # rt-update-changelog runs the release-toolkit run.sh script by piping it into bash to update the CHANGELOG.md.
 # It also passes down to the script all the flags added to the make target. To check all the accepted flags,
