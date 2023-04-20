@@ -197,7 +197,9 @@ func TestKafkaIntegration_consumer_offset(t *testing.T) {
 		)
 	}
 	fail := false
-	for i := 0; i < 20; i++ {
+	for i := 0; i < 60; i++ {
+		t.Logf("Executing iteration: %d", i)
+
 		stdout, stderr, err := runIntegration(t, bootstrapDiscoverConfigInventory)
 
 		assert.NotNil(t, stderr, "unexpected stderr")
