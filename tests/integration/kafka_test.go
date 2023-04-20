@@ -196,13 +196,21 @@ func TestKafkaIntegration_consumer_offset(t *testing.T) {
 			"--consumer_group_regex", ".*",
 		)
 	}
+	fail := false
+	for i := 0; i < 20; i++ {
+		stdout, stderr, err := runIntegration(t, bootstrapDiscoverConfigInventory)
 
-	stdout, stderr, err := runIntegration(t, bootstrapDiscoverConfigInventory)
+		assert.NotNil(t, stderr, "unexpected stderr")
+		assert.NoError(t, err, "Unexpected error")
 
-	assert.NotNil(t, stderr, "unexpected stderr")
-	assert.NoError(t, err, "Unexpected error")
+		schemaPath := filepath.Join("json-schema-files", "kafka-schema-consumer-offset.json")
+		err = jsonschema.Validate(schemaPath, stdout)
+		if err != nil {
+			t.Logf("There was an errror in the iteration number %d", i)
+			fail = true
+			time.Sleep(time.Second)
+		}
 
-	schemaPath := filepath.Join("json-schema-files", "kafka-schema-consumer-offset.json")
-	err = jsonschema.Validate(schemaPath, stdout)
-	assert.NoError(t, err, "The output of kafka integration doesn't have expected format.")
+	}
+	assert.False(t, fail, "The Fail variable should be false.")
 }
