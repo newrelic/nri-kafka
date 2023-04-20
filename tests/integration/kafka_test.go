@@ -212,9 +212,26 @@ func TestKafkaIntegration_consumer_offset(t *testing.T) {
 			t.Logf("Stderr: %s", stderr)
 			t.Logf("Payload: %s", stdout)
 			fail = true
-			time.Sleep(time.Second)
+			time.Sleep(time.Second * 3)
 		}
 
 	}
+
+	if fail {
+		bootstrapDiscoverConfigInventoryVerbose := func(command []string) []string {
+			return append(
+				bootstrapDiscoverConfig(command),
+				"--consumer_offset",
+				"--consumer_group_regex", ".*", "--verbose",
+			)
+		}
+		stdout, stderr, err := runIntegration(t, bootstrapDiscoverConfigInventoryVerbose)
+
+		assert.NotNil(t, stderr, "unexpected stderr")
+		assert.NoError(t, err, "Unexpected error")
+		t.Logf("Stderr: %s", stderr)
+		t.Logf("Payload: %s", stdout)
+	}
+
 	assert.False(t, fail, "The Fail variable should be false.")
 }
