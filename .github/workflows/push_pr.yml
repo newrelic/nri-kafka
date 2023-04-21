@@ -91,8 +91,10 @@ jobs:
         uses: actions/setup-go@v3
         with:
           go-version-file: 'src/github.com/${{env.ORIGINAL_REPO_NAME}}/go.mod'
+      # One of the integration consumer tests is not working as expected to the environment bootstrap, to keep it
+      # we have a simple retry mechanism spawning again the system.
       - name: Integration test
-        run: make integration-test
+        run:  for i in 1 2 3; do make integration-test && break; done
 
   test-build:
     name: Test binary compilation for all platforms:arch

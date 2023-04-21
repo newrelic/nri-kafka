@@ -331,6 +331,27 @@ func TestKafkaIntegration_bootstrap_inventory(t *testing.T) {
 	}
 }
 
+func TestKafkaIntegration_producer_test(t *testing.T) {
+	consumerConfig := func(command []string) []string {
+		return append(
+			command,
+			"--producers", "[{\"host\": \"kafka-dummy-producer.local\", \"port\": 1089}]",
+		)
+	}
+
+	stdout, stderr, err := runIntegration(t, consumerConfig)
+	assert.NotNil(t, stderr, "unexpected stderr")
+	assert.NoError(t, err, "Unexpected error")
+
+	schemaPath := filepath.Join("json-schema-files", "kafka-schema-producer.json")
+	err = jsonschema.Validate(schemaPath, stdout)
+	assert.NoError(t, err, "The output of kafka integration doesn't have expected format.")
+}
+
+// The following tests related to consumers are known to be flaky not because of the integration code, but due to the kafka environment.
+// From time to time (~10%) the consumers fails to get registered and even if after 10-15 minutes it starts working the test still fail.
+// Locally you can restart the docker-compose, in the CI/CD the job is re-run.
+
 func TestKafkaIntegration_consumer_offset(t *testing.T) {
 	bootstrapDiscoverConfigInventory := func(command []string) []string {
 		return append(
@@ -346,23 +367,6 @@ func TestKafkaIntegration_consumer_offset(t *testing.T) {
 	assert.NoError(t, err, "Unexpected error")
 
 	schemaPath := filepath.Join("json-schema-files", "kafka-schema-consumer-offset.json")
-	err = jsonschema.Validate(schemaPath, stdout)
-	assert.NoError(t, err, "The output of kafka integration doesn't have expected format.")
-}
-
-func TestKafkaIntegration_producer_test(t *testing.T) {
-	consumerConfig := func(command []string) []string {
-		return append(
-			command,
-			"--producers", "[{\"host\": \"kafka-dummy-producer.local\", \"port\": 1089}]",
-		)
-	}
-
-	stdout, stderr, err := runIntegration(t, consumerConfig)
-	assert.NotNil(t, stderr, "unexpected stderr")
-	assert.NoError(t, err, "Unexpected error")
-
-	schemaPath := filepath.Join("json-schema-files", "kafka-schema-producer.json")
 	err = jsonschema.Validate(schemaPath, stdout)
 	assert.NoError(t, err, "The output of kafka integration doesn't have expected format.")
 }
