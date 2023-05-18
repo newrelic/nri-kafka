@@ -1,10 +1,7 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": [
-    "config:base",
-    // Disable the creation of this issue that renovate updates with pending PRs. We do that with Jira.
-    // e.g.: https://github.com/newrelic/nri-kubernetes/issues/205
-    ":disableDependencyDashboard"
+    "config:base"
   ],
   "labels": ["dependencies"],
   "packageRules": [
