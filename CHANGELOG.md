@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+## v3.4.5 - 2023-05-31
+
+### ⛓️ Dependencies
+- Updated github.com/stretchr/testify to v1.8.4 - [Changelog 🔗](https://github.com/stretchr/testify/releases/tag/v1.8.4)
+
 ## v3.4.4 - 2023-05-24
 
 ### ⛓️ Dependencies
