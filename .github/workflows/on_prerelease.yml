@@ -74,13 +74,6 @@ jobs:
         with:
           tag: ${{ env.TAG }}
           integration: nri-${{ env.INTEGRATION }}
-      - name: Notify failure via Slack
-        if: ${{ failure() }}
-        uses: archive/github-actions-slack@master
-        with:
-          slack-bot-user-oauth-access-token: ${{ secrets.COREINT_SLACK_TOKEN }}
-          slack-channel: ${{ secrets.COREINT_SLACK_CHANNEL }}
-          slack-text: "❌ `${{ env.REPO_FULL_NAME }}`: prerelease pipeline failed."
 
   package-win:
     name: Create MSI & Upload into GH Release assets
@@ -135,13 +128,6 @@ jobs:
         shell: bash
         run: |
           build/windows/upload_msi.sh ${INTEGRATION} ${{ matrix.goarch }} ${TAG}
-      - name: Notify failure via Slack
-        if: ${{ failure() }}
-        uses: archive/github-actions-slack@master
-        with:
-          slack-bot-user-oauth-access-token: ${{ secrets.COREINT_SLACK_TOKEN }}
-          slack-channel: ${{ secrets.COREINT_SLACK_CHANNEL }}
-          slack-text: "❌ `${{ env.REPO_FULL_NAME }}`: prerelease pipeline failed."
 
   # can't run this step inside of container because of tests specific
   test-integration-nix:
@@ -226,3 +212,15 @@ jobs:
           docker buildx build --push --platform=$CONSUMER_PRODUCER_DOCKER_PLATFORMS \
             -t $CONSUMER_PRODUCER_DOCKER_IMAGE_NAME:latest \
             .
+
+  notify-failure:
+    if: ${{ always() && failure() }}
+    needs: [test-nix,test-windows, test-integration-nix, prerelease, publish-to-s3,package-win, consumer-producer-image]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Notify failure via Slack
+        uses: archive/github-actions-slack@master
+        with:
+          slack-bot-user-oauth-access-token: ${{ secrets.COREINT_SLACK_TOKEN }}
+          slack-channel: ${{ secrets.COREINT_SLACK_CHANNEL }}
+          slack-text: "❌ `${{ env.ORIGINAL_REPO_NAME }}`: [prerelease pipeline failed](${{ github.server_url }}/${{ env.ORIGINAL_REPO_NAME }}/actions/runs/${{ github.run_id }})."
