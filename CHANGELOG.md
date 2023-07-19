@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+## v3.4.7 - 2023-07-19
+
+### ⛓️ Dependencies
+- Updated github.com/newrelic/nrjmx/gojmx digest
+
 ## v3.4.6 - 2023-06-28
 
 ### ⛓️ Dependencies
