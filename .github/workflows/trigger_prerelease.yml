@@ -17,4 +17,4 @@ jobs:
       slack_channel:  ${{ secrets.COREINT_SLACK_CHANNEL }}
       slack_token: ${{ secrets.COREINT_SLACK_TOKEN }}
     with:
-      rt-included-files: go.mod,go.sum
+      rt-included-files: go.mod,go.sum,build/Dockerfile
