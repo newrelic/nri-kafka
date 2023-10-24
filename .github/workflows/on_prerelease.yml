@@ -20,7 +20,7 @@ env:
 jobs:
   test-nix:
     name: Run unit tests on *Nix
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
       - name: Login to DockerHub
@@ -54,7 +54,7 @@ jobs:
 
   prerelease:
     name: Build binary for *Nix/Win, create archives for *Nix/Win, create packages for *Nix, upload all artifacts into GH Release assets
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     needs: [test-nix, test-windows, test-integration-nix]
     steps:
       - uses: actions/checkout@v4
@@ -132,7 +132,7 @@ jobs:
   # can't run this step inside of container because of tests specific
   test-integration-nix:
     name: Run integration tests on *Nix
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     defaults:
       run:
         working-directory: src/github.com/${{env.ORIGINAL_REPO_NAME}}
@@ -151,7 +151,7 @@ jobs:
 
   publish-to-s3:
     name: Send release assets to S3
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     needs: [package-win]
     steps:
       - name: Login to DockerHub
@@ -194,7 +194,7 @@ jobs:
 
   consumer-producer-image:
     name: Build and push consumer-producer image to use in our canaries
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
         with:
