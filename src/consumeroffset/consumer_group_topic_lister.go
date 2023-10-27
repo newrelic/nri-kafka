@@ -3,7 +3,7 @@ package consumeroffset
 import (
 	"sync"
 
-	"github.com/Shopify/sarama"
+	"github.com/IBM/sarama"
 )
 
 type ConsumerGroupTopicLister interface {

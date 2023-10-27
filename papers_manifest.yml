@@ -35,10 +35,10 @@ golang:
     license: MIT
     license_url: github.com/newrelic/nri-kafka/LICENSE
     project_url: github.com/newrelic/nri-kafka/src/zookeeper
-  github.com/newrelic/nri-kafka/vendor/github.com/Shopify/sarama:
+  github.com/newrelic/nri-kafka/vendor/github.com/IBM/sarama:
     license: MIT
-    license_url: github.com/newrelic/nri-kafka/vendor/github.com/Shopify/sarama/LICENSE
-    project_url: github.com/newrelic/nri-kafka/vendor/github.com/Shopify/sarama
+    license_url: github.com/newrelic/nri-kafka/vendor/github.com/IBM/sarama/LICENSE
+    project_url: github.com/newrelic/nri-kafka/vendor/github.com/IBM/sarama
   github.com/newrelic/nri-kafka/vendor/github.com/davecgh/go-spew/spew:
     license: ISC
     license_url: github.com/newrelic/nri-kafka/vendor/github.com/davecgh/go-spew/LICENSE
