@@ -12,7 +12,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/Shopify/sarama"
+	"github.com/IBM/sarama"
 	"github.com/newrelic/infra-integrations-sdk/log"
 	"github.com/newrelic/nri-kafka/tests/integration/helpers"
 	"github.com/newrelic/nri-kafka/tests/integration/jsonschema"

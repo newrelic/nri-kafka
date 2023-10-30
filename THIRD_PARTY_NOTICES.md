@@ -200,7 +200,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 ## Shopify/sarama
 
-* Web: github.com/Shopify/sarama
+* Web: github.com/IBM/sarama
 * License: MIT
 
 ```
