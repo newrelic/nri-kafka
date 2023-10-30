@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+### enhancement
+- Moved all references of sarama library from shopify to IBM
+
 ## v3.4.9 - 2023-10-25
 
 ### ⛓️ Dependencies
