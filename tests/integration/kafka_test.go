@@ -305,7 +305,7 @@ func TestKafkaIntegration_bootstrap_localOnlyCollectionEnforcingTopicCollection(
 	assert.NotNil(t, stderr, "unexpected stderr")
 	assert.NoError(t, err, "Unexpected error")
 
-	schemaPath := filepath.Join("json-schema-files", "kafka-schema-only-local.json")
+	schemaPath := filepath.Join("json-schema-files", "kafka-schema-only-local-force-topic-collection.json")
 	err = jsonschema.Validate(schemaPath, stdout)
 	assert.NoError(t, err, "The output of kafka integration doesn't have expected format.")
 	for _, topic := range topicNames {
