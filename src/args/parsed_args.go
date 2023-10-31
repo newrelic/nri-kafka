@@ -247,11 +247,6 @@ func ParseArgs(a ArgumentList) (*ParsedArguments, error) {
 		}
 	}
 
-	if !a.LocalOnlyCollection && a.ForceTopicSampleCollection {
-		log.Error("ForceTopicSampleCollection has no effect if LocalOnlyCollection==false")
-		return nil, errors.New("ForceTopicSampleCollection has no effect if LocalOnlyCollection==false")
-	}
-
 	version, err := sarama.ParseKafkaVersion(a.KafkaVersion)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse kafka version: %s", err)

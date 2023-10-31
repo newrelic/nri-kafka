@@ -297,7 +297,7 @@ func TestKafkaIntegration_bootstrap_localOnlyCollection(t *testing.T) {
 
 func TestKafkaIntegration_bootstrap_localOnlyCollectionEnforcingTopicCollection(t *testing.T) {
 	bootstrapDiscoverConfigLocalOnlyCollection := func(command []string) []string {
-		return append(bootstrapDiscoverConfig(command), "--local_only_collection -force_topic_sample_collection")
+		return append(bootstrapDiscoverConfig(command), "--local_only_collection", "--force_topic_sample_collection")
 	}
 
 	stdout, stderr, err := runIntegration(t, bootstrapDiscoverConfigLocalOnlyCollection)
