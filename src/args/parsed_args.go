@@ -81,14 +81,15 @@ type ParsedArguments struct {
 	SaslGssapiDisableFASTNegotiation bool
 
 	// Collection configuration
-	LocalOnlyCollection   bool
-	CollectClusterMetrics bool
-	TopicMode             string
-	TopicList             []string
-	TopicRegex            string
-	TopicBucket           TopicBucket
-	CollectTopicSize      bool
-	CollectTopicOffset    bool
+	LocalOnlyCollection        bool
+	ForceTopicSampleCollection bool
+	CollectClusterMetrics      bool
+	TopicMode                  string
+	TopicList                  []string
+	TopicRegex                 string
+	TopicBucket                TopicBucket
+	CollectTopicSize           bool
+	CollectTopicOffset         bool
 
 	// Consumer offset arguments
 	ConsumerOffset              bool
@@ -246,6 +247,11 @@ func ParseArgs(a ArgumentList) (*ParsedArguments, error) {
 		}
 	}
 
+	if !a.LocalOnlyCollection && a.ForceTopicSampleCollection {
+		log.Error("ForceTopicSampleCollection has no effect if LocalOnlyCollection==false")
+		return nil, errors.New("ForceTopicSampleCollection has no effect if LocalOnlyCollection==false")
+	}
+
 	version, err := sarama.ParseKafkaVersion(a.KafkaVersion)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse kafka version: %s", err)
@@ -282,6 +288,7 @@ func ParseArgs(a ArgumentList) (*ParsedArguments, error) {
 		TrustStore:                       a.TrustStore,
 		TrustStorePassword:               a.TrustStorePassword,
 		LocalOnlyCollection:              a.LocalOnlyCollection,
+		ForceTopicSampleCollection:       a.ForceTopicSampleCollection,
 		CollectTopicSize:                 a.CollectTopicSize,
 		CollectTopicOffset:               a.CollectTopicOffset,
 		ConsumerOffset:                   a.ConsumerOffset,

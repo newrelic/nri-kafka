@@ -228,7 +228,7 @@ func coreCollection(kafkaIntegration *integration.Integration, jmxConnProvider c
 		// Start and feed all worker pools
 		brokerChan := broker.StartBrokerPool(3, &wg, kafkaIntegration, collectedTopics, jmxConnProvider)
 
-		if !args.GlobalArgs.LocalOnlyCollection {
+		if !args.GlobalArgs.LocalOnlyCollection || args.GlobalArgs.ForceTopicSampleCollection {
 			topicChan := topic.StartTopicPool(5, &wg, clusterClient)
 			go topic.FeedTopicPool(topicChan, kafkaIntegration, collectedTopics)
 		}

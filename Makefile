@@ -40,6 +40,17 @@ integration-test:
 	@docker-compose -f tests/integration/docker-compose.yml up -d --build
 	@go test -v -tags=integration ./tests/integration/. -count=1 ; (ret=$$?; docker-compose -f tests/integration/docker-compose.yml down && exit $$ret)
 
+POD_NAME  := agent
+NAMESPACE := test-kafka
+ARGS := ""
+# run an agent pod with "kubectl run   agent --image newrelic/infrastructure-bundle --env="LICENSE_KEY=...."
+run-on-pod:
+	GOOS=linux GOARCH=amd64 make compile
+	kubectl cp ./bin/nri-kafka $(POD_NAME):/nri-kafka -n $(NAMESPACE)
+	@echo "=== $(INTEGRATION) === [ test ]: running kafka on pod..."
+	@echo "set ARGS to be passed to kafka binary"
+	kubectl exec -n $(NAMESPACE) $(POD_NAME) -- /nri-kafka  $(ARGS)
+
 # rt-update-changelog runs the release-toolkit run.sh script by piping it into bash to update the CHANGELOG.md.
 # It also passes down to the script all the flags added to the make target. To check all the accepted flags,
 # see: https://github.com/newrelic/release-toolkit/blob/main/contrib/ohi-release-notes/run.sh
