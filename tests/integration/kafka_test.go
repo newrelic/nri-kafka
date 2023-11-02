@@ -295,6 +295,24 @@ func TestKafkaIntegration_bootstrap_localOnlyCollection(t *testing.T) {
 	}
 }
 
+func TestKafkaIntegration_bootstrap_localOnlyCollectionEnforcingTopicCollection(t *testing.T) {
+	bootstrapDiscoverConfigLocalOnlyCollection := func(command []string) []string {
+		return append(bootstrapDiscoverConfig(command), "--local_only_collection", "--force_topic_sample_collection")
+	}
+
+	stdout, stderr, err := runIntegration(t, bootstrapDiscoverConfigLocalOnlyCollection)
+
+	assert.NotNil(t, stderr, "unexpected stderr")
+	assert.NoError(t, err, "Unexpected error")
+
+	schemaPath := filepath.Join("json-schema-files", "kafka-schema-only-local-force-topic-collection.json")
+	err = jsonschema.Validate(schemaPath, stdout)
+	assert.NoError(t, err, "The output of kafka integration doesn't have expected format.")
+	for _, topic := range topicNames {
+		assert.Contains(t, stdout, topic, fmt.Sprintf("The output doesn't have the topic %s", topic))
+	}
+}
+
 func TestKafkaIntegration_bootstrap_metrics(t *testing.T) {
 	bootstrapDiscoverConfigMetrics := func(command []string) []string {
 		return append(bootstrapDiscoverConfig(command), "--metrics")

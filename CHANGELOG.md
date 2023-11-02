@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### 🚀 Enhancements
 - Moved all references of sarama library from shopify to IBM
+- A new config option `ForceTopicSampleCollection` was added to collect `TopicSampleCollection` even if `LocalOnlyCollection` is enabled
 
 ## v3.4.9 - 2023-10-25
 
