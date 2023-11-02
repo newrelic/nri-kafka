@@ -7,11 +7,14 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+### enhancement
+- A new config option `ForceTopicSampleCollection` was added to collect `TopicSampleCollection` even if `LocalOnlyCollection` is enabled
+
+
 ## v3.5.0 - 2023-11-01
 
 ### 🚀 Enhancements
 - Moved all references of sarama library from shopify to IBM
-- A new config option `ForceTopicSampleCollection` was added to collect `TopicSampleCollection` even if `LocalOnlyCollection` is enabled
 
 ## v3.4.9 - 2023-10-25
 
