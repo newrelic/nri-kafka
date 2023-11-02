@@ -7,9 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
-### enhancement
-- A new config option `ForceTopicSampleCollection` was added to collect `TopicSampleCollection` even if `LocalOnlyCollection` is enabled
+## v3.6.0 - 2023-11-02
 
+### 🚀 Enhancements
+- A new config option `ForceTopicSampleCollection` was added to collect `TopicSampleCollection` even if `LocalOnlyCollection` is enabled
 
 ## v3.5.0 - 2023-11-01
 
