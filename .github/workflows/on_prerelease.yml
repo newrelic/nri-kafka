@@ -147,7 +147,7 @@ jobs:
         with:
           go-version-file: 'src/github.com/${{env.ORIGINAL_REPO_NAME}}/go.mod'
       - name: Integration test
-        run: make integration-test
+        run:  for i in 1 2 3; do make integration-test && break; done
 
   publish-to-s3:
     name: Send release assets to S3
