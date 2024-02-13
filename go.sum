@@ -90,6 +90,8 @@ github.com/newrelic/infra-integrations-sdk v3.7.3+incompatible h1:+o/MxTzFsC3BRV
 github.com/newrelic/infra-integrations-sdk v3.7.3+incompatible/go.mod h1:tMUHRMq6mJS0YyBnbWrTXAnREnQqC1AGO6Lu45u5xAM=
 github.com/newrelic/infra-integrations-sdk v3.8.0+incompatible h1:QvwHLsgHyGw4ZULOSnnWQnVPE744K1eda+2XLp2eHtg=
 github.com/newrelic/infra-integrations-sdk v3.8.0+incompatible/go.mod h1:tMUHRMq6mJS0YyBnbWrTXAnREnQqC1AGO6Lu45u5xAM=
+github.com/newrelic/infra-integrations-sdk v3.8.2+incompatible h1:Ktcm1aPAl7CW3o+FXAIKJ+jygWVXDXaUIWFyf2CXQTk=
+github.com/newrelic/infra-integrations-sdk v3.8.2+incompatible/go.mod h1:tMUHRMq6mJS0YyBnbWrTXAnREnQqC1AGO6Lu45u5xAM=
 github.com/newrelic/nrjmx/gojmx v0.0.0-20230714122532-90d44704c70c h1:UC77tt3fDB0jSsduXxrOIjxe77ezfnqeXCYM96l9usU=
 github.com/newrelic/nrjmx/gojmx v0.0.0-20230714122532-90d44704c70c/go.mod h1:tDD9KR/voGBWOlqnTdXfo+oDVXhg2HD0KrYwBrgd04s=
 github.com/opencontainers/go-digest v1.0.0 h1:apOUWs51W5PlhuyGyz9FCeeBIOUDA/6nW8Oi/yOhh5U=
