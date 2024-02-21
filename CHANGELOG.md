@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+## v3.7.1 - 2024-02-21
+
+### ⛓️ Dependencies
+- Updated golang.org/x/sync to v0.6.0
+- Updated github.com/newrelic/infra-integrations-sdk to v3.8.2+incompatible
+
 ## v3.7.0 - 2024-01-31
 
 ### ⛓️ Dependencies
