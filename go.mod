@@ -7,7 +7,7 @@ require (
 	github.com/newrelic/infra-integrations-sdk v3.8.2+incompatible
 	github.com/newrelic/nrjmx/gojmx v0.0.0-20230714122532-90d44704c70c
 	github.com/samuel/go-zookeeper v0.0.0-20201211165307-7117e9ea2414
-	github.com/stretchr/testify v1.8.4
+	github.com/stretchr/testify v1.9.0
 	github.com/xdg-go/scram v1.1.2
 	github.com/xeipuuv/gojsonschema v1.2.0
 	golang.org/x/sync v0.6.0
@@ -35,7 +35,7 @@ require (
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/rcrowley/go-metrics v0.0.0-20201227073835-cf1acfcdf475 // indirect
 	github.com/rogpeppe/go-internal v1.11.0 // indirect
-	github.com/stretchr/objx v0.5.0 // indirect
+	github.com/stretchr/objx v0.5.2 // indirect
 	github.com/xdg-go/pbkdf2 v1.0.0 // indirect
 	github.com/xdg-go/stringprep v1.0.4 // indirect
 	github.com/xeipuuv/gojsonpointer v0.0.0-20190905194746-02993c407bfb // indirect
