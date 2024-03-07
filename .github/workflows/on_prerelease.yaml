@@ -8,6 +8,10 @@ on:
 
 env:
   ORIGINAL_REPO_NAME: ${{ github.event.repository.full_name }}
+  ## this is needed in the makefile
+  NRJMX_VERSION: '2.3.2'
+  CONSUMER_PRODUCER_DOCKER_IMAGE_NAME: ghcr.io/newrelic/kafka-consumer-producer
+  CONSUMER_PRODUCER_DOCKER_PLATFORMS: "linux/amd64"
 
 jobs:
   consumer-producer-image:

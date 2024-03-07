@@ -11,6 +11,8 @@ on:
 
 env:
   ORIGINAL_REPO_NAME: ${{ github.event.repository.full_name }}
+  ## this is needed in the makefile
+  NRJMX_VERSION: '2.3.2'
 
 jobs:
   push-pr:
