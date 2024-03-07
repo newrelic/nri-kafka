@@ -17,7 +17,7 @@ jobs:
     uses: newrelic/coreint-automation/.github/workflows/reusable_push_pr.yaml@v2
     with:
       integration: kafka
-      test_integration_nix: false
+      run_integration_nix: false
     secrets: inherit
 
 # This is currently not covered by reusable workflow due to the retry mechanism

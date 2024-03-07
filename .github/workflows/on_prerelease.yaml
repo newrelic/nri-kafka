@@ -57,7 +57,7 @@ jobs:
       tag: ${{ github.event.release.tag_name }}
       integration: kafka
       publish_schema: "ohi-jmx"
-      test_integration_nix: false
+      run_integration_nix: false
     secrets: inherit
 
 
