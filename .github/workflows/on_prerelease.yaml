@@ -6,6 +6,9 @@ on:
     tags:
       - 'v*'
 
+env:
+  ORIGINAL_REPO_NAME: ${{ github.event.repository.full_name }}
+
 jobs:
   consumer-producer-image:
     name: Build and push consumer-producer image to use in our canaries
