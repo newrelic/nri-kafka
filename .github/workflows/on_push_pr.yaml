@@ -14,4 +14,25 @@ jobs:
     uses: newrelic/coreint-automation/.github/workflows/reusable_push_pr.yaml@v2
     with:
       integration: kafka
+      test_integration_nix: false
     secrets: inherit
+
+# This is currently not covered by reusable workflow due to the retry mechanism
+  test-integration-nix:
+    name: Run integration tests on *Nix
+    runs-on: ubuntu-22.04
+    defaults:
+      run:
+        working-directory: src/github.com/${{env.ORIGINAL_REPO_NAME}}
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          path: src/github.com/${{env.ORIGINAL_REPO_NAME}}
+      - name: Install Go
+        uses: actions/setup-go@v4
+        with:
+          go-version-file: 'src/github.com/${{env.ORIGINAL_REPO_NAME}}/go.mod'
+      - name: Integration test
+        run: for i in 1 2 3; do make integration-test && break; done
