@@ -38,4 +38,5 @@ jobs:
         with:
           go-version-file: 'src/github.com/${{env.ORIGINAL_REPO_NAME}}/go.mod'
       - name: Integration test
+        # One of the integration consumer tests is not working as expected to the environment bootstrap, to keep it
         run: for i in 1 2 3; do make integration-test && break; done
