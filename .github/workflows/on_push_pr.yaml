@@ -9,11 +9,6 @@ on:
   pull_request:
   workflow_dispatch:
 
-env:
-  ORIGINAL_REPO_NAME: ${{ github.event.repository.full_name }}
-  ## this is needed in the makefile
-  NRJMX_VERSION: '2.3.2'
-
 jobs:
   push-pr:
     uses: newrelic/coreint-automation/.github/workflows/reusable_push_pr.yaml@v2
@@ -26,6 +21,9 @@ jobs:
   test-integration-nix:
     name: Run integration tests on *Nix
     runs-on: ubuntu-22.04
+    env:
+      ORIGINAL_REPO_NAME: ${{ github.event.repository.full_name }}
+      NRJMX_VERSION: '2.3.2' ## this is needed in the makefile
     defaults:
       run:
         working-directory: src/github.com/${{env.ORIGINAL_REPO_NAME}}
