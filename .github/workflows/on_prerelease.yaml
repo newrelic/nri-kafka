@@ -62,6 +62,8 @@ jobs:
       integration: kafka
       publish_schema: "ohi-jmx"
       run_integration_nix: false
+      windows_goarch_matrix: '["amd64"]' # 386 is not supported in jmx integrations
+      windows_download_nrjmx: true
     secrets: inherit
 
 
