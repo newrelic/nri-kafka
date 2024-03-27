@@ -299,7 +299,6 @@ func TestNoActiveConsumersForConsumerGroup(t *testing.T) { // nolint: funlen
 		default:
 			assert.Fail(t, "not expected")
 		}
-
 	}
 }
 
