@@ -231,6 +231,7 @@ func TestNoActiveConsumersForConsumerGroup(t *testing.T) { // nolint: funlen
 			ClientId:       testClientID,
 			ClientHost:     "a-host",
 			MemberMetadata: nil,
+			// In the schema below there are no consumer assigned to any of the topics.
 			MemberAssignment: []byte{
 				0, 0, // Version
 				0, 0, 0, 0, // Topic array length
@@ -297,6 +298,7 @@ func TestNoActiveConsumersForConsumerGroup(t *testing.T) { // nolint: funlen
 			assert.Equal(t, expectedTopicEntities[topicName]["maxLag"], entity.Metrics[0].Metrics["consumerGroup.maxLag"])
 			assert.Equal(t, expectedTopicEntities[topicName]["activeConsumers"], entity.Metrics[0].Metrics["consumerGroup.activeConsumers"])
 		default:
+			// We do not expect any "ka-consumer" or "ka-partition-consumer" since no consumers are active.
 			assert.Fail(t, "not expected")
 		}
 	}
