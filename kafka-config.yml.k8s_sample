@@ -1,14 +1,18 @@
-# This file includes a snippet ready to be added to the `integrations_config` section of the values.yml file for the
-# newrelic/infrastructure-k8s chart. For more details, please refer to our docs
-# https://docs.newrelic.com/docs/integrations/kubernetes-integration/link-apps-services/monitor-services-running-kubernetes/
-# or the source values.yml file for the chart:
-# https://github.com/newrelic/helm-charts/blob/e07ec10aada6dda68ba5cd6e71718217d6c01acc/charts/newrelic-infrastructure/values.yaml#L230
+# This file includes *examples* which would be added to the top level `newrelic-infrastructure:` section of
+# the values.yaml file for the `newrelic/nri-bundle` chart.
+# All values must be changed to match your environment; using any placeholder values will fail.
+# For more details, please refer to our docs
+# https://docs.newrelic.com/docs/kubernetes-pixie/kubernetes-integration/advanced-configuration/monitor-services/monitor-services-running-kubernetes/
+# and the source values.yaml file for the chart:
+# https://github.com/newrelic/nri-kubernetes/blob/main/charts/newrelic-infrastructure/values.yaml#L540
 # Labels and URLs have been set to be compatible with those as defined in bitnami's helm chart:
 # https://github.com/bitnami/charts/tree/master/bitnami/kafka
 
-integrations_config:
-  - name: kafka-config-broker.yml
-    data:
+
+newrelic-infrastructure:
+  enabled: true
+  integrations:
+    kafka-config-broker.yaml:
       discovery:
         command:
           exec: /var/db/newrelic-infra/nri-discovery-kubernetes --port 10250 --tls
@@ -25,10 +29,32 @@ integrations_config:
             # advertised name for that broker. Otherwise, collection will fail.
             BOOTSTRAP_BROKER_HOST: ${discovery.podName}.kafka-headless.${discovery.namespace}.svc.cluster.local
             BOOTSTRAP_BROKER_JMX_PORT: 5555
-            METRICS: 1
-            LOCAL_ONLY_COLLECTION: 1
-  - name: kafka-config-producer.yml
-    data:
+            METRICS: "true"
+            LOCAL_ONLY_COLLECTION: "true"
+    kafka-config-offset.yaml:
+      discovery:
+        command:
+          exec: /var/db/newrelic-infra/nri-discovery-kubernetes --port 10250 --tls
+          match:
+            label.app.kubernetes.io/component: kafka
+            label.app.kubernetes.io/instance: kafka
+      integrations:
+        - name: nri-kafka
+          env:
+            CLUSTER_NAME: "testcluster3"
+            METRICS: "false"
+            INVENTORY: "false"
+            CONSUMER_OFFSET: "true"
+            AUTODISCOVER_STRATEGY: bootstrap
+            # Please note that the following URL must be tweaked according to the cluster's setup and broker
+            # configuration. It must point to exactly one pod (i.e. not being load-balanced), and it MUST MATCH the
+            # advertised name for that broker. Otherwise, collection will fail.
+            BOOTSTRAP_BROKER_HOST: ${discovery.podName}.kafka-headless.${discovery.namespace}.svc.cluster.local
+            BOOTSTRAP_BROKER_KAFKA_PORT: 9092
+            BOOTSTRAP_BROKER_KAFKA_PROTOCOL: PLAINTEXT
+            # A regex pattern that matches the consumer groups to collect metrics from
+            CONSUMER_GROUP_REGEX: '.*'
+    kafka-config-producer.yaml:
       discovery:
         command:
           exec: /var/db/newrelic-infra/nri-discovery-kubernetes --port 10250 --tls
@@ -38,13 +64,12 @@ integrations_config:
       integrations:
         - name: nri-kafka
           env:
-            CLUSTER_NAME: kafka-canary
+            CLUSTER_NAME: "kafka-canary"
             PRODUCERS: '[{"host": "${discovery.ip}", "port": 5555}]'
             TOPIC_MODE: list
             TOPIC_LIST: '["test"]'
-            METRICS: 1
-  - name: kafka-config-consumer.yml
-    data:
+            METRICS: "true"
+    kafka-config-consumer.yaml:
       discovery:
         command:
           exec: /var/db/newrelic-infra/nri-discovery-kubernetes --port 10250 --tls
@@ -54,8 +79,8 @@ integrations_config:
       integrations:
         - name: nri-kafka
           env:
-            CLUSTER_NAME: kafka-canary
+            CLUSTER_NAME: "kafka-canary"
             CONSUMERS: '[{"host": "${discovery.ip}", "port": 5555}]'
             TOPIC_MODE: list
             TOPIC_LIST: '["test"]'
-            METRICS: 1
+            METRICS: "true"
