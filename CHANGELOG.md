@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+### enhancements
+
+- Upgrade integrations SDK so the interval is variable and allows intervals up to 5 minutes
+
 ## v3.7.5 - 2024-09-11
 
 ### ⛓️ Dependencies
