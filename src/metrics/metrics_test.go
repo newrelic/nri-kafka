@@ -9,8 +9,8 @@ import (
 	"github.com/newrelic/nri-kafka/src/connection/mocks"
 	"github.com/newrelic/nrjmx/gojmx"
 
-	"github.com/newrelic/infra-integrations-sdk/data/metric"
-	"github.com/newrelic/infra-integrations-sdk/integration"
+	"github.com/newrelic/infra-integrations-sdk/v3/data/metric"
+	"github.com/newrelic/infra-integrations-sdk/v3/integration"
 	"github.com/newrelic/nri-kafka/src/testutils"
 )
 

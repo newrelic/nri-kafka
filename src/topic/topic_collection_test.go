@@ -6,8 +6,8 @@ import (
 	"time"
 
 	"github.com/IBM/sarama"
-	"github.com/newrelic/infra-integrations-sdk/data/inventory"
-	"github.com/newrelic/infra-integrations-sdk/integration"
+	"github.com/newrelic/infra-integrations-sdk/v3/data/inventory"
+	"github.com/newrelic/infra-integrations-sdk/v3/integration"
 	"github.com/newrelic/nri-kafka/src/args"
 	"github.com/newrelic/nri-kafka/src/connection/mocks"
 	"github.com/newrelic/nri-kafka/src/testutils"

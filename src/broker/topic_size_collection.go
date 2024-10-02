@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"github.com/newrelic/nrjmx/gojmx"
 
-	"github.com/newrelic/infra-integrations-sdk/data/metric"
-	"github.com/newrelic/infra-integrations-sdk/integration"
-	"github.com/newrelic/infra-integrations-sdk/log"
+	"github.com/newrelic/infra-integrations-sdk/v3/data/metric"
+	"github.com/newrelic/infra-integrations-sdk/v3/integration"
+	"github.com/newrelic/infra-integrations-sdk/v3/log"
 	"github.com/newrelic/nri-kafka/src/connection"
 	"github.com/newrelic/nri-kafka/src/metrics"
 )

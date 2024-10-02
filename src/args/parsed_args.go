@@ -8,8 +8,8 @@ import (
 	"strconv"
 
 	"github.com/IBM/sarama"
-	sdkArgs "github.com/newrelic/infra-integrations-sdk/args"
-	"github.com/newrelic/infra-integrations-sdk/log"
+	sdkArgs "github.com/newrelic/infra-integrations-sdk/v3/args"
+	"github.com/newrelic/infra-integrations-sdk/v3/log"
 )
 
 // GlobalArgs represents the global arguments that were passed in
