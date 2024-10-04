@@ -3,7 +3,7 @@
 package args
 
 import (
-	sdkArgs "github.com/newrelic/infra-integrations-sdk/args"
+	sdkArgs "github.com/newrelic/infra-integrations-sdk/v3/args"
 )
 
 // ArgumentList is the raw arguments passed into the integration via yaml or CLI args

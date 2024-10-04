@@ -1,6 +1,6 @@
 package main
 
-import "github.com/newrelic/infra-integrations-sdk/log"
+import "github.com/newrelic/infra-integrations-sdk/v3/log"
 
 type saramaLogger struct{}
 

@@ -3,7 +3,7 @@ package topic
 import (
 	"sync"
 
-	"github.com/newrelic/infra-integrations-sdk/log"
+	"github.com/newrelic/infra-integrations-sdk/v3/log"
 	"github.com/newrelic/nri-kafka/src/connection"
 )
 

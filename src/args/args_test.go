@@ -6,8 +6,9 @@ import (
 	"testing"
 
 	"github.com/IBM/sarama"
-	sdkArgs "github.com/newrelic/infra-integrations-sdk/args"
-	"github.com/newrelic/infra-integrations-sdk/integration"
+	sdkArgs "github.com/newrelic/infra-integrations-sdk/v3/args"
+	"github.com/newrelic/infra-integrations-sdk/v3/integration"
+	"github.com/newrelic/infra-integrations-sdk/v3/persist"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -122,6 +123,7 @@ func TestDefaultArgs(t *testing.T) {
 			Inventory: false,
 			Metrics:   false,
 			Events:    false,
+			CacheTTL:  persist.DefaultTTL,
 		},
 		AutodiscoverStrategy: "zookeeper",
 		KafkaVersion:         sarama.V1_0_0_0,
