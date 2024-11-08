@@ -81,7 +81,7 @@ func CollectBrokerRequestMetrics(sample *metric.Set, metricSets []*JMXMetricSet,
 		// If we fail we don't want a total failure as other metrics can be collected even if a single failure/timout occurs
 		if err != nil {
 			if jmxErr, ok := gojmx.IsJMXError(err); ok {
-				log.Error("Unable to execute JMX query for MBean '%s': %v", beanName, jmxErr)
+				log.Warn("Unable to execute JMX query for MBean '%s': %v", beanName, jmxErr)
 				continue
 			}
 			log.Error("Connection error for %s:%s : %s", jmx.HostName(), jmx.Port(), err)
