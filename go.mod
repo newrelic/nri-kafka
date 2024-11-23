@@ -7,7 +7,7 @@ require (
 	github.com/newrelic/infra-integrations-sdk/v3 v3.9.1
 	github.com/newrelic/nrjmx/gojmx v0.0.0-20230714122532-90d44704c70c
 	github.com/samuel/go-zookeeper v0.0.0-20201211165307-7117e9ea2414
-	github.com/stretchr/testify v1.9.0
+	github.com/stretchr/testify v1.10.0
 	github.com/xdg-go/scram v1.1.2
 	github.com/xeipuuv/gojsonschema v1.2.0
 	golang.org/x/sync v0.8.0
