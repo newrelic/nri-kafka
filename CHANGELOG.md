@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+### enhancement
+- Updated golang.org/x/net to v0.33.0
+
 ## v3.9.0 - 2024-12-16
 
 ### ⛓️ Dependencies
@@ -150,7 +153,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## 3.2.0 (2022-08-24)
 ### Changed
-- Fixed a bug that prevented -collect_topic_size and -collect_topic_offset from working as expected 
+- Fixed a bug that prevented -collect_topic_size and -collect_topic_offset from working as expected
 - Bump dependencies:
   `gojmx` v0.0.0-20220801092610-d842b96425bf -> v0.0.0-20220818135048-2c786ece1d31
 
@@ -171,7 +174,7 @@ This new version adds two new features to monitor inactive consumers. We encoura
 - BOOTSTRAP_BROKER_JMX_USER and BOOTSTRAP_BROKER_JMX_PASSWORD are honored taking precedence to DEFAULT_JMX_USER and DEFAULT_JMX_BROKER on Bootsrap discovery.
 
 ### Added
-- Autodetect Consumer/Producer names (clientID) (https://github.com/newrelic/nri-kafka/pull/178) 
+- Autodetect Consumer/Producer names (clientID) (https://github.com/newrelic/nri-kafka/pull/178)
 - Offset collection for consumer groups with inactive consumers using flag INACTIVE_CONSUMER_GROUP_OFFSET (https://github.com/newrelic/nri-kafka/pull/172)
 - Report consumer-group offset metrics by topic using flag CONSUMER_GROUP_OFFSET_BY_TOPIC (https://github.com/newrelic/nri-kafka/pull/172)
 
@@ -209,7 +212,7 @@ Please notice that old [V3](https://docs.newrelic.com/docs/create-integrations/i
 
 ## 2.16.1 (2021-06-07)
 ### Changed
-- New argument topic_source to be either broker or zookeeper (default broker)  
+- New argument topic_source to be either broker or zookeeper (default broker)
 
 ## 2.16.0 (2021-06-02)
 ### Changed
