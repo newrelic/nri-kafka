@@ -7,7 +7,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
-### enhancement
+## v3.10.0 - 2024-12-19
+
+### 🚀 Enhancements
 - Updated golang.org/x/net to v0.33.0
 
 ## v3.9.0 - 2024-12-16
