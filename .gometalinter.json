@@ -1,5 +1,0 @@
-{
-  "Enable": ["errcheck", "gofmt", "golint", "goimports"],
-  "Vendor": true,
-  "Exclude": ["vendor"]
-}
