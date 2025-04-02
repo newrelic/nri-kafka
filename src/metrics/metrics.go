@@ -128,6 +128,7 @@ func CollectMetricDefinitions(sample *metric.Set, metricSets []*JMXMetricSet, be
 
 	for _, metricSet := range metricSets {
 		beanName := metricSet.MBean
+		log.Info("Executing for MBean '%s'", beanName)
 
 		if beanModifier != nil {
 			beanName = beanModifier(beanName)

@@ -6,6 +6,20 @@ import (
 	"github.com/newrelic/infra-integrations-sdk/v3/data/metric"
 )
 
+// var brokerControllerMetricDefs = []*JMXMetricSet{
+// 	{
+// 		MBean:        "kafka.controller:type=KafkaController,name=KafkaController,request=*",
+// 		MetricPrefix: "kafka.controller:type=KafkaController,name=KafkaController,",
+// 		MetricDefs: []*MetricDefinition{
+// 			{
+// 				Name:       "broker.isActiveController",
+// 				SourceType: metric.GAUGE,
+// 				JMXAttr:    "request=ActiveControllerCount",
+// 			},
+// 		},
+// 	},
+// }
+
 // Broker metrics
 var brokerRequestMetricDefs = []*JMXMetricSet{
 	{
@@ -178,12 +192,12 @@ var brokerMetricDefs = []*JMXMetricSet{
 		MetricPrefix: "kafka.server:type=BrokerTopicMetrics,",
 		MetricDefs: []*MetricDefinition{
 			{
-				Name:       "broker.IOInPerSecond",
+				Name:       "broker.IOInPerSecondtest",
 				SourceType: metric.RATE,
 				JMXAttr:    "name=BytesInPerSec,attr=Count",
 			},
 			{
-				Name:       "broker.IOOutPerSecond",
+				Name:       "broker.IOOutPerSecondtest",
 				SourceType: metric.RATE,
 				JMXAttr:    "name=BytesOutPerSec,attr=Count",
 			},
@@ -247,6 +261,23 @@ var brokerMetricDefs = []*JMXMetricSet{
 				Name:       "follower.requestExpirationPerSecond",
 				SourceType: metric.RATE,
 				JMXAttr:    "fetcherType=follower,attr=Count",
+			},
+		},
+	},
+	// Controller Metrics
+	{
+		MBean:        "kafka.controller:type=KafkaController,name=*",
+		MetricPrefix: "kafka.controller:type=KafkaController,",
+		MetricDefs: []*MetricDefinition{
+			{
+				Name:       "broker.ActiveControllerCount",
+				SourceType: metric.GAUGE,
+				JMXAttr:    "name=ActiveControllerCount,attr=Value",
+			},
+			{
+				Name:       "broker.GlobalPartitionCount",
+				SourceType: metric.GAUGE,
+				JMXAttr:    "name=GlobalPartitionCount,attr=Value",
 			},
 		},
 	},
