@@ -66,6 +66,8 @@ jobs:
       windows_download_nrjmx: true
       win_package_type: exe
       upload_fips_packages: true
+      dest_prefix: fips-test-kafka-sairaj/
+      test_package: false
     secrets: inherit
 
 
