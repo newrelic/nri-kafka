@@ -2,9 +2,8 @@
 ci/pull-builder-image:
 	@docker pull $(BUILDER_IMAGE)
 
-.PHONY : ci/pull-builder-image
-ci/deps:
-	@docker build -t $(BUILDER_IMAGE) -f $(CURDIR)/build/Dockerfile $(CURDIR)
+.PHONY : ci/deps
+ci/deps: ci/pull-builder-image
 
 .PHONY : ci/debug-container
 ci/debug-container: ci/deps
