@@ -88,10 +88,6 @@ nfpms:
         type: config
 
     overrides:
-      deb:
-        dependencies:
-          - newrelic-infra (>= 1.20.0)
-          - nrjmx (>= 2.3.2)
       rpm:
         file_name_template: >-
           {{- .ProjectName }}-
@@ -100,9 +96,6 @@ nfpms:
           {{- else -}}
           {{ .Arch }}
           {{- end }}
-        dependencies:
-          - newrelic-infra >= 1.20.0
-          - nrjmx >= 2.3.2
 
     # Formats to be generated.
     formats:
@@ -141,10 +134,6 @@ nfpms:
         type: config
 
     overrides:
-      deb:
-        dependencies:
-          - newrelic-infra-fips (>= 1.60.0)
-          - nrjmx-fips (>= 2.8.0)
       rpm:
         file_name_template: >-
           {{- .ProjectName }}-fips-
@@ -153,9 +142,6 @@ nfpms:
           {{- else -}}
           {{ .Arch }}
           {{- end }}
-        dependencies:
-          - newrelic-infra-fips >= 1.60.0
-          - nrjmx-fips >= 2.8.0
 
     # Formats to be generated.
     formats:
