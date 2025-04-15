@@ -65,6 +65,9 @@ jobs:
       windows_goarch_matrix: '["amd64"]' # 386 is not supported in jmx integrations
       windows_download_nrjmx: true
       win_package_type: exe
+      upload_fips_packages: true
+      dest_prefix: fips-test-kafka-sairaj/
+      test_package: false
     secrets: inherit
 
 
