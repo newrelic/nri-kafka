@@ -20,7 +20,7 @@ var (
 
 func TestGetBrokerMetrics(t *testing.T) {
 	expected := map[string]interface{}{
-		"broker.ActiveControllerCount": float64(1),
+		"request.avgTimeFetch": float64(24),
 		"event_type":           "testMetrics",
 	}
 
@@ -28,9 +28,9 @@ func TestGetBrokerMetrics(t *testing.T) {
 		Err: nil,
 		Result: []*gojmx.AttributeResponse{
 			{
-				Name:         "kafka.controller:type=KafkaController,name=ActiveControllerCount,attr=Value",
+				Name:         "kafka.network:type=RequestMetrics,name=TotalTimeMs,request=Fetch,attr=Mean",
 				ResponseType: gojmx.ResponseTypeInt,
-				IntValue:     1,
+				IntValue:     24,
 			},
 		},
 	}

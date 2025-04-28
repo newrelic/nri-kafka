@@ -103,6 +103,8 @@
                     {
                       "type": "object",
                       "required": [
+                        "broker.ActiveControllerCount",
+                        "broker.GlobalPartitionCount",
                         "broker.IOInPerSecond",
                         "broker.IOOutPerSecond",
                         "broker.messagesInPerSecond",
@@ -116,6 +118,12 @@
                         "replication.unreplicatedPartitions"
                       ],
                       "properties": {
+                        "broker.ActiveControllerCount": {
+                          "type": "number"
+                        },
+                        "broker.GlobalPartitionCount": {
+                          "type": "number"
+                        },
                         "broker.IOInPerSecond": {
                           "type": "integer"
                         },
@@ -362,6 +370,8 @@
                     {
                       "type": "object",
                       "required": [
+                        "broker.ActiveControllerCount",
+                        "broker.GlobalPartitionCount",
                         "broker.IOInPerSecond",
                         "broker.IOOutPerSecond",
                         "broker.messagesInPerSecond",
@@ -375,6 +385,12 @@
                         "replication.unreplicatedPartitions"
                       ],
                       "properties": {
+                        "broker.ActiveControllerCount": {
+                          "type": "number"
+                        },
+                        "broker.GlobalPartitionCount": {
+                          "type": "number"
+                        },
                         "broker.IOInPerSecond": {
                           "type": "integer"
                         },
@@ -621,6 +637,8 @@
                     {
                       "type": "object",
                       "required": [
+                        "broker.ActiveControllerCount",
+                        "broker.GlobalPartitionCount",
                         "broker.IOInPerSecond",
                         "broker.IOOutPerSecond",
                         "broker.messagesInPerSecond",
@@ -634,6 +652,12 @@
                         "replication.unreplicatedPartitions"
                       ],
                       "properties": {
+                        "broker.ActiveControllerCount": {
+                          "type": "number"
+                        },
+                        "broker.GlobalPartitionCount": {
+                          "type": "number"
+                        },
                         "broker.IOInPerSecond": {
                           "type": "integer"
                         },

@@ -6,20 +6,6 @@ import (
 	"github.com/newrelic/infra-integrations-sdk/v3/data/metric"
 )
 
-// var brokerControllerMetricDefs = []*JMXMetricSet{
-// 	{
-// 		MBean:        "kafka.controller:type=KafkaController,name=KafkaController,request=*",
-// 		MetricPrefix: "kafka.controller:type=KafkaController,name=KafkaController,",
-// 		MetricDefs: []*MetricDefinition{
-// 			{
-// 				Name:       "broker.isActiveController",
-// 				SourceType: metric.GAUGE,
-// 				JMXAttr:    "request=ActiveControllerCount",
-// 			},
-// 		},
-// 	},
-// }
-
 // Broker metrics
 var brokerRequestMetricDefs = []*JMXMetricSet{
 	{
@@ -192,12 +178,12 @@ var brokerMetricDefs = []*JMXMetricSet{
 		MetricPrefix: "kafka.server:type=BrokerTopicMetrics,",
 		MetricDefs: []*MetricDefinition{
 			{
-				Name:       "broker.IOInPerSecondtest",
+				Name:       "broker.IOInPerSecond",
 				SourceType: metric.RATE,
 				JMXAttr:    "name=BytesInPerSec,attr=Count",
 			},
 			{
-				Name:       "broker.IOOutPerSecondtest",
+				Name:       "broker.IOOutPerSecond",
 				SourceType: metric.RATE,
 				JMXAttr:    "name=BytesOutPerSec,attr=Count",
 			},
@@ -291,6 +277,28 @@ var BrokerTopicMetricDefs = []*JMXMetricSet{
 		MetricDefs: []*MetricDefinition{
 			{
 				Name:       "broker.bytesWrittenToTopicPerSecond",
+				SourceType: metric.RATE,
+				JMXAttr:    "attr=Count",
+			},
+		},
+	},
+	{
+		MBean:        "kafka.server:type=BrokerTopicMetrics,name=BytesOutPerSec,topic=" + topicHolder,
+		MetricPrefix: "kafka.server:type=BrokerTopicMetrics,name=BytesOutPerSec,topic=" + topicHolder + ",",
+		MetricDefs: []*MetricDefinition{
+			{
+				Name:       "broker.bytesReadFromTopicPerSecond",
+				SourceType: metric.RATE,
+				JMXAttr:    "attr=Count",
+			},
+		},
+	},
+	{
+		MBean:        "kafka.server:type=BrokerTopicMetrics,name=MessagesInPerSec,topic=" + topicHolder,
+		MetricPrefix: "kafka.server:type=BrokerTopicMetrics,name=MessagesInPerSec,topic=" + topicHolder + ",",
+		MetricDefs: []*MetricDefinition{
+			{
+				Name:       "broker.messagesProducedToTopicPerSecond",
 				SourceType: metric.RATE,
 				JMXAttr:    "attr=Count",
 			},
