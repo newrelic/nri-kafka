@@ -165,55 +165,12 @@
                 "items": {
                   "allOf": [
                     {
-                      "not": {
-                        "type": "object",
-                        "anyOf": [
-                          {
-                            "type": "object",
-                            "required": ["broker.ActiveControllerCount"],
-                            "properties": {
-                              "broker.ActiveControllerCount": {
-                                "type": "number"
-                              }
-                            }
-                          },
-                          {
-                            "type": "object",
-                            "required": ["broker.GlobalPartitionCount"],
-                            "properties": {
-                              "broker.GlobalPartitionCount": {
-                                "type": "number"
-                              }
-                            }
-                          },
-                          {
-                            "type": "object",
-                            "required": ["broker.bytesReadFromTopicPerSecond"],
-                            "properties": {
-                              "broker.bytesReadFromTopicPerSecond": {
-                                "type": "number"
-                              }
-                            }
-                          },
-                          {
-                            "type": "object",
-                            "required": [
-                              "broker.messagesProducedToTopicPerSecond"
-                            ],
-                            "properties": {
-                              "broker.messagesProducedToTopicPerSecond": {
-                                "type": "number"
-                              }
-                            }
-                          }
-                        ]
-                      }
-                    },
-                    {
                       "anyOf": [
                         {
                           "type": "object",
                           "required": [
+                            "broker.ActiveControllerCount",
+                            "broker.GlobalPartitionCount",
                             "broker.IOInPerSecond",
                             "broker.IOOutPerSecond",
                             "broker.messagesInPerSecond",
@@ -227,6 +184,12 @@
                             "replication.unreplicatedPartitions"
                           ],
                           "properties": {
+                            "broker.ActiveControllerCount": {
+                              "type": "number"
+                            },
+                            "broker.GlobalPartitionCount": {
+                              "type": "number"
+                            },
                             "broker.IOInPerSecond": {
                               "type": "integer"
                             },
@@ -328,6 +291,41 @@
                             },
                             "topic": {
                               "type": "string"
+                            }
+                          }
+                        },
+                        {
+                          "type": "object",
+                          "required": [
+                            "clusterName",
+                            "displayName",
+                            "entityName",
+                            "event_type",
+                            "topic",
+                            "broker.bytesReadFromTopicPerSecond",
+                            "broker.messagesProducedToTopicPerSecond"
+                          ],
+                          "properties": {
+                            "clusterName": {
+                              "type": "string"
+                            },
+                            "displayName": {
+                              "type": "string"
+                            },
+                            "entityName": {
+                              "type": "string"
+                            },
+                            "event_type": {
+                              "type": "string"
+                            },
+                            "topic": {
+                              "type": "string"
+                            },
+                            "broker.bytesReadFromTopicPerSecond": {
+                              "type": "number"
+                            },
+                            "broker.messagesProducedToTopicPerSecond": {
+                              "type": "number"
                             }
                           }
                         }
