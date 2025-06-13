@@ -261,6 +261,11 @@ func populateTopicInventory(t *Topic) []error {
 		errors = append(errors, err)
 	}
 
+	var topicKey, _ = t.Entity.Metadata.Key();
+	if err := t.Entity.SetInventoryItem("topic.name", "value", topicKey.String()); err != nil {
+		errors = append(errors, err)
+	}
+	
 	// Add topic configs to inventory
 	for _, config := range t.Configs {
 		if err := t.Entity.SetInventoryItem("topic."+config.Name, "value", config.Value); err != nil {
