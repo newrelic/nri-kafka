@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+### enhancements
+- Included topic.name as it is required for creating a topic entity
+
 ## v3.11.0 - 2025-04-23
 
 ### ⛓️ Dependencies
