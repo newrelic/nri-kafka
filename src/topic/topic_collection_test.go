@@ -115,7 +115,7 @@ func TestPopulateTopicInventory(t *testing.T) {
 
 	i, _ := integration.New("kafka", "1.0.0")
 	e, _ := i.Entity("testtopic", "topic")
-	var key, _ = e.Metadata.Key();
+	var key, _ = e.Metadata.Key()
 
 	myTopic := &Topic{
 		Entity:            e,
