@@ -19,6 +19,7 @@ import (
 	"github.com/newrelic/nri-kafka/src/args"
 	"github.com/newrelic/nri-kafka/src/broker"
 	"github.com/newrelic/nri-kafka/src/client"
+	"github.com/newrelic/nri-kafka/src/cluster"
 	"github.com/newrelic/nri-kafka/src/connection"
 	"github.com/newrelic/nri-kafka/src/consumeroffset"
 	"github.com/newrelic/nri-kafka/src/topic"
@@ -233,6 +234,27 @@ func coreCollection(kafkaIntegration *integration.Integration, jmxConnProvider c
 			go topic.FeedTopicPool(topicChan, kafkaIntegration, collectedTopics)
 		}
 
+		// Collect cluster metrics if enabled
+		if args.GlobalArgs.CollectClusterMetrics {
+			log.Info("Collecting cluster metrics")
+			// Cluster metrics should be collected from the controller broker
+			if len(brokers) > 0 {
+				// Try to find the controller broker
+				controllerBroker := connection.FindControllerBroker(brokers)
+				
+				// If controller broker found, use it, otherwise fall back to first broker
+				if controllerBroker != nil {
+					log.Debug("Using controller broker (ID: %s) for cluster metrics collection", controllerBroker.ID)
+					collectClusterMetrics(controllerBroker, kafkaIntegration, jmxConnProvider)
+				} else {
+					log.Debug("Controller broker not found, falling back to first broker")
+					collectClusterMetrics(brokers[0], kafkaIntegration, jmxConnProvider)
+				}
+			} else {
+				log.Error("No brokers available for cluster metric collection")
+			}
+		}
+
 		go broker.FeedBrokerPool(brokers, brokerChan)
 	}
 
@@ -243,6 +265,36 @@ func coreCollection(kafkaIntegration *integration.Integration, jmxConnProvider c
 	go client.FeedWorkerPool(producerChan, args.GlobalArgs.Producers)
 
 	wg.Wait()
+}
+
+// collectClusterMetrics collects metrics at the Kafka cluster level from a specified broker
+// The function expects the broker to be the controller broker if possible, but will work with any broker
+func collectClusterMetrics(broker *connection.Broker, i *integration.Integration, jmxConnProvider connection.JMXProvider) {
+	// Configure JMX connection for the broker
+	jmxConfig := connection.NewConfigBuilder().
+		FromArgs().
+		WithHostname(broker.Host).WithPort(broker.JMXPort).
+		WithUsername(broker.JMXUser).WithPassword(broker.JMXPassword).
+		Build()
+
+	// Get JMX connection from provider
+	jmxConn, err := jmxConnProvider.NewConnection(jmxConfig)
+	if err != nil {
+		log.Error("Failed to create JMX connection for cluster metrics: %s", err)
+		return
+	}
+
+	// Create a cluster collector and collect the metrics
+	hostPort := fmt.Sprintf("%s:%d", broker.Host, broker.JMXPort)
+	clusterCollector := cluster.NewCollector(jmxConn, hostPort)
+	if err := clusterCollector.CollectMetrics(i); err != nil {
+		log.Error("Failed to collect cluster metrics: %s", err)
+	}
+
+	// Properly close the connection when done
+	if err := jmxConn.Close(); err != nil {
+		log.Error("Unable to close JMX connection for cluster metrics: %v", err)
+	}
 }
 
 // ExitOnErr will exit with a 1 if the error is non-nil

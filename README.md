@@ -2,7 +2,7 @@
 
 # New Relic integration for Kafka
 
-The New Relic integration for Kafka captures critical performance metrics and inventory reported by Kafka clusters. Data on Brokers, Topics, Java Producers, and Java Consumers is collected.
+The New Relic integration for Kafka captures critical performance metrics and inventory reported by Kafka clusters. Data on Brokers, Topics, Java Producers, Java Consumers, and cluster-wide metrics is collected.
 
 Inventory data is obtained mainly from Zookeeper nodes and metrics are collected through JMX.
 
@@ -120,6 +120,27 @@ If you believe you have found a security vulnerability in this project or any of
 If you would like to contribute to this project, review [these guidelines](./CONTRIBUTING.md).
 
 To all contributors, we thank you!  Without your contribution, this project would not be what it is today.
+
+## Cluster Metrics
+
+The integration can collect cluster-wide metrics from the Kafka controller. These metrics provide insight into the overall health and performance of your Kafka cluster. To enable cluster metrics collection, use the following configuration:
+
+```yaml
+collect_cluster_metrics: true
+```
+
+When this setting is enabled, the integration will:
+1. Automatically identify which broker is currently the controller
+2. Collect cluster-wide metrics from the controller broker
+3. Fall back to another available broker if the controller cannot be identified or accessed
+
+The cluster metrics are collected from the following MBeans:
+- `kafka.controller:type=KafkaController,name=*` - Core cluster metrics such as active broker count, offline partitions, and more
+- `kafka.controller:type=ControllerStats,name=UncleanLeaderElectionsPerSec` - Rate of unclean leader elections
+- `kafka.coordinator.group:type=GroupMetadataManager,name=*` - Consumer group metrics
+- `kafka.server:type=KafkaServer,name=ClusterId` - Cluster identification
+
+These metrics are reported in a `KafkaClusterSample` event type, allowing you to monitor your entire Kafka cluster's health from a single entity.
 
 ## License
 
