@@ -14,6 +14,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Enhanced cluster metrics collection to intelligently identify and use the controller broker
 - Added fallback mechanism to ensure cluster metrics are collected even if controller is unavailable
 
+### enhancements
+- Included topic.name as it is required for creating a topic entity
+
 ## v3.11.0 - 2025-04-23
 
 ### ⛓️ Dependencies
