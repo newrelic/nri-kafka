@@ -71,41 +71,51 @@
                         "displayName",
                         "entityName",
                         "event_type",
-                        "clusterName"
+                        "clusterName",
+                        "collectedFrom"
                       ],
                       "properties": {
                         "cluster.activeBrokerCount": {
-                          "type": ["number", "null"]
+                          "type": "integer"
                         },
                         "cluster.offlinePartitionsCount": {
-                          "type": ["number", "null"]
+                          "type": "integer"
                         },
                         "cluster.preferredReplicaImbalanceCount": {
-                          "type": ["number", "null"]
+                          "type": "integer"
                         },
                         "cluster.globalTopicCount": {
-                          "type": ["number", "null"]
+                          "type": "integer"
                         },
                         "cluster.globalPartitionCount": {
-                          "type": ["number", "null"]
+                          "type": "integer"
                         },
                         "cluster.activeControllerCount": {
-                          "type": ["number", "null"]
+                          "type": "integer"
                         },
                         "cluster.uncleanLeaderElectionsPerSecond": {
-                          "type": ["number", "null"]
+                          "type": "number"
                         },
                         "cluster.numGroups": {
-                          "type": ["number", "null"]
+                          "type": "integer"
                         },
                         "cluster.numOffsets": {
-                          "type": ["number", "null"]
+                          "type": "integer"
                         },
                         "cluster.numGroupsPreparingRebalance": {
-                          "type": ["number", "null"]
+                          "type": "integer"
+                        },
+                        "cluster.numGroupsStable": {
+                          "type": "integer"
+                        },
+                        "cluster.numGroupsDead": {
+                          "type": "integer"
+                        },
+                        "cluster.fencedBrokerCount": {
+                          "type": "integer"
                         },
                         "cluster.id": {
-                          "type": ["string", "null"]
+                          "type": "string"
                         },
                         "displayName": {
                           "type": "string"

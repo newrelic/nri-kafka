@@ -119,7 +119,20 @@ If you believe you have found a security vulnerability in this project or any of
 
 If you would like to contribute to this project, review [these guidelines](./CONTRIBUTING.md).
 
-To all contributors, we thank you!  Without your contribution, this project would not be what it is today.
+## Event Types
+
+The integration provides multiple event types that each capture a specific aspect of Kafka monitoring:
+
+| Event Type | Description |
+| --- | --- |
+| KafkaBrokerSample | Metrics specific to individual broker performance such as network I/O, request handling, and more. |
+| KafkaTopicSample | Metrics related to individual topics, including partition count and replication status. |
+| KafkaProducerSample | Performance metrics for producers connected to the Kafka cluster. |
+| KafkaConsumerSample | Performance metrics for consumers subscribed to the Kafka cluster. |
+| KafkaOffsetSample | Metrics related to consumer group offsets, providing lag information. |
+| KafkaClusterSample | Cluster-wide metrics that provide a holistic view of the entire cluster, including controller status, broker counts, and partition health. |
+
+Each event type provides a specific perspective on your Kafka ecosystem, allowing you to monitor different components with appropriate granularity.
 
 ## Cluster Metrics
 

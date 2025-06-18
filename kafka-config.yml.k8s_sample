@@ -84,3 +84,8 @@ newrelic-infrastructure:
             TOPIC_MODE: list
             TOPIC_LIST: '["test"]'
             METRICS: "true"
+
+            # Enable collection of cluster-wide metrics from the Kafka controller
+            # These metrics provide a holistic view of the cluster state, including information about brokers, 
+            # controller, partitions, and replication status.
+            COLLECT_CLUSTER_METRICS: false

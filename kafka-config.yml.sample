@@ -33,6 +33,11 @@ integrations:
     # or Kubernetes, is used on top of the integration.
     LOCAL_ONLY_COLLECTION: false
 
+    # Enable collection of cluster-wide metrics from the Kafka controller
+    # These metrics provide a holistic view of the cluster state, including information about brokers, 
+    # controller, partitions, and replication status.
+    COLLECT_CLUSTER_METRICS: false
+
     # Below are the fields used to fine tune/toggle topic metric collection. Can be one of:
     # - "all", where all topics found in all brokers will be collected.
     # - "none", which will disable topic collection alltogether.
