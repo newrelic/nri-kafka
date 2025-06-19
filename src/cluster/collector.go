@@ -58,8 +58,8 @@ func (c *Collector) CollectMetrics(integration *integration.Integration) error {
 func populateClusterMetrics(entity *integration.Entity, hostPort string, conn connection.JMXConnection) {
 	// Create metrics sample
 	sample := entity.NewMetricSet(ClusterEventType,
-		attribute.Attribute{Key: "displayName", Value: "Kafka Cluster"},
-		attribute.Attribute{Key: "entityName", Value: "cluster"},
+		attribute.Attribute{Key: "displayName",  Value: entity.Metadata.Name},
+		attribute.Attribute{Key: "entityName", Value: "cluster:" + entity.Metadata.Name},
 		attribute.Attribute{Key: "clusterName", Value: args.GlobalArgs.ClusterName},
 		attribute.Attribute{Key: "event_type", Value: ClusterEventType},
 	)

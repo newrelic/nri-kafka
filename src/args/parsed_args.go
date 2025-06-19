@@ -283,6 +283,7 @@ func ParseArgs(a ArgumentList) (*ParsedArguments, error) {
 		TrustStore:                       a.TrustStore,
 		TrustStorePassword:               a.TrustStorePassword,
 		LocalOnlyCollection:              a.LocalOnlyCollection,
+		CollectClusterMetrics:            a.CollectClusterMetrics,
 		ForceTopicSampleCollection:       a.ForceTopicSampleCollection,
 		CollectTopicSize:                 a.CollectTopicSize,
 		CollectTopicOffset:               a.CollectTopicOffset,
