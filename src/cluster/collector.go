@@ -43,22 +43,31 @@ func NewCollector(jmxClient connection.JMXConnection, hostPort string) *Collecto
 // CollectMetrics collects metrics from the Kafka controller
 func (c *Collector) CollectMetrics(integration *integration.Integration) error {
 	// Create entity for the cluster
-	clusterEntity, err := integration.Entity(ClusterType, ClusterName)
+	clusterEntity, err := c.Entity(integration)
 	if err != nil {
 		return fmt.Errorf("failed to create cluster entity: %v", err)
 	}
 
-	// Collect cluster metrics
-	populateClusterMetrics(clusterEntity, c.hostPort, c.jmxClient)
+	// Collect metrics only if metrics collection is enabled
+	if args.GlobalArgs.HasMetrics() {
+		// Collect cluster metrics
+		populateClusterMetrics(clusterEntity, c.hostPort, c.jmxClient)
+	}
 
 	return nil
+}
+
+// Entity gets the entity object for the cluster
+func (c *Collector) Entity(i *integration.Integration) (*integration.Entity, error) {
+	clusterIDAttr := integration.NewIDAttribute("clusterName", args.GlobalArgs.ClusterName)
+	return i.Entity(ClusterName, ClusterType, clusterIDAttr)
 }
 
 // populateClusterMetrics collects all cluster metrics and adds them to the entity
 func populateClusterMetrics(entity *integration.Entity, hostPort string, conn connection.JMXConnection) {
 	// Create metrics sample
 	sample := entity.NewMetricSet(ClusterEventType,
-		attribute.Attribute{Key: "displayName",  Value: entity.Metadata.Name},
+		attribute.Attribute{Key: "displayName", Value: entity.Metadata.Name},
 		attribute.Attribute{Key: "entityName", Value: "cluster:" + entity.Metadata.Name},
 		attribute.Attribute{Key: "clusterName", Value: args.GlobalArgs.ClusterName},
 		attribute.Attribute{Key: "event_type", Value: ClusterEventType},
