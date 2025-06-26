@@ -37,7 +37,7 @@
               "inventory",
               "events"
             ],
-            "properties": {
+            "properties": {                
               "entity": {
                 "type": "object",
                 "required": [
@@ -47,12 +47,11 @@
                 "properties": {
                   "name": {
                     "minLength": 1,
-                    "pattern": "^ka-cluster$",
                     "type": "string"
                   },
                   "type": {
                     "minLength": 1,
-                    "pattern": "^kafka:cluster$",
+                    "pattern": "^ka-cluster$",
                     "type": "string"
                   },
                   "id_attributes": {
