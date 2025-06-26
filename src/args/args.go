@@ -89,4 +89,6 @@ type ArgumentList struct {
 	ShowVersion bool `default:"false" help:"Print build information and exit"`
 
 	TopicSource string `default:"broker" help:"Collect topics list from either the Broker or Zookeeper"`
+
+	EnableBrokerTopicMetricsV2 bool `default:"false" help:"Enable the new BrokerTopicMetrics metrics. This is a new set of metrics that are essentials for some capabilities to work. "`
 }

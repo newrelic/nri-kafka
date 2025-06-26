@@ -182,7 +182,7 @@ func collectBrokerTopicMetrics(b *connection.Broker, collectedTopics []string, i
 		// Insert into map
 		topicSampleLookup[topicName] = sample
 
-		metrics.CollectMetricDefinitions(sample, metrics.BrokerTopicMetricDefs, metrics.ApplyTopicName(topicName), conn)
+		metrics.CollectMetricDefinitions(sample, metrics.GetFinalMetricSets(metrics.BrokerTopicMetricDefs, metrics.BrokerTopicV2MetricDefs), metrics.ApplyTopicName(topicName), conn)
 	}
 
 	return topicSampleLookup
