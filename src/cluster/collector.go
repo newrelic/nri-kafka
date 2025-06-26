@@ -6,9 +6,7 @@ import (
 	"strings"
 
 	"github.com/newrelic/infra-integrations-sdk/v3/data/attribute"
-	"github.com/newrelic/infra-integrations-sdk/v3/data/metric"
 	"github.com/newrelic/infra-integrations-sdk/v3/integration"
-	"github.com/newrelic/infra-integrations-sdk/v3/log"
 	"github.com/newrelic/nri-kafka/src/args"
 	"github.com/newrelic/nri-kafka/src/connection"
 	"github.com/newrelic/nri-kafka/src/metrics"
@@ -90,18 +88,13 @@ func (c *Collector) Entity(i *integration.Integration) (*integration.Entity, err
 
 // populateClusterMetrics collects all cluster metrics and adds them to the entity
 func populateClusterMetrics(entity *integration.Entity, hostPort string, conn connection.JMXConnection) {
-	// Create metrics sample
+	// Create a sample metric set for the cluster
 	sample := entity.NewMetricSet(ClusterEventType,
 		attribute.Attribute{Key: "displayName", Value: hostPort},
 		attribute.Attribute{Key: "entityName", Value: "cluster:" + hostPort},
 		attribute.Attribute{Key: "clusterName", Value: args.GlobalArgs.ClusterName},
 		attribute.Attribute{Key: "event_type", Value: ClusterEventType},
 	)
-
-	// Add attributes to identify the broker we collected from
-	if err := sample.SetMetric("collectedFrom", hostPort, metric.ATTRIBUTE); err != nil {
-		log.Error("Failed to set collectedFrom metric: %v", err)
-	}
 
 	// Collect all cluster metrics
 	metrics.CollectMetricDefinitions(sample, metrics.ClusterMetricDefs, nil, conn)

@@ -51,7 +51,6 @@
                   },
                   "type": {
                     "minLength": 1,
-                    "pattern": "^ka-cluster$",
                     "type": "string"
                   },
                   "id_attributes": {
@@ -70,8 +69,7 @@
                         "displayName",
                         "entityName",
                         "event_type",
-                        "clusterName",
-                        "collectedFrom"
+                        "clusterName"
                       ],
                       "properties": {
                         "cluster.activeBrokerCount": {
@@ -126,10 +124,6 @@
                           "type": "string"
                         },
                         "event_type": {
-                          "type": "string",
-                          "pattern": "^KafkaClusterSample$"
-                        },
-                        "collectedFrom": {
                           "type": "string"
                         }
                       }
