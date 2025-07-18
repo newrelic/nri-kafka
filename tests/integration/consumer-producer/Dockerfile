@@ -1,4 +1,4 @@
-FROM maven:3.9.10-eclipse-temurin-17
+FROM maven:3.9.11-eclipse-temurin-17
 COPY src src
 COPY pom.xml pom.xml
 
