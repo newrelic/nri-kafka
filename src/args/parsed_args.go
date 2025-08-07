@@ -90,6 +90,7 @@ type ParsedArguments struct {
 	TopicBucket                TopicBucket
 	CollectTopicSize           bool
 	CollectTopicOffset         bool
+	EnableBrokerTopicMetricsV2 bool
 
 	// Consumer offset arguments
 	ConsumerOffset              bool
@@ -252,6 +253,8 @@ func ParseArgs(a ArgumentList) (*ParsedArguments, error) {
 		return nil, fmt.Errorf("failed to parse kafka version: %s", err)
 	}
 
+	log.Info("Processing new BrokerTopic metrics flag is : %v", a.EnableBrokerTopicMetricsV2)
+
 	parsedArgs := &ParsedArguments{
 		DefaultArgumentList:              a.DefaultArgumentList,
 		AutodiscoverStrategy:             a.AutodiscoverStrategy,
@@ -283,6 +286,7 @@ func ParseArgs(a ArgumentList) (*ParsedArguments, error) {
 		TrustStore:                       a.TrustStore,
 		TrustStorePassword:               a.TrustStorePassword,
 		LocalOnlyCollection:              a.LocalOnlyCollection,
+		CollectClusterMetrics:            a.CollectClusterMetrics,
 		ForceTopicSampleCollection:       a.ForceTopicSampleCollection,
 		CollectTopicSize:                 a.CollectTopicSize,
 		CollectTopicOffset:               a.CollectTopicOffset,
@@ -300,6 +304,7 @@ func ParseArgs(a ArgumentList) (*ParsedArguments, error) {
 		SaslGssapiKerberosConfigPath:     a.SaslGssapiKerberosConfigPath,
 		SaslGssapiDisableFASTNegotiation: a.SaslGssapiDisableFASTNegotiation,
 		TopicSource:                      a.TopicSource,
+		EnableBrokerTopicMetricsV2: 	  a.EnableBrokerTopicMetricsV2,
 	}
 
 	return parsedArgs, nil

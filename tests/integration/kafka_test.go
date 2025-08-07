@@ -330,6 +330,24 @@ func TestKafkaIntegration_bootstrap_metrics(t *testing.T) {
 	}
 }
 
+func TestKafkaIntegration_bootstrap_new_metrics(t *testing.T) {
+	bootstrapDiscoverConfigMetrics := func(command []string) []string {
+		return append(bootstrapDiscoverConfig(command), "--metrics", "--enable_broker_topic_metrics_v2")
+	}
+
+	stdout, stderr, err := runIntegration(t, bootstrapDiscoverConfigMetrics)
+
+	assert.NotNil(t, stderr, "unexpected stderr")
+	assert.NoError(t, err, "Unexpected error")
+
+	schemaPath := filepath.Join("json-schema-files", "kafka-schema-metrics-v2.json")
+	err = jsonschema.Validate(schemaPath, stdout)
+	assert.NoError(t, err, "The output of kafka integration doesn't have expected format.")
+	for _, topic := range topicNames {
+		assert.Contains(t, stdout, topic, fmt.Sprintf("The output doesn't have the topic %s", topic))
+	}
+}
+
 func TestKafkaIntegration_bootstrap_inventory(t *testing.T) {
 	bootstrapDiscoverConfigInventory := func(command []string) []string {
 		return append(bootstrapDiscoverConfig(command), "--inventory")
@@ -403,4 +421,35 @@ func TestKafkaIntegration_consumer_test(t *testing.T) {
 	schemaPath := filepath.Join("json-schema-files", "kafka-schema-consumer.json")
 	err = jsonschema.Validate(schemaPath, stdout)
 	assert.NoError(t, err, "The output of kafka integration doesn't have expected format.")
+}
+
+func TestKafkaIntegration_clusterMetrics(t *testing.T) {
+	clusterMetricsConfig := func(command []string) []string {
+		return append(
+			command,
+			"--cluster_name", "kfk-cluster-metrics",
+			"--autodiscover_strategy", "bootstrap",
+			"--bootstrap_broker_host", "kafka1",
+			"--bootstrap_broker_kafka_port", "9092",
+			"--bootstrap_broker_kafka_protocol", "PLAINTEXT",
+			"--bootstrap_broker_jmx_port", "1099",
+			"--bootstrap_broker_jmx_user", "admin",
+			"--bootstrap_broker_jmx_password", "nrone",
+			"--collect_cluster_metrics",
+		)
+	}
+
+	stdout, stderr, err := runIntegration(t, clusterMetricsConfig)
+
+	assert.NotNil(t, stderr, "unexpected stderr")
+	assert.NoError(t, err, "Unexpected error")
+
+	// Use the cluster-specific schema for validation
+	schemaPath := filepath.Join("json-schema-files", "kafka-schema-cluster.json")
+	err = jsonschema.Validate(schemaPath, stdout)
+	assert.NoError(t, err, "The output of kafka integration doesn't have expected format.")
+
+	// Verify cluster metrics presence
+	assert.Contains(t, stdout, "\"event_type\":\"KafkaClusterSample\"", "Cluster metrics event type not found")
+	assert.Contains(t, stdout, "\"entityName\":\"cluster:", "Cluster entity name not found")
 }

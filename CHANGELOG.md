@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+### 🚀 Enhancements
+- Added cluster-level metrics from kafka.controller, kafka.coordinator.group, and kafka.server domains
+- Added a new event type `KafkaClusterSample` with metrics reflecting the health of the entire Kafka cluster
+- Added a new command line option `collect_cluster_metrics` to enable collection of cluster-wide metrics
+- Enhanced cluster metrics collection to intelligently identify and use the controller broker
+- Added fallback mechanism to ensure cluster metrics are collected even if controller is unavailable
+
 ## v3.13.2 - 2025-07-24
 
 ### 🐞 Bug fixes
