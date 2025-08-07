@@ -22,8 +22,21 @@ import (
 
 // GetBrokerMetrics collects all Broker JMX metrics and stores them in sample
 func GetBrokerMetrics(sample *metric.Set, conn connection.JMXConnection) {
-	CollectMetricDefinitions(sample, brokerMetricDefs, nil, conn)
+	CollectMetricDefinitions(sample, GetFinalMetricSets(brokerMetricDefs, BrokerV2MetricDefs), nil, conn)
 	CollectBrokerRequestMetrics(sample, brokerRequestMetricDefs, conn)
+}
+
+func GetFinalMetricSets(metricSets []*JMXMetricSet, v2MetricSets []*JMXMetricSet) []*JMXMetricSet {
+	log.Info("Initial metric sets: %v , %v", metricSets, v2MetricSets)
+    finalMetricSets := make([]*JMXMetricSet, 0, len(metricSets)+len(v2MetricSets))
+    finalMetricSets = append(finalMetricSets, metricSets...)
+
+    if args.GlobalArgs.EnableBrokerTopicMetricsV2 {
+        finalMetricSets = append(finalMetricSets, v2MetricSets...)
+    }
+
+	log.Info("Final metric sets: %v", finalMetricSets)
+    return finalMetricSets
 }
 
 // GetConsumerMetrics collects all Consumer metrics for the given

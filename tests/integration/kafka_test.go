@@ -330,6 +330,24 @@ func TestKafkaIntegration_bootstrap_metrics(t *testing.T) {
 	}
 }
 
+func TestKafkaIntegration_bootstrap_new_metrics(t *testing.T) {
+	bootstrapDiscoverConfigMetrics := func(command []string) []string {
+		return append(bootstrapDiscoverConfig(command), "--metrics", "--enable_broker_topic_metrics_v2")
+	}
+
+	stdout, stderr, err := runIntegration(t, bootstrapDiscoverConfigMetrics)
+
+	assert.NotNil(t, stderr, "unexpected stderr")
+	assert.NoError(t, err, "Unexpected error")
+
+	schemaPath := filepath.Join("json-schema-files", "kafka-schema-metrics-v2.json")
+	err = jsonschema.Validate(schemaPath, stdout)
+	assert.NoError(t, err, "The output of kafka integration doesn't have expected format.")
+	for _, topic := range topicNames {
+		assert.Contains(t, stdout, topic, fmt.Sprintf("The output doesn't have the topic %s", topic))
+	}
+}
+
 func TestKafkaIntegration_bootstrap_inventory(t *testing.T) {
 	bootstrapDiscoverConfigInventory := func(command []string) []string {
 		return append(bootstrapDiscoverConfig(command), "--inventory")
