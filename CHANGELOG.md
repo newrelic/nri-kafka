@@ -14,6 +14,26 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Enhanced cluster metrics collection to intelligently identify and use the controller broker
 - Added fallback mechanism to ensure cluster metrics are collected even if controller is unavailable
 
+## v3.13.2 - 2025-07-24
+
+### 🐞 Bug fixes
+- Rereleasing due to bad release
+
+## v3.13.1 - 2025-07-10
+
+### ⛓️ Dependencies
+- Updated source
+
+## v3.13.0 - 2025-07-09
+
+### ⛓️ Dependencies
+- Upgraded golang.org/x/net from 0.33.0 to 0.38.0
+
+## v3.12.1 - 2025-07-02
+
+### ⛓️ Dependencies
+- Updated golang version to v1.24.4
+
 ## v3.12.0 - 2025-06-18
 
 ### 🚀 Enhancements
