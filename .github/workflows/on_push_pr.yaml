@@ -23,7 +23,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       ORIGINAL_REPO_NAME: ${{ github.event.repository.full_name }}
-      NRJMX_VERSION: '2.3.2' ## this is needed in the makefile
+      NRJMX_VERSION: '2.10.1' ## this is needed in the makefile
     defaults:
       run:
         working-directory: src/github.com/${{env.ORIGINAL_REPO_NAME}}
