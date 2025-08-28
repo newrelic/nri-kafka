@@ -65,6 +65,7 @@ jobs:
       windows_goarch_matrix: '["amd64"]' # 386 is not supported in jmx integrations
       windows_download_nrjmx: true
       win_package_type: exe
+      upload_fips_packages: true
     secrets: inherit
 
 
