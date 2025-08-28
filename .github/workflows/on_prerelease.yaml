@@ -12,7 +12,7 @@ jobs:
       ORIGINAL_REPO_NAME: ${{ github.event.repository.full_name }}
       CONSUMER_PRODUCER_DOCKER_IMAGE_NAME: ghcr.io/newrelic/kafka-consumer-producer
     name: Build and push consumer-producer image to use in our canaries
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
@@ -33,7 +33,7 @@ jobs:
   # This is currently not covered by reusable workflow due to the retry mechanism
   test-integration-nix:
     name: Run integration tests on *Nix
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     env:
       ORIGINAL_REPO_NAME: ${{ github.event.repository.full_name }}
       NRJMX_VERSION: '2.3.2' ## this is needed in the makefile
@@ -66,7 +66,7 @@ jobs:
       windows_download_nrjmx: true
       win_package_type: exe
       upload_fips_packages: true
-      dest_prefix: fips-test-kafka-sairaj/
+      dest_prefix: test-kafka-fips-rahul-un/
       test_package: false
     secrets: inherit
 
