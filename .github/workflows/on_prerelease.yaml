@@ -69,5 +69,3 @@ jobs:
       dest_prefix: test-kafka-fips-rahul-un/
       test_package: false
     secrets: inherit
-
-
