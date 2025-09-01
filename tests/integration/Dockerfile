@@ -1,12 +1,11 @@
 FROM golang:1.24.6 as builder
 ARG CGO_ENABLED=0
 ARG NRJMX_VERSION
-ARG DOWNLOAD_BASE_URL=http://nr-downloads-ohai-staging.s3-website-us-east-1.amazonaws.com
 WORKDIR /go/src/github.com/newrelic/nri-kafka
 COPY . .
 RUN make clean compile
 WORKDIR /
-ADD ${DOWNLOAD_BASE_URL}/infrastructure_agent/binaries/linux/noarch/nrjmx_linux_${NRJMX_VERSION}_noarch.tar.gz ./
+ADD http://download.newrelic.com/infrastructure_agent/binaries/linux/noarch/nrjmx_linux_${NRJMX_VERSION}_noarch.tar.gz ./
 RUN tar -xzf nrjmx_linux_${NRJMX_VERSION}_noarch.tar.gz
 
 FROM alpine:latest
