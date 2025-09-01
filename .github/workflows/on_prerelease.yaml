@@ -66,6 +66,5 @@ jobs:
       windows_download_nrjmx: true
       win_package_type: exe
       upload_fips_packages: true
-      dest_prefix: test-kafka-fips-rahul-deux/
       test_package: false
     secrets: inherit
