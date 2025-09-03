@@ -7,7 +7,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
-### enhancements
+## v3.14.0 - 2025-09-03
+
+### 🚀 Enhancements
 - Add FIPS compliant packages
 
 ## v3.13.3 - 2025-08-13
