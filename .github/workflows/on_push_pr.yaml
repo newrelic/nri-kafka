@@ -29,7 +29,7 @@ jobs:
         working-directory: src/github.com/${{env.ORIGINAL_REPO_NAME}}
     steps:
       - name: Check out code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 1
           path: src/github.com/${{env.ORIGINAL_REPO_NAME}}
