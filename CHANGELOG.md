@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+## v3.15.2 - 2025-12-10
+
+### ⛓️ Dependencies
+- Updated github.com/xdg-go/scram to v1.2.0 - [Changelog 🔗](https://github.com/xdg-go/scram/releases/tag/v1.2.0)
+- Updated golang patch version to v1.25.5
+
 ## v3.15.1 - 2025-11-19
 
 ### ⛓️ Dependencies
