@@ -1,4 +1,4 @@
-FROM golang:1.25.7 as builder-kafka
+FROM golang:1.26.0 as builder-kafka
 COPY . /go/src/github.com/newrelic/nri-kafka/
 RUN cd /go/src/github.com/newrelic/nri-kafka && \
     make && \
