@@ -7,6 +7,45 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+## v3.16.2 - 2026-02-11
+
+### ⛓️ Dependencies
+- Updated golang patch version to v1.25.7
+
+## v3.16.1 - 2026-01-22
+
+### ⛓️ Dependencies
+- Updated source
+
+## v3.16.0 - 2026-01-21
+
+### ⛓️ Dependencies
+- Upgraded golang.org/x/crypto from 0.36.0 to 0.45.0
+
+## v3.15.2 - 2025-12-10
+
+### ⛓️ Dependencies
+- Updated github.com/xdg-go/scram to v1.2.0 - [Changelog 🔗](https://github.com/xdg-go/scram/releases/tag/v1.2.0)
+- Updated golang patch version to v1.25.5
+
+## v3.15.1 - 2025-11-19
+
+### ⛓️ Dependencies
+- Updated source
+
+## v3.15.0 - 2025-11-12
+
+### 🚀 Enhancements
+- Updated nrjmx-fips patch version to v2.10.2
+
+### ⛓️ Dependencies
+- Updated source
+
+## v3.14.0 - 2025-09-03
+
+### 🚀 Enhancements
+- Add FIPS compliant packages
+
 ## v3.13.3 - 2025-08-13
 
 ### ⛓️ Dependencies
