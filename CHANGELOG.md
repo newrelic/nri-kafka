@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### security
 - update go to v1.25.8
+- update org.apache.kafka:kafka-clients to v3.9.2
 
 ## v3.16.2 - 2026-02-11
 
