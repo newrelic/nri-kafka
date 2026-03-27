@@ -7,7 +7,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
-### security
+## v3.17.0 - 2026-03-27
+
+### 🛡️ Security notices
 - update go to v1.25.8
 - update org.apache.kafka:kafka-clients to v3.9.2
 
