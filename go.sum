@@ -102,6 +102,8 @@ github.com/newrelic/infra-integrations-sdk/v3 v3.9.1 h1:dCtVLsYNHWTQ5aAlAaHroomO
 github.com/newrelic/infra-integrations-sdk/v3 v3.9.1/go.mod h1:yPeidhcq9Cla0QDquGXH0KqvS2k9xtetFOD7aLA0Z8M=
 github.com/newrelic/nrjmx/gojmx v0.0.0-20260311192102-126022c31a10 h1:nA+1eGy4chxWVAE/sMGrA3YFzNjNgCOku+f1QYne+Xo=
 github.com/newrelic/nrjmx/gojmx v0.0.0-20260311192102-126022c31a10/go.mod h1:ofFn8WcyaKO7NHhHCnqH/eKCSqYcXdD02RTPB49eOqA=
+github.com/newrelic/nrjmx/gojmx v0.0.0-20260326150546-3385d4760564 h1:gVYys+iJxbHbDPBPllYrf/ZDOf7AxSikZ+/mz6hNmjs=
+github.com/newrelic/nrjmx/gojmx v0.0.0-20260326150546-3385d4760564/go.mod h1:ofFn8WcyaKO7NHhHCnqH/eKCSqYcXdD02RTPB49eOqA=
 github.com/opencontainers/go-digest v1.0.0 h1:apOUWs51W5PlhuyGyz9FCeeBIOUDA/6nW8Oi/yOhh5U=
 github.com/opencontainers/go-digest v1.0.0/go.mod h1:0JzlMkj0TRzQZfJkVvzbP0HBR3IKzErnv2BNG4W4MAM=
 github.com/opencontainers/image-spec v1.1.0 h1:8SG7/vwALn54lVB/0yZ/MMwhFrPYtpEHQb2IpWsCzug=
