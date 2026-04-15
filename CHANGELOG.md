@@ -6,7 +6,10 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
-### security
+
+## v3.18.0 - 2026-04-15
+
+### 🛡️ Security notices
 - upgrade go version to 1.25.9
 
 ## v3.17.0 - 2026-03-27
