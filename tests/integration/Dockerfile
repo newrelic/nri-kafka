@@ -1,4 +1,4 @@
-FROM golang:1.25.9 as builder
+FROM golang:1.26.2-bookworm as builder
 ARG CGO_ENABLED=0
 ARG NRJMX_VERSION
 WORKDIR /go/src/github.com/newrelic/nri-kafka
