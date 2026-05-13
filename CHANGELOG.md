@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+### security
+- update github.com/apache/thrift to v0.23.0
+
 ## v3.18.0 - 2026-04-15
 
 ### 🛡️ Security notices
