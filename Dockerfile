@@ -1,4 +1,4 @@
-FROM golang:1.26.2-bookworm as builder-kafka
+FROM golang:1.26.3-bookworm as builder-kafka
 COPY . /go/src/github.com/newrelic/nri-kafka/
 RUN cd /go/src/github.com/newrelic/nri-kafka && \
     make && \
