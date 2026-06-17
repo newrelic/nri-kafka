@@ -126,7 +126,7 @@ func TestDefaultArgs(t *testing.T) {
 			CacheTTL:  persist.DefaultTTL,
 		},
 		AutodiscoverStrategy: "zookeeper",
-		KafkaVersion:         sarama.V1_0_0_0,
+		KafkaVersion:         sarama.V2_1_0_0,
 		ZookeeperHosts: []*ZookeeperHost{
 			{
 				Host: "localhost",

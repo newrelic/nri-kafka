@@ -10,7 +10,7 @@ import (
 type ArgumentList struct {
 	sdkArgs.DefaultArgumentList
 	ClusterName  string `default:"" help:"A user-defined name to uniquely identify the cluster"`
-	KafkaVersion string `default:"1.0.0" help:"What version of the API to use for connecting to Kafka. Versions older than 1.0.0 may be missing some features."`
+	KafkaVersion string `default:"2.1.0" help:"What version of the API to use for connecting to Kafka. Defaults to 2.1.0. Set this to match your cluster's version. Kafka 4.x requires at least 2.0.0 for topic and broker configuration collection (DescribeConfigs v0 was removed). Versions older than 1.0.0 may be missing some features."`
 
 	AutodiscoverStrategy string `default:"zookeeper" help:"How to discover broker nodes to collect metrics from. One of 'zookeeper' (default) or 'bootstrap'"`
 

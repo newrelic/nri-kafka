@@ -191,9 +191,20 @@ func collectBrokerTopicMetrics(b *connection.Broker, collectedTopics []string, i
 // Collect broker configuration from Zookeeper
 func getBrokerConfig(broker *connection.Broker) ([]*sarama.ConfigEntry, error) {
 
+	// DescribeConfigs v0 was removed in Kafka 4.0 (the broker's minimum supported
+	// version is now v1). Derive the request version from the negotiated Kafka
+	// version so we remain compatible with both older brokers and Kafka 4.x.
+	// sarama v1.43.x supports DescribeConfigs up to v2.
+	descVer := int16(0)
+	switch {
+	case args.GlobalArgs.KafkaVersion.IsAtLeast(sarama.V2_0_0_0):
+		descVer = 2
+	case args.GlobalArgs.KafkaVersion.IsAtLeast(sarama.V1_1_0_0):
+		descVer = 1
+	}
 	configRequest := &sarama.DescribeConfigsRequest{
-		Version:         0,
-		IncludeSynonyms: true,
+		Version:         descVer,
+		IncludeSynonyms: descVer >= 1,
 		Resources: []*sarama.ConfigResource{
 			{
 				Type:        sarama.BrokerResource,
