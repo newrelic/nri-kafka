@@ -55,6 +55,11 @@ var producerMetricDefs = []*JMXMetricSet{
 				JMXAttr:    "client-id=" + producerHolder + ",attr=bufferpool-wait-time-total",
 			},
 			{
+				Name:       "producer.bufferpoolWaitTimeNs",
+				SourceType: metric.GAUGE,
+				JMXAttr:    "client-id=" + producerHolder + ",attr=bufferpool-wait-time-ns-total",
+			},
+			{
 				Name:       "producer.bytesOutPerSecond",
 				SourceType: metric.GAUGE,
 				JMXAttr:    "client-id=" + producerHolder + ",attr=outgoing-byte-rate",
