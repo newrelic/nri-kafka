@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+### Bugfixes
+- Fixed missing `KafkaTopicSample` data on Kafka 4.x. The integration sent `DescribeConfigs` requests at API version 0, which Kafka 4.0 removed (the broker minimum is now v1), causing topic configuration collection to fail and the topic samples to be dropped entirely. The request version is now derived from the configured `KAFKA_VERSION` (v2/v1/v0), and the default `KAFKA_VERSION` was raised from `1.0.0` to `2.1.0` so topic and broker configuration collection works against Kafka 4.x out of the box.
+
 ## v3.20.0 - 2026-06-17
 
 ### 🛡️ Security notices
