@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+### security
+- Upgraded `go.opentelemetry.io/otel` from v1.40.0 to v1.41.0 to fix [GHSA-mh2q-q3fh-2475](https://github.com/advisories/GHSA-mh2q-q3fh-2475) (High severity)
+
 ## v3.20.1 - 2026-06-24
 
 ### 🐞 Bug fixes
