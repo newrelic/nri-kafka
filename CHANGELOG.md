@@ -9,9 +9,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### security
 - Upgraded `go.opentelemetry.io/otel` from v1.40.0 to v1.41.0 to fix [GHSA-mh2q-q3fh-2475](https://github.com/advisories/GHSA-mh2q-q3fh-2475) (High severity)
-
-### ⛓️ Dependencies
-- Updated `github.com/newrelic/nrjmx/gojmx` to `v0.0.0-20260714104524-a2f2193e84e3`
+- Upgraded `github.com/newrelic/nrjmx/gojmx` to fix [GHSA-x744-4wpc-v9h2](https://github.com/advisories/GHSA-x744-4wpc-v9h2) (High severity) and [GHSA-4vq8-7jfc-9cvp](https://github.com/advisories/GHSA-4vq8-7jfc-9cvp) (Low severity)
 
 ## v3.20.1 - 2026-06-24
 
