@@ -5,7 +5,7 @@ go 1.26.6
 require (
 	github.com/IBM/sarama v1.43.3
 	github.com/newrelic/infra-integrations-sdk/v3 v3.9.1
-	github.com/newrelic/nrjmx/gojmx v0.0.0-20260812103111-ec73e85ec47a
+	github.com/newrelic/nrjmx/gojmx v0.0.0-20260821063345-e0a5abde2d31
 	github.com/samuel/go-zookeeper v0.0.0-20201211165307-7117e9ea2414
 	github.com/stretchr/testify v1.11.1
 	github.com/xdg-go/scram v1.2.0
@@ -28,7 +28,7 @@ require (
 	github.com/jcmturner/gofork v1.7.6 // indirect
 	github.com/jcmturner/gokrb5/v8 v8.4.4 // indirect
 	github.com/jcmturner/rpc/v2 v2.0.3 // indirect
-	github.com/klauspost/compress v1.18.5 // indirect
+	github.com/klauspost/compress v1.18.7 // indirect
 	github.com/kr/pretty v0.3.1 // indirect
 	github.com/pierrec/lz4/v4 v4.1.21 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
