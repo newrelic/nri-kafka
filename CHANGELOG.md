@@ -7,9 +7,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
-### security
+## v3.23.0 - 2026-08-28
+
+### 🛡️ Security notices
 - upgrade go version to 1.26.6
-  
+
 ## v3.22.0 - 2026-08-19
 
 ### 🛡️ Security notices
