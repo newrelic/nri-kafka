@@ -9,8 +9,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### security 
 - update golang.org/x/crypto to v0.55.0 
-- golang.org/x/net v0.57.0 
-- golang.org/x/text v0.41.0
+- golang.org/x/net to v0.57.0 
+- golang.org/x/text to v0.41.0
 
 ## v3.23.0 - 2026-08-28
 
