@@ -97,7 +97,7 @@ func getBrokerList(arguments *args.ParsedArguments) ([]*connection.Broker, error
 			return nil, fmt.Errorf("failed to create boostrap broker: %s", err)
 		}
 
-		metadata, err := bootstrapBroker.GetMetadata(sarama.NewMetadataRequest(arguments.KafkaVersion, nil))
+		metadata, err := bootstrapBroker.GetMetadata(&sarama.MetadataRequest{Version: connection.MetadataRequestVersionForClusterID})
 		if err != nil {
 			return nil, fmt.Errorf("failed to get metadata from broker: %s", err)
 		}
@@ -171,7 +171,7 @@ func getBrokerList(arguments *args.ParsedArguments) ([]*connection.Broker, error
 		}
 
 		if len(brokers) > 0 {
-			metadata, mErr := brokers[0].GetMetadata(sarama.NewMetadataRequest(arguments.KafkaVersion, nil))
+			metadata, mErr := brokers[0].GetMetadata(&sarama.MetadataRequest{Version: connection.MetadataRequestVersionForClusterID})
 			if mErr != nil {
 				log.Debug("Failed to get metadata for cluster ID from broker %s: %s", brokers[0].Host, mErr)
 			} else {
