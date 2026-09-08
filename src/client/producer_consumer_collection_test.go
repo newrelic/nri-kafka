@@ -239,6 +239,7 @@ func TestProducerConsumerEntitiesCreation(t *testing.T) {
 			i, err := integration.New(c.Name, "1.0.0")
 			require.NoError(t, err)
 			testutils.SetupTestArgs()
+			args.GlobalArgs.ClusterID = "lkc-abc123"
 			connProvider := mocks.NewEmptyMockJMXProvider()
 			connProvider.Names = c.JMXNames
 			// run collection
@@ -246,6 +247,7 @@ func TestProducerConsumerEntitiesCreation(t *testing.T) {
 			var entityNames []string
 			for _, entity := range i.Entities {
 				entityNames = append(entityNames, entity.Metadata.Name)
+				assert.Contains(t, entity.Metadata.IDAttrs, integration.NewIDAttribute("clusterID", "lkc-abc123"))
 			}
 			assert.ElementsMatch(t, c.ExpectedEntityNames, entityNames)
 		})

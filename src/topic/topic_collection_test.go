@@ -75,6 +75,7 @@ func TestStartTopicPool(t *testing.T) {
 func TestFeedTopicPool(t *testing.T) {
 	testutils.SetupTestArgs()
 	args.GlobalArgs.TopicMode = "All"
+	args.GlobalArgs.ClusterID = "lkc-abc123"
 
 	i, err := integration.New("kafka", "1.0.0")
 	if err != nil {
@@ -108,6 +109,8 @@ func TestFeedTopicPool(t *testing.T) {
 			t.Errorf("Expected topic name %s, got %s", name, topics[index].Name)
 		}
 	}
+
+	assert.Contains(t, topics[0].Entity.Metadata.IDAttrs, integration.NewIDAttribute("clusterID", "lkc-abc123"))
 }
 
 func TestPopulateTopicInventory(t *testing.T) {

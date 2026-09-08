@@ -92,8 +92,9 @@ func FeedTopicPool(topicChan chan<- *Topic, i *integration.Integration, collecte
 
 	for _, topicName := range collectedTopics {
 		// create topic entity
-		clusterIDAttr := integration.NewIDAttribute("clusterName", args.GlobalArgs.ClusterName)
-		topicEntity, err := i.Entity(topicName, "ka-topic", clusterIDAttr)
+		clusterNameAttr := integration.NewIDAttribute("clusterName", args.GlobalArgs.ClusterName)
+		clusterIDAttr := integration.NewIDAttribute("clusterID", args.GlobalArgs.ClusterID)
+		topicEntity, err := i.Entity(topicName, "ka-topic", clusterNameAttr, clusterIDAttr)
 		if err != nil {
 			log.Error("Unable to create an entity for topic %s", topicName)
 		}
@@ -139,6 +140,7 @@ func topicWorker(topicChan <-chan *Topic, wg *sync.WaitGroup, client connection.
 				attribute.Attribute{Key: "displayName", Value: topic.Name},
 				attribute.Attribute{Key: "entityName", Value: "topic:" + topic.Name},
 				attribute.Attribute{Key: "clusterName", Value: args.GlobalArgs.ClusterName},
+				attribute.Attribute{Key: "clusterID", Value: args.GlobalArgs.ClusterID},
 			)
 
 			// Collect metrics and populate metric set with them

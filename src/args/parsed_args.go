@@ -309,7 +309,7 @@ func ParseArgs(a ArgumentList) (*ParsedArguments, error) {
 		SaslGssapiKerberosConfigPath:     a.SaslGssapiKerberosConfigPath,
 		SaslGssapiDisableFASTNegotiation: a.SaslGssapiDisableFASTNegotiation,
 		TopicSource:                      a.TopicSource,
-		EnableBrokerTopicMetricsV2: 	  a.EnableBrokerTopicMetricsV2,
+		EnableBrokerTopicMetricsV2:       a.EnableBrokerTopicMetricsV2,
 	}
 
 	return parsedArgs, nil

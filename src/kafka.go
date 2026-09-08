@@ -255,7 +255,7 @@ func coreCollection(kafkaIntegration *integration.Integration, jmxConnProvider c
 			if len(brokers) > 0 {
 				// Try to find the controller broker
 				controllerBroker := connection.FindControllerBroker(brokers)
-				
+
 				// If controller broker found, use it, otherwise fall back to first broker
 				if controllerBroker != nil {
 					log.Debug("Using controller broker (ID: %s) for cluster metrics collection", controllerBroker.ID)

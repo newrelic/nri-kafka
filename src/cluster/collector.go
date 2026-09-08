@@ -72,18 +72,21 @@ func (c *Collector) Entity(i *integration.Integration) (*integration.Entity, err
 	// and the namespace is "ka-broker". Let's follow the same pattern.
 	entityName := fmt.Sprintf("%s:%s", hostname, port)
 
-	// Get cluster name from args if available
+	// Get cluster name/ID from args if available
 	clusterName := ""
+	clusterID := ""
 	if args.GlobalArgs != nil {
 		clusterName = args.GlobalArgs.ClusterName
+		clusterID = args.GlobalArgs.ClusterID
 	}
 
-	// Follow the broker entity pattern: only use clusterName as an ID attribute
-	clusterIDAttr := integration.NewIDAttribute("clusterName", clusterName)
+	// Follow the broker entity pattern: use clusterName and clusterID as ID attributes
+	clusterNameAttr := integration.NewIDAttribute("clusterName", clusterName)
+	clusterIDAttr := integration.NewIDAttribute("clusterID", clusterID)
 
 	// Don't include host and port attributes in the entity key
 	// as they are already part of the entityName
-	return i.Entity(entityName, ClusterName, clusterIDAttr)
+	return i.Entity(entityName, ClusterName, clusterNameAttr, clusterIDAttr)
 }
 
 // populateClusterMetrics collects all cluster metrics and adds them to the entity
@@ -93,6 +96,7 @@ func populateClusterMetrics(entity *integration.Entity, hostPort string, conn co
 		attribute.Attribute{Key: "displayName", Value: hostPort},
 		attribute.Attribute{Key: "entityName", Value: "cluster:" + hostPort},
 		attribute.Attribute{Key: "clusterName", Value: args.GlobalArgs.ClusterName},
+		attribute.Attribute{Key: "clusterID", Value: args.GlobalArgs.ClusterID},
 		attribute.Attribute{Key: "event_type", Value: ClusterEventType},
 	)
 

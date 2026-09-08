@@ -178,6 +178,7 @@ func TestPopulateBrokerMetrics_Normal(t *testing.T) {
 		"displayName": "kafkabroker:9090",
 		"entityName":  "broker:" + "kafkabroker:9090",
 		"clusterName": "",
+		"clusterID":   "",
 	}
 
 	assert.Equal(t, expected, sample.Metrics)
@@ -205,6 +206,7 @@ func TestCollectBrokerTopicMetrics(t *testing.T) {
 		"kafkabroker:9090",
 		"ka-broker",
 		integration.IDAttribute{Key: "clusterName", Value: ""},
+		integration.IDAttribute{Key: "clusterID", Value: ""},
 		integration.IDAttribute{Key: "brokerID", Value: "0"},
 	)
 
@@ -220,6 +222,7 @@ func TestCollectBrokerTopicMetrics(t *testing.T) {
 
 	sample := e.NewMetricSet("KafkaBrokerSample",
 		attribute.Attribute{Key: "clusterName", Value: ""},
+		attribute.Attribute{Key: "clusterID", Value: ""},
 		attribute.Attribute{Key: "displayName", Value: "kafkabroker:9090"},
 		attribute.Attribute{Key: "entityName", Value: "broker:kafkabroker:9090"},
 		attribute.Attribute{Key: "topic", Value: "topic"},
