@@ -12,7 +12,7 @@ import (
 func TestFindControllerBrokerWithEmptyList(t *testing.T) {
 	// Setup logging
 	log.SetupLogging(false)
-	
+
 	// Test case: Empty broker list
 	emptyBrokers := []*Broker{}
 	controllerBroker := FindControllerBroker(emptyBrokers)
