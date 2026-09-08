@@ -31,6 +31,11 @@ type ParsedArguments struct {
 	ClusterName  string
 	KafkaVersion sarama.KafkaVersion
 
+	// ClusterID is the Kafka-native cluster identifier, fetched from broker metadata at
+	// startup. It is not a CLI argument; it is populated programmatically once brokers
+	// are discovered. Empty if the brokers didn't report one.
+	ClusterID string
+
 	AutodiscoverStrategy string
 
 	// Zookeeper autodiscovery. Only required if using zookeeper to autodiscover brokers

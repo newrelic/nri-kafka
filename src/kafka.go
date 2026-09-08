@@ -97,10 +97,11 @@ func getBrokerList(arguments *args.ParsedArguments) ([]*connection.Broker, error
 			return nil, fmt.Errorf("failed to create boostrap broker: %s", err)
 		}
 
-		metadata, err := bootstrapBroker.GetMetadata(&sarama.MetadataRequest{})
+		metadata, err := bootstrapBroker.GetMetadata(sarama.NewMetadataRequest(arguments.KafkaVersion, nil))
 		if err != nil {
 			return nil, fmt.Errorf("failed to get metadata from broker: %s", err)
 		}
+		arguments.ClusterID = connection.ClusterIDFromMetadata(metadata)
 
 		brokers := make([]*connection.Broker, 0, len(metadata.Brokers))
 		log.Debug("Found %d brokers in the metadata", len(metadata.Brokers))
@@ -164,7 +165,21 @@ func getBrokerList(arguments *args.ParsedArguments) ([]*connection.Broker, error
 			conn.Close()
 		}(zkConn)
 
-		return connection.GetBrokerListFromZookeeper(zkConn, arguments.PreferredListener)
+		brokers, err := connection.GetBrokerListFromZookeeper(zkConn, arguments.PreferredListener)
+		if err != nil {
+			return nil, err
+		}
+
+		if len(brokers) > 0 {
+			metadata, mErr := brokers[0].GetMetadata(sarama.NewMetadataRequest(arguments.KafkaVersion, nil))
+			if mErr != nil {
+				log.Debug("Failed to get metadata for cluster ID from broker %s: %s", brokers[0].Host, mErr)
+			} else {
+				arguments.ClusterID = connection.ClusterIDFromMetadata(metadata)
+			}
+		}
+
+		return brokers, nil
 	default:
 		return nil, fmt.Errorf("invalid autodiscovery strategy %s", arguments.AutodiscoverStrategy)
 	}
