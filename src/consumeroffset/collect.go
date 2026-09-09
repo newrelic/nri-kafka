@@ -98,7 +98,7 @@ func Collect(client connection.Client, kafkaIntegration *integration.Integration
 // setMetrics adds the metrics from an array of partitionOffsets to the integration
 func setMetrics(consumerGroup string, offsetData []*partitionOffsets, kafkaIntegration *integration.Integration) error {
 	clusterNameAttr := integration.NewIDAttribute("clusterName", args.GlobalArgs.ClusterName)
-	clusterIDAttr := integration.NewIDAttribute("clusterID", args.GlobalArgs.ClusterID)
+	clusterIDAttr := integration.NewIDAttribute("clusterId", args.GlobalArgs.ClusterID)
 	groupEntity, err := kafkaIntegration.Entity(consumerGroup, "ka-consumerGroup", clusterNameAttr, clusterIDAttr)
 	if err != nil {
 		return err
@@ -109,7 +109,7 @@ func setMetrics(consumerGroup string, offsetData []*partitionOffsets, kafkaInteg
 			attribute.Attribute{Key: "displayName", Value: groupEntity.Metadata.Name},
 			attribute.Attribute{Key: "entityName", Value: "consumerGroup:" + groupEntity.Metadata.Name},
 			attribute.Attribute{Key: "clusterName", Value: args.GlobalArgs.ClusterName},
-			attribute.Attribute{Key: "clusterID", Value: args.GlobalArgs.ClusterID},
+			attribute.Attribute{Key: "clusterId", Value: args.GlobalArgs.ClusterID},
 		)
 
 		if err := metricSet.MarshalMetrics(offsetData); err != nil {

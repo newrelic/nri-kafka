@@ -30,5 +30,5 @@ func Test_Broker_Entity_IncludesClusterID(t *testing.T) {
 	entity, err := b.Entity(i)
 	assert.NoError(t, err)
 
-	assert.Contains(t, entity.Metadata.IDAttrs, integration.NewIDAttribute("clusterID", "lkc-abc123"))
+	assert.Contains(t, entity.Metadata.IDAttrs, integration.NewIDAttribute("clusterId", "lkc-abc123"))
 }

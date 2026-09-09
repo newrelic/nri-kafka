@@ -39,14 +39,14 @@ func TestCollector_CollectMetrics(t *testing.T) {
 	assert.Equal(t, ClusterName, entity.Metadata.Namespace)
 	assert.Equal(t, hostPort, entity.Metadata.Name)
 	assert.Equal(t, 1, len(i.Entities))
-	assert.Contains(t, entity.Metadata.IDAttrs, integration.NewIDAttribute("clusterID", "lkc-abc123"))
+	assert.Contains(t, entity.Metadata.IDAttrs, integration.NewIDAttribute("clusterId", "lkc-abc123"))
 
 	// Create a metric set to simulate metrics collection
 	ms := entity.NewMetricSet(ClusterEventType,
 		attribute.Attribute{Key: "displayName", Value: hostPort},
 		attribute.Attribute{Key: "entityName", Value: "cluster:" + hostPort},
 		attribute.Attribute{Key: "clusterName", Value: args.GlobalArgs.ClusterName},
-		attribute.Attribute{Key: "clusterID", Value: args.GlobalArgs.ClusterID},
+		attribute.Attribute{Key: "clusterId", Value: args.GlobalArgs.ClusterID},
 		attribute.Attribute{Key: "event_type", Value: ClusterEventType},
 	)
 

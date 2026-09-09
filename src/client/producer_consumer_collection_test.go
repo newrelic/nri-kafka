@@ -247,7 +247,7 @@ func TestProducerConsumerEntitiesCreation(t *testing.T) {
 			var entityNames []string
 			for _, entity := range i.Entities {
 				entityNames = append(entityNames, entity.Metadata.Name)
-				assert.Contains(t, entity.Metadata.IDAttrs, integration.NewIDAttribute("clusterID", "lkc-abc123"))
+				assert.Contains(t, entity.Metadata.IDAttrs, integration.NewIDAttribute("clusterId", "lkc-abc123"))
 			}
 			assert.ElementsMatch(t, c.ExpectedEntityNames, entityNames)
 		})

@@ -82,7 +82,7 @@ func (c *Collector) Entity(i *integration.Integration) (*integration.Entity, err
 
 	// Follow the broker entity pattern: use clusterName and clusterID as ID attributes
 	clusterNameAttr := integration.NewIDAttribute("clusterName", clusterName)
-	clusterIDAttr := integration.NewIDAttribute("clusterID", clusterID)
+	clusterIDAttr := integration.NewIDAttribute("clusterId", clusterID)
 
 	// Don't include host and port attributes in the entity key
 	// as they are already part of the entityName
@@ -96,7 +96,7 @@ func populateClusterMetrics(entity *integration.Entity, hostPort string, conn co
 		attribute.Attribute{Key: "displayName", Value: hostPort},
 		attribute.Attribute{Key: "entityName", Value: "cluster:" + hostPort},
 		attribute.Attribute{Key: "clusterName", Value: args.GlobalArgs.ClusterName},
-		attribute.Attribute{Key: "clusterID", Value: args.GlobalArgs.ClusterID},
+		attribute.Attribute{Key: "clusterId", Value: args.GlobalArgs.ClusterID},
 		attribute.Attribute{Key: "event_type", Value: ClusterEventType},
 	)
 

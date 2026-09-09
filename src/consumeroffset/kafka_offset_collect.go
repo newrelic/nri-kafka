@@ -160,7 +160,7 @@ func collectClientPartitionOffsetMetrics(
 	lag := hwm - block.Offset
 
 	clusterNameAttr := integration.NewIDAttribute("clusterName", args.GlobalArgs.ClusterName)
-	clusterIDAttr := integration.NewIDAttribute("clusterID", args.GlobalArgs.ClusterID)
+	clusterIDAttr := integration.NewIDAttribute("clusterId", args.GlobalArgs.ClusterID)
 	consumerGroupIDAttr := integration.NewIDAttribute("consumerGroup", consumerGroup)
 	topicIDAttr := integration.NewIDAttribute("topic", topic)
 	partitionIDAttr := integration.NewIDAttribute("partition", strconv.Itoa(int(partition)))
@@ -173,7 +173,7 @@ func collectClientPartitionOffsetMetrics(
 
 	ms := partitionConsumerEntity.NewMetricSet("KafkaOffsetSample",
 		attribute.Attribute{Key: "clusterName", Value: args.GlobalArgs.ClusterName},
-		attribute.Attribute{Key: "clusterID", Value: args.GlobalArgs.ClusterID},
+		attribute.Attribute{Key: "clusterId", Value: args.GlobalArgs.ClusterID},
 		attribute.Attribute{Key: "consumerGroup", Value: consumerGroup},
 		attribute.Attribute{Key: "topic", Value: topic},
 		attribute.Attribute{Key: "partition", Value: strconv.Itoa(int(partition))},
@@ -265,7 +265,7 @@ func collectInactiveConsumerGroupOffsets(
 func generateConsumerNRMetrics(kafkaIntegration *integration.Integration, consumerClientRollup map[clientID]int) {
 	for clientID, totalLag := range consumerClientRollup {
 		clusterNameAttr := integration.NewIDAttribute("clusterName", args.GlobalArgs.ClusterName)
-		clusterIDAttr := integration.NewIDAttribute("clusterID", args.GlobalArgs.ClusterID)
+		clusterIDAttr := integration.NewIDAttribute("clusterId", args.GlobalArgs.ClusterID)
 
 		clientEntity, err := kafkaIntegration.Entity(string(clientID), nrConsumerEntity, clusterNameAttr, clusterIDAttr)
 		if err != nil {
@@ -275,7 +275,7 @@ func generateConsumerNRMetrics(kafkaIntegration *integration.Integration, consum
 
 		ms := clientEntity.NewMetricSet("KafkaOffsetSample",
 			attribute.Attribute{Key: "clusterName", Value: args.GlobalArgs.ClusterName},
-			attribute.Attribute{Key: "clusterID", Value: args.GlobalArgs.ClusterID},
+			attribute.Attribute{Key: "clusterId", Value: args.GlobalArgs.ClusterID},
 			attribute.Attribute{Key: "clientID", Value: string(clientID)},
 		)
 
@@ -299,7 +299,7 @@ func consumerGroupMetrics(
 ) {
 	for consumerGroup, totalLag := range consumerGroupRollup {
 		clusterNameAttr := integration.NewIDAttribute("clusterName", args.GlobalArgs.ClusterName)
-		clusterIDAttr := integration.NewIDAttribute("clusterID", args.GlobalArgs.ClusterID)
+		clusterIDAttr := integration.NewIDAttribute("clusterId", args.GlobalArgs.ClusterID)
 
 		consumerGroupEntity, err := kafkaIntegration.Entity(string(consumerGroup), nrConsumerGroupEntity, clusterNameAttr, clusterIDAttr)
 		if err != nil {
@@ -309,7 +309,7 @@ func consumerGroupMetrics(
 
 		ms := consumerGroupEntity.NewMetricSet("KafkaOffsetSample",
 			attribute.Attribute{Key: "clusterName", Value: args.GlobalArgs.ClusterName},
-			attribute.Attribute{Key: "clusterID", Value: args.GlobalArgs.ClusterID},
+			attribute.Attribute{Key: "clusterId", Value: args.GlobalArgs.ClusterID},
 			attribute.Attribute{Key: "consumerGroup", Value: string(consumerGroup)},
 		)
 
@@ -340,7 +340,7 @@ func consumerGroupByTopicMetrics(
 ) {
 	for topic, totalLag := range topicRollup {
 		clusterNameAttr := integration.NewIDAttribute("clusterName", args.GlobalArgs.ClusterName)
-		clusterIDAttr := integration.NewIDAttribute("clusterID", args.GlobalArgs.ClusterID)
+		clusterIDAttr := integration.NewIDAttribute("clusterId", args.GlobalArgs.ClusterID)
 		consumerGroupIDAttr := integration.NewIDAttribute("consumerGroup", consumerGroup)
 		topicIDAttr := integration.NewIDAttribute("topic", string(topic))
 
@@ -352,7 +352,7 @@ func consumerGroupByTopicMetrics(
 
 		ms := partitionConsumerEntity.NewMetricSet("KafkaOffsetSample",
 			attribute.Attribute{Key: "clusterName", Value: args.GlobalArgs.ClusterName},
-			attribute.Attribute{Key: "clusterID", Value: args.GlobalArgs.ClusterID},
+			attribute.Attribute{Key: "clusterId", Value: args.GlobalArgs.ClusterID},
 			attribute.Attribute{Key: "consumerGroup", Value: consumerGroup},
 			attribute.Attribute{Key: "topic", Value: string(topic)},
 		)

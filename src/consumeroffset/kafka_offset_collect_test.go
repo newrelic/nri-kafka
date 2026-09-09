@@ -219,7 +219,7 @@ func TestCollectOffsetsForConsumerGroup(t *testing.T) { // nolint: funlen
 				default:
 					assert.Fail(t, "not expected")
 				}
-				assert.Equal(t, args.GlobalArgs.ClusterID, entity.Metrics[0].Metrics["clusterID"])
+				assert.Equal(t, args.GlobalArgs.ClusterID, entity.Metrics[0].Metrics["clusterId"])
 				assert.NotEmpty(t, entity)
 			}
 		})

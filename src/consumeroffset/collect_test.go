@@ -28,10 +28,10 @@ func Test_setMetrics(t *testing.T) {
 	assert.NoError(t, err)
 
 	clusterNameAttr := integration.NewIDAttribute("clusterName", args.GlobalArgs.ClusterName)
-	clusterIDAttr := integration.NewIDAttribute("clusterID", args.GlobalArgs.ClusterID)
+	clusterIDAttr := integration.NewIDAttribute("clusterId", args.GlobalArgs.ClusterID)
 	resultEntity, err := i.Entity("testGroup", "ka-consumerGroup", clusterNameAttr, clusterIDAttr)
 	assert.NoError(t, err)
 	assert.Len(t, resultEntity.Metrics, 1)
 	assert.Len(t, resultEntity.Metrics[0].Metrics, 10)
-	assert.Equal(t, args.GlobalArgs.ClusterID, resultEntity.Metrics[0].Metrics["clusterID"])
+	assert.Equal(t, args.GlobalArgs.ClusterID, resultEntity.Metrics[0].Metrics["clusterId"])
 }

@@ -78,7 +78,7 @@ func CollectConsumerMetrics(i *integration.Integration, jmxInfo *args.JMXHost, j
 	for _, clientID := range clientIDs {
 		// Create an entity for the consumer
 		clusterNameAttr := integration.NewIDAttribute("clusterName", args.GlobalArgs.ClusterName)
-		clusterIDAttr := integration.NewIDAttribute("clusterID", args.GlobalArgs.ClusterID)
+		clusterIDAttr := integration.NewIDAttribute("clusterId", args.GlobalArgs.ClusterID)
 		hostIDAttr := integration.NewIDAttribute("host", jmxInfo.Host)
 		consumerEntity, err := i.Entity(clientID, "ka-consumer", clusterNameAttr, clusterIDAttr, hostIDAttr)
 		if err != nil {
@@ -94,7 +94,7 @@ func CollectConsumerMetrics(i *integration.Integration, jmxInfo *args.JMXHost, j
 		// Create a sample for consumer metrics
 		sample := consumerEntity.NewMetricSet("KafkaConsumerSample",
 			attribute.Attribute{Key: "clusterName", Value: args.GlobalArgs.ClusterName},
-			attribute.Attribute{Key: "clusterID", Value: args.GlobalArgs.ClusterID},
+			attribute.Attribute{Key: "clusterId", Value: args.GlobalArgs.ClusterID},
 			attribute.Attribute{Key: "displayName", Value: clientID},
 			attribute.Attribute{Key: "entityName", Value: "consumer:" + clientID},
 			attribute.Attribute{Key: "host", Value: jmxInfo.Host},
@@ -125,7 +125,7 @@ func CollectProducerMetrics(i *integration.Integration, jmxInfo *args.JMXHost, j
 	for _, clientID := range clientIDs {
 		// Create the producer entity
 		clusterNameAttr := integration.NewIDAttribute("clusterName", args.GlobalArgs.ClusterName)
-		clusterIDAttr := integration.NewIDAttribute("clusterID", args.GlobalArgs.ClusterID)
+		clusterIDAttr := integration.NewIDAttribute("clusterId", args.GlobalArgs.ClusterID)
 		hostIDAttr := integration.NewIDAttribute("host", jmxInfo.Host)
 		producerEntity, err := i.Entity(clientID, "ka-producer", clusterNameAttr, clusterIDAttr, hostIDAttr)
 		if err != nil {
@@ -137,7 +137,7 @@ func CollectProducerMetrics(i *integration.Integration, jmxInfo *args.JMXHost, j
 		}
 		sample := producerEntity.NewMetricSet("KafkaProducerSample",
 			attribute.Attribute{Key: "clusterName", Value: args.GlobalArgs.ClusterName},
-			attribute.Attribute{Key: "clusterID", Value: args.GlobalArgs.ClusterID},
+			attribute.Attribute{Key: "clusterId", Value: args.GlobalArgs.ClusterID},
 			attribute.Attribute{Key: "displayName", Value: clientID},
 			attribute.Attribute{Key: "entityName", Value: "producer:" + clientID},
 			attribute.Attribute{Key: "host", Value: jmxInfo.Host},

@@ -110,7 +110,7 @@ func TestFeedTopicPool(t *testing.T) {
 		}
 	}
 
-	assert.Contains(t, topics[0].Entity.Metadata.IDAttrs, integration.NewIDAttribute("clusterID", "lkc-abc123"))
+	assert.Contains(t, topics[0].Entity.Metadata.IDAttrs, integration.NewIDAttribute("clusterId", "lkc-abc123"))
 }
 
 func TestPopulateTopicInventory(t *testing.T) {
