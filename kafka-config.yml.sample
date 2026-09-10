@@ -35,7 +35,7 @@ integrations:
 
     # Below are the fields used to fine tune/toggle topic metric collection. Can be one of:
     # - "all", where all topics found in all brokers will be collected.
-    # - "none", which will disable topic collection alltogether.
+    # - "none", which will disable topic collection altogether.
     # - "list", which allows a fixed list of topics to be defined as topic_list: '["topic1", "topic2"]'
     # - "regex", which allows to define a regex to select which topics will be monitored using topic_regex: 'topic\d+'
     #
@@ -155,7 +155,7 @@ integrations:
     env: production
     role: kafka
 
-# Example configuration for collecting JMX metrics form consumers and producers.
+# Example configuration for collecting JMX metrics from consumers and producers.
 # Please note that we use JMX to collect these metrics, which means that only producers and consumers written in Java
 # are supported for collection.
 - name: nri-kafka
