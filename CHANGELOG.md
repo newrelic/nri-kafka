@@ -7,8 +7,15 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
-### security 
+## v3.25.0 - 2026-09-11
+
+### 🛡️ Security notices
 - update github.com/apache/thrift to v0.24.0 to address CVE-2026-43871
+
+### ⛓️ Dependencies
+- Updated source
+- Updated github.com/newrelic/nrjmx/gojmx digest
+- Updated golang.org/x/sync to v0.23.0
 
 ## v3.24.0 - 2026-09-01
 
