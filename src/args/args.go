@@ -91,4 +91,5 @@ type ArgumentList struct {
 	TopicSource string `default:"broker" help:"Collect topics list from either the Broker or Zookeeper"`
 
 	EnableBrokerTopicMetricsV2 bool `default:"false" help:"Enable the new BrokerTopicMetrics metrics. This is a new set of metrics that are essentials for some capabilities to work. "`
+	EnableBrokerJVMMetrics     bool `default:"false" help:"Enable collection of broker JVM metrics (heap, GC, threads, CPU load, file descriptors, loaded classes) via the standard java.lang JMX platform MBeans."`
 }

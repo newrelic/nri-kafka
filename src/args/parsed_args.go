@@ -96,6 +96,7 @@ type ParsedArguments struct {
 	CollectTopicSize           bool
 	CollectTopicOffset         bool
 	EnableBrokerTopicMetricsV2 bool
+	EnableBrokerJVMMetrics     bool
 
 	// Consumer offset arguments
 	ConsumerOffset              bool
@@ -310,6 +311,7 @@ func ParseArgs(a ArgumentList) (*ParsedArguments, error) {
 		SaslGssapiDisableFASTNegotiation: a.SaslGssapiDisableFASTNegotiation,
 		TopicSource:                      a.TopicSource,
 		EnableBrokerTopicMetricsV2:       a.EnableBrokerTopicMetricsV2,
+		EnableBrokerJVMMetrics:           a.EnableBrokerJVMMetrics,
 	}
 
 	return parsedArgs, nil

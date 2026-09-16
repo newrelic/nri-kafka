@@ -24,6 +24,11 @@ import (
 func GetBrokerMetrics(sample *metric.Set, conn connection.JMXConnection) {
 	CollectMetricDefinitions(sample, GetFinalMetricSets(brokerMetricDefs, BrokerV2MetricDefs), nil, conn)
 	CollectBrokerRequestMetrics(sample, brokerRequestMetricDefs, conn)
+
+	if args.GlobalArgs.EnableBrokerJVMMetrics {
+		CollectMetricDefinitions(sample, jvmMetricDefs, nil, conn)
+		CollectGarbageCollectorMetrics(sample, conn)
+	}
 }
 
 func GetFinalMetricSets(metricSets []*JMXMetricSet, v2MetricSets []*JMXMetricSet) []*JMXMetricSet {
@@ -132,6 +137,48 @@ func CollectBrokerRequestMetrics(sample *metric.Set, metricSets []*JMXMetricSet,
 
 	if len(notFoundMetrics) > 0 {
 		log.Warn("Can't find raw metrics in results for keys: %v", notFoundMetrics)
+	}
+}
+
+// CollectGarbageCollectorMetrics sums CollectionCount and CollectionTime across every garbage
+// collector MBean present. Collector names vary by GC algorithm (G1, Parallel, ZGC, ...), so
+// unlike the rest of jvmMetricDefs this can't be a fixed MetricDefinition - it aggregates by
+// attribute suffix instead, regardless of which collector name reported it.
+func CollectGarbageCollectorMetrics(sample *metric.Set, conn connection.JMXConnection) {
+	results, err := conn.QueryMBeanAttributes(jvmGCMBean)
+	if err != nil {
+		if jmxErr, ok := gojmx.IsJMXError(err); ok {
+			log.Error("Unable to execute JMX query for MBean '%s': %v", jvmGCMBean, jmxErr)
+			return
+		}
+		log.Error("Connection error for %s:%s : %s", jmx.HostName(), jmx.Port(), err)
+		os.Exit(1)
+	}
+
+	var collectionCount, collectionTime float64
+	for _, attr := range results {
+		if attr.ResponseType == gojmx.ResponseTypeErr {
+			continue
+		}
+
+		value, err := attr.GetValueAsFloat()
+		if err != nil {
+			continue
+		}
+
+		switch {
+		case strings.HasSuffix(attr.Name, jvmGCCollectionCountAttr):
+			collectionCount += value
+		case strings.HasSuffix(attr.Name, jvmGCCollectionTimeAttr):
+			collectionTime += value
+		}
+	}
+
+	if err := sample.SetMetric("jvm.gcCollectionsPerSecond", collectionCount, metric.RATE); err != nil {
+		log.Error("Error setting value: %s", err)
+	}
+	if err := sample.SetMetric("jvm.gcTimePerSecond", collectionTime, metric.RATE); err != nil {
+		log.Error("Error setting value: %s", err)
 	}
 }
 
