@@ -92,4 +92,5 @@ type ArgumentList struct {
 
 	EnableBrokerTopicMetricsV2 bool `default:"false" help:"Enable the new BrokerTopicMetrics metrics. This is a new set of metrics that are essentials for some capabilities to work. "`
 	EnableBrokerJVMMetrics     bool `default:"false" help:"Enable collection of broker JVM metrics (heap, GC, threads, CPU load, file descriptors, loaded classes) via the standard java.lang JMX platform MBeans."`
+	EnableTopicConfigMetrics   bool `default:"false" help:"Enable topic.partitionCount, topic.replicationFactor, and topic.minInSyncReplicas on KafkaTopicSample."`
 }
