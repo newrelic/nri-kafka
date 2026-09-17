@@ -5,8 +5,53 @@ import (
 	"testing"
 
 	"github.com/newrelic/nri-kafka/src/args"
+	"github.com/newrelic/nri-kafka/src/connection"
+	"github.com/newrelic/nri-kafka/src/connection/mocks"
+	"github.com/newrelic/nri-kafka/src/testutils"
+	"github.com/newrelic/nrjmx/gojmx"
 	"github.com/stretchr/testify/assert"
 )
+
+func TestCountActiveControllers_SumsAcrossBrokers(t *testing.T) {
+	testutils.SetupTestArgs()
+
+	mockResponse := &mocks.MockJMXResponse{
+		Result: []*gojmx.AttributeResponse{
+			{
+				Name:         "kafka.controller:type=KafkaController,name=ActiveControllerCount,attr=Value",
+				ResponseType: gojmx.ResponseTypeInt,
+				IntValue:     1,
+			},
+		},
+	}
+	mockJMXProvider := &mocks.MockJMXProvider{Response: mockResponse}
+
+	brokers := []*connection.Broker{
+		{Host: "broker1", JMXPort: 9999},
+		{Host: "broker2", JMXPort: 9999},
+		{Host: "broker3", JMXPort: 9999},
+	}
+
+	count := countActiveControllers(brokers, mockJMXProvider)
+
+	assert.Equal(t, 3, count)
+}
+
+func TestCountActiveControllers_SkipsFailedConnections(t *testing.T) {
+	testutils.SetupTestArgs()
+
+	mockJMXProvider := &mocks.MockJMXProvider{
+		Response: &mocks.MockJMXResponse{Err: mocks.ErrQuery},
+	}
+
+	brokers := []*connection.Broker{
+		{Host: "broker1", JMXPort: 9999},
+	}
+
+	count := countActiveControllers(brokers, mockJMXProvider)
+
+	assert.Equal(t, 0, count)
+}
 
 func Test_enforceTopicLimit(t *testing.T) {
 	overLimit := make([]string, maxTopics+1)

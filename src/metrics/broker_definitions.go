@@ -48,6 +48,21 @@ var brokerRequestMetricDefs = []*JMXMetricSet{
 
 // Broker metrics
 var brokerMetricDefs = []*JMXMetricSet{
+	// Controller status - unlike GlobalPartitionCount (only accurate from the active
+	// controller's own tracked state, see ClusterMetricDefs), ActiveControllerCount is a
+	// strict 0/1 gauge that's valid to read from any broker's own JMX: it just reports
+	// whether that specific broker is currently the elected controller.
+	{
+		MBean:        "kafka.controller:type=KafkaController,name=ActiveControllerCount",
+		MetricPrefix: "kafka.controller:type=KafkaController,name=ActiveControllerCount,",
+		MetricDefs: []*MetricDefinition{
+			{
+				Name:       "broker.isActiveController",
+				SourceType: metric.GAUGE,
+				JMXAttr:    "attr=Value",
+			},
+		},
+	},
 	// Metadata request Metrics
 	{
 		MBean:        "kafka.network:type=RequestMetrics,name=TotalTimeMs,request=Metadata",

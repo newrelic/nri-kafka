@@ -253,16 +253,18 @@ func coreCollection(kafkaIntegration *integration.Integration, jmxConnProvider c
 			log.Info("Collecting cluster metrics")
 			// Cluster metrics should be collected from the controller broker
 			if len(brokers) > 0 {
+				activeControllerCount := countActiveControllers(brokers, jmxConnProvider)
+
 				// Try to find the controller broker
 				controllerBroker := connection.FindControllerBroker(brokers)
 
 				// If controller broker found, use it, otherwise fall back to first broker
 				if controllerBroker != nil {
 					log.Debug("Using controller broker (ID: %s) for cluster metrics collection", controllerBroker.ID)
-					collectClusterMetrics(controllerBroker, kafkaIntegration, jmxConnProvider)
+					collectClusterMetrics(controllerBroker, kafkaIntegration, jmxConnProvider, activeControllerCount)
 				} else {
 					log.Debug("Controller broker not found, falling back to first broker")
-					collectClusterMetrics(brokers[0], kafkaIntegration, jmxConnProvider)
+					collectClusterMetrics(brokers[0], kafkaIntegration, jmxConnProvider, activeControllerCount)
 				}
 			} else {
 				log.Error("No brokers available for cluster metric collection")
@@ -283,7 +285,7 @@ func coreCollection(kafkaIntegration *integration.Integration, jmxConnProvider c
 
 // collectClusterMetrics collects metrics at the Kafka cluster level from a specified broker
 // The function expects the broker to be the controller broker if possible, but will work with any broker
-func collectClusterMetrics(broker *connection.Broker, i *integration.Integration, jmxConnProvider connection.JMXProvider) {
+func collectClusterMetrics(broker *connection.Broker, i *integration.Integration, jmxConnProvider connection.JMXProvider, activeControllerCount int) {
 	// Configure JMX connection for the broker
 	jmxConfig := connection.NewConfigBuilder().
 		FromArgs().
@@ -300,7 +302,7 @@ func collectClusterMetrics(broker *connection.Broker, i *integration.Integration
 
 	// Create a cluster collector and collect the metrics
 	hostPort := fmt.Sprintf("%s:%d", broker.Host, broker.JMXPort)
-	clusterCollector := cluster.NewCollector(jmxConn, hostPort)
+	clusterCollector := cluster.NewCollector(jmxConn, hostPort, activeControllerCount)
 	if err := clusterCollector.CollectMetrics(i); err != nil {
 		log.Error("Failed to collect cluster metrics: %s", err)
 	}
@@ -309,6 +311,52 @@ func collectClusterMetrics(broker *connection.Broker, i *integration.Integration
 	if err := jmxConn.Close(); err != nil {
 		log.Error("Unable to close JMX connection for cluster metrics: %v", err)
 	}
+}
+
+// countActiveControllers sums ActiveControllerCount across every broker's own JMX connection.
+// Each broker reports a strict 0 or 1 (see broker.isActiveController) - Kafka itself has no
+// single authoritative source for the cluster-wide total, unlike every other ClusterMetricDefs
+// metric, so this is computed here rather than read from one broker. In a healthy cluster the
+// sum is exactly 1; 0 (no controller elected) or >1 (split-brain) both indicate a real problem.
+// Connection/query failures for a given broker are logged and skipped, not fatal.
+func countActiveControllers(brokers []*connection.Broker, jmxConnProvider connection.JMXProvider) int {
+	activeCount := 0
+
+	for _, b := range brokers {
+		jmxConfig := connection.NewConfigBuilder().
+			FromArgs().
+			WithHostname(b.Host).WithPort(b.JMXPort).
+			WithUsername(b.JMXUser).WithPassword(b.JMXPassword).
+			Build()
+
+		jmxConn, err := jmxConnProvider.NewConnection(jmxConfig)
+		if err != nil {
+			log.Error("Failed to create JMX connection to broker '%s' for active controller count: %s", b.Host, err)
+			continue
+		}
+
+		results, err := jmxConn.QueryMBeanAttributes("kafka.controller:type=KafkaController,name=ActiveControllerCount")
+		if err != nil {
+			log.Error("Failed to query ActiveControllerCount from broker '%s': %s", b.Host, err)
+			jmxConn.Close()
+			continue
+		}
+
+		for _, attr := range results {
+			if !strings.HasSuffix(attr.Name, "attr=Value") {
+				continue
+			}
+			if value, err := attr.GetValueAsFloat(); err == nil {
+				activeCount += int(value)
+			}
+		}
+
+		if err := jmxConn.Close(); err != nil {
+			log.Error("Unable to close JMX connection to broker '%s': %v", b.Host, err)
+		}
+	}
+
+	return activeCount
 }
 
 // ExitOnErr will exit with a 1 if the error is non-nil

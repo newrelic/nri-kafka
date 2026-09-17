@@ -3,7 +3,6 @@ package cluster
 import (
 	"testing"
 
-	"github.com/newrelic/infra-integrations-sdk/v3/data/attribute"
 	"github.com/newrelic/infra-integrations-sdk/v3/integration"
 	"github.com/newrelic/nri-kafka/src/args"
 	"github.com/newrelic/nri-kafka/src/connection/mocks"
@@ -28,8 +27,8 @@ func TestCollector_CollectMetrics(t *testing.T) {
 	// Create a mock JMX client
 	mockJMX := mocks.NewEmptyMockJMXProvider()
 
-	// Create collector with mock JMX client
-	collector := NewCollector(mockJMX, hostPort)
+	// Create collector with mock JMX client and a pre-computed active controller count
+	collector := NewCollector(mockJMX, hostPort, 1)
 
 	// Create the entity using the collector's Entity method
 	entity, err := collector.Entity(i)
@@ -41,18 +40,19 @@ func TestCollector_CollectMetrics(t *testing.T) {
 	assert.Equal(t, 1, len(i.Entities))
 	assert.Contains(t, entity.Metadata.IDAttrs, integration.NewIDAttribute("clusterId", "lkc-abc123"))
 
-	// Create a metric set to simulate metrics collection
-	ms := entity.NewMetricSet(ClusterEventType,
-		attribute.Attribute{Key: "displayName", Value: hostPort},
-		attribute.Attribute{Key: "entityName", Value: "cluster:" + hostPort},
-		attribute.Attribute{Key: "clusterName", Value: args.GlobalArgs.ClusterName},
-		attribute.Attribute{Key: "clusterId", Value: args.GlobalArgs.ClusterID},
-		attribute.Attribute{Key: "event_type", Value: ClusterEventType},
-	)
+	err = collector.CollectMetrics(i)
+	require.NoError(t, err)
 
-	// Verify the metric set was created
-	assert.NotNil(t, ms)
-	assert.Equal(t, 1, len(entity.Metrics))
+	require.Len(t, entity.Metrics, 1)
+	sample := entity.Metrics[0]
 
-	t.Log("Test completed successfully")
+	expected := map[string]interface{}{
+		"event_type":                    ClusterEventType,
+		"displayName":                   hostPort,
+		"entityName":                    "cluster:" + hostPort,
+		"clusterName":                   args.GlobalArgs.ClusterName,
+		"clusterId":                     args.GlobalArgs.ClusterID,
+		"cluster.activeControllerCount": float64(1),
+	}
+	assert.Equal(t, expected, sample.Metrics)
 }
