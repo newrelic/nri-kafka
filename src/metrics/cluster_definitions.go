@@ -37,7 +37,10 @@ var ClusterMetricDefs = []*JMXMetricSet{
 				JMXAttr:    "name=GlobalPartitionCount,attr=Value",
 			},
 			{
-				Name:       "cluster.activeControllerCount",
+				// ActiveControllerCount is a strict 0/1 gauge in both ZK and KRaft mode
+				// (kafka.controller.KafkaController / QuorumControllerMetrics both define it
+				// as `if (isActive) 1 else 0`) - never a count - hence the boolean name here.
+				Name:       "cluster.isActiveController",
 				SourceType: metric.GAUGE,
 				JMXAttr:    "name=ActiveControllerCount,attr=Value",
 			},

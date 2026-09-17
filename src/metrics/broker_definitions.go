@@ -46,26 +46,6 @@ var brokerRequestMetricDefs = []*JMXMetricSet{
 	},
 }
 
-var BrokerV2MetricDefs = []*JMXMetricSet{
-	// Controller Metrics
-	{
-		MBean:        "kafka.controller:type=KafkaController,name=*",
-		MetricPrefix: "kafka.controller:type=KafkaController,",
-		MetricDefs: []*MetricDefinition{
-			{
-				Name:       "broker.ActiveControllerCount",
-				SourceType: metric.GAUGE,
-				JMXAttr:    "name=ActiveControllerCount,attr=Value",
-			},
-			{
-				Name:       "broker.GlobalPartitionCount",
-				SourceType: metric.GAUGE,
-				JMXAttr:    "name=GlobalPartitionCount,attr=Value",
-			},
-		},
-	},
-}
-
 // Broker metrics
 var brokerMetricDefs = []*JMXMetricSet{
 	// Metadata request Metrics

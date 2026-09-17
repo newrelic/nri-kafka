@@ -22,7 +22,10 @@ import (
 
 // GetBrokerMetrics collects all Broker JMX metrics and stores them in sample
 func GetBrokerMetrics(sample *metric.Set, conn connection.JMXConnection) {
-	CollectMetricDefinitions(sample, GetFinalMetricSets(brokerMetricDefs, BrokerV2MetricDefs), nil, conn)
+	// ActiveControllerCount and GlobalPartitionCount are only meaningful read from the
+	// controller broker specifically - see ClusterMetricDefs, which collects them correctly
+	// via connection.FindControllerBroker instead of every broker's own JMX connection.
+	CollectMetricDefinitions(sample, brokerMetricDefs, nil, conn)
 	CollectBrokerRequestMetrics(sample, brokerRequestMetricDefs, conn)
 
 	if args.GlobalArgs.EnableBrokerJVMMetrics {
