@@ -8,6 +8,7 @@ import (
 	"github.com/newrelic/nri-kafka/src/connection"
 	"github.com/newrelic/nri-kafka/src/connection/mocks"
 	"github.com/newrelic/nri-kafka/src/testutils"
+	"github.com/newrelic/nri-kafka/src/topic"
 	"github.com/newrelic/nrjmx/gojmx"
 	"github.com/stretchr/testify/assert"
 )
@@ -35,6 +36,46 @@ func TestCountActiveControllers_SumsAcrossBrokers(t *testing.T) {
 	count := countActiveControllers(brokers, mockJMXProvider)
 
 	assert.Equal(t, 3, count)
+}
+
+func TestCollectTopicByteRates_SumsAcrossBrokersIncludingInternalTopics(t *testing.T) {
+	testutils.SetupTestArgs()
+
+	mockResponse := &mocks.MockJMXResponse{
+		Result: []*gojmx.AttributeResponse{
+			{
+				Name:         "kafka.server:type=BrokerTopicMetrics,name=BytesInPerSec,topic=orders,attr=Count",
+				ResponseType: gojmx.ResponseTypeInt,
+				IntValue:     100,
+			},
+			{
+				Name:         "kafka.server:type=BrokerTopicMetrics,name=BytesInPerSec,topic=orders,attr=OneMinuteRate",
+				ResponseType: gojmx.ResponseTypeDouble,
+				DoubleValue:  1.5,
+			},
+			{
+				Name:         "kafka.server:type=BrokerTopicMetrics,name=BytesOutPerSec,topic=orders,attr=Count",
+				ResponseType: gojmx.ResponseTypeInt,
+				IntValue:     50,
+			},
+			{
+				Name:         "kafka.server:type=BrokerTopicMetrics,name=BytesInPerSec,topic=__consumer_offsets,attr=Count",
+				ResponseType: gojmx.ResponseTypeInt,
+				IntValue:     999999,
+			},
+		},
+	}
+	mockJMXProvider := &mocks.MockJMXProvider{Response: mockResponse}
+
+	brokers := []*connection.Broker{
+		{Host: "broker1", JMXPort: 9999},
+		{Host: "broker2", JMXPort: 9999},
+	}
+
+	rates := collectTopicByteRates(brokers, mockJMXProvider)
+
+	assert.Equal(t, topic.ByteRates{BytesInPerSecond: 200, BytesOutPerSecond: 100}, rates["orders"])
+	assert.Equal(t, topic.ByteRates{BytesInPerSecond: 1999998}, rates["__consumer_offsets"], "internal topics get collected like any other topic - every other topic metric already does")
 }
 
 func TestCountActiveControllers_SkipsFailedConnections(t *testing.T) {

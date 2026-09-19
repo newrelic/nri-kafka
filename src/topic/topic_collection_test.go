@@ -92,7 +92,11 @@ func TestFeedTopicPool(t *testing.T) {
 		t.FailNow()
 	}
 
-	FeedTopicPool(topicChan, i, collectedTopics)
+	byteRates := map[string]ByteRates{
+		"test2": {BytesInPerSecond: 100, BytesOutPerSecond: 200},
+	}
+
+	FeedTopicPool(topicChan, i, collectedTopics, byteRates)
 
 	var topics []*Topic
 	for {
@@ -111,6 +115,10 @@ func TestFeedTopicPool(t *testing.T) {
 	}
 
 	assert.Contains(t, topics[0].Entity.Metadata.IDAttrs, integration.NewIDAttribute("clusterId", "lkc-abc123"))
+
+	assert.Nil(t, topics[0].ByteRates, "test1 has no byte rates, should be nil")
+	assert.Equal(t, &ByteRates{BytesInPerSecond: 100, BytesOutPerSecond: 200}, topics[1].ByteRates)
+	assert.Nil(t, topics[2].ByteRates, "test3 has no byte rates, should be nil")
 }
 
 func TestPopulateTopicInventory(t *testing.T) {
@@ -238,6 +246,33 @@ func TestPopulateTopicConfigMetrics(t *testing.T) {
 		"topic.replicationFactor": float64(2),
 		"topic.minInSyncReplicas": float64(2),
 		"topic.retentionMs":       float64(604800000),
+	}
+	assert.Equal(t, expected, sample.Metrics)
+}
+
+func TestPopulateTopicConfigMetrics_ByteRates(t *testing.T) {
+	testutils.SetupTestArgs()
+
+	i, _ := integration.New("kafka", "1.0.0")
+	e, _ := i.Entity("testtopic", "topic")
+	sample := e.NewMetricSet("KafkaTopicSample")
+
+	myTopic := &Topic{
+		Name:              "test",
+		PartitionCount:    3,
+		ReplicationFactor: 2,
+		ByteRates:         &ByteRates{BytesInPerSecond: 150, BytesOutPerSecond: 75},
+	}
+
+	err := populateTopicConfigMetrics(myTopic, sample)
+	assert.NoError(t, err)
+
+	expected := map[string]interface{}{
+		"event_type":              "KafkaTopicSample",
+		"topic.partitionCount":    float64(3),
+		"topic.replicationFactor": float64(2),
+		"topic.bytesInPerSecond":  float64(0),
+		"topic.bytesOutPerSecond": float64(0),
 	}
 	assert.Equal(t, expected, sample.Metrics)
 }

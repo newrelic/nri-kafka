@@ -26,6 +26,17 @@ type Topic struct {
 	ReplicationFactor int
 	Configs           []*sarama.ConfigEntry
 	Partitions        []*partition
+	// ByteRates is nil when not pre-computed by the caller (e.g. EnableTopicConfigMetrics is
+	// off, or the broker-side MBean for this topic hasn't been created yet).
+	ByteRates *ByteRates
+}
+
+// ByteRates is bytes-in/bytes-out for a topic, summed across every broker's own JMX -
+// see kafka.go's collectTopicByteRates. Kafka has no single MBean that reports a
+// cluster-wide total for a topic; each broker only knows about the partitions it hosts.
+type ByteRates struct {
+	BytesInPerSecond  float64
+	BytesOutPerSecond float64
 }
 
 type Getter interface {
@@ -87,8 +98,10 @@ func GetTopics(topicGetter Getter) ([]string, error) {
 	}
 }
 
-// FeedTopicPool sends Topic structs down the topicChan for workers to collect and build Topic structs
-func FeedTopicPool(topicChan chan<- *Topic, i *integration.Integration, collectedTopics []string) {
+// FeedTopicPool sends Topic structs down the topicChan for workers to collect and build Topic structs.
+// byteRates is looked up by topic name; topics with no entry (not pre-computed, or no traffic
+// yet) simply get a nil Topic.ByteRates.
+func FeedTopicPool(topicChan chan<- *Topic, i *integration.Integration, collectedTopics []string, byteRates map[string]ByteRates) {
 	defer close(topicChan)
 
 	for _, topicName := range collectedTopics {
@@ -100,10 +113,15 @@ func FeedTopicPool(topicChan chan<- *Topic, i *integration.Integration, collecte
 			log.Error("Unable to create an entity for topic %s", topicName)
 		}
 
-		topicChan <- &Topic{
+		newTopic := &Topic{
 			Name:   topicName,
 			Entity: topicEntity,
 		}
+		if rates, ok := byteRates[topicName]; ok {
+			newTopic.ByteRates = &rates
+		}
+
+		topicChan <- newTopic
 	}
 }
 
@@ -195,6 +213,15 @@ func populateTopicConfigMetrics(t *Topic, sample *metric.Set) error {
 
 	if retention, ok := retentionMs(t.Configs); ok {
 		if err := sample.SetMetric("topic.retentionMs", retention, metric.GAUGE); err != nil {
+			return err
+		}
+	}
+
+	if t.ByteRates != nil {
+		if err := sample.SetMetric("topic.bytesInPerSecond", t.ByteRates.BytesInPerSecond, metric.RATE); err != nil {
+			return err
+		}
+		if err := sample.SetMetric("topic.bytesOutPerSecond", t.ByteRates.BytesOutPerSecond, metric.RATE); err != nil {
 			return err
 		}
 	}
