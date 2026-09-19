@@ -24,6 +24,16 @@ func jvmMockResponse() *mocks.MockJMXResponse {
 				ResponseType: gojmx.ResponseTypeInt,
 				IntValue:     120,
 			},
+			{
+				Name:         "java.lang:type=Runtime,attr=Uptime",
+				ResponseType: gojmx.ResponseTypeInt,
+				IntValue:     3798168,
+			},
+			{
+				Name:         "java.lang:type=OperatingSystem,attr=ProcessCpuLoad",
+				ResponseType: gojmx.ResponseTypeDouble,
+				DoubleValue:  0.125,
+			},
 		},
 	}
 }
@@ -64,6 +74,12 @@ func TestGetBrokerMetrics_JVMMetricsEnabled(t *testing.T) {
 	}
 	if got := m.Metrics["jvm.threadCount"]; got != float64(120) {
 		t.Errorf("expected jvm.threadCount = 120, got %v", got)
+	}
+	if got := m.Metrics["jvm.uptimeMs"]; got != float64(3798168) {
+		t.Errorf("expected jvm.uptimeMs = 3798168, got %v", got)
+	}
+	if got := m.Metrics["jvm.processCpuLoad"]; got != float64(0.125) {
+		t.Errorf("expected jvm.processCpuLoad = 0.125, got %v", got)
 	}
 	if _, ok := m.Metrics["jvm.gcCollectionsPerSecond"]; !ok {
 		t.Error("expected jvm.gcCollectionsPerSecond to be collected when EnableBrokerJVMMetrics is true")

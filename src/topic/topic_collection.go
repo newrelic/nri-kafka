@@ -193,6 +193,12 @@ func populateTopicConfigMetrics(t *Topic, sample *metric.Set) error {
 		}
 	}
 
+	if retention, ok := retentionMs(t.Configs); ok {
+		if err := sample.SetMetric("topic.retentionMs", retention, metric.GAUGE); err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
@@ -206,6 +212,26 @@ func minInSyncReplicas(configs []*sarama.ConfigEntry) (int, bool) {
 		value, err := strconv.Atoi(config.Value)
 		if err != nil {
 			log.Error("Failed to parse min.insync.replicas value %q: %s", config.Value, err)
+			return 0, false
+		}
+
+		return value, true
+	}
+
+	return 0, false
+}
+
+// retentionMs finds and parses the retention.ms topic config, if set. -1 means infinite
+// retention, a valid value, not an error.
+func retentionMs(configs []*sarama.ConfigEntry) (int, bool) {
+	for _, config := range configs {
+		if config.Name != "retention.ms" {
+			continue
+		}
+
+		value, err := strconv.Atoi(config.Value)
+		if err != nil {
+			log.Error("Failed to parse retention.ms value %q: %s", config.Value, err)
 			return 0, false
 		}
 

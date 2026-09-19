@@ -182,6 +182,36 @@ func TestMinInSyncReplicas_Unparseable(t *testing.T) {
 	assert.False(t, ok)
 }
 
+func TestRetentionMs_Present(t *testing.T) {
+	configs := []*sarama.ConfigEntry{
+		{Name: "flush.messages", Value: "12345"},
+		{Name: "retention.ms", Value: "604800000"},
+	}
+
+	value, ok := retentionMs(configs)
+	assert.True(t, ok)
+	assert.Equal(t, 604800000, value)
+}
+
+func TestRetentionMs_Infinite(t *testing.T) {
+	configs := []*sarama.ConfigEntry{
+		{Name: "retention.ms", Value: "-1"},
+	}
+
+	value, ok := retentionMs(configs)
+	assert.True(t, ok)
+	assert.Equal(t, -1, value)
+}
+
+func TestRetentionMs_Absent(t *testing.T) {
+	configs := []*sarama.ConfigEntry{
+		{Name: "flush.messages", Value: "12345"},
+	}
+
+	_, ok := retentionMs(configs)
+	assert.False(t, ok)
+}
+
 func TestPopulateTopicConfigMetrics(t *testing.T) {
 	testutils.SetupTestArgs()
 
@@ -195,6 +225,7 @@ func TestPopulateTopicConfigMetrics(t *testing.T) {
 		ReplicationFactor: 2,
 		Configs: []*sarama.ConfigEntry{
 			{Name: "min.insync.replicas", Value: "2"},
+			{Name: "retention.ms", Value: "604800000"},
 		},
 	}
 
@@ -206,6 +237,7 @@ func TestPopulateTopicConfigMetrics(t *testing.T) {
 		"topic.partitionCount":    float64(3),
 		"topic.replicationFactor": float64(2),
 		"topic.minInSyncReplicas": float64(2),
+		"topic.retentionMs":       float64(604800000),
 	}
 	assert.Equal(t, expected, sample.Metrics)
 }

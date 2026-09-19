@@ -37,6 +37,24 @@ var consumerMetricDefs = []*JMXMetricSet{
 		},
 	},
 	{
+		// Rebalance churn - frequent or failing rebalances indicate crash-looping consumers
+		// or a misconfigured session.timeout.ms, not visible from any broker-side metric.
+		MBean:        "kafka.consumer:type=consumer-coordinator-metrics,client-id=" + consumerHolder,
+		MetricPrefix: "kafka.consumer:type=consumer-coordinator-metrics,client-id=" + consumerHolder + ",",
+		MetricDefs: []*MetricDefinition{
+			{
+				Name:       "consumer.rebalanceTotal",
+				SourceType: metric.RATE,
+				JMXAttr:    "attr=rebalance-total",
+			},
+			{
+				Name:       "consumer.failedRebalanceTotal",
+				SourceType: metric.RATE,
+				JMXAttr:    "attr=failed-rebalance-total",
+			},
+		},
+	},
+	{
 		MBean:        "kafka.consumer:type=ZookeeperConsumerConnector,name=*,clientId=" + consumerHolder,
 		MetricPrefix: "kafka.consumer:type=ZookeeperConsumerConnector,",
 		MetricDefs: []*MetricDefinition{

@@ -168,6 +168,11 @@ var brokerMetricDefs = []*JMXMetricSet{
 				SourceType: metric.GAUGE,
 				JMXAttr:    "name=UnderReplicatedPartitions,attr=Value",
 			},
+			{
+				Name:       "broker.leaderCount",
+				SourceType: metric.GAUGE,
+				JMXAttr:    "name=LeaderCount,attr=Value",
+			},
 		},
 	},
 	// Leader Metrics

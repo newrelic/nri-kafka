@@ -18,6 +18,32 @@ var (
 	errTest = errors.New("this is an error")
 )
 
+func TestGetBrokerMetrics_LeaderCount(t *testing.T) {
+	testutils.SetupTestArgs()
+
+	mockResponse := &mocks.MockJMXResponse{
+		Result: []*gojmx.AttributeResponse{
+			{
+				Name:         "kafka.server:type=ReplicaManager,name=LeaderCount,attr=Value",
+				ResponseType: gojmx.ResponseTypeInt,
+				IntValue:     28,
+			},
+		},
+	}
+
+	mockJMXProvider := &mocks.MockJMXProvider{Response: mockResponse}
+
+	i, _ := integration.New("test", "1.0.0")
+	e, _ := i.Entity("leaderCountEntity", "leaderCountNamespace")
+	m := e.NewMetricSet("testMetrics")
+
+	GetBrokerMetrics(m, mockJMXProvider)
+
+	if got := m.Metrics["broker.leaderCount"]; got != float64(28) {
+		t.Errorf("expected broker.leaderCount = 28, got %v", got)
+	}
+}
+
 func TestGetBrokerMetrics_IsActiveController(t *testing.T) {
 	testutils.SetupTestArgs()
 
@@ -131,6 +157,42 @@ func TestGetConsumerMetrics(t *testing.T) {
 
 	if !reflect.DeepEqual(expected, m.Metrics) {
 		t.Errorf("Expected %+v got %+v", expected, m.Metrics)
+	}
+}
+
+func TestGetConsumerMetrics_RebalanceChurn(t *testing.T) {
+	testutils.SetupTestArgs()
+
+	consumerName := "consumer"
+
+	mockResponse := &mocks.MockJMXResponse{
+		Result: []*gojmx.AttributeResponse{
+			{
+				Name:         "kafka.consumer:type=consumer-coordinator-metrics,client-id=" + consumerName + ",attr=rebalance-total",
+				ResponseType: gojmx.ResponseTypeDouble,
+				DoubleValue:  1,
+			},
+			{
+				Name:         "kafka.consumer:type=consumer-coordinator-metrics,client-id=" + consumerName + ",attr=failed-rebalance-total",
+				ResponseType: gojmx.ResponseTypeDouble,
+				DoubleValue:  1,
+			},
+		},
+	}
+
+	mockJMXProvider := &mocks.MockJMXProvider{Response: mockResponse}
+
+	i, _ := integration.New("test", "1.0.0")
+	e, _ := i.Entity("rebalanceEntity", "rebalanceNamespace")
+	m := e.NewMetricSet("testMetrics")
+
+	GetConsumerMetrics(consumerName, m, mockJMXProvider)
+
+	if _, ok := m.Metrics["consumer.rebalanceTotal"]; !ok {
+		t.Error("expected consumer.rebalanceTotal to be collected")
+	}
+	if _, ok := m.Metrics["consumer.failedRebalanceTotal"]; !ok {
+		t.Error("expected consumer.failedRebalanceTotal to be collected")
 	}
 }
 

@@ -63,6 +63,14 @@ var jvmMetricDefs = []*JMXMetricSet{
 				JMXAttr:    "attr=AvailableProcessors",
 			},
 			{
+				// cgroup-aware CPU usage ratio (0.0-1.0) for this JVM process specifically -
+				// unlike SystemLoadAverage (host-wide), this reflects what the container is
+				// actually allowed/using, useful for correlating with container CPU throttling.
+				Name:       "jvm.processCpuLoad",
+				SourceType: metric.GAUGE,
+				JMXAttr:    "attr=ProcessCpuLoad",
+			},
+			{
 				// Only present on Unix JVMs (com.sun.management.UnixOperatingSystemMXBean);
 				// absent on Windows, handled like any other not-found JMX attribute.
 				Name:       "jvm.openFileDescriptorCount",
@@ -80,6 +88,19 @@ var jvmMetricDefs = []*JMXMetricSet{
 				Name:       "jvm.classLoadedCount",
 				SourceType: metric.GAUGE,
 				JMXAttr:    "attr=LoadedClassCount",
+			},
+		},
+	},
+	// Uptime - resets to a small value on JVM restart, the signal for detecting an
+	// unexpected broker restart.
+	{
+		MBean:        "java.lang:type=Runtime",
+		MetricPrefix: "java.lang:type=Runtime,",
+		MetricDefs: []*MetricDefinition{
+			{
+				Name:       "jvm.uptimeMs",
+				SourceType: metric.GAUGE,
+				JMXAttr:    "attr=Uptime",
 			},
 		},
 	},
