@@ -1,0 +1,147 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema",
+  "type": "object",
+  "required": [
+    "name",
+    "protocol_version",
+    "integration_version",
+    "data"
+  ],
+  "properties": {
+    "name": {
+      "minLength": 1,
+      "pattern": "^com.newrelic.kafka$",
+      "type": "string"
+    },
+    "protocol_version": {
+      "minLength": 1,
+      "pattern": "^3$",
+      "type": "string"
+    },
+    "integration_version": {
+      "minLength": 1,
+      "pattern": "^[0-9]+.[0-9]+.[0-9]+$",
+      "type": "string"
+    },
+    "data": {
+      "type": "array",
+      "uniqueItems": true,
+      "minItems": 1,
+      "items": {
+        "anyOf": [
+          {
+            "type": "object",
+            "required": [
+              "entity",
+              "metrics",
+              "inventory",
+              "events"
+            ],
+            "properties": {                
+              "entity": {
+                "type": "object",
+                "required": [
+                  "name",
+                  "type"
+                ],
+                "properties": {
+                  "name": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "type": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "id_attributes": {
+                    "type": "array"
+                  }
+                }
+              },
+              "metrics": {
+                "type": "array",
+                "uniqueItems": true,
+                "items": {
+                  "anyOf": [
+                    {
+                      "type": "object",
+                      "required": [
+                        "displayName",
+                        "entityName",
+                        "event_type",
+                        "clusterName"
+                      ],
+                      "properties": {
+                        "cluster.activeBrokerCount": {
+                          "type": "integer"
+                        },
+                        "cluster.offlinePartitionsCount": {
+                          "type": "integer"
+                        },
+                        "cluster.preferredReplicaImbalanceCount": {
+                          "type": "integer"
+                        },
+                        "cluster.globalTopicCount": {
+                          "type": "integer"
+                        },
+                        "cluster.globalPartitionCount": {
+                          "type": "integer"
+                        },
+                        "cluster.activeControllerCount": {
+                          "type": "integer"
+                        },
+                        "cluster.uncleanLeaderElectionsPerSecond": {
+                          "type": "number"
+                        },
+                        "cluster.numGroups": {
+                          "type": "integer"
+                        },
+                        "cluster.numOffsets": {
+                          "type": "integer"
+                        },
+                        "cluster.numGroupsPreparingRebalance": {
+                          "type": "integer"
+                        },
+                        "cluster.numGroupsStable": {
+                          "type": "integer"
+                        },
+                        "cluster.numGroupsDead": {
+                          "type": "integer"
+                        },
+                        "cluster.fencedBrokerCount": {
+                          "type": "integer"
+                        },
+                        "cluster.id": {
+                          "type": "string"
+                        },
+                        "displayName": {
+                          "type": "string"
+                        },
+                        "entityName": {
+                          "type": "string"
+                        },
+                        "clusterName": {
+                          "type": "string"
+                        },
+                        "event_type": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  ]
+                }
+              },
+              "inventory": {
+                "type": "object",
+                "properties": {}
+              },
+              "events": {
+                "type": "array"
+              }
+            }
+          }
+        ]
+      }
+    }
+  }
+}

@@ -75,6 +75,7 @@ func TestStartTopicPool(t *testing.T) {
 func TestFeedTopicPool(t *testing.T) {
 	testutils.SetupTestArgs()
 	args.GlobalArgs.TopicMode = "All"
+	args.GlobalArgs.ClusterID = "lkc-abc123"
 
 	i, err := integration.New("kafka", "1.0.0")
 	if err != nil {
@@ -108,6 +109,8 @@ func TestFeedTopicPool(t *testing.T) {
 			t.Errorf("Expected topic name %s, got %s", name, topics[index].Name)
 		}
 	}
+
+	assert.Contains(t, topics[0].Entity.Metadata.IDAttrs, integration.NewIDAttribute("clusterId", "lkc-abc123"))
 }
 
 func TestPopulateTopicInventory(t *testing.T) {
@@ -148,4 +151,117 @@ func TestPopulateTopicInventory(t *testing.T) {
 
 	assert.Equal(t, expectedInventoryItems, myTopic.Entity.Inventory.Items())
 
+}
+
+func TestMinInSyncReplicas_Present(t *testing.T) {
+	configs := []*sarama.ConfigEntry{
+		{Name: "flush.messages", Value: "12345"},
+		{Name: "min.insync.replicas", Value: "2"},
+	}
+
+	value, ok := minInSyncReplicas(configs)
+	assert.True(t, ok)
+	assert.Equal(t, 2, value)
+}
+
+func TestMinInSyncReplicas_Absent(t *testing.T) {
+	configs := []*sarama.ConfigEntry{
+		{Name: "flush.messages", Value: "12345"},
+	}
+
+	_, ok := minInSyncReplicas(configs)
+	assert.False(t, ok)
+}
+
+func TestMinInSyncReplicas_Unparseable(t *testing.T) {
+	configs := []*sarama.ConfigEntry{
+		{Name: "min.insync.replicas", Value: "not-a-number"},
+	}
+
+	_, ok := minInSyncReplicas(configs)
+	assert.False(t, ok)
+}
+
+func TestRetentionMs_Present(t *testing.T) {
+	configs := []*sarama.ConfigEntry{
+		{Name: "flush.messages", Value: "12345"},
+		{Name: "retention.ms", Value: "604800000"},
+	}
+
+	value, ok := retentionMs(configs)
+	assert.True(t, ok)
+	assert.Equal(t, 604800000, value)
+}
+
+func TestRetentionMs_Infinite(t *testing.T) {
+	configs := []*sarama.ConfigEntry{
+		{Name: "retention.ms", Value: "-1"},
+	}
+
+	value, ok := retentionMs(configs)
+	assert.True(t, ok)
+	assert.Equal(t, -1, value)
+}
+
+func TestRetentionMs_Absent(t *testing.T) {
+	configs := []*sarama.ConfigEntry{
+		{Name: "flush.messages", Value: "12345"},
+	}
+
+	_, ok := retentionMs(configs)
+	assert.False(t, ok)
+}
+
+func TestPopulateTopicConfigMetrics(t *testing.T) {
+	testutils.SetupTestArgs()
+
+	i, _ := integration.New("kafka", "1.0.0")
+	e, _ := i.Entity("testtopic", "topic")
+	sample := e.NewMetricSet("KafkaTopicSample")
+
+	myTopic := &Topic{
+		Name:              "test",
+		PartitionCount:    3,
+		ReplicationFactor: 2,
+		Configs: []*sarama.ConfigEntry{
+			{Name: "min.insync.replicas", Value: "2"},
+			{Name: "retention.ms", Value: "604800000"},
+		},
+	}
+
+	err := populateTopicConfigMetrics(myTopic, sample)
+	assert.NoError(t, err)
+
+	expected := map[string]interface{}{
+		"event_type":              "KafkaTopicSample",
+		"topic.partitionCount":    float64(3),
+		"topic.replicationFactor": float64(2),
+		"topic.minInSyncReplicas": float64(2),
+		"topic.retentionMs":       float64(604800000),
+	}
+	assert.Equal(t, expected, sample.Metrics)
+}
+
+func TestPopulateTopicConfigMetrics_NoMinInSyncReplicasConfig(t *testing.T) {
+	testutils.SetupTestArgs()
+
+	i, _ := integration.New("kafka", "1.0.0")
+	e, _ := i.Entity("testtopic", "topic")
+	sample := e.NewMetricSet("KafkaTopicSample")
+
+	myTopic := &Topic{
+		Name:              "test",
+		PartitionCount:    3,
+		ReplicationFactor: 2,
+	}
+
+	err := populateTopicConfigMetrics(myTopic, sample)
+	assert.NoError(t, err)
+
+	expected := map[string]interface{}{
+		"event_type":              "KafkaTopicSample",
+		"topic.partitionCount":    float64(3),
+		"topic.replicationFactor": float64(2),
+	}
+	assert.Equal(t, expected, sample.Metrics)
 }

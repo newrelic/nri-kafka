@@ -80,9 +80,10 @@ type Broker struct {
 
 // Entity gets the entity object for the broker
 func (b *Broker) Entity(i *integration.Integration) (*integration.Entity, error) {
-	clusterIDAttr := integration.NewIDAttribute("clusterName", args.GlobalArgs.ClusterName)
+	clusterNameAttr := integration.NewIDAttribute("clusterName", args.GlobalArgs.ClusterName)
+	clusterIDAttr := integration.NewIDAttribute("clusterId", args.GlobalArgs.ClusterID)
 	brokerIDAttr := integration.NewIDAttribute("brokerID", string(b.ID))
-	return i.Entity(b.Addr(), "ka-broker", clusterIDAttr, brokerIDAttr)
+	return i.Entity(b.Addr(), "ka-broker", clusterNameAttr, clusterIDAttr, brokerIDAttr)
 }
 
 // NewBroker creates a new broker

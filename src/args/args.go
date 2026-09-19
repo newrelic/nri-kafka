@@ -76,6 +76,7 @@ type ArgumentList struct {
 	TopicBucket                string `default:"1/1" help:"Allows the partitioning of topic collection across multiple instances. The second number is the number of instances topics are partitioned across. The first number is the bucket number of the current instance, which should be between 1 and the second number."`
 	CollectTopicSize           bool   `default:"false" help:"Enablement of on disk Topic size metric collection. This metric can be very resource intensive to collect especially against many topics."`
 	CollectTopicOffset         bool   `default:"false" help:"Enablement of Topic offsets collection. This metric can be very resource intensive to collect especially against many topics."`
+	CollectClusterMetrics      bool   `default:"false" help:"Collect cluster-wide metrics from the Kafka controller."`
 
 	// Consumer offset arguments
 	ConsumerOffset              bool   `default:"false" help:"Populate consumer offset data"`
@@ -88,4 +89,8 @@ type ArgumentList struct {
 	ShowVersion bool `default:"false" help:"Print build information and exit"`
 
 	TopicSource string `default:"broker" help:"Collect topics list from either the Broker or Zookeeper"`
+
+	EnableBrokerTopicMetricsV2 bool `default:"false" help:"Enable the new BrokerTopicMetrics metrics. This is a new set of metrics that are essentials for some capabilities to work. "`
+	EnableBrokerJVMMetrics     bool `default:"false" help:"Enable collection of broker JVM metrics (heap, GC, threads, CPU load, file descriptors, loaded classes) via the standard java.lang JMX platform MBeans."`
+	EnableTopicConfigMetrics   bool `default:"false" help:"Enable topic.partitionCount, topic.replicationFactor, and topic.minInSyncReplicas on KafkaTopicSample."`
 }

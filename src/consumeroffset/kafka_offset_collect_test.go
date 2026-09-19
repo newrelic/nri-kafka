@@ -82,6 +82,7 @@ func TestCollectOffsetsForConsumerGroup(t *testing.T) { // nolint: funlen
 	}
 
 	args.GlobalArgs = &args.ParsedArguments{}
+	args.GlobalArgs.ClusterID = "lkc-abc123"
 
 	testCases := []struct {
 		name                        string
@@ -218,6 +219,7 @@ func TestCollectOffsetsForConsumerGroup(t *testing.T) { // nolint: funlen
 				default:
 					assert.Fail(t, "not expected")
 				}
+				assert.Equal(t, args.GlobalArgs.ClusterID, entity.Metrics[0].Metrics["clusterId"])
 				assert.NotEmpty(t, entity)
 			}
 		})

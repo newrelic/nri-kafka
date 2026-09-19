@@ -31,6 +31,11 @@ type ParsedArguments struct {
 	ClusterName  string
 	KafkaVersion sarama.KafkaVersion
 
+	// ClusterID is the Kafka-native cluster identifier, fetched from broker metadata at
+	// startup. It is not a CLI argument; it is populated programmatically once brokers
+	// are discovered. Empty if the brokers didn't report one.
+	ClusterID string
+
 	AutodiscoverStrategy string
 
 	// Zookeeper autodiscovery. Only required if using zookeeper to autodiscover brokers
@@ -90,6 +95,9 @@ type ParsedArguments struct {
 	TopicBucket                TopicBucket
 	CollectTopicSize           bool
 	CollectTopicOffset         bool
+	EnableBrokerTopicMetricsV2 bool
+	EnableBrokerJVMMetrics     bool
+	EnableTopicConfigMetrics   bool
 
 	// Consumer offset arguments
 	ConsumerOffset              bool
@@ -252,6 +260,8 @@ func ParseArgs(a ArgumentList) (*ParsedArguments, error) {
 		return nil, fmt.Errorf("failed to parse kafka version: %s", err)
 	}
 
+	log.Info("Processing new BrokerTopic metrics flag is : %v", a.EnableBrokerTopicMetricsV2)
+
 	parsedArgs := &ParsedArguments{
 		DefaultArgumentList:              a.DefaultArgumentList,
 		AutodiscoverStrategy:             a.AutodiscoverStrategy,
@@ -283,6 +293,7 @@ func ParseArgs(a ArgumentList) (*ParsedArguments, error) {
 		TrustStore:                       a.TrustStore,
 		TrustStorePassword:               a.TrustStorePassword,
 		LocalOnlyCollection:              a.LocalOnlyCollection,
+		CollectClusterMetrics:            a.CollectClusterMetrics,
 		ForceTopicSampleCollection:       a.ForceTopicSampleCollection,
 		CollectTopicSize:                 a.CollectTopicSize,
 		CollectTopicOffset:               a.CollectTopicOffset,
@@ -300,6 +311,9 @@ func ParseArgs(a ArgumentList) (*ParsedArguments, error) {
 		SaslGssapiKerberosConfigPath:     a.SaslGssapiKerberosConfigPath,
 		SaslGssapiDisableFASTNegotiation: a.SaslGssapiDisableFASTNegotiation,
 		TopicSource:                      a.TopicSource,
+		EnableBrokerTopicMetricsV2:       a.EnableBrokerTopicMetricsV2,
+		EnableBrokerJVMMetrics:           a.EnableBrokerJVMMetrics,
+		EnableTopicConfigMetrics:         a.EnableTopicConfigMetrics,
 	}
 
 	return parsedArgs, nil
