@@ -7,7 +7,8 @@ import "github.com/newrelic/infra-integrations-sdk/v3/data/metric"
 // they're generic JVM platform MBeans exposed on the same JMX connection nri-kafka already
 // holds open to the broker, since it's the same JVM process.
 var jvmMetricDefs = []*JMXMetricSet{
-	// Heap memory
+	// Heap memory - nrjmx flattens the composite HeapMemoryUsage attribute with capitalized
+	// sub-field names (HeapMemoryUsage.Used, not .used), verified against a live broker.
 	{
 		MBean:        "java.lang:type=Memory",
 		MetricPrefix: "java.lang:type=Memory,",
@@ -15,17 +16,17 @@ var jvmMetricDefs = []*JMXMetricSet{
 			{
 				Name:       "jvm.heapMemoryUsedBytes",
 				SourceType: metric.GAUGE,
-				JMXAttr:    "attr=HeapMemoryUsage.used",
+				JMXAttr:    "attr=HeapMemoryUsage.Used",
 			},
 			{
 				Name:       "jvm.heapMemoryMaxBytes",
 				SourceType: metric.GAUGE,
-				JMXAttr:    "attr=HeapMemoryUsage.max",
+				JMXAttr:    "attr=HeapMemoryUsage.Max",
 			},
 			{
 				Name:       "jvm.heapMemoryCommittedBytes",
 				SourceType: metric.GAUGE,
-				JMXAttr:    "attr=HeapMemoryUsage.committed",
+				JMXAttr:    "attr=HeapMemoryUsage.Committed",
 			},
 		},
 	},

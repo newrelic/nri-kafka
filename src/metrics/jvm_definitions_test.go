@@ -15,7 +15,7 @@ func jvmMockResponse() *mocks.MockJMXResponse {
 	return &mocks.MockJMXResponse{
 		Result: []*gojmx.AttributeResponse{
 			{
-				Name:         "java.lang:type=Memory,attr=HeapMemoryUsage.used",
+				Name:         "java.lang:type=Memory,attr=HeapMemoryUsage.Used",
 				ResponseType: gojmx.ResponseTypeInt,
 				IntValue:     1000,
 			},
