@@ -367,6 +367,22 @@ func TestGetProducerMetrics_ErrorRetryRate(t *testing.T) {
 	}
 }
 
+// beanRecordingJMXProvider wraps mocks.MockJMXProvider purely to record which MBean pattern
+// getAllTopicsFromJMX actually queries. Deliberately not using MockJMXProvider's
+// MBeanNamePattern mismatch check for this: that path returns a plain (non-JMX) error, which
+// getAllTopicsFromJMX's error handling escalates to os.Exit(1) for any unrecognized error
+// type - fine today since the fix is correct and no mismatch occurs, but it would make a
+// future regression here crash the test binary instead of failing as a normal assertion.
+type beanRecordingJMXProvider struct {
+	*mocks.MockJMXProvider
+	queriedBeans []string
+}
+
+func (r *beanRecordingJMXProvider) QueryMBeanAttributes(mBeanNamePattern string) ([]*gojmx.AttributeResponse, error) {
+	r.queriedBeans = append(r.queriedBeans, mBeanNamePattern)
+	return r.MockJMXProvider.QueryMBeanAttributes(mBeanNamePattern)
+}
+
 func TestCollectTopicSubMetrics_ConsumerQueriesConsumerBean(t *testing.T) {
 	testutils.SetupTestArgs()
 	args.GlobalArgs.TopicMode = "all"
@@ -375,8 +391,7 @@ func TestCollectTopicSubMetrics_ConsumerQueriesConsumerBean(t *testing.T) {
 
 	// Before the fix, getAllTopicsFromJMX always queried the producer bean regardless of
 	// caller - a consumer-only client has no kafka.producer:... MBeans, so this returned zero
-	// topics and ConsumerTopicMetricDefs never populated. MBeanNamePattern here asserts the
-	// query actually goes to the consumer's own bean.
+	// topics and ConsumerTopicMetricDefs never populated.
 	mockResponse := &mocks.MockJMXResponse{
 		Result: []*gojmx.AttributeResponse{
 			{
@@ -387,10 +402,7 @@ func TestCollectTopicSubMetrics_ConsumerQueriesConsumerBean(t *testing.T) {
 		},
 	}
 
-	mockJMXProvider := &mocks.MockJMXProvider{
-		Response:         mockResponse,
-		MBeanNamePattern: "kafka.consumer:type=consumer-fetch-manager-metrics,client-id=" + consumerName + ",topic=*",
-	}
+	provider := &beanRecordingJMXProvider{MockJMXProvider: &mocks.MockJMXProvider{Response: mockResponse}}
 
 	i, err := integration.New("test", "1.0.0")
 	if err != nil {
@@ -402,7 +414,20 @@ func TestCollectTopicSubMetrics_ConsumerQueriesConsumerBean(t *testing.T) {
 		t.Fatalf("Unexpected error %s", err.Error())
 	}
 
-	CollectTopicSubMetrics(consumerEntity, ConsumerTopicMetricDefs, ApplyConsumerTopicName, mockJMXProvider)
+	CollectTopicSubMetrics(consumerEntity, ConsumerTopicMetricDefs, ApplyConsumerTopicName, provider)
+
+	// Discovery queries the wildcarded bean once, then CollectMetricDefinitions queries the
+	// same wildcarded bean again per topic found (it isn't narrowed to a specific topic) - so
+	// every query should be this consumer's own bean, never the producer's.
+	wantBean := "kafka.consumer:type=consumer-fetch-manager-metrics,client-id=" + consumerName + ",topic=*"
+	if len(provider.queriedBeans) == 0 {
+		t.Fatal("expected at least one JMX query, got none")
+	}
+	for _, got := range provider.queriedBeans {
+		if got != wantBean {
+			t.Errorf("expected topic discovery/collection to query %q, got %q", wantBean, got)
+		}
+	}
 
 	found := false
 	for _, ms := range consumerEntity.Metrics {
@@ -431,10 +456,7 @@ func TestCollectTopicSubMetrics_ProducerQueriesProducerBean(t *testing.T) {
 		},
 	}
 
-	mockJMXProvider := &mocks.MockJMXProvider{
-		Response:         mockResponse,
-		MBeanNamePattern: "kafka.producer:type=producer-topic-metrics,client-id=" + producerName + ",topic=*",
-	}
+	provider := &beanRecordingJMXProvider{MockJMXProvider: &mocks.MockJMXProvider{Response: mockResponse}}
 
 	i, err := integration.New("test", "1.0.0")
 	if err != nil {
@@ -446,7 +468,17 @@ func TestCollectTopicSubMetrics_ProducerQueriesProducerBean(t *testing.T) {
 		t.Fatalf("Unexpected error %s", err.Error())
 	}
 
-	CollectTopicSubMetrics(producerEntity, ProducerTopicMetricDefs, ApplyProducerTopicName, mockJMXProvider)
+	CollectTopicSubMetrics(producerEntity, ProducerTopicMetricDefs, ApplyProducerTopicName, provider)
+
+	wantBean := "kafka.producer:type=producer-topic-metrics,client-id=" + producerName + ",topic=*"
+	if len(provider.queriedBeans) == 0 {
+		t.Fatal("expected at least one JMX query, got none")
+	}
+	for _, got := range provider.queriedBeans {
+		if got != wantBean {
+			t.Errorf("expected topic discovery/collection to query %q, got %q", wantBean, got)
+		}
+	}
 
 	found := false
 	for _, ms := range producerEntity.Metrics {
