@@ -124,6 +124,18 @@ var producerMetricDefs = []*JMXMetricSet{
 				SourceType: metric.GAUGE,
 				JMXAttr:    "client-id=" + producerHolder + ",attr=record-queue-time-avg",
 			},
+			{
+				// Produce failures were invisible before this - throughput/latency metrics
+				// above all still look normal while a producer silently drops records.
+				Name:       "producer.recordErrorRate",
+				SourceType: metric.GAUGE,
+				JMXAttr:    "client-id=" + producerHolder + ",attr=record-error-rate",
+			},
+			{
+				Name:       "producer.recordRetryRate",
+				SourceType: metric.GAUGE,
+				JMXAttr:    "client-id=" + producerHolder + ",attr=record-retry-rate",
+			},
 		},
 	},
 	{

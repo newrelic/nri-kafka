@@ -34,6 +34,28 @@ var consumerMetricDefs = []*JMXMetricSet{
 				SourceType: metric.GAUGE,
 				JMXAttr:    "attr=records-consumed-rate",
 			},
+			{
+				// No request-latency visibility existed on the consumer side at all before
+				// this - producer had it (avgRequestLatencyPerSecond), consumer didn't.
+				Name:       "consumer.fetchLatencyAvg",
+				SourceType: metric.GAUGE,
+				JMXAttr:    "attr=fetch-latency-avg",
+			},
+			{
+				Name:       "consumer.fetchLatencyMax",
+				SourceType: metric.GAUGE,
+				JMXAttr:    "attr=fetch-latency-max",
+			},
+			{
+				Name:       "consumer.fetchThrottleTimeAvg",
+				SourceType: metric.GAUGE,
+				JMXAttr:    "attr=fetch-throttle-time-avg",
+			},
+			{
+				Name:       "consumer.fetchThrottleTimeMax",
+				SourceType: metric.GAUGE,
+				JMXAttr:    "attr=fetch-throttle-time-max",
+			},
 		},
 	},
 	{
@@ -51,6 +73,48 @@ var consumerMetricDefs = []*JMXMetricSet{
 				Name:       "consumer.failedRebalanceTotal",
 				SourceType: metric.RATE,
 				JMXAttr:    "attr=failed-rebalance-total",
+			},
+			{
+				// Session/heartbeat health - the metric that tells you a consumer is about
+				// to be evicted from its group, before rebalanceTotal above ever fires.
+				Name:       "consumer.heartbeatRate",
+				SourceType: metric.GAUGE,
+				JMXAttr:    "attr=heartbeat-rate",
+			},
+			{
+				Name:       "consumer.lastHeartbeatSecondsAgo",
+				SourceType: metric.GAUGE,
+				JMXAttr:    "attr=last-heartbeat-seconds-ago",
+			},
+			{
+				Name:       "consumer.heartbeatResponseTimeMax",
+				SourceType: metric.GAUGE,
+				JMXAttr:    "attr=heartbeat-response-time-max",
+			},
+			{
+				// Detects a consumer that's silently lost all its partitions (e.g. stuck
+				// mid-rebalance) - invisible from rebalanceTotal alone.
+				Name:       "consumer.assignedPartitions",
+				SourceType: metric.GAUGE,
+				JMXAttr:    "attr=assigned-partitions",
+			},
+			{
+				// Modern commit-health metrics. Unlike consumer.offsetKafkaCommitsPerSecond
+				// below (kafka.consumer:type=ZookeeperConsumerConnector, dead on any client
+				// 0.9+), these read from the actual coordinator MBean every real consumer uses.
+				Name:       "consumer.commitRate",
+				SourceType: metric.GAUGE,
+				JMXAttr:    "attr=commit-rate",
+			},
+			{
+				Name:       "consumer.commitLatencyAvg",
+				SourceType: metric.GAUGE,
+				JMXAttr:    "attr=commit-latency-avg",
+			},
+			{
+				Name:       "consumer.commitLatencyMax",
+				SourceType: metric.GAUGE,
+				JMXAttr:    "attr=commit-latency-max",
 			},
 		},
 	},

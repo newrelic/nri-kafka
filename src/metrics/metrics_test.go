@@ -6,6 +6,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/newrelic/nri-kafka/src/args"
 	"github.com/newrelic/nri-kafka/src/connection/mocks"
 	"github.com/newrelic/nrjmx/gojmx"
 
@@ -196,6 +197,94 @@ func TestGetConsumerMetrics_RebalanceChurn(t *testing.T) {
 	}
 }
 
+func TestGetConsumerMetrics_HeartbeatAndCommitHealth(t *testing.T) {
+	testutils.SetupTestArgs()
+
+	consumerName := "consumer"
+
+	mockResponse := &mocks.MockJMXResponse{
+		Result: []*gojmx.AttributeResponse{
+			{
+				Name:         "kafka.consumer:type=consumer-coordinator-metrics,client-id=" + consumerName + ",attr=heartbeat-rate",
+				ResponseType: gojmx.ResponseTypeDouble,
+				DoubleValue:  0.1,
+			},
+			{
+				Name:         "kafka.consumer:type=consumer-coordinator-metrics,client-id=" + consumerName + ",attr=last-heartbeat-seconds-ago",
+				ResponseType: gojmx.ResponseTypeInt,
+				IntValue:     2,
+			},
+			{
+				Name:         "kafka.consumer:type=consumer-coordinator-metrics,client-id=" + consumerName + ",attr=assigned-partitions",
+				ResponseType: gojmx.ResponseTypeInt,
+				IntValue:     2,
+			},
+			{
+				Name:         "kafka.consumer:type=consumer-coordinator-metrics,client-id=" + consumerName + ",attr=commit-rate",
+				ResponseType: gojmx.ResponseTypeDouble,
+				DoubleValue:  0.05,
+			},
+		},
+	}
+
+	mockJMXProvider := &mocks.MockJMXProvider{Response: mockResponse}
+
+	i, _ := integration.New("test", "1.0.0")
+	e, _ := i.Entity("heartbeatEntity", "heartbeatNamespace")
+	m := e.NewMetricSet("testMetrics")
+
+	GetConsumerMetrics(consumerName, m, mockJMXProvider)
+
+	if got := m.Metrics["consumer.heartbeatRate"]; got != float64(0.1) {
+		t.Errorf("expected consumer.heartbeatRate = 0.1, got %v", got)
+	}
+	if got := m.Metrics["consumer.lastHeartbeatSecondsAgo"]; got != float64(2) {
+		t.Errorf("expected consumer.lastHeartbeatSecondsAgo = 2, got %v", got)
+	}
+	if got := m.Metrics["consumer.assignedPartitions"]; got != float64(2) {
+		t.Errorf("expected consumer.assignedPartitions = 2, got %v", got)
+	}
+	if got := m.Metrics["consumer.commitRate"]; got != float64(0.05) {
+		t.Errorf("expected consumer.commitRate = 0.05, got %v", got)
+	}
+}
+
+func TestGetConsumerMetrics_FetchLatency(t *testing.T) {
+	testutils.SetupTestArgs()
+
+	consumerName := "consumer"
+
+	mockResponse := &mocks.MockJMXResponse{
+		Result: []*gojmx.AttributeResponse{
+			{
+				Name:         "kafka.consumer:type=consumer-fetch-manager-metrics,client-id=" + consumerName + ",attr=fetch-latency-avg",
+				ResponseType: gojmx.ResponseTypeDouble,
+				DoubleValue:  154.8,
+			},
+			{
+				Name:         "kafka.consumer:type=consumer-fetch-manager-metrics,client-id=" + consumerName + ",attr=fetch-throttle-time-max",
+				ResponseType: gojmx.ResponseTypeInt,
+				IntValue:     0,
+			},
+		},
+	}
+
+	mockJMXProvider := &mocks.MockJMXProvider{Response: mockResponse}
+
+	i, _ := integration.New("test", "1.0.0")
+	e, _ := i.Entity("fetchLatencyEntity", "fetchLatencyNamespace")
+	m := e.NewMetricSet("testMetrics")
+
+	GetConsumerMetrics(consumerName, m, mockJMXProvider)
+
+	if got := m.Metrics["consumer.fetchLatencyAvg"]; got != float64(154.8) {
+		t.Errorf("expected consumer.fetchLatencyAvg = 154.8, got %v", got)
+	}
+	if _, ok := m.Metrics["consumer.fetchThrottleTimeMax"]; !ok {
+		t.Error("expected consumer.fetchThrottleTimeMax to be collected")
+	}
+}
+
 func TestGetProducerMetrics(t *testing.T) {
 	expected := map[string]interface{}{
 		"producer.ageMetadataUsedInMilliseconds": float64(24),
@@ -239,6 +328,134 @@ func TestGetProducerMetrics(t *testing.T) {
 
 	if !reflect.DeepEqual(expected, m.Metrics) {
 		t.Errorf("Expected %+v got %+v", expected, m.Metrics)
+	}
+}
+
+func TestGetProducerMetrics_ErrorRetryRate(t *testing.T) {
+	testutils.SetupTestArgs()
+
+	producerName := "producer"
+
+	mockResponse := &mocks.MockJMXResponse{
+		Result: []*gojmx.AttributeResponse{
+			{
+				Name:         "kafka.producer:type=producer-metrics,client-id=" + producerName + ",attr=record-error-rate",
+				ResponseType: gojmx.ResponseTypeDouble,
+				DoubleValue:  0.0,
+			},
+			{
+				Name:         "kafka.producer:type=producer-metrics,client-id=" + producerName + ",attr=record-retry-rate",
+				ResponseType: gojmx.ResponseTypeDouble,
+				DoubleValue:  0.02,
+			},
+		},
+	}
+
+	mockJMXProvider := &mocks.MockJMXProvider{Response: mockResponse}
+
+	i, _ := integration.New("test", "1.0.0")
+	e, _ := i.Entity("producerErrorEntity", "producerErrorNamespace")
+	m := e.NewMetricSet("testMetrics")
+
+	GetProducerMetrics(producerName, m, mockJMXProvider)
+
+	if got := m.Metrics["producer.recordErrorRate"]; got != float64(0.0) {
+		t.Errorf("expected producer.recordErrorRate = 0.0, got %v", got)
+	}
+	if got := m.Metrics["producer.recordRetryRate"]; got != float64(0.02) {
+		t.Errorf("expected producer.recordRetryRate = 0.02, got %v", got)
+	}
+}
+
+func TestCollectTopicSubMetrics_ConsumerQueriesConsumerBean(t *testing.T) {
+	testutils.SetupTestArgs()
+	args.GlobalArgs.TopicMode = "all"
+
+	consumerName := "myconsumer"
+
+	// Before the fix, getAllTopicsFromJMX always queried the producer bean regardless of
+	// caller - a consumer-only client has no kafka.producer:... MBeans, so this returned zero
+	// topics and ConsumerTopicMetricDefs never populated. MBeanNamePattern here asserts the
+	// query actually goes to the consumer's own bean.
+	mockResponse := &mocks.MockJMXResponse{
+		Result: []*gojmx.AttributeResponse{
+			{
+				Name:         "kafka.consumer:type=consumer-fetch-manager-metrics,client-id=" + consumerName + ",topic=orders,attr=fetch-size-avg",
+				ResponseType: gojmx.ResponseTypeDouble,
+				DoubleValue:  1024,
+			},
+		},
+	}
+
+	mockJMXProvider := &mocks.MockJMXProvider{
+		Response:         mockResponse,
+		MBeanNamePattern: "kafka.consumer:type=consumer-fetch-manager-metrics,client-id=" + consumerName + ",topic=*",
+	}
+
+	i, err := integration.New("test", "1.0.0")
+	if err != nil {
+		t.Fatalf("Unexpected error %s", err.Error())
+	}
+
+	consumerEntity, err := i.Entity(consumerName, "ka-consumer")
+	if err != nil {
+		t.Fatalf("Unexpected error %s", err.Error())
+	}
+
+	CollectTopicSubMetrics(consumerEntity, ConsumerTopicMetricDefs, ApplyConsumerTopicName, mockJMXProvider)
+
+	found := false
+	for _, ms := range consumerEntity.Metrics {
+		if ms.Metrics["topic"] == "orders" && ms.Metrics["consumer.avgFetchSizeInBytes"] == float64(1024) {
+			found = true
+		}
+	}
+	if !found {
+		t.Errorf("expected a KafkaConsumerSample for topic 'orders' with consumer.avgFetchSizeInBytes = 1024, got %+v", consumerEntity.Metrics)
+	}
+}
+
+func TestCollectTopicSubMetrics_ProducerQueriesProducerBean(t *testing.T) {
+	testutils.SetupTestArgs()
+	args.GlobalArgs.TopicMode = "all"
+
+	producerName := "myproducer"
+
+	mockResponse := &mocks.MockJMXResponse{
+		Result: []*gojmx.AttributeResponse{
+			{
+				Name:         "kafka.producer:type=producer-topic-metrics,client-id=" + producerName + ",topic=orders,attr=record-send-rate",
+				ResponseType: gojmx.ResponseTypeDouble,
+				DoubleValue:  5,
+			},
+		},
+	}
+
+	mockJMXProvider := &mocks.MockJMXProvider{
+		Response:         mockResponse,
+		MBeanNamePattern: "kafka.producer:type=producer-topic-metrics,client-id=" + producerName + ",topic=*",
+	}
+
+	i, err := integration.New("test", "1.0.0")
+	if err != nil {
+		t.Fatalf("Unexpected error %s", err.Error())
+	}
+
+	producerEntity, err := i.Entity(producerName, "ka-producer")
+	if err != nil {
+		t.Fatalf("Unexpected error %s", err.Error())
+	}
+
+	CollectTopicSubMetrics(producerEntity, ProducerTopicMetricDefs, ApplyProducerTopicName, mockJMXProvider)
+
+	found := false
+	for _, ms := range producerEntity.Metrics {
+		if ms.Metrics["topic"] == "orders" && ms.Metrics["producer.avgRecordsSentPerTopicPerSecond"] == float64(5) {
+			found = true
+		}
+	}
+	if !found {
+		t.Errorf("expected a KafkaProducerSample for topic 'orders' with producer.avgRecordsSentPerTopicPerSecond = 5, got %+v", producerEntity.Metrics)
 	}
 }
 

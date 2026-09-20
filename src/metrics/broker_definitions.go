@@ -173,6 +173,62 @@ var brokerMetricDefs = []*JMXMetricSet{
 				SourceType: metric.GAUGE,
 				JMXAttr:    "name=LeaderCount,attr=Value",
 			},
+			{
+				Name:       "broker.underMinIsrPartitionCount",
+				SourceType: metric.GAUGE,
+				JMXAttr:    "name=UnderMinIsrPartitionCount,attr=Value",
+			},
+			{
+				// One failure away from violating min.insync.replicas - the early-warning
+				// counterpart to UnderMinIsrPartitionCount, which only fires after the fact.
+				Name:       "broker.atMinIsrPartitionCount",
+				SourceType: metric.GAUGE,
+				JMXAttr:    "name=AtMinIsrPartitionCount,attr=Value",
+			},
+		},
+	},
+	// Replica fetcher lag - how far this broker's follower replicas are behind their
+	// leaders, distinct from consumer lag. No equivalent anywhere else in this file.
+	{
+		MBean:        "kafka.server:type=ReplicaFetcherManager,name=MaxLag,clientId=Replica",
+		MetricPrefix: "kafka.server:type=ReplicaFetcherManager,name=MaxLag,clientId=Replica,",
+		MetricDefs: []*MetricDefinition{
+			{
+				Name:       "replication.maxLag",
+				SourceType: metric.GAUGE,
+				JMXAttr:    "attr=Value",
+			},
+		},
+	},
+	// Request queue depth - fills up ahead of handler-thread starvation, a leading
+	// indicator broker.* throughput/latency metrics don't otherwise surface.
+	{
+		MBean:        "kafka.network:type=RequestChannel,name=RequestQueueSize",
+		MetricPrefix: "kafka.network:type=RequestChannel,name=RequestQueueSize,",
+		MetricDefs: []*MetricDefinition{
+			{
+				Name:       "request.queueSize",
+				SourceType: metric.GAUGE,
+				JMXAttr:    "attr=Value",
+			},
+		},
+	},
+	// Purgatory depth - requests currently parked waiting on acks/fetch data, not just
+	// the rate at which they eventually expire (consumer.requestsExpiredPerSecond above).
+	{
+		MBean:        "kafka.server:type=DelayedOperationPurgatory,name=PurgatorySize,delayedOperation=*",
+		MetricPrefix: "kafka.server:type=DelayedOperationPurgatory,name=PurgatorySize,",
+		MetricDefs: []*MetricDefinition{
+			{
+				Name:       "broker.produceRequestPurgatorySize",
+				SourceType: metric.GAUGE,
+				JMXAttr:    "delayedOperation=Produce,attr=Value",
+			},
+			{
+				Name:       "broker.fetchRequestPurgatorySize",
+				SourceType: metric.GAUGE,
+				JMXAttr:    "delayedOperation=Fetch,attr=Value",
+			},
 		},
 	},
 	// Leader Metrics
@@ -238,6 +294,16 @@ var brokerMetricDefs = []*JMXMetricSet{
 				Name:       "broker.logFlushPerSecond",
 				SourceType: metric.RATE,
 				JMXAttr:    "name=LogFlushRateAndTimeMs,attr=Count",
+			},
+			{
+				Name:       "broker.logFlushTimeMsMean",
+				SourceType: metric.GAUGE,
+				JMXAttr:    "name=LogFlushRateAndTimeMs,attr=Mean",
+			},
+			{
+				Name:       "broker.logFlushTime99Percentile",
+				SourceType: metric.GAUGE,
+				JMXAttr:    "name=LogFlushRateAndTimeMs,attr=99thPercentile",
 			},
 		},
 	},
