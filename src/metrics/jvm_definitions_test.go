@@ -114,10 +114,7 @@ func TestGetBrokerMetrics_JVMMetricsEnabled(t *testing.T) {
 func TestCollectGarbageCollectorMetrics_SumsAcrossCollectors(t *testing.T) {
 	testutils.SetupTestArgs()
 
-	// Key order here is "name=...,type=...,attr=..." (name before type), matching what a
-	// real broker's java.lang:type=GarbageCollector MBean actually returns - verified live.
-	// Kafka's own custom MBeans return "type=...,name=...,attr=...", the opposite order; see
-	// jvmMBeanNameRegex for why extraction can't assume either ordering.
+	// Name-before-type ordering, matching a real GarbageCollector MBean - see jvmMBeanNameRegex.
 	mockResponse := &mocks.MockJMXResponse{
 		Result: []*gojmx.AttributeResponse{
 			{
@@ -141,8 +138,7 @@ func TestCollectGarbageCollectorMetrics_SumsAcrossCollectors(t *testing.T) {
 				IntValue:     300,
 			},
 			{
-				// G1's concurrent marking cycle - matches neither bucket in
-				// classifyGCGeneration, should only count toward the flat totals.
+				// Matches neither bucket in classifyGCGeneration; only the flat totals count it.
 				Name:         "java.lang:name=G1 Concurrent GC,type=GarbageCollector,attr=CollectionCount",
 				ResponseType: gojmx.ResponseTypeInt,
 				IntValue:     1,
@@ -166,11 +162,8 @@ func TestCollectGarbageCollectorMetrics_SumsAcrossCollectors(t *testing.T) {
 
 	CollectGarbageCollectorMetrics(m, mockJMXProvider)
 
-	// All RATE-type: the SDK needs two samples over time to compute a delta, so a fresh
-	// entity's first observation is always 0 - this only proves the metrics are set, not
-	// that bucketing sums correctly. TestCollectMemoryPoolMetrics below proves that, since
-	// its GAUGE metrics reflect real values on the first call and share the exact same
-	// jvmMBeanNameRegex extraction path.
+	// RATE metrics report 0 on a fresh entity's first sample; TestCollectMemoryPoolMetrics_
+	// BucketsByPool below proves the bucketing sums correctly, via GAUGE values.
 	expected := map[string]interface{}{
 		"event_type":                         "testMetrics",
 		"jvm.gcCollectionsPerSecond":         float64(0),
@@ -189,9 +182,8 @@ func TestCollectGarbageCollectorMetrics_SumsAcrossCollectors(t *testing.T) {
 func TestCollectMemoryPoolMetrics_BucketsByPool(t *testing.T) {
 	testutils.SetupTestArgs()
 
-	// Key order and pool names verified live against a real broker JVM (JDK 21, G1GC).
-	// Non-heap pools (Metaspace, Code Cache, ...) are included here specifically to prove
-	// they're safely ignored rather than misclassified into a heap bucket.
+	// Non-heap pools (Metaspace, Code Cache) are included to prove they're ignored, not
+	// misclassified into a heap bucket.
 	mockResponse := &mocks.MockJMXResponse{
 		Result: []*gojmx.AttributeResponse{
 			{

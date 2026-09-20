@@ -39,8 +39,7 @@ var jvmMetricDefs = []*JMXMetricSet{
 				JMXAttr:    "attr=NonHeapMemoryUsage.Used",
 			},
 			{
-				// -1 on this JVM means "no fixed max" (e.g. Metaspace with no
-				// -XX:MaxMetaspaceSize set) - verified live, not a collection failure.
+				// -1 means no fixed max (e.g. unset -XX:MaxMetaspaceSize), not a failure.
 				Name:       "jvm.nonHeapMemoryMaxBytes",
 				SourceType: metric.GAUGE,
 				JMXAttr:    "attr=NonHeapMemoryUsage.Max",
@@ -100,10 +99,7 @@ var jvmMetricDefs = []*JMXMetricSet{
 				JMXAttr:    "attr=OpenFileDescriptorCount",
 			},
 			{
-				// Whole-host CPU utilization, unlike ProcessCpuLoad above which is just this
-				// JVM. Uses CpuLoad, not the deprecated (JDK 14+) SystemCpuLoad attribute -
-				// verified live: SystemCpuLoad read 1.0 (looks saturated/unreliable) while
-				// CpuLoad read a plausible 0.36 on the same idle-ish broker at the same instant.
+				// Uses CpuLoad, not the deprecated SystemCpuLoad (read an implausible 1.0 live).
 				Name:       "jvm.systemCpuLoad",
 				SourceType: metric.GAUGE,
 				JMXAttr:    "attr=CpuLoad",
@@ -147,21 +143,14 @@ const (
 	jvmMemoryPoolMaxAttr  = ",attr=Usage.Max"
 )
 
-// jvmMBeanNameRegex extracts the wildcarded "name=" value from a returned JMX attribute
-// path. It does NOT anchor on what follows "name=" - verified live that key order in the
-// returned string varies by MBean (java.lang platform MXBeans return "name=X,type=Y,attr=Z",
-// Kafka's own custom MBeans return "type=Y,name=X,attr=Z"), so anchoring on ",attr=" right
-// after the name would silently fail to match on the platform MXBeans. Mirrors the existing
-// topic= extraction pattern in getAllTopicsFromJMX.
+// jvmMBeanNameRegex extracts a wildcarded "name=" value without anchoring on what follows it:
+// key order varies by MBean (JDK platform beans put name before type, Kafka's own beans do
+// the opposite).
 var jvmMBeanNameRegex = regexp.MustCompile(`name="?([^,"]+)"?`)
 
-// classifyGCGeneration buckets a GC collector name into young/old generation so
-// jvm.gcYoungGen*/jvm.gcOldGen* can distinguish cheap young-gen churn from expensive
-// old-gen/full GC - impossible from the flat jvm.gcCollectionsPerSecond/gcTimePerSecond
-// totals alone. Covers G1 (Young/Old Generation), Parallel (Scavenge/MarkSweep), CMS
-// (ParNew/ConcurrentMarkSweep) and Serial (Copy/MarkSweepCompact) naming. Collectors that
-// match neither (e.g. "G1 Concurrent GC") are intentionally left out of both buckets -
-// they still count toward the flat totals, which remain the reliable ground truth.
+// classifyGCGeneration buckets a GC collector name into young/old generation. Unmatched
+// collectors (e.g. G1's concurrent marking cycle) count toward neither bucket, only the
+// flat jvm.gcCollectionsPerSecond/gcTimePerSecond totals.
 func classifyGCGeneration(collectorName string) (young, old bool) {
 	lower := strings.ToLower(collectorName)
 	switch {
@@ -174,12 +163,9 @@ func classifyGCGeneration(collectorName string) (young, old bool) {
 	}
 }
 
-// classifyMemoryPool buckets a memory pool name into eden/survivor/old-gen so pool-level
-// pressure (e.g. old-gen filling up) is visible instead of only the aggregate heap total.
-// Covers G1 ("G1 Eden Space" etc.), Parallel ("PS Eden Space" etc.), CMS ("Par Eden Space",
-// "CMS Old Gen") and Serial ("Eden Space", "Tenured Gen") naming. Non-heap pools (Metaspace,
-// Code Cache, Compressed Class Space) intentionally match nothing here - they're covered by
-// the aggregate NonHeapMemoryUsage.* metrics above instead.
+// classifyMemoryPool buckets a memory pool name into eden/survivor/old-gen. Non-heap pools
+// (Metaspace, Code Cache, ...) intentionally match nothing - they're covered by the aggregate
+// NonHeapMemoryUsage.* metrics above instead.
 func classifyMemoryPool(poolName string) (eden, survivor, old bool) {
 	lower := strings.ToLower(poolName)
 	switch {

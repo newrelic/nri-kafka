@@ -179,16 +179,13 @@ var brokerMetricDefs = []*JMXMetricSet{
 				JMXAttr:    "name=UnderMinIsrPartitionCount,attr=Value",
 			},
 			{
-				// One failure away from violating min.insync.replicas - the early-warning
-				// counterpart to UnderMinIsrPartitionCount, which only fires after the fact.
+				// Fires before UnderMinIsrPartitionCount does - one failure earlier.
 				Name:       "broker.atMinIsrPartitionCount",
 				SourceType: metric.GAUGE,
 				JMXAttr:    "name=AtMinIsrPartitionCount,attr=Value",
 			},
 		},
 	},
-	// Replica fetcher lag - how far this broker's follower replicas are behind their
-	// leaders, distinct from consumer lag. No equivalent anywhere else in this file.
 	{
 		MBean:        "kafka.server:type=ReplicaFetcherManager,name=MaxLag,clientId=Replica",
 		MetricPrefix: "kafka.server:type=ReplicaFetcherManager,name=MaxLag,clientId=Replica,",
@@ -200,8 +197,6 @@ var brokerMetricDefs = []*JMXMetricSet{
 			},
 		},
 	},
-	// Request queue depth - fills up ahead of handler-thread starvation, a leading
-	// indicator broker.* throughput/latency metrics don't otherwise surface.
 	{
 		MBean:        "kafka.network:type=RequestChannel,name=RequestQueueSize",
 		MetricPrefix: "kafka.network:type=RequestChannel,name=RequestQueueSize,",
@@ -213,8 +208,7 @@ var brokerMetricDefs = []*JMXMetricSet{
 			},
 		},
 	},
-	// Purgatory depth - requests currently parked waiting on acks/fetch data, not just
-	// the rate at which they eventually expire (consumer.requestsExpiredPerSecond above).
+	// Distinct from consumer.requestsExpiredPerSecond above (rate vs. current depth).
 	{
 		MBean:        "kafka.server:type=DelayedOperationPurgatory,name=PurgatorySize,delayedOperation=*",
 		MetricPrefix: "kafka.server:type=DelayedOperationPurgatory,name=PurgatorySize,",

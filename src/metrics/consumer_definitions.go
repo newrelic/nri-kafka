@@ -35,8 +35,6 @@ var consumerMetricDefs = []*JMXMetricSet{
 				JMXAttr:    "attr=records-consumed-rate",
 			},
 			{
-				// No request-latency visibility existed on the consumer side at all before
-				// this - producer had it (avgRequestLatencyPerSecond), consumer didn't.
 				Name:       "consumer.fetchLatencyAvg",
 				SourceType: metric.GAUGE,
 				JMXAttr:    "attr=fetch-latency-avg",
@@ -75,8 +73,6 @@ var consumerMetricDefs = []*JMXMetricSet{
 				JMXAttr:    "attr=failed-rebalance-total",
 			},
 			{
-				// Session/heartbeat health - the metric that tells you a consumer is about
-				// to be evicted from its group, before rebalanceTotal above ever fires.
 				Name:       "consumer.heartbeatRate",
 				SourceType: metric.GAUGE,
 				JMXAttr:    "attr=heartbeat-rate",
@@ -92,16 +88,12 @@ var consumerMetricDefs = []*JMXMetricSet{
 				JMXAttr:    "attr=heartbeat-response-time-max",
 			},
 			{
-				// Detects a consumer that's silently lost all its partitions (e.g. stuck
-				// mid-rebalance) - invisible from rebalanceTotal alone.
 				Name:       "consumer.assignedPartitions",
 				SourceType: metric.GAUGE,
 				JMXAttr:    "attr=assigned-partitions",
 			},
 			{
-				// Modern commit-health metrics. Unlike consumer.offsetKafkaCommitsPerSecond
-				// below (kafka.consumer:type=ZookeeperConsumerConnector, dead on any client
-				// 0.9+), these read from the actual coordinator MBean every real consumer uses.
+				// Unlike offsetKafkaCommitsPerSecond below (dead on any client 0.9+).
 				Name:       "consumer.commitRate",
 				SourceType: metric.GAUGE,
 				JMXAttr:    "attr=commit-rate",

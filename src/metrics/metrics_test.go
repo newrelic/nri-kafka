@@ -367,12 +367,9 @@ func TestGetProducerMetrics_ErrorRetryRate(t *testing.T) {
 	}
 }
 
-// beanRecordingJMXProvider wraps mocks.MockJMXProvider purely to record which MBean pattern
-// getAllTopicsFromJMX actually queries. Deliberately not using MockJMXProvider's
-// MBeanNamePattern mismatch check for this: that path returns a plain (non-JMX) error, which
-// getAllTopicsFromJMX's error handling escalates to os.Exit(1) for any unrecognized error
-// type - fine today since the fix is correct and no mismatch occurs, but it would make a
-// future regression here crash the test binary instead of failing as a normal assertion.
+// beanRecordingJMXProvider records queried MBeans instead of using MockJMXProvider's
+// MBeanNamePattern error-on-mismatch, since that error type makes getAllTopicsFromJMX
+// os.Exit(1) rather than fail the test cleanly.
 type beanRecordingJMXProvider struct {
 	*mocks.MockJMXProvider
 	queriedBeans []string
@@ -389,9 +386,6 @@ func TestCollectTopicSubMetrics_ConsumerQueriesConsumerBean(t *testing.T) {
 
 	consumerName := "myconsumer"
 
-	// Before the fix, getAllTopicsFromJMX always queried the producer bean regardless of
-	// caller - a consumer-only client has no kafka.producer:... MBeans, so this returned zero
-	// topics and ConsumerTopicMetricDefs never populated.
 	mockResponse := &mocks.MockJMXResponse{
 		Result: []*gojmx.AttributeResponse{
 			{
@@ -416,9 +410,7 @@ func TestCollectTopicSubMetrics_ConsumerQueriesConsumerBean(t *testing.T) {
 
 	CollectTopicSubMetrics(consumerEntity, ConsumerTopicMetricDefs, ApplyConsumerTopicName, provider)
 
-	// Discovery queries the wildcarded bean once, then CollectMetricDefinitions queries the
-	// same wildcarded bean again per topic found (it isn't narrowed to a specific topic) - so
-	// every query should be this consumer's own bean, never the producer's.
+	// Queried twice (discovery, then per-topic collection on the same unnarrowed bean).
 	wantBean := "kafka.consumer:type=consumer-fetch-manager-metrics,client-id=" + consumerName + ",topic=*"
 	if len(provider.queriedBeans) == 0 {
 		t.Fatal("expected at least one JMX query, got none")

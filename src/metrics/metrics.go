@@ -145,10 +145,10 @@ func CollectBrokerRequestMetrics(sample *metric.Set, metricSets []*JMXMetricSet,
 }
 
 // CollectGarbageCollectorMetrics sums CollectionCount and CollectionTime across every garbage
-// collector MBean present, and additionally buckets those same values into young/old
-// generation via classifyGCGeneration. Collector names vary by GC algorithm (G1, Parallel,
-// ZGC, ...), so unlike the rest of jvmMetricDefs this can't be a fixed MetricDefinition - it
-// aggregates by attribute suffix instead, regardless of which collector name reported it.
+// collector MBean present, and buckets the same values into young/old generation via
+// classifyGCGeneration. Collector names vary by GC algorithm, so unlike the rest of
+// jvmMetricDefs this can't be a fixed MetricDefinition - it aggregates by attribute suffix
+// instead, regardless of which collector name reported it.
 func CollectGarbageCollectorMetrics(sample *metric.Set, conn connection.JMXConnection) {
 	results, err := conn.QueryMBeanAttributes(jvmGCMBean)
 	if err != nil {
@@ -214,12 +214,8 @@ func CollectGarbageCollectorMetrics(sample *metric.Set, conn connection.JMXConne
 	setGCMetric("jvm.gcOldGenTimePerSecond", oldTime)
 }
 
-// CollectMemoryPoolMetrics reads current usage/max for each heap memory pool and buckets
-// them into eden/survivor/old-gen via classifyMemoryPool, the same wildcard-plus-name-match
-// approach as CollectGarbageCollectorMetrics above (see jvmMBeanNameRegex for why the name
-// extraction can't assume a fixed key order). Non-heap pools (Metaspace, Code Cache, ...)
-// don't match any bucket and are silently skipped - they're covered by the aggregate
-// NonHeapMemoryUsage.* metrics in jvmMetricDefs instead.
+// CollectMemoryPoolMetrics buckets heap pool usage into eden/survivor/old-gen via
+// classifyMemoryPool.
 func CollectMemoryPoolMetrics(sample *metric.Set, conn connection.JMXConnection) {
 	results, err := conn.QueryMBeanAttributes(jvmMemoryPoolMBean)
 	if err != nil {
@@ -340,11 +336,9 @@ func CollectMetricDefinitions(sample *metric.Set, metricSets []*JMXMetricSet, be
 	}
 }
 
-// getTopicListFromJMX discovers which topics a producer or consumer client is actively
-// talking to. entityType ("Producer" or "Consumer", as computed by CollectTopicSubMetrics)
-// picks which client's topic-metrics MBean getAllTopicsFromJMX queries - this used to be
-// hardcoded to the producer MBean regardless of caller, silently returning zero topics (and
-// thus zero ConsumerTopicMetricDefs rows) for every consumer-only client.
+// getTopicListFromJMX discovers which topics a producer or consumer client is talking to.
+// entityType ("Producer" or "Consumer") picks the client's own topic-metrics MBean via
+// getAllTopicsFromJMX/topicMetricsMBeanForEntityType.
 func getTopicListFromJMX(clientID, entityType string, conn connection.JMXConnection) ([]string, error) {
 	switch strings.ToLower(args.GlobalArgs.TopicMode) {
 	case "none":
@@ -387,9 +381,8 @@ func getTopicListFromJMX(clientID, entityType string, conn connection.JMXConnect
 
 }
 
-// topicMetricsMBeanForEntityType returns the per-client, per-topic MBean pattern used both to
-// discover a client's topics and (by ConsumerTopicMetricDefs/ProducerTopicMetricDefs) to
-// collect their metrics - keeping discovery pointed at the same MBean family collection uses.
+// topicMetricsMBeanForEntityType returns the per-client, per-topic MBean pattern also used by
+// ConsumerTopicMetricDefs/ProducerTopicMetricDefs.
 func topicMetricsMBeanForEntityType(clientID, entityType string) string {
 	if entityType == "Consumer" {
 		return fmt.Sprintf("kafka.consumer:type=consumer-fetch-manager-metrics,client-id=%s,topic=*", clientID)
