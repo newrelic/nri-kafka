@@ -178,7 +178,7 @@ func TestPopulateBrokerMetrics_Normal(t *testing.T) {
 		"displayName":    "kafkabroker:9090",
 		"entityName":     "broker:" + "kafkabroker:9090",
 		"clusterName":    "",
-		"kafkaClusterId": "",
+		"clusterId": "",
 	}
 
 	assert.Equal(t, expected, sample.Metrics)
@@ -223,7 +223,7 @@ func TestCollectBrokerTopicMetrics(t *testing.T) {
 		attribute.Attribute{Key: "clusterName", Value: ""},
 		attribute.Attribute{Key: "displayName", Value: "kafkabroker:9090"},
 		attribute.Attribute{Key: "entityName", Value: "broker:kafkabroker:9090"},
-		attribute.Attribute{Key: "kafkaClusterId", Value: ""},
+		attribute.Attribute{Key: "clusterId", Value: ""},
 		attribute.Attribute{Key: "topic", Value: "topic"},
 	)
 

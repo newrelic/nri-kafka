@@ -173,7 +173,7 @@ func collectClientPartitionOffsetMetrics(
 
 	ms := partitionConsumerEntity.NewMetricSet("KafkaOffsetSample",
 		attribute.Attribute{Key: "clusterName", Value: args.GlobalArgs.ClusterName},
-		attribute.Attribute{Key: "kafkaClusterId", Value: connection.ClusterID},
+		attribute.Attribute{Key: "clusterId", Value: connection.ClusterID},
 		attribute.Attribute{Key: "consumerGroup", Value: consumerGroup},
 		attribute.Attribute{Key: "topic", Value: topic},
 		attribute.Attribute{Key: "partition", Value: strconv.Itoa(int(partition))},
@@ -275,7 +275,7 @@ func generateConsumerNRMetrics(kafkaIntegration *integration.Integration, consum
 		ms := clientEntity.NewMetricSet("KafkaOffsetSample",
 			attribute.Attribute{Key: "clusterName", Value: args.GlobalArgs.ClusterName},
 			attribute.Attribute{Key: "clientID", Value: string(clientID)},
-			attribute.Attribute{Key: "kafkaClusterId", Value: connection.ClusterID},
+			attribute.Attribute{Key: "clusterId", Value: connection.ClusterID},
 		)
 
 		err = ms.SetMetric("consumer.totalLag", totalLag, metric.GAUGE)
@@ -308,7 +308,7 @@ func consumerGroupMetrics(
 		ms := consumerGroupEntity.NewMetricSet("KafkaOffsetSample",
 			attribute.Attribute{Key: "clusterName", Value: args.GlobalArgs.ClusterName},
 			attribute.Attribute{Key: "consumerGroup", Value: string(consumerGroup)},
-			attribute.Attribute{Key: "kafkaClusterId", Value: connection.ClusterID},
+			attribute.Attribute{Key: "clusterId", Value: connection.ClusterID},
 		)
 
 		err = ms.SetMetric("consumerGroup.totalLag", totalLag, metric.GAUGE)
@@ -349,7 +349,7 @@ func consumerGroupByTopicMetrics(
 
 		ms := partitionConsumerEntity.NewMetricSet("KafkaOffsetSample",
 			attribute.Attribute{Key: "clusterName", Value: args.GlobalArgs.ClusterName},
-			attribute.Attribute{Key: "kafkaClusterId", Value: connection.ClusterID},
+			attribute.Attribute{Key: "clusterId", Value: connection.ClusterID},
 			attribute.Attribute{Key: "consumerGroup", Value: consumerGroup},
 			attribute.Attribute{Key: "topic", Value: string(topic)},
 		)

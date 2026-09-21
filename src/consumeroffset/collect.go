@@ -108,7 +108,7 @@ func setMetrics(consumerGroup string, offsetData []*partitionOffsets, kafkaInteg
 			attribute.Attribute{Key: "displayName", Value: groupEntity.Metadata.Name},
 			attribute.Attribute{Key: "entityName", Value: "consumerGroup:" + groupEntity.Metadata.Name},
 			attribute.Attribute{Key: "clusterName", Value: args.GlobalArgs.ClusterName},
-			attribute.Attribute{Key: "kafkaClusterId", Value: connection.ClusterID},
+			attribute.Attribute{Key: "clusterId", Value: connection.ClusterID},
 		)
 
 		if err := metricSet.MarshalMetrics(offsetData); err != nil {

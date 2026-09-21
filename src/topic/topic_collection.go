@@ -139,7 +139,7 @@ func topicWorker(topicChan <-chan *Topic, wg *sync.WaitGroup, client connection.
 				attribute.Attribute{Key: "displayName", Value: topic.Name},
 				attribute.Attribute{Key: "entityName", Value: "topic:" + topic.Name},
 				attribute.Attribute{Key: "clusterName", Value: args.GlobalArgs.ClusterName},
-				attribute.Attribute{Key: "kafkaClusterId", Value: connection.ClusterID},
+				attribute.Attribute{Key: "clusterId", Value: connection.ClusterID},
 			)
 
 			// Collect metrics and populate metric set with them

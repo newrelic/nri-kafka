@@ -155,7 +155,7 @@ func populateBrokerMetrics(b *connection.Broker, i *integration.Integration, con
 		attribute.Attribute{Key: "displayName", Value: entity.Metadata.Name},
 		attribute.Attribute{Key: "entityName", Value: "broker:" + entity.Metadata.Name},
 		attribute.Attribute{Key: "clusterName", Value: args.GlobalArgs.ClusterName},
-		attribute.Attribute{Key: "kafkaClusterId", Value: connection.ClusterID},
+		attribute.Attribute{Key: "clusterId", Value: connection.ClusterID},
 	)
 
 	// Populate metrics set with broker metrics
@@ -177,7 +177,7 @@ func collectBrokerTopicMetrics(b *connection.Broker, collectedTopics []string, i
 			attribute.Attribute{Key: "displayName", Value: entity.Metadata.Name},
 			attribute.Attribute{Key: "entityName", Value: "broker:" + entity.Metadata.Name},
 			attribute.Attribute{Key: "clusterName", Value: args.GlobalArgs.ClusterName},
-			attribute.Attribute{Key: "kafkaClusterId", Value: connection.ClusterID},
+			attribute.Attribute{Key: "clusterId", Value: connection.ClusterID},
 			attribute.Attribute{Key: "topic", Value: topicName},
 		)
 
