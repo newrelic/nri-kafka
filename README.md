@@ -147,6 +147,11 @@ When this setting is enabled, the integration will:
 2. Collect cluster-wide metrics from the controller broker
 3. Fall back to another available broker if the controller cannot be identified or accessed
 
+The cluster entity is identified by `cluster_name` if set, falling back to the Kafka-native
+cluster ID (read automatically from broker metadata) if it isn't. Cluster metrics collection
+fails if neither is available - this is normal only for pre-0.10.1 Kafka clusters (which don't
+report a cluster ID) with `cluster_name` also left unset.
+
 The cluster metrics are collected from the following MBeans:
 - `kafka.controller:type=KafkaController,name=*` - Core cluster metrics such as active broker count, offline partitions, and more
 - `kafka.controller:type=ControllerStats,name=UncleanLeaderElectionsPerSec` - Rate of unclean leader elections

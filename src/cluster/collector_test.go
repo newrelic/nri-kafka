@@ -54,3 +54,38 @@ func TestCollector_CollectMetrics(t *testing.T) {
 	}
 	assert.Equal(t, expected, sample.Metrics)
 }
+
+func TestCollector_Entity_FallsBackToClusterIDWhenClusterNameUnset(t *testing.T) {
+	args.GlobalArgs = &args.ParsedArguments{
+		ClusterName: "",
+		ClusterID:   "lkc-abc123",
+	}
+
+	i, err := integration.New("test", "1.0.0")
+	require.NoError(t, err)
+
+	collector := NewCollector(mocks.NewEmptyMockJMXProvider(), 1)
+
+	entity, err := collector.Entity(i)
+	require.NoError(t, err)
+
+	// cluster_name is optional and has no default - clusterId is auto-populated from broker
+	// metadata, so it's what the entity should be named when cluster_name isn't set.
+	assert.Equal(t, "lkc-abc123", entity.Metadata.Name)
+	assert.Contains(t, entity.Metadata.IDAttrs, integration.NewIDAttribute("clusterId", "lkc-abc123"))
+}
+
+func TestCollector_Entity_ErrorsWhenNeitherClusterNameNorClusterIDSet(t *testing.T) {
+	args.GlobalArgs = &args.ParsedArguments{
+		ClusterName: "",
+		ClusterID:   "",
+	}
+
+	i, err := integration.New("test", "1.0.0")
+	require.NoError(t, err)
+
+	collector := NewCollector(mocks.NewEmptyMockJMXProvider(), 1)
+
+	_, err = collector.Entity(i)
+	require.Error(t, err)
+}

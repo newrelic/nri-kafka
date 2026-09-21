@@ -2,6 +2,7 @@
 package cluster
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/newrelic/infra-integrations-sdk/v3/data/attribute"
@@ -68,21 +69,31 @@ func (c *Collector) Entity(i *integration.Integration) (*integration.Entity, err
 		clusterID = args.GlobalArgs.ClusterID
 	}
 
+	// clusterName is optional (no default) - fall back to clusterId, which is auto-populated
+	// from broker metadata, rather than passing the SDK an empty entity name and failing to
+	// collect any cluster metrics at all just because cluster_name wasn't set.
+	entityName := clusterName
+	if entityName == "" {
+		entityName = clusterID
+	}
+	if entityName == "" {
+		return nil, errors.New("cluster_name is not set and no clusterId was available from broker metadata; set the cluster_name config option to enable cluster metrics")
+	}
+
 	clusterNameAttr := integration.NewIDAttribute("clusterName", clusterName)
 	clusterIDAttr := integration.NewIDAttribute("clusterId", clusterID)
 
-	return i.Entity(clusterName, ClusterName, clusterNameAttr, clusterIDAttr)
+	return i.Entity(entityName, ClusterName, clusterNameAttr, clusterIDAttr)
 }
 
 // populateClusterMetrics collects all cluster metrics and adds them to the entity
 func populateClusterMetrics(entity *integration.Entity, conn connection.JMXConnection, activeControllerCount int) {
-	clusterName := args.GlobalArgs.ClusterName
-
-	// Create a sample metric set for the cluster
+	// entity.Metadata.Name is the single source of truth for display purposes - it already
+	// reflects whichever of clusterName/clusterId Entity() resolved to.
 	sample := entity.NewMetricSet(ClusterEventType,
-		attribute.Attribute{Key: "displayName", Value: clusterName},
-		attribute.Attribute{Key: "entityName", Value: "cluster:" + clusterName},
-		attribute.Attribute{Key: "clusterName", Value: clusterName},
+		attribute.Attribute{Key: "displayName", Value: entity.Metadata.Name},
+		attribute.Attribute{Key: "entityName", Value: "cluster:" + entity.Metadata.Name},
+		attribute.Attribute{Key: "clusterName", Value: args.GlobalArgs.ClusterName},
 		attribute.Attribute{Key: "clusterId", Value: args.GlobalArgs.ClusterID},
 		attribute.Attribute{Key: "event_type", Value: ClusterEventType},
 	)
