@@ -95,16 +95,4 @@ var ClusterMetricDefs = []*JMXMetricSet{
 			},
 		},
 	},
-	// KafkaServer for ClusterId
-	{
-		MBean:        "kafka.server:type=KafkaServer,name=ClusterId",
-		MetricPrefix: "kafka.server:type=KafkaServer,",
-		MetricDefs: []*MetricDefinition{
-			{
-				Name:       "cluster.id",
-				SourceType: metric.ATTRIBUTE,
-				JMXAttr:    "name=ClusterId,attr=Value",
-			},
-		},
-	},
 }

@@ -111,9 +111,6 @@
                         "cluster.fencedBrokerCount": {
                           "type": "integer"
                         },
-                        "cluster.id": {
-                          "type": "string"
-                        },
                         "displayName": {
                           "type": "string"
                         },
