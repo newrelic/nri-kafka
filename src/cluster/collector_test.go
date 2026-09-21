@@ -31,12 +31,13 @@ func TestCollector_CollectMetrics(t *testing.T) {
 	entity, err := collector.Entity(i)
 	require.NoError(t, err)
 
-	// Verify entity was created with correct metadata - identified by clusterName/clusterId,
-	// not by whichever broker's JMX happened to answer this collection run.
+	// Verify entity was created with correct metadata - identified by clusterName, not by
+	// whichever broker's JMX happened to answer this collection run. No ID attributes: the
+	// entity key is just namespace:name.
 	assert.Equal(t, ClusterName, entity.Metadata.Namespace)
 	assert.Equal(t, args.GlobalArgs.ClusterName, entity.Metadata.Name)
 	assert.Equal(t, 1, len(i.Entities))
-	assert.Contains(t, entity.Metadata.IDAttrs, integration.NewIDAttribute("clusterId", "lkc-abc123"))
+	assert.Empty(t, entity.Metadata.IDAttrs)
 
 	err = collector.CollectMetrics(i)
 	require.NoError(t, err)
@@ -72,7 +73,7 @@ func TestCollector_Entity_FallsBackToClusterIDWhenClusterNameUnset(t *testing.T)
 	// cluster_name is optional and has no default - clusterId is auto-populated from broker
 	// metadata, so it's what the entity should be named when cluster_name isn't set.
 	assert.Equal(t, "lkc-abc123", entity.Metadata.Name)
-	assert.Contains(t, entity.Metadata.IDAttrs, integration.NewIDAttribute("clusterId", "lkc-abc123"))
+	assert.Empty(t, entity.Metadata.IDAttrs)
 }
 
 func TestCollector_Entity_ErrorsWhenNeitherClusterNameNorClusterIDSet(t *testing.T) {

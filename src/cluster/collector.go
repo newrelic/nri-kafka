@@ -80,10 +80,10 @@ func (c *Collector) Entity(i *integration.Integration) (*integration.Entity, err
 		return nil, errors.New("cluster_name is not set and no clusterId was available from broker metadata; set the cluster_name config option to enable cluster metrics")
 	}
 
-	clusterNameAttr := integration.NewIDAttribute("clusterName", clusterName)
-	clusterIDAttr := integration.NewIDAttribute("clusterId", clusterID)
-
-	return i.Entity(entityName, ClusterName, clusterNameAttr, clusterIDAttr)
+	// No ID attributes: clusterName is already the entity Name, so repeating it as an ID
+	// attribute would be redundant, and clusterId is deliberately not used to disambiguate -
+	// two different clusters sharing a cluster_name will collide into one entity.
+	return i.Entity(entityName, ClusterName)
 }
 
 // populateClusterMetrics collects all cluster metrics and adds them to the entity
