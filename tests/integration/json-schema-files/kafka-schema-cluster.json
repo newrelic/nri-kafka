@@ -93,19 +93,19 @@
                         "cluster.uncleanLeaderElectionsPerSecond": {
                           "type": "number"
                         },
-                        "cluster.numGroups": {
+                        "cluster.groupCount": {
                           "type": "integer"
                         },
-                        "cluster.numOffsets": {
+                        "cluster.offsetCount": {
                           "type": "integer"
                         },
-                        "cluster.numGroupsPreparingRebalance": {
+                        "cluster.rebalancingGroupCount": {
                           "type": "integer"
                         },
-                        "cluster.numGroupsStable": {
+                        "cluster.stableGroupCount": {
                           "type": "integer"
                         },
-                        "cluster.numGroupsDead": {
+                        "cluster.deadGroupCount": {
                           "type": "integer"
                         },
                         "cluster.fencedBrokerCount": {

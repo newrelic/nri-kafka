@@ -69,27 +69,27 @@ var ClusterMetricDefs = []*JMXMetricSet{
 		MetricPrefix: "kafka.coordinator.group:type=GroupMetadataManager,",
 		MetricDefs: []*MetricDefinition{
 			{
-				Name:       "cluster.numGroups",
+				Name:       "cluster.groupCount",
 				SourceType: metric.GAUGE,
 				JMXAttr:    "name=NumGroups,attr=Value",
 			},
 			{
-				Name:       "cluster.numOffsets",
+				Name:       "cluster.offsetCount",
 				SourceType: metric.GAUGE,
 				JMXAttr:    "name=NumOffsets,attr=Value",
 			},
 			{
-				Name:       "cluster.numGroupsStable",
+				Name:       "cluster.stableGroupCount",
 				SourceType: metric.GAUGE,
 				JMXAttr:    "name=NumGroupsStable,attr=Value",
 			},
 			{
-				Name:       "cluster.numGroupsPreparingRebalance",
+				Name:       "cluster.rebalancingGroupCount",
 				SourceType: metric.GAUGE,
 				JMXAttr:    "name=NumGroupsPreparingRebalance,attr=Value",
 			},
 			{
-				Name:       "cluster.numGroupsDead",
+				Name:       "cluster.deadGroupCount",
 				SourceType: metric.GAUGE,
 				JMXAttr:    "name=NumGroupsDead,attr=Value",
 			},
