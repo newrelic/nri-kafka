@@ -21,22 +21,20 @@ func TestCollector_CollectMetrics(t *testing.T) {
 	i, err := integration.New("test", "1.0.0")
 	require.NoError(t, err)
 
-	// Create a collector with test parameters
-	hostPort := "localhost:9999"
-
 	// Create a mock JMX client
 	mockJMX := mocks.NewEmptyMockJMXProvider()
 
 	// Create collector with mock JMX client and a pre-computed active controller count
-	collector := NewCollector(mockJMX, hostPort, 1)
+	collector := NewCollector(mockJMX, 1)
 
 	// Create the entity using the collector's Entity method
 	entity, err := collector.Entity(i)
 	require.NoError(t, err)
 
-	// Verify entity was created with correct metadata
+	// Verify entity was created with correct metadata - identified by clusterName/clusterId,
+	// not by whichever broker's JMX happened to answer this collection run.
 	assert.Equal(t, ClusterName, entity.Metadata.Namespace)
-	assert.Equal(t, hostPort, entity.Metadata.Name)
+	assert.Equal(t, args.GlobalArgs.ClusterName, entity.Metadata.Name)
 	assert.Equal(t, 1, len(i.Entities))
 	assert.Contains(t, entity.Metadata.IDAttrs, integration.NewIDAttribute("clusterId", "lkc-abc123"))
 
@@ -48,8 +46,8 @@ func TestCollector_CollectMetrics(t *testing.T) {
 
 	expected := map[string]interface{}{
 		"event_type":                    ClusterEventType,
-		"displayName":                   hostPort,
-		"entityName":                    "cluster:" + hostPort,
+		"displayName":                   args.GlobalArgs.ClusterName,
+		"entityName":                    "cluster:" + args.GlobalArgs.ClusterName,
 		"clusterName":                   args.GlobalArgs.ClusterName,
 		"clusterId":                     args.GlobalArgs.ClusterID,
 		"cluster.activeControllerCount": float64(1),

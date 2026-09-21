@@ -3,7 +3,6 @@ package cluster
 
 import (
 	"fmt"
-	"strings"
 
 	"github.com/newrelic/infra-integrations-sdk/v3/data/attribute"
 	"github.com/newrelic/infra-integrations-sdk/v3/data/metric"
@@ -27,17 +26,15 @@ const (
 // but it will work with any broker that has JMX enabled.
 type Collector struct {
 	jmxClient             connection.JMXConnection
-	hostPort              string // Format: host:port to identify the broker used for metrics collection
-	activeControllerCount int    // pre-computed sum of ActiveControllerCount across every broker
+	activeControllerCount int // pre-computed sum of ActiveControllerCount across every broker
 }
 
 // NewCollector creates a new collector for cluster metrics. activeControllerCount is the
 // pre-computed sum of every broker's own ActiveControllerCount (see countActiveControllers) -
 // in a healthy cluster this is exactly 1; 0 or >1 both indicate a real problem.
-func NewCollector(jmxClient connection.JMXConnection, hostPort string, activeControllerCount int) *Collector {
+func NewCollector(jmxClient connection.JMXConnection, activeControllerCount int) *Collector {
 	return &Collector{
 		jmxClient:             jmxClient,
-		hostPort:              hostPort,
 		activeControllerCount: activeControllerCount,
 	}
 }
@@ -53,32 +50,17 @@ func (c *Collector) CollectMetrics(integration *integration.Integration) error {
 	// Collect metrics only if metrics collection is enabled
 	if args.GlobalArgs.HasMetrics() {
 		// Collect cluster metrics
-		populateClusterMetrics(clusterEntity, c.hostPort, c.jmxClient, c.activeControllerCount)
+		populateClusterMetrics(clusterEntity, c.jmxClient, c.activeControllerCount)
 	}
 
 	return nil
 }
 
-// Entity gets the entity object for the cluster
+// Entity gets the entity object for the cluster, identified by clusterName/clusterId - not by
+// whichever broker's JMX happened to answer this collection run, which can differ across
+// polling intervals and hosts (controller re-election, discovery order) and would otherwise
+// fragment one logical cluster into many entities.
 func (c *Collector) Entity(i *integration.Integration) (*integration.Entity, error) {
-	host := c.hostPort
-	if host == "" {
-		host = "unknown:0"
-	}
-
-	// Get hostname and port from hostPort
-	hostParts := strings.Split(host, ":")
-	hostname := hostParts[0]
-	port := "0"
-	if len(hostParts) > 1 {
-		port = hostParts[1]
-	}
-
-	// For broker entities, the entityName is just the host:port
-	// and the namespace is "ka-broker". Let's follow the same pattern.
-	entityName := fmt.Sprintf("%s:%s", hostname, port)
-
-	// Get cluster name/ID from args if available
 	clusterName := ""
 	clusterID := ""
 	if args.GlobalArgs != nil {
@@ -86,22 +68,21 @@ func (c *Collector) Entity(i *integration.Integration) (*integration.Entity, err
 		clusterID = args.GlobalArgs.ClusterID
 	}
 
-	// Follow the broker entity pattern: use clusterName and clusterID as ID attributes
 	clusterNameAttr := integration.NewIDAttribute("clusterName", clusterName)
 	clusterIDAttr := integration.NewIDAttribute("clusterId", clusterID)
 
-	// Don't include host and port attributes in the entity key
-	// as they are already part of the entityName
-	return i.Entity(entityName, ClusterName, clusterNameAttr, clusterIDAttr)
+	return i.Entity(clusterName, ClusterName, clusterNameAttr, clusterIDAttr)
 }
 
 // populateClusterMetrics collects all cluster metrics and adds them to the entity
-func populateClusterMetrics(entity *integration.Entity, hostPort string, conn connection.JMXConnection, activeControllerCount int) {
+func populateClusterMetrics(entity *integration.Entity, conn connection.JMXConnection, activeControllerCount int) {
+	clusterName := args.GlobalArgs.ClusterName
+
 	// Create a sample metric set for the cluster
 	sample := entity.NewMetricSet(ClusterEventType,
-		attribute.Attribute{Key: "displayName", Value: hostPort},
-		attribute.Attribute{Key: "entityName", Value: "cluster:" + hostPort},
-		attribute.Attribute{Key: "clusterName", Value: args.GlobalArgs.ClusterName},
+		attribute.Attribute{Key: "displayName", Value: clusterName},
+		attribute.Attribute{Key: "entityName", Value: "cluster:" + clusterName},
+		attribute.Attribute{Key: "clusterName", Value: clusterName},
 		attribute.Attribute{Key: "clusterId", Value: args.GlobalArgs.ClusterID},
 		attribute.Attribute{Key: "event_type", Value: ClusterEventType},
 	)

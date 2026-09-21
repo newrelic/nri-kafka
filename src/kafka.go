@@ -306,8 +306,7 @@ func collectClusterMetrics(broker *connection.Broker, i *integration.Integration
 	}
 
 	// Create a cluster collector and collect the metrics
-	hostPort := fmt.Sprintf("%s:%d", broker.Host, broker.JMXPort)
-	clusterCollector := cluster.NewCollector(jmxConn, hostPort, activeControllerCount)
+	clusterCollector := cluster.NewCollector(jmxConn, activeControllerCount)
 	if err := clusterCollector.CollectMetrics(i); err != nil {
 		log.Error("Failed to collect cluster metrics: %s", err)
 	}
