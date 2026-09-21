@@ -76,11 +76,14 @@ func CollectConsumerMetrics(i *integration.Integration, jmxInfo *args.JMXHost, j
 		return
 	}
 	for _, clientID := range clientIDs {
-		// Create an entity for the consumer
+		// Create an entity for the consumer. No host ID attribute: the consumeroffset package
+		// also creates "ka-consumer" entities (client-id lag rollups, summed across every host
+		// running that client-id) with only clusterName/clusterId - keeping this path's ID
+		// attributes identical avoids the same client-id fragmenting into two entities
+		// depending on which collection path reports it first.
 		clusterNameAttr := integration.NewIDAttribute("clusterName", args.GlobalArgs.ClusterName)
 		clusterIDAttr := integration.NewIDAttribute("clusterId", args.GlobalArgs.ClusterID)
-		hostIDAttr := integration.NewIDAttribute("host", jmxInfo.Host)
-		consumerEntity, err := i.Entity(clientID, "ka-consumer", clusterNameAttr, clusterIDAttr, hostIDAttr)
+		consumerEntity, err := i.Entity(clientID, "ka-consumer", clusterNameAttr, clusterIDAttr)
 		if err != nil {
 			log.Error("Unable to create entity for Consumer %s: %s", clientID, err.Error())
 			continue

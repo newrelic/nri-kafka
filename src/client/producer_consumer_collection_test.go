@@ -253,3 +253,28 @@ func TestProducerConsumerEntitiesCreation(t *testing.T) {
 		})
 	}
 }
+
+func TestCollectConsumerMetrics_NoHostIDAttribute(t *testing.T) {
+	// The consumeroffset package also creates "ka-consumer" entities (client-id lag rollups,
+	// summed across every host running that client-id) with only clusterName/clusterId as ID
+	// attributes - no host. This pins CollectConsumerMetrics to the same ID attribute set, so
+	// the same client-id can't fragment into two entities depending on which collection path
+	// reports it first.
+	i, err := integration.New(t.Name(), "1.0.0")
+	require.NoError(t, err)
+	testutils.SetupTestArgs()
+	args.GlobalArgs.ClusterName = "test-cluster"
+	args.GlobalArgs.ClusterID = "lkc-abc123"
+
+	connProvider := mocks.NewEmptyMockJMXProvider()
+	connProvider.Names = []string{"kafka.consumer:type=consumer-fetch-manager-metrics,client-id=consumer-1"}
+
+	CollectConsumerMetrics(i, &args.JMXHost{Host: "10.0.0.5"}, connProvider)
+
+	require.Len(t, i.Entities, 1)
+	expected := []integration.IDAttribute{
+		integration.NewIDAttribute("clusterName", "test-cluster"),
+		integration.NewIDAttribute("clusterId", "lkc-abc123"),
+	}
+	assert.ElementsMatch(t, expected, i.Entities[0].Metadata.IDAttrs)
+}
