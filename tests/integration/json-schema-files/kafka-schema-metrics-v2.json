@@ -169,8 +169,7 @@
                         {
                           "type": "object",
                           "required": [
-                            "broker.ActiveControllerCount",
-                            "broker.GlobalPartitionCount",
+                            "broker.isActiveController",
                             "broker.IOInPerSecond",
                             "broker.IOOutPerSecond",
                             "broker.messagesInPerSecond",
@@ -184,10 +183,7 @@
                             "replication.unreplicatedPartitions"
                           ],
                           "properties": {
-                            "broker.ActiveControllerCount": {
-                              "type": "number"
-                            },
-                            "broker.GlobalPartitionCount": {
+                            "broker.isActiveController": {
                               "type": "number"
                             },
                             "broker.IOInPerSecond": {

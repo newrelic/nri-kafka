@@ -332,7 +332,7 @@ func TestKafkaIntegration_bootstrap_metrics(t *testing.T) {
 
 func TestKafkaIntegration_bootstrap_new_metrics(t *testing.T) {
 	bootstrapDiscoverConfigMetrics := func(command []string) []string {
-		return append(bootstrapDiscoverConfig(command), "--metrics", "--enable_broker_topic_metrics_v2")
+		return append(bootstrapDiscoverConfig(command), "--metrics", "--collect_broker_topic_metrics_v2")
 	}
 
 	stdout, stderr, err := runIntegration(t, bootstrapDiscoverConfigMetrics)
