@@ -93,6 +93,7 @@ func CollectConsumerMetrics(i *integration.Integration, jmxInfo *args.JMXHost, j
 		// Create a sample for consumer metrics
 		sample := consumerEntity.NewMetricSet("KafkaConsumerSample",
 			attribute.Attribute{Key: "clusterName", Value: args.GlobalArgs.ClusterName},
+			attribute.Attribute{Key: "kafkaClusterId", Value: connection.ClusterID},
 			attribute.Attribute{Key: "displayName", Value: clientID},
 			attribute.Attribute{Key: "entityName", Value: "consumer:" + clientID},
 			attribute.Attribute{Key: "host", Value: jmxInfo.Host},
@@ -134,6 +135,7 @@ func CollectProducerMetrics(i *integration.Integration, jmxInfo *args.JMXHost, j
 		}
 		sample := producerEntity.NewMetricSet("KafkaProducerSample",
 			attribute.Attribute{Key: "clusterName", Value: args.GlobalArgs.ClusterName},
+			attribute.Attribute{Key: "kafkaClusterId", Value: connection.ClusterID},
 			attribute.Attribute{Key: "displayName", Value: clientID},
 			attribute.Attribute{Key: "entityName", Value: "producer:" + clientID},
 			attribute.Attribute{Key: "host", Value: jmxInfo.Host},
