@@ -60,22 +60,22 @@ func TestGetBrokerMetrics_JVMMetricsDisabledByDefault(t *testing.T) {
 	GetBrokerMetrics(m, mockJMXProvider)
 
 	if _, ok := m.Metrics["jvm.heapMemoryUsedBytes"]; ok {
-		t.Error("jvm.heapMemoryUsedBytes should not be collected when EnableBrokerJVMMetrics is false")
+		t.Error("jvm.heapMemoryUsedBytes should not be collected when CollectBrokerJVMMetrics is false")
 	}
 	if _, ok := m.Metrics["jvm.threadCount"]; ok {
-		t.Error("jvm.threadCount should not be collected when EnableBrokerJVMMetrics is false")
+		t.Error("jvm.threadCount should not be collected when CollectBrokerJVMMetrics is false")
 	}
 	if _, ok := m.Metrics["jvm.systemCpuLoad"]; ok {
-		t.Error("jvm.systemCpuLoad should not be collected when EnableBrokerJVMMetrics is false")
+		t.Error("jvm.systemCpuLoad should not be collected when CollectBrokerJVMMetrics is false")
 	}
 	if _, ok := m.Metrics["jvm.heapEdenUsedBytes"]; ok {
-		t.Error("jvm.heapEdenUsedBytes should not be collected when EnableBrokerJVMMetrics is false")
+		t.Error("jvm.heapEdenUsedBytes should not be collected when CollectBrokerJVMMetrics is false")
 	}
 }
 
 func TestGetBrokerMetrics_JVMMetricsEnabled(t *testing.T) {
 	testutils.SetupTestArgs()
-	args.GlobalArgs.EnableBrokerJVMMetrics = true
+	args.GlobalArgs.CollectBrokerJVMMetrics = true
 
 	mockJMXProvider := &mocks.MockJMXProvider{Response: jvmMockResponse()}
 
@@ -104,10 +104,10 @@ func TestGetBrokerMetrics_JVMMetricsEnabled(t *testing.T) {
 		t.Errorf("expected jvm.nonHeapMemoryUsedBytes = 500, got %v", got)
 	}
 	if _, ok := m.Metrics["jvm.gcCollectionsPerSecond"]; !ok {
-		t.Error("expected jvm.gcCollectionsPerSecond to be collected when EnableBrokerJVMMetrics is true")
+		t.Error("expected jvm.gcCollectionsPerSecond to be collected when CollectBrokerJVMMetrics is true")
 	}
 	if _, ok := m.Metrics["jvm.heapEdenUsedBytes"]; !ok {
-		t.Error("expected jvm.heapEdenUsedBytes to be collected when EnableBrokerJVMMetrics is true")
+		t.Error("expected jvm.heapEdenUsedBytes to be collected when CollectBrokerJVMMetrics is true")
 	}
 }
 

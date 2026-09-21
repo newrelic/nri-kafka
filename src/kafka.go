@@ -245,7 +245,7 @@ func coreCollection(kafkaIntegration *integration.Integration, jmxConnProvider c
 
 		if !args.GlobalArgs.LocalOnlyCollection || args.GlobalArgs.ForceTopicSampleCollection {
 			var topicByteRates map[string]topic.ByteRates
-			if args.GlobalArgs.EnableTopicConfigMetrics {
+			if args.GlobalArgs.CollectTopicConfigMetrics {
 				topicByteRates = collectTopicByteRates(brokers, jmxConnProvider)
 			}
 

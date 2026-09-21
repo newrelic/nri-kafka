@@ -26,7 +26,7 @@ type Topic struct {
 	ReplicationFactor int
 	Configs           []*sarama.ConfigEntry
 	Partitions        []*partition
-	// ByteRates is nil when not pre-computed by the caller (e.g. EnableTopicConfigMetrics is
+	// ByteRates is nil when not pre-computed by the caller (e.g. CollectTopicConfigMetrics is
 	// off, or the broker-side MBean for this topic hasn't been created yet).
 	ByteRates *ByteRates
 }
@@ -183,7 +183,7 @@ func populateTopicMetrics(t *Topic, sample *metric.Set, client connection.Client
 		return err
 	}
 
-	if args.GlobalArgs.EnableTopicConfigMetrics {
+	if args.GlobalArgs.CollectTopicConfigMetrics {
 		if err := populateTopicConfigMetrics(t, sample); err != nil {
 			return err
 		}

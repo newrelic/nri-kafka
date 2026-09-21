@@ -28,7 +28,7 @@ func GetBrokerMetrics(sample *metric.Set, conn connection.JMXConnection) {
 	CollectMetricDefinitions(sample, brokerMetricDefs, nil, conn)
 	CollectBrokerRequestMetrics(sample, brokerRequestMetricDefs, conn)
 
-	if args.GlobalArgs.EnableBrokerJVMMetrics {
+	if args.GlobalArgs.CollectBrokerJVMMetrics {
 		CollectMetricDefinitions(sample, jvmMetricDefs, nil, conn)
 		CollectGarbageCollectorMetrics(sample, conn)
 		CollectMemoryPoolMetrics(sample, conn)
@@ -40,7 +40,7 @@ func GetFinalMetricSets(metricSets []*JMXMetricSet, v2MetricSets []*JMXMetricSet
 	finalMetricSets := make([]*JMXMetricSet, 0, len(metricSets)+len(v2MetricSets))
 	finalMetricSets = append(finalMetricSets, metricSets...)
 
-	if args.GlobalArgs.EnableBrokerTopicMetricsV2 {
+	if args.GlobalArgs.CollectBrokerTopicMetricsV2 {
 		finalMetricSets = append(finalMetricSets, v2MetricSets...)
 	}
 

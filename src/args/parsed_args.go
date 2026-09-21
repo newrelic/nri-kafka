@@ -86,18 +86,18 @@ type ParsedArguments struct {
 	SaslGssapiDisableFASTNegotiation bool
 
 	// Collection configuration
-	LocalOnlyCollection        bool
-	ForceTopicSampleCollection bool
-	CollectClusterMetrics      bool
-	TopicMode                  string
-	TopicList                  []string
-	TopicRegex                 string
-	TopicBucket                TopicBucket
-	CollectTopicSize           bool
-	CollectTopicOffset         bool
-	EnableBrokerTopicMetricsV2 bool
-	EnableBrokerJVMMetrics     bool
-	EnableTopicConfigMetrics   bool
+	LocalOnlyCollection         bool
+	ForceTopicSampleCollection  bool
+	CollectClusterMetrics       bool
+	TopicMode                   string
+	TopicList                   []string
+	TopicRegex                  string
+	TopicBucket                 TopicBucket
+	CollectTopicSize            bool
+	CollectTopicOffset          bool
+	CollectBrokerTopicMetricsV2 bool
+	CollectBrokerJVMMetrics     bool
+	CollectTopicConfigMetrics   bool
 
 	// Consumer offset arguments
 	ConsumerOffset              bool
@@ -260,7 +260,7 @@ func ParseArgs(a ArgumentList) (*ParsedArguments, error) {
 		return nil, fmt.Errorf("failed to parse kafka version: %s", err)
 	}
 
-	log.Info("Processing new BrokerTopic metrics flag is : %v", a.EnableBrokerTopicMetricsV2)
+	log.Info("Processing new BrokerTopic metrics flag is : %v", a.CollectBrokerTopicMetricsV2)
 
 	parsedArgs := &ParsedArguments{
 		DefaultArgumentList:              a.DefaultArgumentList,
@@ -311,9 +311,9 @@ func ParseArgs(a ArgumentList) (*ParsedArguments, error) {
 		SaslGssapiKerberosConfigPath:     a.SaslGssapiKerberosConfigPath,
 		SaslGssapiDisableFASTNegotiation: a.SaslGssapiDisableFASTNegotiation,
 		TopicSource:                      a.TopicSource,
-		EnableBrokerTopicMetricsV2:       a.EnableBrokerTopicMetricsV2,
-		EnableBrokerJVMMetrics:           a.EnableBrokerJVMMetrics,
-		EnableTopicConfigMetrics:         a.EnableTopicConfigMetrics,
+		CollectBrokerTopicMetricsV2:      a.CollectBrokerTopicMetricsV2,
+		CollectBrokerJVMMetrics:          a.CollectBrokerJVMMetrics,
+		CollectTopicConfigMetrics:        a.CollectTopicConfigMetrics,
 	}
 
 	return parsedArgs, nil

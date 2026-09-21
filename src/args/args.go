@@ -68,15 +68,17 @@ type ArgumentList struct {
 	SaslGssapiDisableFASTNegotiation bool   `default:"false" help:"Disable FAST negotiation."`
 
 	// Collection configuration
-	LocalOnlyCollection        bool   `default:"false" help:"Collect only the metrics related to the configured bootstrap broker. Useful for distributed metric collection"`
-	ForceTopicSampleCollection bool   `default:"false" help:"If LocalOnlyCollection=true it enforces the collection of the topicSample for every instance, possibly causing duplication. If LocalOnlyCollection=false it has no effects"`
-	TopicMode                  string `default:"None" help:"Possible options are All, None, or List. If List, must also specify the list of topics to collect with the topic_list option."`
-	TopicList                  string `default:"[]" help:"JSON array of strings with the names of topics to monitor. Only used if collect_topics is set to 'List'"`
-	TopicRegex                 string `default:"" help:"A regex pattern that matches the list of topics to collect. Only used if collect_topics is set to 'Regex'"`
-	TopicBucket                string `default:"1/1" help:"Allows the partitioning of topic collection across multiple instances. The second number is the number of instances topics are partitioned across. The first number is the bucket number of the current instance, which should be between 1 and the second number."`
-	CollectTopicSize           bool   `default:"false" help:"Enablement of on disk Topic size metric collection. This metric can be very resource intensive to collect especially against many topics."`
-	CollectTopicOffset         bool   `default:"false" help:"Enablement of Topic offsets collection. This metric can be very resource intensive to collect especially against many topics."`
-	CollectClusterMetrics      bool   `default:"false" help:"Collect cluster-wide metrics from the Kafka controller."`
+	LocalOnlyCollection         bool   `default:"false" help:"Collect only the metrics related to the configured bootstrap broker. Useful for distributed metric collection"`
+	ForceTopicSampleCollection  bool   `default:"false" help:"If LocalOnlyCollection=true it enforces the collection of the topicSample for every instance, possibly causing duplication. If LocalOnlyCollection=false it has no effects"`
+	TopicMode                   string `default:"None" help:"Possible options are All, None, or List. If List, must also specify the list of topics to collect with the topic_list option."`
+	TopicList                   string `default:"[]" help:"JSON array of strings with the names of topics to monitor. Only used if collect_topics is set to 'List'"`
+	TopicRegex                  string `default:"" help:"A regex pattern that matches the list of topics to collect. Only used if collect_topics is set to 'Regex'"`
+	TopicBucket                 string `default:"1/1" help:"Allows the partitioning of topic collection across multiple instances. The second number is the number of instances topics are partitioned across. The first number is the bucket number of the current instance, which should be between 1 and the second number."`
+	CollectTopicSize            bool   `default:"false" help:"Enablement of on disk Topic size metric collection. This metric can be very resource intensive to collect especially against many topics."`
+	CollectTopicOffset          bool   `default:"false" help:"Enablement of Topic offsets collection. This metric can be very resource intensive to collect especially against many topics."`
+	CollectClusterMetrics       bool   `default:"false" help:"Collect cluster-wide metrics from the Kafka controller."`
+	CollectTopicConfigMetrics   bool   `default:"false" help:"Collect topic.partitionCount, topic.replicationFactor, topic.minInSyncReplicas, topic.retentionMs, and topic byte rates on KafkaTopicSample. Requires an AdminClient call per topic, so can be resource intensive against many topics."`
+	CollectBrokerTopicMetricsV2 bool   `default:"false" help:"Collect broker.bytesReadFromTopicPerSecond and broker.messagesProducedToTopicPerSecond on KafkaBrokerSample. Requires a JMX query per topic per broker, so can be resource intensive against many topics."`
 
 	// Consumer offset arguments
 	ConsumerOffset              bool   `default:"false" help:"Populate consumer offset data"`
@@ -90,7 +92,5 @@ type ArgumentList struct {
 
 	TopicSource string `default:"broker" help:"Collect topics list from either the Broker or Zookeeper"`
 
-	EnableBrokerTopicMetricsV2 bool `default:"false" help:"Enable the new BrokerTopicMetrics metrics. This is a new set of metrics that are essentials for some capabilities to work. "`
-	EnableBrokerJVMMetrics     bool `default:"false" help:"Enable collection of broker JVM metrics (heap, GC, threads, CPU load, file descriptors, loaded classes) via the standard java.lang JMX platform MBeans."`
-	EnableTopicConfigMetrics   bool `default:"false" help:"Enable topic.partitionCount, topic.replicationFactor, and topic.minInSyncReplicas on KafkaTopicSample."`
+	CollectBrokerJVMMetrics bool `default:"false" help:"Collect broker JVM metrics (heap, non-heap, GC, memory pools, threads, CPU load, file descriptors, loaded classes) on KafkaBrokerSample. Opens several new JMX connections per broker."`
 }
