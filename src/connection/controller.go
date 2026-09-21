@@ -14,7 +14,6 @@ func FindControllerBroker(brokers []*Broker) *Broker {
 		return nil
 	}
 
-	// Create a client from the broker list to make API calls
 	client, err := NewSaramaClientFromBrokerList(brokers)
 	if err != nil {
 		log.Error("Failed to create client to find controller: %s", err)
@@ -22,20 +21,17 @@ func FindControllerBroker(brokers []*Broker) *Broker {
 	}
 	defer client.Close()
 
-	// Get the controller broker from the client
 	controllerBroker, err := client.Controller()
 	if err != nil {
 		log.Error("Failed to get controller broker: %s", err)
 		return nil
 	}
 
-	// Get the broker ID as a string
 	controllerIDStr := fmt.Sprintf("%d", controllerBroker.ID())
 	log.Debug("Found controller broker with ID: %s", controllerIDStr)
 
-	// Find the broker in our list that matches the controller ID
 	for _, broker := range brokers {
-		// The broker ID in our struct is a string, compare with the string version of controller ID
+		// broker.ID is a string in our struct; sarama's is an int32, hence the conversion above.
 		if broker.ID == controllerIDStr {
 			log.Debug("Found controller broker: %s (ID: %s)", broker.Host, broker.ID)
 			return broker

@@ -42,15 +42,12 @@ func NewCollector(jmxClient connection.JMXConnection, activeControllerCount int)
 
 // CollectMetrics collects metrics from the Kafka controller
 func (c *Collector) CollectMetrics(integration *integration.Integration) error {
-	// Create entity for the cluster
 	clusterEntity, err := c.Entity(integration)
 	if err != nil {
 		return fmt.Errorf("failed to create cluster entity: %v", err)
 	}
 
-	// Collect metrics only if metrics collection is enabled
 	if args.GlobalArgs.HasMetrics() {
-		// Collect cluster metrics
 		populateClusterMetrics(clusterEntity, c.jmxClient, c.activeControllerCount)
 	}
 
@@ -98,7 +95,6 @@ func populateClusterMetrics(entity *integration.Entity, conn connection.JMXConne
 		attribute.Attribute{Key: "event_type", Value: ClusterEventType},
 	)
 
-	// Collect all cluster metrics
 	metrics.CollectMetricDefinitions(sample, metrics.ClusterMetricDefs, nil, conn)
 
 	// activeControllerCount is pre-computed by summing every broker's own ActiveControllerCount
