@@ -125,12 +125,12 @@ var producerMetricDefs = []*JMXMetricSet{
 				JMXAttr:    "client-id=" + producerHolder + ",attr=record-queue-time-avg",
 			},
 			{
-				Name:       "producer.recordErrorRate",
+				Name:       "producer.recordErrorsPerSecond",
 				SourceType: metric.GAUGE,
 				JMXAttr:    "client-id=" + producerHolder + ",attr=record-error-rate",
 			},
 			{
-				Name:       "producer.recordRetryRate",
+				Name:       "producer.recordRetriesPerSecond",
 				SourceType: metric.GAUGE,
 				JMXAttr:    "client-id=" + producerHolder + ",attr=record-retry-rate",
 			},

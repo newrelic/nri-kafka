@@ -235,8 +235,8 @@ func TestGetConsumerMetrics_HeartbeatAndCommitHealth(t *testing.T) {
 
 	GetConsumerMetrics(consumerName, m, mockJMXProvider)
 
-	if got := m.Metrics["consumer.heartbeatRate"]; got != float64(0.1) {
-		t.Errorf("expected consumer.heartbeatRate = 0.1, got %v", got)
+	if got := m.Metrics["consumer.heartbeatsPerSecond"]; got != float64(0.1) {
+		t.Errorf("expected consumer.heartbeatsPerSecond = 0.1, got %v", got)
 	}
 	if got := m.Metrics["consumer.lastHeartbeatSecondsAgo"]; got != float64(2) {
 		t.Errorf("expected consumer.lastHeartbeatSecondsAgo = 2, got %v", got)
@@ -244,8 +244,8 @@ func TestGetConsumerMetrics_HeartbeatAndCommitHealth(t *testing.T) {
 	if got := m.Metrics["consumer.assignedPartitions"]; got != float64(2) {
 		t.Errorf("expected consumer.assignedPartitions = 2, got %v", got)
 	}
-	if got := m.Metrics["consumer.commitRate"]; got != float64(0.05) {
-		t.Errorf("expected consumer.commitRate = 0.05, got %v", got)
+	if got := m.Metrics["consumer.commitsPerSecond"]; got != float64(0.05) {
+		t.Errorf("expected consumer.commitsPerSecond = 0.05, got %v", got)
 	}
 }
 
@@ -359,11 +359,11 @@ func TestGetProducerMetrics_ErrorRetryRate(t *testing.T) {
 
 	GetProducerMetrics(producerName, m, mockJMXProvider)
 
-	if got := m.Metrics["producer.recordErrorRate"]; got != float64(0.0) {
-		t.Errorf("expected producer.recordErrorRate = 0.0, got %v", got)
+	if got := m.Metrics["producer.recordErrorsPerSecond"]; got != float64(0.0) {
+		t.Errorf("expected producer.recordErrorsPerSecond = 0.0, got %v", got)
 	}
-	if got := m.Metrics["producer.recordRetryRate"]; got != float64(0.02) {
-		t.Errorf("expected producer.recordRetryRate = 0.02, got %v", got)
+	if got := m.Metrics["producer.recordRetriesPerSecond"]; got != float64(0.02) {
+		t.Errorf("expected producer.recordRetriesPerSecond = 0.02, got %v", got)
 	}
 }
 

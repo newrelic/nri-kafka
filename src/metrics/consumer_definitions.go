@@ -73,7 +73,7 @@ var consumerMetricDefs = []*JMXMetricSet{
 				JMXAttr:    "attr=failed-rebalance-total",
 			},
 			{
-				Name:       "consumer.heartbeatRate",
+				Name:       "consumer.heartbeatsPerSecond",
 				SourceType: metric.GAUGE,
 				JMXAttr:    "attr=heartbeat-rate",
 			},
@@ -94,7 +94,7 @@ var consumerMetricDefs = []*JMXMetricSet{
 			},
 			{
 				// Unlike offsetKafkaCommitsPerSecond below (dead on any client 0.9+).
-				Name:       "consumer.commitRate",
+				Name:       "consumer.commitsPerSecond",
 				SourceType: metric.GAUGE,
 				JMXAttr:    "attr=commit-rate",
 			},
