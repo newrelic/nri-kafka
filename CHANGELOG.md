@@ -8,21 +8,14 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## Unreleased
 
 ### enhancement
-- Bring back Kafka cluster-level metrics (`KafkaClusterSample`), off by default via `COLLECT_CLUSTER_METRICS`
-- Collect the real Kafka-native cluster ID (`clusterId`) and propagate it as an attribute on every sample - broker, topic, cluster, producer, consumer, and consumer offset
-- Add `brokerId` to `KafkaBrokerSample`
-- Add optional broker JVM metrics (heap, non-heap, GC by generation, memory pool usage, threads, system/process CPU load, file descriptors, loaded classes, uptime), off by default via `ENABLE_BROKER_JVM_METRICS`
-- Add optional topic metrics (partition count, replication factor, min in-sync replicas, retention, bytes in/out per second summed across all brokers), off by default via `ENABLE_TOPIC_CONFIG_METRICS`
-- Add broker backpressure metrics: min-ISR/at-min-ISR partition violation counts, replica-fetcher lag, request-queue depth, produce/fetch purgatory size, log-flush latency
-- Add consumer health metrics: heartbeat rate, last-heartbeat-seconds-ago, heartbeat response time, assigned partitions, commit rate/latency, fetch latency/throttle time
-- Add producer error/retry rate metrics
-- Add `broker.isActiveController` and a true cluster-wide `cluster.activeControllerCount` summed across all brokers, replacing a broker-level metric that duplicated cluster data incorrectly
+- Add Kafka cluster-level metrics (`KafkaClusterSample`), off by default via `COLLECT_CLUSTER_METRICS`
+- Collect the real Kafka-native cluster ID (`clusterId`) and `brokerId`, propagated across all samples
+- Add optional broker JVM metrics and topic config metrics, off by default
+- Add broker backpressure metrics and consumer/producer health metrics
 
 ### bugfix
-- Fix the Kafka cluster ID never being captured, because the metadata request used a protocol version that doesn't carry it
-- Fix `KafkaClusterSample` fragmenting into multiple entities depending on which broker happened to answer JMX for a given collection cycle - now identified by `clusterName` (falling back to `clusterId` if unset)
-- Fix `ka-consumer` entities potentially fragmenting depending on which of two independent collection paths (JMX client metrics vs. consumer-offset rollup) reports a given client ID first
-- Fix `ConsumerTopicMetricDefs` never populating for consumer-only clients, because topic discovery always queried the producer's JMX bean regardless of caller
+- Fix the Kafka cluster ID never being captured due to a protocol version mismatch
+- Fix cluster and consumer entities fragmenting into duplicates under certain conditions
 
 ### security
 - update golang.org/x/crypto to v0.57.0 to address CVE-2026-56855
