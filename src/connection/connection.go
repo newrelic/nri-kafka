@@ -80,10 +80,12 @@ type Broker struct {
 
 // Entity gets the entity object for the broker
 func (b *Broker) Entity(i *integration.Integration) (*integration.Entity, error) {
-	clusterNameAttr := integration.NewIDAttribute("clusterName", args.GlobalArgs.ClusterName)
-	clusterIDAttr := integration.NewIDAttribute("clusterId", args.GlobalArgs.ClusterID)
+	// clusterId is deliberately NOT an ID attribute here - adding it would change this
+	// entity's key/GUID for every existing customer already running a released nri-kafka.
+	// It's still exposed as a plain queryable sample attribute (see populateBrokerMetrics).
+	clusterIDAttr := integration.NewIDAttribute("clusterName", args.GlobalArgs.ClusterName)
 	brokerIDAttr := integration.NewIDAttribute("brokerID", string(b.ID))
-	return i.Entity(b.Addr(), "ka-broker", clusterNameAttr, clusterIDAttr, brokerIDAttr)
+	return i.Entity(b.Addr(), "ka-broker", clusterIDAttr, brokerIDAttr)
 }
 
 // NewBroker creates a new broker

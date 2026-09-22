@@ -27,9 +27,10 @@ func Test_setMetrics(t *testing.T) {
 	err := setMetrics("testGroup", offsetData, i)
 	assert.NoError(t, err)
 
+	// clusterId is deliberately NOT an ID attribute - see connection.Broker.Entity - so the
+	// lookup key here must match setMetrics' actual entity key (clusterName only).
 	clusterNameAttr := integration.NewIDAttribute("clusterName", args.GlobalArgs.ClusterName)
-	clusterIDAttr := integration.NewIDAttribute("clusterId", args.GlobalArgs.ClusterID)
-	resultEntity, err := i.Entity("testGroup", "ka-consumerGroup", clusterNameAttr, clusterIDAttr)
+	resultEntity, err := i.Entity("testGroup", "ka-consumerGroup", clusterNameAttr)
 	assert.NoError(t, err)
 	assert.Len(t, resultEntity.Metrics, 1)
 	assert.Len(t, resultEntity.Metrics[0].Metrics, 10)

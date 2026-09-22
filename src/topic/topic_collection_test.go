@@ -114,7 +114,9 @@ func TestFeedTopicPool(t *testing.T) {
 		}
 	}
 
-	assert.Contains(t, topics[0].Entity.Metadata.IDAttrs, integration.NewIDAttribute("clusterId", "lkc-abc123"))
+	// clusterId must NOT be an ID attribute - adding it would change entity keys/GUIDs for
+	// every existing customer already running a released nri-kafka.
+	assert.NotContains(t, topics[0].Entity.Metadata.IDAttrs, integration.NewIDAttribute("clusterId", "lkc-abc123"))
 
 	assert.Nil(t, topics[0].ByteRates, "test1 has no byte rates, should be nil")
 	assert.Equal(t, &ByteRates{BytesInPerSecond: 100, BytesOutPerSecond: 200}, topics[1].ByteRates)

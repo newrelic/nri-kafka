@@ -76,14 +76,13 @@ func CollectConsumerMetrics(i *integration.Integration, jmxInfo *args.JMXHost, j
 		return
 	}
 	for _, clientID := range clientIDs {
-		// Create an entity for the consumer. No host ID attribute: the consumeroffset package
-		// also creates "ka-consumer" entities (client-id lag rollups, summed across every host
-		// running that client-id) with only clusterName/clusterId - keeping this path's ID
-		// attributes identical avoids the same client-id fragmenting into two entities
-		// depending on which collection path reports it first.
-		clusterNameAttr := integration.NewIDAttribute("clusterName", args.GlobalArgs.ClusterName)
-		clusterIDAttr := integration.NewIDAttribute("clusterId", args.GlobalArgs.ClusterID)
-		consumerEntity, err := i.Entity(clientID, "ka-consumer", clusterNameAttr, clusterIDAttr)
+		// clusterId is deliberately NOT an ID attribute - see connection.Broker.Entity.
+		// host IS kept, matching this path's existing (released) identity - even though the
+		// consumeroffset package's separate "ka-consumer" rollup entities use clusterName only,
+		// unifying the two is itself an entity-identity change and out of scope here.
+		clusterIDAttr := integration.NewIDAttribute("clusterName", args.GlobalArgs.ClusterName)
+		hostIDAttr := integration.NewIDAttribute("host", jmxInfo.Host)
+		consumerEntity, err := i.Entity(clientID, "ka-consumer", clusterIDAttr, hostIDAttr)
 		if err != nil {
 			log.Error("Unable to create entity for Consumer %s: %s", clientID, err.Error())
 			continue
@@ -126,11 +125,10 @@ func CollectProducerMetrics(i *integration.Integration, jmxInfo *args.JMXHost, j
 		return
 	}
 	for _, clientID := range clientIDs {
-		// Create the producer entity
-		clusterNameAttr := integration.NewIDAttribute("clusterName", args.GlobalArgs.ClusterName)
-		clusterIDAttr := integration.NewIDAttribute("clusterId", args.GlobalArgs.ClusterID)
+		// clusterId is deliberately NOT an ID attribute - see connection.Broker.Entity.
+		clusterIDAttr := integration.NewIDAttribute("clusterName", args.GlobalArgs.ClusterName)
 		hostIDAttr := integration.NewIDAttribute("host", jmxInfo.Host)
-		producerEntity, err := i.Entity(clientID, "ka-producer", clusterNameAttr, clusterIDAttr, hostIDAttr)
+		producerEntity, err := i.Entity(clientID, "ka-producer", clusterIDAttr, hostIDAttr)
 		if err != nil {
 			log.Error("Unable to create entity for Producer %s: %s", clientID, err.Error())
 			continue

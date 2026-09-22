@@ -105,10 +105,9 @@ func FeedTopicPool(topicChan chan<- *Topic, i *integration.Integration, collecte
 	defer close(topicChan)
 
 	for _, topicName := range collectedTopics {
-		// create topic entity
-		clusterNameAttr := integration.NewIDAttribute("clusterName", args.GlobalArgs.ClusterName)
-		clusterIDAttr := integration.NewIDAttribute("clusterId", args.GlobalArgs.ClusterID)
-		topicEntity, err := i.Entity(topicName, "ka-topic", clusterNameAttr, clusterIDAttr)
+		// clusterId is deliberately NOT an ID attribute - see connection.Broker.Entity.
+		clusterIDAttr := integration.NewIDAttribute("clusterName", args.GlobalArgs.ClusterName)
+		topicEntity, err := i.Entity(topicName, "ka-topic", clusterIDAttr)
 		if err != nil {
 			log.Error("Unable to create an entity for topic %s", topicName)
 		}

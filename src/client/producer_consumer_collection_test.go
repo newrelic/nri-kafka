@@ -247,19 +247,18 @@ func TestProducerConsumerEntitiesCreation(t *testing.T) {
 			var entityNames []string
 			for _, entity := range i.Entities {
 				entityNames = append(entityNames, entity.Metadata.Name)
-				assert.Contains(t, entity.Metadata.IDAttrs, integration.NewIDAttribute("clusterId", "lkc-abc123"))
+				// clusterId must NOT be an ID attribute - see connection.Broker.Entity.
+				assert.NotContains(t, entity.Metadata.IDAttrs, integration.NewIDAttribute("clusterId", "lkc-abc123"))
 			}
 			assert.ElementsMatch(t, c.ExpectedEntityNames, entityNames)
 		})
 	}
 }
 
-func TestCollectConsumerMetrics_NoHostIDAttribute(t *testing.T) {
-	// The consumeroffset package also creates "ka-consumer" entities (client-id lag rollups,
-	// summed across every host running that client-id) with only clusterName/clusterId as ID
-	// attributes - no host. This pins CollectConsumerMetrics to the same ID attribute set, so
-	// the same client-id can't fragment into two entities depending on which collection path
-	// reports it first.
+func TestCollectConsumerMetrics_IDAttributesMatchReleasedBehavior(t *testing.T) {
+	// clusterId must NOT be an ID attribute here - adding it would change entity keys/GUIDs
+	// for every existing customer already running a released nri-kafka. host stays, matching
+	// the identity this path has always shipped with.
 	i, err := integration.New(t.Name(), "1.0.0")
 	require.NoError(t, err)
 	testutils.SetupTestArgs()
@@ -274,7 +273,7 @@ func TestCollectConsumerMetrics_NoHostIDAttribute(t *testing.T) {
 	require.Len(t, i.Entities, 1)
 	expected := []integration.IDAttribute{
 		integration.NewIDAttribute("clusterName", "test-cluster"),
-		integration.NewIDAttribute("clusterId", "lkc-abc123"),
+		integration.NewIDAttribute("host", "10.0.0.5"),
 	}
 	assert.ElementsMatch(t, expected, i.Entities[0].Metadata.IDAttrs)
 }

@@ -207,7 +207,6 @@ func TestCollectBrokerTopicMetrics(t *testing.T) {
 		"kafkabroker:9090",
 		"ka-broker",
 		integration.IDAttribute{Key: "clusterName", Value: ""},
-		integration.IDAttribute{Key: "clusterId", Value: ""},
 		integration.IDAttribute{Key: "brokerID", Value: "0"},
 	)
 
