@@ -76,7 +76,10 @@ func CollectConsumerMetrics(i *integration.Integration, jmxInfo *args.JMXHost, j
 		return
 	}
 	for _, clientID := range clientIDs {
-		// Create an entity for the consumer
+		// clusterId is deliberately NOT an ID attribute - see connection.Broker.Entity.
+		// host IS kept, matching this path's existing (released) identity - even though the
+		// consumeroffset package's separate "ka-consumer" rollup entities use clusterName only,
+		// unifying the two is itself an entity-identity change and out of scope here.
 		clusterIDAttr := integration.NewIDAttribute("clusterName", args.GlobalArgs.ClusterName)
 		hostIDAttr := integration.NewIDAttribute("host", jmxInfo.Host)
 		consumerEntity, err := i.Entity(clientID, "ka-consumer", clusterIDAttr, hostIDAttr)
@@ -93,6 +96,7 @@ func CollectConsumerMetrics(i *integration.Integration, jmxInfo *args.JMXHost, j
 		// Create a sample for consumer metrics
 		sample := consumerEntity.NewMetricSet("KafkaConsumerSample",
 			attribute.Attribute{Key: "clusterName", Value: args.GlobalArgs.ClusterName},
+			attribute.Attribute{Key: "clusterId", Value: args.GlobalArgs.ClusterID},
 			attribute.Attribute{Key: "displayName", Value: clientID},
 			attribute.Attribute{Key: "entityName", Value: "consumer:" + clientID},
 			attribute.Attribute{Key: "host", Value: jmxInfo.Host},
@@ -121,7 +125,7 @@ func CollectProducerMetrics(i *integration.Integration, jmxInfo *args.JMXHost, j
 		return
 	}
 	for _, clientID := range clientIDs {
-		// Create the producer entity
+		// clusterId is deliberately NOT an ID attribute - see connection.Broker.Entity.
 		clusterIDAttr := integration.NewIDAttribute("clusterName", args.GlobalArgs.ClusterName)
 		hostIDAttr := integration.NewIDAttribute("host", jmxInfo.Host)
 		producerEntity, err := i.Entity(clientID, "ka-producer", clusterIDAttr, hostIDAttr)
@@ -134,6 +138,7 @@ func CollectProducerMetrics(i *integration.Integration, jmxInfo *args.JMXHost, j
 		}
 		sample := producerEntity.NewMetricSet("KafkaProducerSample",
 			attribute.Attribute{Key: "clusterName", Value: args.GlobalArgs.ClusterName},
+			attribute.Attribute{Key: "clusterId", Value: args.GlobalArgs.ClusterID},
 			attribute.Attribute{Key: "displayName", Value: clientID},
 			attribute.Attribute{Key: "entityName", Value: "producer:" + clientID},
 			attribute.Attribute{Key: "host", Value: jmxInfo.Host},

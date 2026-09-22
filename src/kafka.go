@@ -18,6 +18,7 @@ import (
 	"github.com/newrelic/nri-kafka/src/args"
 	"github.com/newrelic/nri-kafka/src/broker"
 	"github.com/newrelic/nri-kafka/src/client"
+	"github.com/newrelic/nri-kafka/src/cluster"
 	"github.com/newrelic/nri-kafka/src/connection"
 	"github.com/newrelic/nri-kafka/src/consumeroffset"
 	"github.com/newrelic/nri-kafka/src/topic"
@@ -96,10 +97,11 @@ func getBrokerList(arguments *args.ParsedArguments) ([]*connection.Broker, error
 			return nil, fmt.Errorf("failed to create boostrap broker: %s", err)
 		}
 
-		metadata, err := bootstrapBroker.GetMetadata(&sarama.MetadataRequest{})
+		metadata, err := bootstrapBroker.GetMetadata(&sarama.MetadataRequest{Version: connection.MetadataRequestVersionForClusterID})
 		if err != nil {
 			return nil, fmt.Errorf("failed to get metadata from broker: %s", err)
 		}
+		arguments.ClusterID = connection.ClusterIDFromMetadata(metadata)
 
 		brokers := make([]*connection.Broker, 0, len(metadata.Brokers))
 		log.Debug("Found %d brokers in the metadata", len(metadata.Brokers))
@@ -163,7 +165,21 @@ func getBrokerList(arguments *args.ParsedArguments) ([]*connection.Broker, error
 			conn.Close()
 		}(zkConn)
 
-		return connection.GetBrokerListFromZookeeper(zkConn, arguments.PreferredListener)
+		brokers, err := connection.GetBrokerListFromZookeeper(zkConn, arguments.PreferredListener)
+		if err != nil {
+			return nil, err
+		}
+
+		if len(brokers) > 0 {
+			metadata, mErr := brokers[0].GetMetadata(&sarama.MetadataRequest{Version: connection.MetadataRequestVersionForClusterID})
+			if mErr != nil {
+				log.Debug("Failed to get metadata for cluster ID from broker %s: %s", brokers[0].Host, mErr)
+			} else {
+				arguments.ClusterID = connection.ClusterIDFromMetadata(metadata)
+			}
+		}
+
+		return brokers, nil
 	default:
 		return nil, fmt.Errorf("invalid autodiscovery strategy %s", arguments.AutodiscoverStrategy)
 	}
@@ -228,8 +244,30 @@ func coreCollection(kafkaIntegration *integration.Integration, jmxConnProvider c
 		brokerChan := broker.StartBrokerPool(3, &wg, kafkaIntegration, collectedTopics, jmxConnProvider)
 
 		if !args.GlobalArgs.LocalOnlyCollection || args.GlobalArgs.ForceTopicSampleCollection {
+			var topicByteRates map[string]topic.ByteRates
+			if args.GlobalArgs.CollectTopicConfigMetrics {
+				topicByteRates = collectTopicByteRates(brokers, jmxConnProvider)
+			}
+
 			topicChan := topic.StartTopicPool(5, &wg, clusterClient)
-			go topic.FeedTopicPool(topicChan, kafkaIntegration, collectedTopics)
+			go topic.FeedTopicPool(topicChan, kafkaIntegration, collectedTopics, topicByteRates)
+		}
+
+		if args.GlobalArgs.CollectClusterMetrics {
+			log.Info("Collecting cluster metrics")
+			if len(brokers) > 0 {
+				activeControllerCount := countActiveControllers(brokers, jmxConnProvider)
+				controllerBroker := connection.FindControllerBroker(brokers)
+				if controllerBroker != nil {
+					log.Debug("Using controller broker (ID: %s) for cluster metrics collection", controllerBroker.ID)
+					collectClusterMetrics(controllerBroker, kafkaIntegration, jmxConnProvider, activeControllerCount)
+				} else {
+					log.Debug("Controller broker not found, falling back to first broker")
+					collectClusterMetrics(brokers[0], kafkaIntegration, jmxConnProvider, activeControllerCount)
+				}
+			} else {
+				log.Error("No brokers available for cluster metric collection")
+			}
 		}
 
 		go broker.FeedBrokerPool(brokers, brokerChan)
@@ -242,6 +280,148 @@ func coreCollection(kafkaIntegration *integration.Integration, jmxConnProvider c
 	go client.FeedWorkerPool(producerChan, args.GlobalArgs.Producers)
 
 	wg.Wait()
+}
+
+// collectClusterMetrics collects metrics at the Kafka cluster level from a specified broker
+// The function expects the broker to be the controller broker if possible, but will work with any broker
+func collectClusterMetrics(broker *connection.Broker, i *integration.Integration, jmxConnProvider connection.JMXProvider, activeControllerCount int) {
+	jmxConfig := connection.NewConfigBuilder().
+		FromArgs().
+		WithHostname(broker.Host).WithPort(broker.JMXPort).
+		WithUsername(broker.JMXUser).WithPassword(broker.JMXPassword).
+		Build()
+
+	jmxConn, err := jmxConnProvider.NewConnection(jmxConfig)
+	if err != nil {
+		log.Error("Failed to create JMX connection for cluster metrics: %s", err)
+		return
+	}
+
+	clusterCollector := cluster.NewCollector(jmxConn, activeControllerCount)
+	if err := clusterCollector.CollectMetrics(i); err != nil {
+		log.Error("Failed to collect cluster metrics: %s", err)
+	}
+
+	if err := jmxConn.Close(); err != nil {
+		log.Error("Unable to close JMX connection for cluster metrics: %v", err)
+	}
+}
+
+// countActiveControllers sums ActiveControllerCount across every broker's own JMX connection.
+// Each broker reports a strict 0 or 1 (see broker.isActiveController) - Kafka itself has no
+// single authoritative source for the cluster-wide total, unlike every other ClusterMetricDefs
+// metric, so this is computed here rather than read from one broker. In a healthy cluster the
+// sum is exactly 1; 0 (no controller elected) or >1 (split-brain) both indicate a real problem.
+// Connection/query failures for a given broker are logged and skipped, not fatal.
+func countActiveControllers(brokers []*connection.Broker, jmxConnProvider connection.JMXProvider) int {
+	activeCount := 0
+
+	for _, b := range brokers {
+		jmxConfig := connection.NewConfigBuilder().
+			FromArgs().
+			WithHostname(b.Host).WithPort(b.JMXPort).
+			WithUsername(b.JMXUser).WithPassword(b.JMXPassword).
+			Build()
+
+		jmxConn, err := jmxConnProvider.NewConnection(jmxConfig)
+		if err != nil {
+			log.Error("Failed to create JMX connection to broker '%s' for active controller count: %s", b.Host, err)
+			continue
+		}
+
+		results, err := jmxConn.QueryMBeanAttributes("kafka.controller:type=KafkaController,name=ActiveControllerCount")
+		if err != nil {
+			log.Error("Failed to query ActiveControllerCount from broker '%s': %s", b.Host, err)
+			jmxConn.Close()
+			continue
+		}
+
+		for _, attr := range results {
+			if !strings.HasSuffix(attr.Name, "attr=Value") {
+				continue
+			}
+			if value, err := attr.GetValueAsFloat(); err == nil {
+				activeCount += int(value)
+			}
+		}
+
+		if err := jmxConn.Close(); err != nil {
+			log.Error("Unable to close JMX connection to broker '%s': %v", b.Host, err)
+		}
+	}
+
+	return activeCount
+}
+
+// collectTopicByteRates sums BytesInPerSec/BytesOutPerSec across every broker's own JMX, per
+// topic, including internal topics (__consumer_offsets etc.) - every other topic.* metric
+// already reports on them same as any other topic, so this one shouldn't be the exception.
+// Kafka has no single MBean that reports a cluster-wide total for a topic - each broker only
+// knows about the partitions it hosts - so, like countActiveControllers, this is computed here
+// rather than read from one broker. One wildcarded query per broker per direction returns every
+// topic's count in a single JMX round trip (O(brokers), not O(brokers x topics)).
+func collectTopicByteRates(brokers []*connection.Broker, jmxConnProvider connection.JMXProvider) map[string]topic.ByteRates {
+	rates := make(map[string]topic.ByteRates)
+
+	for _, b := range brokers {
+		jmxConfig := connection.NewConfigBuilder().
+			FromArgs().
+			WithHostname(b.Host).WithPort(b.JMXPort).
+			WithUsername(b.JMXUser).WithPassword(b.JMXPassword).
+			Build()
+
+		jmxConn, err := jmxConnProvider.NewConnection(jmxConfig)
+		if err != nil {
+			log.Error("Failed to create JMX connection to broker '%s' for topic byte rates: %s", b.Host, err)
+			continue
+		}
+
+		addTopicByteRates(jmxConn, "BytesInPerSec", rates, func(r topic.ByteRates, v float64) topic.ByteRates {
+			r.BytesInPerSecond += v
+			return r
+		})
+		addTopicByteRates(jmxConn, "BytesOutPerSec", rates, func(r topic.ByteRates, v float64) topic.ByteRates {
+			r.BytesOutPerSecond += v
+			return r
+		})
+
+		if err := jmxConn.Close(); err != nil {
+			log.Error("Unable to close JMX connection to broker '%s': %v", b.Host, err)
+		}
+	}
+
+	return rates
+}
+
+// addTopicByteRates queries one wildcarded MBean for the given metric name (BytesInPerSec or
+// BytesOutPerSec) and accumulates its Count attributes into rates via accumulate. Checks the
+// metric name explicitly rather than trusting the query's own scoping - a wildcarded topic=*
+// query returning exactly what its name= asked for is a server guarantee, not something worth
+// silently depending on here.
+func addTopicByteRates(jmxConn connection.JMXConnection, metricName string, rates map[string]topic.ByteRates, accumulate func(topic.ByteRates, float64) topic.ByteRates) {
+	prefix := "kafka.server:type=BrokerTopicMetrics,name=" + metricName + ",topic="
+	const suffix = ",attr=Count"
+
+	results, err := jmxConn.QueryMBeanAttributes(prefix + "*")
+	if err != nil {
+		log.Error("Failed to query '%s*' for topic byte rates: %s", prefix, err)
+		return
+	}
+
+	for _, attr := range results {
+		if !strings.HasPrefix(attr.Name, prefix) || !strings.HasSuffix(attr.Name, suffix) {
+			continue
+		}
+
+		topicName := attr.Name[len(prefix) : len(attr.Name)-len(suffix)]
+
+		value, err := attr.GetValueAsFloat()
+		if err != nil {
+			continue
+		}
+
+		rates[topicName] = accumulate(rates[topicName], value)
+	}
 }
 
 // ExitOnErr will exit with a 1 if the error is non-nil

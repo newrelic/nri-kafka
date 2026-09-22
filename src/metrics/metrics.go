@@ -22,8 +22,30 @@ import (
 
 // GetBrokerMetrics collects all Broker JMX metrics and stores them in sample
 func GetBrokerMetrics(sample *metric.Set, conn connection.JMXConnection) {
+	// ActiveControllerCount and GlobalPartitionCount are only meaningful read from the
+	// controller broker specifically - see ClusterMetricDefs, which collects them correctly
+	// via connection.FindControllerBroker instead of every broker's own JMX connection.
 	CollectMetricDefinitions(sample, brokerMetricDefs, nil, conn)
 	CollectBrokerRequestMetrics(sample, brokerRequestMetricDefs, conn)
+
+	if args.GlobalArgs.CollectBrokerJVMMetrics {
+		CollectMetricDefinitions(sample, jvmMetricDefs, nil, conn)
+		CollectGarbageCollectorMetrics(sample, conn)
+		CollectMemoryPoolMetrics(sample, conn)
+	}
+}
+
+func GetFinalMetricSets(metricSets []*JMXMetricSet, v2MetricSets []*JMXMetricSet) []*JMXMetricSet {
+	log.Info("Initial metric sets: %v , %v", metricSets, v2MetricSets)
+	finalMetricSets := make([]*JMXMetricSet, 0, len(metricSets)+len(v2MetricSets))
+	finalMetricSets = append(finalMetricSets, metricSets...)
+
+	if args.GlobalArgs.CollectBrokerTopicMetricsV2 {
+		finalMetricSets = append(finalMetricSets, v2MetricSets...)
+	}
+
+	log.Info("Final metric sets: %v", finalMetricSets)
+	return finalMetricSets
 }
 
 // GetConsumerMetrics collects all Consumer metrics for the given
@@ -52,7 +74,7 @@ func CollectTopicSubMetrics(
 	// need to title case the type so it matches the metric set of the parent entity
 	titleEntityType := strings.Title(strings.TrimPrefix(entity.Metadata.Namespace, "ka-"))
 
-	topicList, err := getTopicListFromJMX(entity.Metadata.Name, conn)
+	topicList, err := getTopicListFromJMX(entity.Metadata.Name, titleEntityType, conn)
 	if err != nil {
 		log.Error("Failed to collect topic list for producer or consumer: %s", err)
 		return
@@ -122,6 +144,144 @@ func CollectBrokerRequestMetrics(sample *metric.Set, metricSets []*JMXMetricSet,
 	}
 }
 
+// CollectGarbageCollectorMetrics sums CollectionCount and CollectionTime across every garbage
+// collector MBean present, and buckets the same values into young/old generation via
+// classifyGCGeneration. Collector names vary by GC algorithm, so unlike the rest of
+// jvmMetricDefs this can't be a fixed MetricDefinition - it aggregates by attribute suffix
+// instead, regardless of which collector name reported it.
+func CollectGarbageCollectorMetrics(sample *metric.Set, conn connection.JMXConnection) {
+	results, err := conn.QueryMBeanAttributes(jvmGCMBean)
+	if err != nil {
+		if jmxErr, ok := gojmx.IsJMXError(err); ok {
+			log.Error("Unable to execute JMX query for MBean '%s': %v", jvmGCMBean, jmxErr)
+			return
+		}
+		log.Error("Connection error for %s:%s : %s", jmx.HostName(), jmx.Port(), err)
+		os.Exit(1)
+	}
+
+	var collectionCount, collectionTime float64
+	var youngCount, youngTime, oldCount, oldTime float64
+	for _, attr := range results {
+		if attr.ResponseType == gojmx.ResponseTypeErr {
+			continue
+		}
+
+		value, err := attr.GetValueAsFloat()
+		if err != nil {
+			continue
+		}
+
+		var isCount, isTime bool
+		switch {
+		case strings.HasSuffix(attr.Name, jvmGCCollectionCountAttr):
+			collectionCount += value
+			isCount = true
+		case strings.HasSuffix(attr.Name, jvmGCCollectionTimeAttr):
+			collectionTime += value
+			isTime = true
+		default:
+			continue
+		}
+
+		match := jvmMBeanNameRegex.FindStringSubmatch(attr.Name)
+		if match == nil {
+			continue
+		}
+		young, old := classifyGCGeneration(match[1])
+		switch {
+		case young && isCount:
+			youngCount += value
+		case young && isTime:
+			youngTime += value
+		case old && isCount:
+			oldCount += value
+		case old && isTime:
+			oldTime += value
+		}
+	}
+
+	setGCMetric := func(name string, value float64) {
+		if err := sample.SetMetric(name, value, metric.RATE); err != nil {
+			log.Error("Error setting value: %s", err)
+		}
+	}
+	setGCMetric("jvm.gcCollectionsPerSecond", collectionCount)
+	setGCMetric("jvm.gcTimePerSecond", collectionTime)
+	setGCMetric("jvm.gcYoungGenCollectionsPerSecond", youngCount)
+	setGCMetric("jvm.gcYoungGenTimePerSecond", youngTime)
+	setGCMetric("jvm.gcOldGenCollectionsPerSecond", oldCount)
+	setGCMetric("jvm.gcOldGenTimePerSecond", oldTime)
+}
+
+// CollectMemoryPoolMetrics buckets heap pool usage into eden/survivor/old-gen via
+// classifyMemoryPool.
+func CollectMemoryPoolMetrics(sample *metric.Set, conn connection.JMXConnection) {
+	results, err := conn.QueryMBeanAttributes(jvmMemoryPoolMBean)
+	if err != nil {
+		if jmxErr, ok := gojmx.IsJMXError(err); ok {
+			log.Error("Unable to execute JMX query for MBean '%s': %v", jvmMemoryPoolMBean, jmxErr)
+			return
+		}
+		log.Error("Connection error for %s:%s : %s", jmx.HostName(), jmx.Port(), err)
+		os.Exit(1)
+	}
+
+	var edenUsed, edenMax, survivorUsed, survivorMax, oldUsed, oldMax float64
+	for _, attr := range results {
+		if attr.ResponseType == gojmx.ResponseTypeErr {
+			continue
+		}
+
+		var isUsed, isMax bool
+		switch {
+		case strings.HasSuffix(attr.Name, jvmMemoryPoolUsedAttr):
+			isUsed = true
+		case strings.HasSuffix(attr.Name, jvmMemoryPoolMaxAttr):
+			isMax = true
+		default:
+			continue
+		}
+
+		value, err := attr.GetValueAsFloat()
+		if err != nil {
+			continue
+		}
+
+		match := jvmMBeanNameRegex.FindStringSubmatch(attr.Name)
+		if match == nil {
+			continue
+		}
+		eden, survivor, old := classifyMemoryPool(match[1])
+		switch {
+		case eden && isUsed:
+			edenUsed += value
+		case eden && isMax:
+			edenMax += value
+		case survivor && isUsed:
+			survivorUsed += value
+		case survivor && isMax:
+			survivorMax += value
+		case old && isUsed:
+			oldUsed += value
+		case old && isMax:
+			oldMax += value
+		}
+	}
+
+	setPoolMetric := func(name string, value float64) {
+		if err := sample.SetMetric(name, value, metric.GAUGE); err != nil {
+			log.Error("Error setting value: %s", err)
+		}
+	}
+	setPoolMetric("jvm.heapEdenUsedBytes", edenUsed)
+	setPoolMetric("jvm.heapEdenMaxBytes", edenMax)
+	setPoolMetric("jvm.heapSurvivorUsedBytes", survivorUsed)
+	setPoolMetric("jvm.heapSurvivorMaxBytes", survivorMax)
+	setPoolMetric("jvm.heapOldGenUsedBytes", oldUsed)
+	setPoolMetric("jvm.heapOldGenMaxBytes", oldMax)
+}
+
 // CollectMetricDefinitions collects the set of metrics from the current open JMX connection and add them to the sample
 func CollectMetricDefinitions(sample *metric.Set, metricSets []*JMXMetricSet, beanModifier BeanModifier, conn connection.JMXConnection) {
 	notFoundMetrics := make([]string, 0)
@@ -176,7 +336,10 @@ func CollectMetricDefinitions(sample *metric.Set, metricSets []*JMXMetricSet, be
 	}
 }
 
-func getTopicListFromJMX(producer string, conn connection.JMXConnection) ([]string, error) {
+// getTopicListFromJMX discovers which topics a producer or consumer client is talking to.
+// entityType ("Producer" or "Consumer") picks the client's own topic-metrics MBean via
+// getAllTopicsFromJMX/topicMetricsMBeanForEntityType.
+func getTopicListFromJMX(clientID, entityType string, conn connection.JMXConnection) ([]string, error) {
 	switch strings.ToLower(args.GlobalArgs.TopicMode) {
 	case "none":
 		return []string{}, nil
@@ -192,7 +355,7 @@ func getTopicListFromJMX(producer string, conn connection.JMXConnection) ([]stri
 			return nil, fmt.Errorf("failed to compile topic regex: %s", err)
 		}
 
-		allTopics, err := getAllTopicsFromJMX(producer, conn)
+		allTopics, err := getAllTopicsFromJMX(clientID, entityType, conn)
 		if err != nil {
 			return nil, fmt.Errorf("failed to get topics from client: %s", err)
 		}
@@ -206,7 +369,7 @@ func getTopicListFromJMX(producer string, conn connection.JMXConnection) ([]stri
 
 		return filteredTopics, nil
 	case "all":
-		allTopics, err := getAllTopicsFromJMX(producer, conn)
+		allTopics, err := getAllTopicsFromJMX(clientID, entityType, conn)
 		if err != nil {
 			return nil, fmt.Errorf("failed to get topics from client: %s", err)
 		}
@@ -218,8 +381,17 @@ func getTopicListFromJMX(producer string, conn connection.JMXConnection) ([]stri
 
 }
 
-func getAllTopicsFromJMX(producer string, conn connection.JMXConnection) ([]string, error) {
-	result, err := conn.QueryMBeanAttributes(fmt.Sprintf("kafka.producer:type=producer-topic-metrics,client-id=%s,topic=*", producer))
+// topicMetricsMBeanForEntityType returns the per-client, per-topic MBean pattern also used by
+// ConsumerTopicMetricDefs/ProducerTopicMetricDefs.
+func topicMetricsMBeanForEntityType(clientID, entityType string) string {
+	if entityType == "Consumer" {
+		return fmt.Sprintf("kafka.consumer:type=consumer-fetch-manager-metrics,client-id=%s,topic=*", clientID)
+	}
+	return fmt.Sprintf("kafka.producer:type=producer-topic-metrics,client-id=%s,topic=*", clientID)
+}
+
+func getAllTopicsFromJMX(clientID, entityType string, conn connection.JMXConnection) ([]string, error) {
+	result, err := conn.QueryMBeanAttributes(topicMetricsMBeanForEntityType(clientID, entityType))
 	// If we fail we don't want a total failure as other metrics can be collected even if a single failure/timout occurs
 	if err != nil {
 		if jmxErr, ok := gojmx.IsJMXError(err); ok {

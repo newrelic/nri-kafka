@@ -34,6 +34,80 @@ var consumerMetricDefs = []*JMXMetricSet{
 				SourceType: metric.GAUGE,
 				JMXAttr:    "attr=records-consumed-rate",
 			},
+			{
+				Name:       "consumer.fetchLatencyAvg",
+				SourceType: metric.GAUGE,
+				JMXAttr:    "attr=fetch-latency-avg",
+			},
+			{
+				Name:       "consumer.fetchLatencyMax",
+				SourceType: metric.GAUGE,
+				JMXAttr:    "attr=fetch-latency-max",
+			},
+			{
+				Name:       "consumer.fetchThrottleTimeAvg",
+				SourceType: metric.GAUGE,
+				JMXAttr:    "attr=fetch-throttle-time-avg",
+			},
+			{
+				Name:       "consumer.fetchThrottleTimeMax",
+				SourceType: metric.GAUGE,
+				JMXAttr:    "attr=fetch-throttle-time-max",
+			},
+		},
+	},
+	{
+		// Rebalance churn - frequent or failing rebalances indicate crash-looping consumers
+		// or a misconfigured session.timeout.ms, not visible from any broker-side metric.
+		MBean:        "kafka.consumer:type=consumer-coordinator-metrics,client-id=" + consumerHolder,
+		MetricPrefix: "kafka.consumer:type=consumer-coordinator-metrics,client-id=" + consumerHolder + ",",
+		MetricDefs: []*MetricDefinition{
+			{
+				Name:       "consumer.rebalanceTotal",
+				SourceType: metric.RATE,
+				JMXAttr:    "attr=rebalance-total",
+			},
+			{
+				Name:       "consumer.failedRebalanceTotal",
+				SourceType: metric.RATE,
+				JMXAttr:    "attr=failed-rebalance-total",
+			},
+			{
+				Name:       "consumer.heartbeatsPerSecond",
+				SourceType: metric.GAUGE,
+				JMXAttr:    "attr=heartbeat-rate",
+			},
+			{
+				Name:       "consumer.lastHeartbeatSecondsAgo",
+				SourceType: metric.GAUGE,
+				JMXAttr:    "attr=last-heartbeat-seconds-ago",
+			},
+			{
+				Name:       "consumer.heartbeatResponseTimeMax",
+				SourceType: metric.GAUGE,
+				JMXAttr:    "attr=heartbeat-response-time-max",
+			},
+			{
+				Name:       "consumer.assignedPartitions",
+				SourceType: metric.GAUGE,
+				JMXAttr:    "attr=assigned-partitions",
+			},
+			{
+				// Unlike offsetKafkaCommitsPerSecond below (dead on any client 0.9+).
+				Name:       "consumer.commitsPerSecond",
+				SourceType: metric.GAUGE,
+				JMXAttr:    "attr=commit-rate",
+			},
+			{
+				Name:       "consumer.commitLatencyAvg",
+				SourceType: metric.GAUGE,
+				JMXAttr:    "attr=commit-latency-avg",
+			},
+			{
+				Name:       "consumer.commitLatencyMax",
+				SourceType: metric.GAUGE,
+				JMXAttr:    "attr=commit-latency-max",
+			},
 		},
 	},
 	{

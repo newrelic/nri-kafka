@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+### enhancement
+- Add Kafka cluster-level metrics (`KafkaClusterSample`), off by default via `COLLECT_CLUSTER_METRICS`
+- Collect the real Kafka-native cluster ID (`clusterId`) and `brokerId`, propagated across all samples
+- Add optional broker JVM metrics and topic config metrics, off by default
+- Add broker backpressure metrics and consumer/producer health metrics
+- Add retention-loss detection (`consumer.earliestOffset`, `consumer.retentionLossDetected`) for consumer group offsets
+
+### bugfix
+- Fix the Kafka cluster ID never being captured due to a protocol version mismatch
+- Fix cluster and consumer entities fragmenting into duplicates under certain conditions
+
 ### security
 - update golang.org/x/crypto to v0.57.0 to address CVE-2026-56855
 

@@ -155,6 +155,8 @@ func populateBrokerMetrics(b *connection.Broker, i *integration.Integration, con
 		attribute.Attribute{Key: "displayName", Value: entity.Metadata.Name},
 		attribute.Attribute{Key: "entityName", Value: "broker:" + entity.Metadata.Name},
 		attribute.Attribute{Key: "clusterName", Value: args.GlobalArgs.ClusterName},
+		attribute.Attribute{Key: "clusterId", Value: args.GlobalArgs.ClusterID},
+		attribute.Attribute{Key: "brokerId", Value: b.ID},
 	)
 
 	// Populate metrics set with broker metrics
@@ -176,13 +178,15 @@ func collectBrokerTopicMetrics(b *connection.Broker, collectedTopics []string, i
 			attribute.Attribute{Key: "displayName", Value: entity.Metadata.Name},
 			attribute.Attribute{Key: "entityName", Value: "broker:" + entity.Metadata.Name},
 			attribute.Attribute{Key: "clusterName", Value: args.GlobalArgs.ClusterName},
+			attribute.Attribute{Key: "clusterId", Value: args.GlobalArgs.ClusterID},
+			attribute.Attribute{Key: "brokerId", Value: b.ID},
 			attribute.Attribute{Key: "topic", Value: topicName},
 		)
 
 		// Insert into map
 		topicSampleLookup[topicName] = sample
 
-		metrics.CollectMetricDefinitions(sample, metrics.BrokerTopicMetricDefs, metrics.ApplyTopicName(topicName), conn)
+		metrics.CollectMetricDefinitions(sample, metrics.GetFinalMetricSets(metrics.BrokerTopicMetricDefs, metrics.BrokerTopicV2MetricDefs), metrics.ApplyTopicName(topicName), conn)
 	}
 
 	return topicSampleLookup

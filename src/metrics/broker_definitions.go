@@ -48,6 +48,21 @@ var brokerRequestMetricDefs = []*JMXMetricSet{
 
 // Broker metrics
 var brokerMetricDefs = []*JMXMetricSet{
+	// Controller status - unlike GlobalPartitionCount (only accurate from the active
+	// controller's own tracked state, see ClusterMetricDefs), ActiveControllerCount is a
+	// strict 0/1 gauge that's valid to read from any broker's own JMX: it just reports
+	// whether that specific broker is currently the elected controller.
+	{
+		MBean:        "kafka.controller:type=KafkaController,name=ActiveControllerCount",
+		MetricPrefix: "kafka.controller:type=KafkaController,name=ActiveControllerCount,",
+		MetricDefs: []*MetricDefinition{
+			{
+				Name:       "broker.isActiveController",
+				SourceType: metric.GAUGE,
+				JMXAttr:    "attr=Value",
+			},
+		},
+	},
 	// Metadata request Metrics
 	{
 		MBean:        "kafka.network:type=RequestMetrics,name=TotalTimeMs,request=Metadata",
@@ -153,6 +168,61 @@ var brokerMetricDefs = []*JMXMetricSet{
 				SourceType: metric.GAUGE,
 				JMXAttr:    "name=UnderReplicatedPartitions,attr=Value",
 			},
+			{
+				Name:       "broker.leaderCount",
+				SourceType: metric.GAUGE,
+				JMXAttr:    "name=LeaderCount,attr=Value",
+			},
+			{
+				Name:       "broker.underMinIsrPartitionCount",
+				SourceType: metric.GAUGE,
+				JMXAttr:    "name=UnderMinIsrPartitionCount,attr=Value",
+			},
+			{
+				// Fires before UnderMinIsrPartitionCount does - one failure earlier.
+				Name:       "broker.atMinIsrPartitionCount",
+				SourceType: metric.GAUGE,
+				JMXAttr:    "name=AtMinIsrPartitionCount,attr=Value",
+			},
+		},
+	},
+	{
+		MBean:        "kafka.server:type=ReplicaFetcherManager,name=MaxLag,clientId=Replica",
+		MetricPrefix: "kafka.server:type=ReplicaFetcherManager,name=MaxLag,clientId=Replica,",
+		MetricDefs: []*MetricDefinition{
+			{
+				Name:       "replication.maxLag",
+				SourceType: metric.GAUGE,
+				JMXAttr:    "attr=Value",
+			},
+		},
+	},
+	{
+		MBean:        "kafka.network:type=RequestChannel,name=RequestQueueSize",
+		MetricPrefix: "kafka.network:type=RequestChannel,name=RequestQueueSize,",
+		MetricDefs: []*MetricDefinition{
+			{
+				Name:       "request.queueSize",
+				SourceType: metric.GAUGE,
+				JMXAttr:    "attr=Value",
+			},
+		},
+	},
+	// Distinct from consumer.requestsExpiredPerSecond above (rate vs. current depth).
+	{
+		MBean:        "kafka.server:type=DelayedOperationPurgatory,name=PurgatorySize,delayedOperation=*",
+		MetricPrefix: "kafka.server:type=DelayedOperationPurgatory,name=PurgatorySize,",
+		MetricDefs: []*MetricDefinition{
+			{
+				Name:       "broker.produceRequestPurgatorySize",
+				SourceType: metric.GAUGE,
+				JMXAttr:    "delayedOperation=Produce,attr=Value",
+			},
+			{
+				Name:       "broker.fetchRequestPurgatorySize",
+				SourceType: metric.GAUGE,
+				JMXAttr:    "delayedOperation=Fetch,attr=Value",
+			},
 		},
 	},
 	// Leader Metrics
@@ -219,6 +289,16 @@ var brokerMetricDefs = []*JMXMetricSet{
 				SourceType: metric.RATE,
 				JMXAttr:    "name=LogFlushRateAndTimeMs,attr=Count",
 			},
+			{
+				Name:       "broker.logFlushTimeMsMean",
+				SourceType: metric.GAUGE,
+				JMXAttr:    "name=LogFlushRateAndTimeMs,attr=Mean",
+			},
+			{
+				Name:       "broker.logFlushTime99Percentile",
+				SourceType: metric.GAUGE,
+				JMXAttr:    "name=LogFlushRateAndTimeMs,attr=99thPercentile",
+			},
 		},
 	},
 	// Idle Handler
@@ -260,6 +340,32 @@ var BrokerTopicMetricDefs = []*JMXMetricSet{
 		MetricDefs: []*MetricDefinition{
 			{
 				Name:       "broker.bytesWrittenToTopicPerSecond",
+				SourceType: metric.RATE,
+				JMXAttr:    "attr=Count",
+			},
+		},
+	},
+}
+
+// BrokerTopicMetricDefs metric definitions for topic metrics that are specific to a Broker
+var BrokerTopicV2MetricDefs = []*JMXMetricSet{
+	{
+		MBean:        "kafka.server:type=BrokerTopicMetrics,name=BytesOutPerSec,topic=" + topicHolder,
+		MetricPrefix: "kafka.server:type=BrokerTopicMetrics,name=BytesOutPerSec,topic=" + topicHolder + ",",
+		MetricDefs: []*MetricDefinition{
+			{
+				Name:       "broker.bytesReadFromTopicPerSecond",
+				SourceType: metric.RATE,
+				JMXAttr:    "attr=Count",
+			},
+		},
+	},
+	{
+		MBean:        "kafka.server:type=BrokerTopicMetrics,name=MessagesInPerSec,topic=" + topicHolder,
+		MetricPrefix: "kafka.server:type=BrokerTopicMetrics,name=MessagesInPerSec,topic=" + topicHolder + ",",
+		MetricDefs: []*MetricDefinition{
+			{
+				Name:       "broker.messagesProducedToTopicPerSecond",
 				SourceType: metric.RATE,
 				JMXAttr:    "attr=Count",
 			},

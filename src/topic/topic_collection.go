@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"regexp"
+	"strconv"
 	"strings"
 	"sync"
 
@@ -25,6 +26,17 @@ type Topic struct {
 	ReplicationFactor int
 	Configs           []*sarama.ConfigEntry
 	Partitions        []*partition
+	// ByteRates is nil when not pre-computed by the caller (e.g. CollectTopicConfigMetrics is
+	// off, or the broker-side MBean for this topic hasn't been created yet).
+	ByteRates *ByteRates
+}
+
+// ByteRates is bytes-in/bytes-out for a topic, summed across every broker's own JMX -
+// see kafka.go's collectTopicByteRates. Kafka has no single MBean that reports a
+// cluster-wide total for a topic; each broker only knows about the partitions it hosts.
+type ByteRates struct {
+	BytesInPerSecond  float64
+	BytesOutPerSecond float64
 }
 
 type Getter interface {
@@ -86,22 +98,29 @@ func GetTopics(topicGetter Getter) ([]string, error) {
 	}
 }
 
-// FeedTopicPool sends Topic structs down the topicChan for workers to collect and build Topic structs
-func FeedTopicPool(topicChan chan<- *Topic, i *integration.Integration, collectedTopics []string) {
+// FeedTopicPool sends Topic structs down the topicChan for workers to collect and build Topic structs.
+// byteRates is looked up by topic name; topics with no entry (not pre-computed, or no traffic
+// yet) simply get a nil Topic.ByteRates.
+func FeedTopicPool(topicChan chan<- *Topic, i *integration.Integration, collectedTopics []string, byteRates map[string]ByteRates) {
 	defer close(topicChan)
 
 	for _, topicName := range collectedTopics {
-		// create topic entity
+		// clusterId is deliberately NOT an ID attribute - see connection.Broker.Entity.
 		clusterIDAttr := integration.NewIDAttribute("clusterName", args.GlobalArgs.ClusterName)
 		topicEntity, err := i.Entity(topicName, "ka-topic", clusterIDAttr)
 		if err != nil {
 			log.Error("Unable to create an entity for topic %s", topicName)
 		}
 
-		topicChan <- &Topic{
+		newTopic := &Topic{
 			Name:   topicName,
 			Entity: topicEntity,
 		}
+		if rates, ok := byteRates[topicName]; ok {
+			newTopic.ByteRates = &rates
+		}
+
+		topicChan <- newTopic
 	}
 }
 
@@ -139,6 +158,7 @@ func topicWorker(topicChan <-chan *Topic, wg *sync.WaitGroup, client connection.
 				attribute.Attribute{Key: "displayName", Value: topic.Name},
 				attribute.Attribute{Key: "entityName", Value: "topic:" + topic.Name},
 				attribute.Attribute{Key: "clusterName", Value: args.GlobalArgs.ClusterName},
+				attribute.Attribute{Key: "clusterId", Value: args.GlobalArgs.ClusterID},
 			)
 
 			// Collect metrics and populate metric set with them
@@ -162,8 +182,89 @@ func populateTopicMetrics(t *Topic, sample *metric.Set, client connection.Client
 		return err
 	}
 
+	if args.GlobalArgs.CollectTopicConfigMetrics {
+		if err := populateTopicConfigMetrics(t, sample); err != nil {
+			return err
+		}
+	}
+
 	responds := topicRespondsToMetadata(t, client)
 	return sample.SetMetric("topic.respondsToMetadataRequests", responds, metric.GAUGE)
+}
+
+// populateTopicConfigMetrics adds metrics that are already available from the topic's
+// existing DescribeConfigs/partition data - no extra network calls beyond what setTopicInfo
+// already does.
+func populateTopicConfigMetrics(t *Topic, sample *metric.Set) error {
+	if err := sample.SetMetric("topic.partitionCount", t.PartitionCount, metric.GAUGE); err != nil {
+		return err
+	}
+
+	if err := sample.SetMetric("topic.replicationFactor", t.ReplicationFactor, metric.GAUGE); err != nil {
+		return err
+	}
+
+	if minISR, ok := minInSyncReplicas(t.Configs); ok {
+		if err := sample.SetMetric("topic.minInSyncReplicas", minISR, metric.GAUGE); err != nil {
+			return err
+		}
+	}
+
+	if retention, ok := retentionMs(t.Configs); ok {
+		if err := sample.SetMetric("topic.retentionMs", retention, metric.GAUGE); err != nil {
+			return err
+		}
+	}
+
+	if t.ByteRates != nil {
+		if err := sample.SetMetric("topic.bytesInPerSecond", t.ByteRates.BytesInPerSecond, metric.RATE); err != nil {
+			return err
+		}
+		if err := sample.SetMetric("topic.bytesOutPerSecond", t.ByteRates.BytesOutPerSecond, metric.RATE); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// minInSyncReplicas finds and parses the min.insync.replicas topic config, if set.
+func minInSyncReplicas(configs []*sarama.ConfigEntry) (int, bool) {
+	for _, config := range configs {
+		if config.Name != "min.insync.replicas" {
+			continue
+		}
+
+		value, err := strconv.Atoi(config.Value)
+		if err != nil {
+			log.Error("Failed to parse min.insync.replicas value %q: %s", config.Value, err)
+			return 0, false
+		}
+
+		return value, true
+	}
+
+	return 0, false
+}
+
+// retentionMs finds and parses the retention.ms topic config, if set. -1 means infinite
+// retention, a valid value, not an error.
+func retentionMs(configs []*sarama.ConfigEntry) (int, bool) {
+	for _, config := range configs {
+		if config.Name != "retention.ms" {
+			continue
+		}
+
+		value, err := strconv.Atoi(config.Value)
+		if err != nil {
+			log.Error("Failed to parse retention.ms value %q: %s", config.Value, err)
+			return 0, false
+		}
+
+		return value, true
+	}
+
+	return 0, false
 }
 
 func calculateNonPreferredLeader(partitions []*partition, sample *metric.Set) error {
