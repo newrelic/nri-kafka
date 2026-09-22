@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Collect the real Kafka-native cluster ID (`clusterId`) and `brokerId`, propagated across all samples
 - Add optional broker JVM metrics and topic config metrics, off by default
 - Add broker backpressure metrics and consumer/producer health metrics
+- Add retention-loss detection (`consumer.earliestOffset`, `consumer.retentionLossDetected`) for consumer group offsets
 
 ### bugfix
 - Fix the Kafka cluster ID never being captured due to a protocol version mismatch
