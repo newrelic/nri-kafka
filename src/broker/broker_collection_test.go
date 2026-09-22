@@ -174,11 +174,11 @@ func TestPopulateBrokerMetrics_Normal(t *testing.T) {
 	sample := entity.Metrics[0]
 
 	expected := map[string]interface{}{
-		"event_type":     "KafkaBrokerSample",
-		"displayName":    "kafkabroker:9090",
-		"entityName":     "broker:" + "kafkabroker:9090",
-		"clusterName":    "",
-		"clusterId": "",
+		"event_type":  "KafkaBrokerSample",
+		"displayName": "kafkabroker:9090",
+		"entityName":  "broker:" + "kafkabroker:9090",
+		"clusterName": "",
+		"clusterId":   "",
 	}
 
 	assert.Equal(t, expected, sample.Metrics)
