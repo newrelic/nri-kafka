@@ -194,6 +194,26 @@ func collectClientPartitionOffsetMetrics(
 			log.Error("Failed to set metric consumer.lag: %s", err)
 		}
 
+		// Retention loss: the consumer's last committed offset is older than the partition's
+		// current log-start offset, meaning some messages it hadn't read yet were already
+		// deleted by retention. Only meaningful once we know there IS a committed offset
+		// (the kfkNoOffset branch above already covers "never committed here at all").
+		earliestOffset, err := topicOffsetGetter.GetEarliestFromTopicPartition(topic, partition)
+		if err != nil {
+			log.Error("Failed to get earliest offset for topic %s, partition %d: %s", topic, partition, err)
+		} else {
+			if err := ms.SetMetric("consumer.earliestOffset", earliestOffset, metric.GAUGE); err != nil {
+				log.Error("Failed to set metric consumer.earliestOffset: %s", err)
+			}
+			retentionLoss := 0
+			if block.Offset < earliestOffset {
+				retentionLoss = 1
+			}
+			if err := ms.SetMetric("consumer.retentionLossDetected", retentionLoss, metric.GAUGE); err != nil {
+				log.Error("Failed to set metric consumer.retentionLossDetected: %s", err)
+			}
+		}
+
 		partitionLagResult.ConsumerGroup = consumerGroup
 		partitionLagResult.Topic = topic
 		partitionLagResult.PartitionID = strconv.Itoa(int(partition))

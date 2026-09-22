@@ -63,6 +63,57 @@ func (tm *TopicOffsetGetterMock) GetFromTopicPartition(topicName string, partiti
 	return 0, nil
 }
 
+func (tm *TopicOffsetGetterMock) GetEarliestFromTopicPartition(topicName string, partition int32) (int64, error) {
+	return 0, nil
+}
+
+type fixedOffsetGetterMock struct {
+	hwm      int64
+	earliest int64
+}
+
+func (f *fixedOffsetGetterMock) GetFromTopicPartition(topicName string, partition int32) (int64, error) {
+	return f.hwm, nil
+}
+
+func (f *fixedOffsetGetterMock) GetEarliestFromTopicPartition(topicName string, partition int32) (int64, error) {
+	return f.earliest, nil
+}
+
+func TestCollectClientPartitionOffsetMetrics_RetentionLoss(t *testing.T) {
+	cases := []struct {
+		name              string
+		committedOffset   int64
+		earliestOffset    int64
+		wantRetentionLoss float64
+	}{
+		{"committed offset is still within retention", 50, 10, 0},
+		{"committed offset was already deleted by retention", 5, 10, 1},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			args.GlobalArgs = &args.ParsedArguments{}
+
+			i, err := integration.New("kafka", "1.0.0")
+			assert.NoError(t, err)
+
+			block := &sarama.OffsetFetchResponseBlock{Offset: tc.committedOffset}
+			member := &sarama.GroupMemberDescription{ClientId: testClientID, ClientHost: "host-1"}
+			getter := &fixedOffsetGetterMock{hwm: 100, earliest: tc.earliestOffset}
+
+			var result partitionLagResult
+			collectClientPartitionOffsetMetrics(&result, getter, consumerGroupOne, member, topicOne, 0, block, i)
+
+			assert.Len(t, i.Entities, 1)
+			assert.Len(t, i.Entities[0].Metrics, 1)
+			metrics := i.Entities[0].Metrics[0].Metrics
+			assert.Equal(t, float64(tc.earliestOffset), metrics["consumer.earliestOffset"])
+			assert.Equal(t, tc.wantRetentionLoss, metrics["consumer.retentionLossDetected"])
+		})
+	}
+}
+
 func TestCollectOffsetsForConsumerGroup(t *testing.T) { // nolint: funlen
 	// MemberAssignment mock created as in sarama's consumer_group_member_test.go
 	members := map[string]*sarama.GroupMemberDescription{
