@@ -31,6 +31,10 @@ newrelic-infrastructure:
             BOOTSTRAP_BROKER_JMX_PORT: 5555
             METRICS: "true"
             LOCAL_ONLY_COLLECTION: "true"
+            # Optional metrics that are disabled by default. To enable one, add its name to
+            # this JSON array. Currently supports "clusterId" (the Kafka-native cluster ID,
+            # fetched from broker metadata, as a "clusterId" attribute on samples).
+            # ADDITIONAL_METRICS_ENABLED: '["clusterId"]'
     kafka-config-offset.yaml:
       discovery:
         command:
