@@ -53,6 +53,13 @@ integrations:
     COLLECT_TOPIC_SIZE: false
     COLLECT_TOPIC_OFFSET: false
 
+    # Optional metrics that are disabled by default. To enable one, add its name to this
+    # JSON array. Currently supports:
+    # - "clusterId": adds the Kafka-native cluster ID (fetched from broker metadata) as a
+    #   "clusterId" attribute on broker, topic, consumer, producer, and consumer-offset
+    #   samples.
+    # ADDITIONAL_METRICS_ENABLED: '["clusterId"]'
+
     METRICS: "true"
   interval: 15s
   inventory_source: config/kafka

@@ -73,6 +73,9 @@ func main() {
 	} else {
 		brokers, err := getBrokerList(args.GlobalArgs)
 		ExitOnErr(err)
+		if args.GlobalArgs.AdditionalMetricEnabled(args.AdditionalMetricClusterID) {
+			connection.PopulateClusterID(brokers)
+		}
 
 		client, err := connection.NewSaramaClientFromBrokerList(brokers)
 		ExitOnErr(err)
@@ -179,6 +182,9 @@ func coreCollection(kafkaIntegration *integration.Integration, jmxConnProvider c
 		if err != nil {
 			log.Error("Failed to get list of brokers: %s", err)
 			return
+		}
+		if args.GlobalArgs.AdditionalMetricEnabled(args.AdditionalMetricClusterID) {
+			connection.PopulateClusterID(brokers)
 		}
 
 		clusterClient, err := connection.NewSaramaClientFromBrokerList(brokers)

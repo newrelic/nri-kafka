@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+### enhancement
+- Collect the Kafka broker-reported cluster ID (`clusterId`) as a metric attribute on broker, topic, consumer, producer, and consumer-offset samples
+
 ### security
 - update golang.org/x/crypto to v0.57.0 to address CVE-2026-56855
 

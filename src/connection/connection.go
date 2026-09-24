@@ -10,7 +10,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"regexp"
 	"strconv"
 
@@ -78,11 +78,49 @@ type Broker struct {
 	SaramaBroker
 }
 
+// ClusterID is the Kafka cluster ID reported by the brokers themselves, as opposed to
+// args.GlobalArgs.ClusterName, which is a user-supplied label.
+var ClusterID string
+
+// PopulateClusterID fetches the cluster ID once, from the first broker in the list, and
+// stores it in the package-level ClusterID.
+// Brokers that don't report a cluster ID (e.g. older Kafka versions) leave it unset.
+func PopulateClusterID(brokers []*Broker) {
+	if len(brokers) == 0 {
+		return
+	}
+
+	ClusterID = fetchClusterID(brokers[0].SaramaBroker)
+}
+
 // Entity gets the entity object for the broker
 func (b *Broker) Entity(i *integration.Integration) (*integration.Entity, error) {
 	clusterIDAttr := integration.NewIDAttribute("clusterName", args.GlobalArgs.ClusterName)
 	brokerIDAttr := integration.NewIDAttribute("brokerID", string(b.ID))
 	return i.Entity(b.Addr(), "ka-broker", clusterIDAttr, brokerIDAttr)
+}
+
+// metadataRequestVersionForClusterID is the minimum Kafka Metadata protocol version whose
+// response includes ClusterID (KIP-78, Kafka 0.10.1+). It's requested explicitly, rather than
+// negotiated via the configured KafkaVersion, so that fetching the cluster ID doesn't depend
+// on what the user happens to have set there - a KafkaVersion below 0.10.1.0 would otherwise
+// negotiate a metadata request version that silently omits ClusterID.
+const metadataRequestVersionForClusterID = 2
+
+// fetchClusterID queries the broker's metadata for the Kafka cluster ID.
+// Returns an empty string if the broker doesn't report one (e.g. protocol version too old)
+func fetchClusterID(saramaBroker SaramaBroker) string {
+	metadata, err := saramaBroker.GetMetadata(&sarama.MetadataRequest{Version: metadataRequestVersionForClusterID})
+	if err != nil {
+		log.Warn("Failed to fetch Kafka cluster ID from broker %s: %s", saramaBroker.Addr(), err)
+		return ""
+	}
+
+	if metadata.ClusterID == nil {
+		return ""
+	}
+
+	return *metadata.ClusterID
 }
 
 // NewBroker creates a new broker
@@ -263,7 +301,7 @@ func configureTLS(config *sarama.Config) error {
 
 	if args.GlobalArgs.TLSCaFile != "" {
 		certPool := x509.NewCertPool()
-		ca, err := ioutil.ReadFile(args.GlobalArgs.TLSCaFile)
+		ca, err := os.ReadFile(args.GlobalArgs.TLSCaFile)
 		if err != nil {
 			return err
 		}

@@ -48,6 +48,7 @@ func TestParseArgs(t *testing.T) {
 		SaslUsername:                     "admin3",
 		SaslPassword:                     "secret1",
 		SaslGssapiDisableFASTNegotiation: true,
+		AdditionalMetricsEnabled:         `["clusterId"]`,
 	}
 
 	expectedArgs := &ParsedArguments{
@@ -104,6 +105,7 @@ func TestParseArgs(t *testing.T) {
 		SaslUsername:                     "admin3",
 		SaslPassword:                     "secret1",
 		SaslGssapiDisableFASTNegotiation: true,
+		AdditionalMetricsEnabled:         []string{"clusterId"},
 	}
 	parsedArgs, err := ParseArgs(a)
 	assert.NoError(t, err)
@@ -155,6 +157,7 @@ func TestDefaultArgs(t *testing.T) {
 		SaslMechanism:                    "GSSAPI",
 		SaslGssapiDisableFASTNegotiation: false,
 		TopicSource:                      "broker",
+		AdditionalMetricsEnabled:         []string{},
 	}
 
 	parsedArgs, err := ParseArgs(a)

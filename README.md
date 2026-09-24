@@ -22,6 +22,20 @@ Information on configuring JMX can be found [here](https://docs.oracle.com/javas
 
 For installation and usage instructions, see our [documentation web site](https://docs.newrelic.com/docs/integrations/host-integrations/host-integrations-list/kafka-monitoring-integration).
 
+## Configuration
+
+See [`kafka-config.yml.sample`](./kafka-config.yml.sample) (or the Windows/Kubernetes
+variants, [`kafka-win-config.yml.sample`](./kafka-win-config.yml.sample) and
+[`kafka-config.yml.k8s_sample`](./kafka-config.yml.k8s_sample)) for the full list of
+configuration options with examples.
+
+Some metrics are opt-in via `ADDITIONAL_METRICS_ENABLED`, a JSON array of metric names
+to enable. Currently supported:
+
+* `clusterId`: adds the Kafka-native cluster ID (fetched from broker metadata) as a
+  `clusterId` attribute on broker, topic, consumer, producer, and consumer-offset
+  samples.
+
 ## Compatibility
 
 * Supported OS: No limitations

@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"regexp"
+	"slices"
 	"strconv"
 
 	"github.com/IBM/sarama"
@@ -100,11 +101,24 @@ type ParsedArguments struct {
 	Timeout int `default:"10000" help:"Timeout in milliseconds per single JMX query."`
 
 	TopicSource string
+
+	// Additional metrics
+	AdditionalMetricsEnabled []string
 }
+
+// AdditionalMetricClusterID is the additional_metrics_enabled entry that enables collecting
+// the Kafka-native cluster ID as a 'clusterId' attribute on samples.
+const AdditionalMetricClusterID = "clusterId"
 
 // CollectBrokers returns whether we should collect broker metrics
 func (args *ParsedArguments) CollectBrokers() bool {
 	return len(args.ZookeeperHosts) > 0 || args.BootstrapBroker != nil
+}
+
+// AdditionalMetricEnabled returns whether the given optional metric name was enabled via
+// the additional_metrics_enabled argument.
+func (args *ParsedArguments) AdditionalMetricEnabled(name string) bool {
+	return slices.Contains(args.AdditionalMetricsEnabled, name)
 }
 
 // TopicBucket is a struct that stores the information for bucketing topic collection
@@ -209,6 +223,13 @@ func ParseArgs(a ArgumentList) (*ParsedArguments, error) {
 		return nil, err
 	}
 
+	// Parse additional metrics
+	var additionalMetricsEnabled []string
+	if err = json.Unmarshal([]byte(a.AdditionalMetricsEnabled), &additionalMetricsEnabled); err != nil {
+		log.Error("Failed to parse additional_metrics_enabled from json")
+		return nil, err
+	}
+
 	// Parse topic bucket
 	re := regexp.MustCompile(`(\d+)/(\d+)`)
 	match := re.FindStringSubmatch(a.TopicBucket)
@@ -300,6 +321,7 @@ func ParseArgs(a ArgumentList) (*ParsedArguments, error) {
 		SaslGssapiKerberosConfigPath:     a.SaslGssapiKerberosConfigPath,
 		SaslGssapiDisableFASTNegotiation: a.SaslGssapiDisableFASTNegotiation,
 		TopicSource:                      a.TopicSource,
+		AdditionalMetricsEnabled:         additionalMetricsEnabled,
 	}
 
 	return parsedArgs, nil
