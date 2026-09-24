@@ -88,4 +88,10 @@ type ArgumentList struct {
 	ShowVersion bool `default:"false" help:"Print build information and exit"`
 
 	TopicSource string `default:"broker" help:"Collect topics list from either the Broker or Zookeeper"`
+
+	// Additional metrics
+	// TODO: Mention docs link with list of all the additional metrics
+	// TODO: Probably move it to the sdk so that it is available to all the integrations
+	// Currently supports: 'clusterId' (adds the Kafka-native cluster ID, fetched from broker metadata, as a 'clusterId' attribute on samples)
+	AdditionalMetricsEnabled string `default:"[]" help:"JSON array of optional metric names to enable. Disabled by default."`
 }
