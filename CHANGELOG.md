@@ -7,8 +7,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
-### security
+## v3.26.0 - 2026-09-30
+
+### 🛡️ Security notices
 - update golang.org/x/crypto to v0.57.0 to address CVE-2026-56855
+
+### ⛓️ Dependencies
+- Updated github.com/newrelic/nrjmx/gojmx digest to a0f749b
 
 ## v3.25.0 - 2026-09-11
 
