@@ -31,6 +31,11 @@ type ParsedArguments struct {
 	ClusterName  string
 	KafkaVersion sarama.KafkaVersion
 
+	// ClusterID is the Kafka-native cluster identifier, fetched from broker metadata at
+	// startup. It is not a CLI argument; it is populated programmatically once brokers
+	// are discovered. Empty if the brokers didn't report one.
+	ClusterID string
+
 	AutodiscoverStrategy string
 
 	// Zookeeper autodiscovery. Only required if using zookeeper to autodiscover brokers
@@ -81,21 +86,28 @@ type ParsedArguments struct {
 	SaslGssapiDisableFASTNegotiation bool
 
 	// Collection configuration
-	LocalOnlyCollection        bool
-	ForceTopicSampleCollection bool
-	CollectClusterMetrics      bool
-	TopicMode                  string
-	TopicList                  []string
-	TopicRegex                 string
-	TopicBucket                TopicBucket
-	CollectTopicSize           bool
-	CollectTopicOffset         bool
+	LocalOnlyCollection          bool
+	ForceTopicSampleCollection   bool
+	CollectClusterMetrics        bool
+	TopicMode                    string
+	TopicList                    []string
+	TopicRegex                   string
+	TopicBucket                  TopicBucket
+	CollectTopicSize             bool
+	CollectTopicOffset           bool
+	CollectBrokerExtendedMetrics bool
+
+	// DisableAttributes is the parsed form of the DisableAttributes JSON array - attribute
+	// names (e.g. "clusterId", "brokerId") to omit from every sample that would otherwise
+	// include them.
+	DisableAttributes []string
 
 	// Consumer offset arguments
-	ConsumerOffset              bool
-	ConsumerGroupRegex          *regexp.Regexp
-	ConsumerGroupOffsetByTopic  bool
-	InactiveConsumerGroupOffset bool
+	ConsumerOffset                       bool
+	ConsumerGroupRegex                   *regexp.Regexp
+	ConsumerGroupOffsetByTopic           bool
+	InactiveConsumerGroupOffset          bool
+	CollectConsumerOffsetExtendedMetrics bool
 
 	Timeout int `default:"10000" help:"Timeout in milliseconds per single JMX query."`
 
@@ -209,6 +221,12 @@ func ParseArgs(a ArgumentList) (*ParsedArguments, error) {
 		return nil, err
 	}
 
+	var disableAttributes []string
+	if err = json.Unmarshal([]byte(a.DisableAttributes), &disableAttributes); err != nil {
+		log.Error("Failed to parse disable_attributes from json")
+		return nil, err
+	}
+
 	// Parse topic bucket
 	re := regexp.MustCompile(`(\d+)/(\d+)`)
 	match := re.FindStringSubmatch(a.TopicBucket)
@@ -253,53 +271,57 @@ func ParseArgs(a ArgumentList) (*ParsedArguments, error) {
 	}
 
 	parsedArgs := &ParsedArguments{
-		DefaultArgumentList:              a.DefaultArgumentList,
-		AutodiscoverStrategy:             a.AutodiscoverStrategy,
-		BootstrapBroker:                  brokerHost,
-		TLSCaFile:                        a.TLSCaFile,
-		TLSCertFile:                      a.TLSCertFile,
-		TLSKeyFile:                       a.TLSKeyFile,
-		TLSInsecureSkipVerify:            a.TLSInsecureSkipVerify,
-		ClusterName:                      a.ClusterName,
-		KafkaVersion:                     version,
-		ZookeeperHosts:                   zookeeperHosts,
-		ZookeeperAuthScheme:              a.ZookeeperAuthScheme,
-		ZookeeperAuthSecret:              a.ZookeeperAuthSecret,
-		ZookeeperPath:                    a.ZookeeperPath,
-		PreferredListener:                a.PreferredListener,
-		DefaultJMXUser:                   a.DefaultJMXUser,
-		DefaultJMXPassword:               a.DefaultJMXPassword,
-		MaxJMXConnections:                a.MaxJMXConnections,
-		NrJmx:                            a.NrJmx,
-		Producers:                        producers,
-		Consumers:                        consumers,
-		TopicMode:                        a.TopicMode,
-		TopicList:                        topics,
-		TopicRegex:                       a.TopicRegex,
-		TopicBucket:                      topicBucket,
-		Timeout:                          a.Timeout,
-		KeyStore:                         a.KeyStore,
-		KeyStorePassword:                 a.KeyStorePassword,
-		TrustStore:                       a.TrustStore,
-		TrustStorePassword:               a.TrustStorePassword,
-		LocalOnlyCollection:              a.LocalOnlyCollection,
-		ForceTopicSampleCollection:       a.ForceTopicSampleCollection,
-		CollectTopicSize:                 a.CollectTopicSize,
-		CollectTopicOffset:               a.CollectTopicOffset,
-		ConsumerOffset:                   a.ConsumerOffset,
-		ConsumerGroupRegex:               consumerGroupRegex,
-		ConsumerGroupOffsetByTopic:       a.ConsumerGroupOffsetByTopic,
-		InactiveConsumerGroupOffset:      a.InactiveConsumerGroupOffset,
-		SaslMechanism:                    a.SaslMechanism,
-		SaslUsername:                     a.SaslUsername,
-		SaslPassword:                     a.SaslPassword,
-		SaslGssapiRealm:                  a.SaslGssapiRealm,
-		SaslGssapiServiceName:            a.SaslGssapiServiceName,
-		SaslGssapiUsername:               a.SaslGssapiUsername,
-		SaslGssapiKeyTabPath:             a.SaslGssapiKeyTabPath,
-		SaslGssapiKerberosConfigPath:     a.SaslGssapiKerberosConfigPath,
-		SaslGssapiDisableFASTNegotiation: a.SaslGssapiDisableFASTNegotiation,
-		TopicSource:                      a.TopicSource,
+		DefaultArgumentList:                  a.DefaultArgumentList,
+		AutodiscoverStrategy:                 a.AutodiscoverStrategy,
+		BootstrapBroker:                      brokerHost,
+		TLSCaFile:                            a.TLSCaFile,
+		TLSCertFile:                          a.TLSCertFile,
+		TLSKeyFile:                           a.TLSKeyFile,
+		TLSInsecureSkipVerify:                a.TLSInsecureSkipVerify,
+		ClusterName:                          a.ClusterName,
+		KafkaVersion:                         version,
+		ZookeeperHosts:                       zookeeperHosts,
+		ZookeeperAuthScheme:                  a.ZookeeperAuthScheme,
+		ZookeeperAuthSecret:                  a.ZookeeperAuthSecret,
+		ZookeeperPath:                        a.ZookeeperPath,
+		PreferredListener:                    a.PreferredListener,
+		DefaultJMXUser:                       a.DefaultJMXUser,
+		DefaultJMXPassword:                   a.DefaultJMXPassword,
+		MaxJMXConnections:                    a.MaxJMXConnections,
+		NrJmx:                                a.NrJmx,
+		Producers:                            producers,
+		Consumers:                            consumers,
+		TopicMode:                            a.TopicMode,
+		TopicList:                            topics,
+		TopicRegex:                           a.TopicRegex,
+		TopicBucket:                          topicBucket,
+		Timeout:                              a.Timeout,
+		KeyStore:                             a.KeyStore,
+		KeyStorePassword:                     a.KeyStorePassword,
+		TrustStore:                           a.TrustStore,
+		TrustStorePassword:                   a.TrustStorePassword,
+		LocalOnlyCollection:                  a.LocalOnlyCollection,
+		CollectClusterMetrics:                a.CollectClusterMetrics,
+		ForceTopicSampleCollection:           a.ForceTopicSampleCollection,
+		CollectTopicSize:                     a.CollectTopicSize,
+		CollectTopicOffset:                   a.CollectTopicOffset,
+		ConsumerOffset:                       a.ConsumerOffset,
+		ConsumerGroupRegex:                   consumerGroupRegex,
+		ConsumerGroupOffsetByTopic:           a.ConsumerGroupOffsetByTopic,
+		InactiveConsumerGroupOffset:          a.InactiveConsumerGroupOffset,
+		CollectConsumerOffsetExtendedMetrics: a.CollectConsumerOffsetExtendedMetrics,
+		SaslMechanism:                        a.SaslMechanism,
+		SaslUsername:                         a.SaslUsername,
+		SaslPassword:                         a.SaslPassword,
+		SaslGssapiRealm:                      a.SaslGssapiRealm,
+		SaslGssapiServiceName:                a.SaslGssapiServiceName,
+		SaslGssapiUsername:                   a.SaslGssapiUsername,
+		SaslGssapiKeyTabPath:                 a.SaslGssapiKeyTabPath,
+		SaslGssapiKerberosConfigPath:         a.SaslGssapiKerberosConfigPath,
+		SaslGssapiDisableFASTNegotiation:     a.SaslGssapiDisableFASTNegotiation,
+		TopicSource:                          a.TopicSource,
+		CollectBrokerExtendedMetrics:         a.CollectBrokerExtendedMetrics,
+		DisableAttributes:                    disableAttributes,
 	}
 
 	return parsedArgs, nil

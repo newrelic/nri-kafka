@@ -22,8 +22,17 @@ import (
 
 // GetBrokerMetrics collects all Broker JMX metrics and stores them in sample
 func GetBrokerMetrics(sample *metric.Set, conn connection.JMXConnection) {
+	// ActiveControllerCount and GlobalPartitionCount are only meaningful read from the
+	// controller broker specifically - see ClusterMetricDefs, which collects them correctly
+	// via connection.FindControllerBroker instead of every broker's own JMX connection.
 	CollectMetricDefinitions(sample, brokerMetricDefs, nil, conn)
 	CollectBrokerRequestMetrics(sample, brokerRequestMetricDefs, conn)
+
+	if args.GlobalArgs.CollectBrokerExtendedMetrics {
+		CollectMetricDefinitions(sample, brokerExtendedMetricDefs, nil, conn)
+		CollectMetricDefinitions(sample, jvmMetricDefs, nil, conn)
+		CollectGarbageCollectorMetrics(sample, conn)
+	}
 }
 
 // GetConsumerMetrics collects all Consumer metrics for the given
@@ -120,6 +129,76 @@ func CollectBrokerRequestMetrics(sample *metric.Set, metricSets []*JMXMetricSet,
 	if len(notFoundMetrics) > 0 {
 		log.Warn("Can't find raw metrics in results for keys: %v", notFoundMetrics)
 	}
+}
+
+// CollectGarbageCollectorMetrics sums CollectionCount and CollectionTime across every garbage
+// collector MBean present, and buckets the same values into young/old generation via
+// classifyGCGeneration. Collector names vary by GC algorithm, so unlike the rest of
+// jvmMetricDefs this can't be a fixed MetricDefinition - it aggregates by attribute suffix
+// instead, regardless of which collector name reported it.
+func CollectGarbageCollectorMetrics(sample *metric.Set, conn connection.JMXConnection) {
+	results, err := conn.QueryMBeanAttributes(jvmGCMBean)
+	if err != nil {
+		if jmxErr, ok := gojmx.IsJMXError(err); ok {
+			log.Error("Unable to execute JMX query for MBean '%s': %v", jvmGCMBean, jmxErr)
+			return
+		}
+		log.Error("Connection error for %s:%s : %s", jmx.HostName(), jmx.Port(), err)
+		os.Exit(1)
+	}
+
+	var collectionCount, collectionTime float64
+	var youngCount, youngTime, oldCount, oldTime float64
+	for _, attr := range results {
+		if attr.ResponseType == gojmx.ResponseTypeErr {
+			continue
+		}
+
+		value, err := attr.GetValueAsFloat()
+		if err != nil {
+			continue
+		}
+
+		var isCount, isTime bool
+		switch {
+		case strings.HasSuffix(attr.Name, jvmGCCollectionCountAttr):
+			collectionCount += value
+			isCount = true
+		case strings.HasSuffix(attr.Name, jvmGCCollectionTimeAttr):
+			collectionTime += value
+			isTime = true
+		default:
+			continue
+		}
+
+		match := jvmMBeanNameRegex.FindStringSubmatch(attr.Name)
+		if match == nil {
+			continue
+		}
+		young, old := classifyGCGeneration(match[1])
+		switch {
+		case young && isCount:
+			youngCount += value
+		case young && isTime:
+			youngTime += value
+		case old && isCount:
+			oldCount += value
+		case old && isTime:
+			oldTime += value
+		}
+	}
+
+	setGCMetric := func(name string, value float64) {
+		if err := sample.SetMetric(name, value, metric.RATE); err != nil {
+			log.Error("Error setting value: %s", err)
+		}
+	}
+	setGCMetric("jvm.gcCollectionsPerSecond", collectionCount)
+	setGCMetric("jvm.gcTimePerSecond", collectionTime)
+	setGCMetric("jvm.gcYoungGenCollectionsPerSecond", youngCount)
+	setGCMetric("jvm.gcYoungGenTimePerSecond", youngTime)
+	setGCMetric("jvm.gcOldGenCollectionsPerSecond", oldCount)
+	setGCMetric("jvm.gcOldGenTimePerSecond", oldTime)
 }
 
 // CollectMetricDefinitions collects the set of metrics from the current open JMX connection and add them to the sample

@@ -75,6 +75,7 @@ func TestStartTopicPool(t *testing.T) {
 func TestFeedTopicPool(t *testing.T) {
 	testutils.SetupTestArgs()
 	args.GlobalArgs.TopicMode = "All"
+	args.GlobalArgs.ClusterID = "lkc-abc123"
 
 	i, err := integration.New("kafka", "1.0.0")
 	if err != nil {
@@ -108,6 +109,10 @@ func TestFeedTopicPool(t *testing.T) {
 			t.Errorf("Expected topic name %s, got %s", name, topics[index].Name)
 		}
 	}
+
+	// clusterId must NOT be an ID attribute - adding it would change entity keys/GUIDs for
+	// every existing customer already running a released nri-kafka.
+	assert.NotContains(t, topics[0].Entity.Metadata.IDAttrs, integration.NewIDAttribute("clusterId", "lkc-abc123"))
 }
 
 func TestPopulateTopicInventory(t *testing.T) {

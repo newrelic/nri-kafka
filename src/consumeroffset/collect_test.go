@@ -11,6 +11,7 @@ import (
 
 func Test_setMetrics(t *testing.T) {
 	testutils.SetupTestArgs()
+	args.GlobalArgs.ClusterID = "lkc-abc123"
 
 	i, _ := integration.New("test", "test")
 	offsetData := []*partitionOffsets{
@@ -26,9 +27,12 @@ func Test_setMetrics(t *testing.T) {
 	err := setMetrics("testGroup", offsetData, i)
 	assert.NoError(t, err)
 
-	clusterIDAttr := integration.NewIDAttribute("clusterName", args.GlobalArgs.ClusterName)
-	resultEntity, err := i.Entity("testGroup", "ka-consumerGroup", clusterIDAttr)
+	// clusterId is deliberately NOT an ID attribute - see connection.Broker.Entity - so the
+	// lookup key here must match setMetrics' actual entity key (clusterName only).
+	clusterNameAttr := integration.NewIDAttribute("clusterName", args.GlobalArgs.ClusterName)
+	resultEntity, err := i.Entity("testGroup", "ka-consumerGroup", clusterNameAttr)
 	assert.NoError(t, err)
 	assert.Len(t, resultEntity.Metrics, 1)
-	assert.Len(t, resultEntity.Metrics[0].Metrics, 9)
+	assert.Len(t, resultEntity.Metrics[0].Metrics, 10)
+	assert.Equal(t, args.GlobalArgs.ClusterID, resultEntity.Metrics[0].Metrics["clusterId"])
 }

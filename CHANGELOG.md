@@ -7,13 +7,18 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
-## v3.26.0 - 2026-09-30
+### enhancement
+- Add Kafka cluster-level metrics via `COLLECT_CLUSTER_METRICS`
+- Add real Kafka `clusterId`/`brokerId` on all samples; opt out via `DISABLE_ATTRIBUTES`
+- Add broker health and JVM metrics via `COLLECT_BROKER_EXTENDED_METRICS`
+- Add consumer offset lag metric via `COLLECT_CONSUMER_OFFSET_EXTENDED_METRICS`
 
-### 🛡️ Security notices
+### bugfix
+- Fix the Kafka cluster ID never being captured due to a protocol version mismatch
+- Fix cluster and consumer entities fragmenting into duplicates under certain conditions
+
+### security
 - update golang.org/x/crypto to v0.57.0 to address CVE-2026-56855
-
-### ⛓️ Dependencies
-- Updated github.com/newrelic/nrjmx/gojmx digest to a0f749b
 
 ## v3.25.0 - 2026-09-11
 

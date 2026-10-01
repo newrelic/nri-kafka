@@ -68,24 +68,31 @@ type ArgumentList struct {
 	SaslGssapiDisableFASTNegotiation bool   `default:"false" help:"Disable FAST negotiation."`
 
 	// Collection configuration
-	LocalOnlyCollection        bool   `default:"false" help:"Collect only the metrics related to the configured bootstrap broker. Useful for distributed metric collection"`
-	ForceTopicSampleCollection bool   `default:"false" help:"If LocalOnlyCollection=true it enforces the collection of the topicSample for every instance, possibly causing duplication. If LocalOnlyCollection=false it has no effects"`
-	TopicMode                  string `default:"None" help:"Possible options are All, None, or List. If List, must also specify the list of topics to collect with the topic_list option."`
-	TopicList                  string `default:"[]" help:"JSON array of strings with the names of topics to monitor. Only used if collect_topics is set to 'List'"`
-	TopicRegex                 string `default:"" help:"A regex pattern that matches the list of topics to collect. Only used if collect_topics is set to 'Regex'"`
-	TopicBucket                string `default:"1/1" help:"Allows the partitioning of topic collection across multiple instances. The second number is the number of instances topics are partitioned across. The first number is the bucket number of the current instance, which should be between 1 and the second number."`
-	CollectTopicSize           bool   `default:"false" help:"Enablement of on disk Topic size metric collection. This metric can be very resource intensive to collect especially against many topics."`
-	CollectTopicOffset         bool   `default:"false" help:"Enablement of Topic offsets collection. This metric can be very resource intensive to collect especially against many topics."`
+	LocalOnlyCollection          bool   `default:"false" help:"Collect only the metrics related to the configured bootstrap broker. Useful for distributed metric collection"`
+	ForceTopicSampleCollection   bool   `default:"false" help:"If LocalOnlyCollection=true it enforces the collection of the topicSample for every instance, possibly causing duplication. If LocalOnlyCollection=false it has no effects"`
+	TopicMode                    string `default:"None" help:"Possible options are All, None, or List. If List, must also specify the list of topics to collect with the topic_list option."`
+	TopicList                    string `default:"[]" help:"JSON array of strings with the names of topics to monitor. Only used if collect_topics is set to 'List'"`
+	TopicRegex                   string `default:"" help:"A regex pattern that matches the list of topics to collect. Only used if collect_topics is set to 'Regex'"`
+	TopicBucket                  string `default:"1/1" help:"Allows the partitioning of topic collection across multiple instances. The second number is the number of instances topics are partitioned across. The first number is the bucket number of the current instance, which should be between 1 and the second number."`
+	CollectTopicSize             bool   `default:"false" help:"Enablement of on disk Topic size metric collection. This metric can be very resource intensive to collect especially against many topics."`
+	CollectTopicOffset           bool   `default:"false" help:"Enablement of Topic offsets collection. This metric can be very resource intensive to collect especially against many topics."`
+	CollectClusterMetrics        bool   `default:"false" help:"Collect cluster-wide metrics from the Kafka controller."`
+	CollectBrokerExtendedMetrics bool   `default:"false" help:"Collect broker.isActiveController, broker.leaderCount, broker.underMinIsrPartitionCount, replication.maxLag, and broker JVM heap memory/GC collection rate (including young/old generation split) on KafkaBrokerSample. The default home for future broker-level additions."`
 
 	// Consumer offset arguments
-	ConsumerOffset              bool   `default:"false" help:"Populate consumer offset data"`
-	ConsumerGroupRegex          string `default:"" help:"A regex pattern matching the consumer groups to collect"`
-	ConsumerGroupOffsetByTopic  bool   `default:"false" help:"Report consumer-group offset metrics by topic"`
-	InactiveConsumerGroupOffset bool   `default:"false" help:"Collect offset from consumer-groups with inactive consumers"`
+	ConsumerOffset                       bool   `default:"false" help:"Populate consumer offset data"`
+	ConsumerGroupRegex                   string `default:"" help:"A regex pattern matching the consumer groups to collect"`
+	ConsumerGroupOffsetByTopic           bool   `default:"false" help:"Report consumer-group offset metrics by topic"`
+	InactiveConsumerGroupOffset          bool   `default:"false" help:"Collect offset from consumer-groups with inactive consumers"`
+	CollectConsumerOffsetExtendedMetrics bool   `default:"false" help:"Collect consumer.earliestOffset (the partition's current log-start offset) on KafkaOffsetSample. Requires an extra per-partition ListOffsets query on top of the one already made for hwm/lag. Only in effect if ConsumerOffset is true."`
 
 	Timeout int `default:"10000" help:"Timeout in milliseconds per single JMX query."`
 
 	ShowVersion bool `default:"false" help:"Print build information and exit"`
 
 	TopicSource string `default:"broker" help:"Collect topics list from either the Broker or Zookeeper"`
+
+	// DisableAttributes lists attribute names to omit from every sample that would otherwise
+	// include them. Supports: clusterId, brokerId.
+	DisableAttributes string `default:"[]" help:"JSON array of attribute names to omit from every sample that would otherwise include them. Currently supports 'clusterId' and 'brokerId'."`
 }

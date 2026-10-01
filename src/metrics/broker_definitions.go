@@ -252,6 +252,56 @@ var brokerMetricDefs = []*JMXMetricSet{
 	},
 }
 
+// brokerExtendedMetricDefs holds low-cost broker metrics gated behind CollectBrokerExtendedMetrics
+// (default off) - single extra attribute reads on Kafka MBean families already queried for
+// other always-on metrics in brokerMetricDefs, not requiring a new connection or MBean domain.
+var brokerExtendedMetricDefs = []*JMXMetricSet{
+	// Controller status - unlike GlobalPartitionCount (only accurate from the active
+	// controller's own tracked state, see ClusterMetricDefs), ActiveControllerCount is a
+	// strict 0/1 gauge that's valid to read from any broker's own JMX: it just reports
+	// whether that specific broker is currently the elected controller.
+	{
+		MBean:        "kafka.controller:type=KafkaController,name=ActiveControllerCount",
+		MetricPrefix: "kafka.controller:type=KafkaController,name=ActiveControllerCount,",
+		MetricDefs: []*MetricDefinition{
+			{
+				Name:       "broker.isActiveController",
+				SourceType: metric.GAUGE,
+				JMXAttr:    "attr=Value",
+			},
+		},
+	},
+	{
+		MBean:        "kafka.server:type=ReplicaManager,name=*",
+		MetricPrefix: "kafka.server:type=ReplicaManager,",
+		MetricDefs: []*MetricDefinition{
+			{
+				Name:       "broker.leaderCount",
+				SourceType: metric.GAUGE,
+				JMXAttr:    "name=LeaderCount,attr=Value",
+			},
+			{
+				Name:       "broker.underMinIsrPartitionCount",
+				SourceType: metric.GAUGE,
+				JMXAttr:    "name=UnderMinIsrPartitionCount,attr=Value",
+			},
+		},
+	},
+	// Replica fetcher lag - how far this broker's follower replicas are behind their
+	// leaders, distinct from consumer lag.
+	{
+		MBean:        "kafka.server:type=ReplicaFetcherManager,name=MaxLag,clientId=Replica",
+		MetricPrefix: "kafka.server:type=ReplicaFetcherManager,name=MaxLag,clientId=Replica,",
+		MetricDefs: []*MetricDefinition{
+			{
+				Name:       "replication.maxLag",
+				SourceType: metric.GAUGE,
+				JMXAttr:    "attr=Value",
+			},
+		},
+	},
+}
+
 // BrokerTopicMetricDefs metric definitions for topic metrics that are specific to a Broker
 var BrokerTopicMetricDefs = []*JMXMetricSet{
 	{
