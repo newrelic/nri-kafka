@@ -41,6 +41,9 @@ integrations:
     # Broker health (isActiveController, leaderCount, underMinIsrPartitionCount, maxLag) and JVM heap/GC metrics on KafkaBrokerSample (default: false)
     COLLECT_BROKER_EXTENDED_METRICS: true
 
+    # topic.replicationFactor on KafkaTopicSample (default: false)
+    COLLECT_TOPIC_EXTENDED_METRICS: true
+
     # clusterId/brokerId are the real Kafka-native cluster/broker identifiers, used to correlate all Kafka samples and will power cluster-level entity relationships - disable only if you have a specific reason to
     # DISABLE_ATTRIBUTES: '["clusterId", "brokerId"]'
 

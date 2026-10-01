@@ -154,3 +154,32 @@ func TestPopulateTopicInventory(t *testing.T) {
 	assert.Equal(t, expectedInventoryItems, myTopic.Entity.Inventory.Items())
 
 }
+
+func TestPopulateTopicMetrics_ReplicationFactorGating(t *testing.T) {
+	testutils.SetupTestArgs()
+
+	myTopic := &Topic{
+		ReplicationFactor: 2,
+		Partitions: []*partition{
+			{ID: 0, Leader: 1, Replicas: []int32{1, 2}, InSyncReplicas: []int32{1, 2}},
+		},
+	}
+
+	mockClient := &mocks.Client{}
+	mockClient.On("Controller").Return(sarama.NewBroker("fake:9092"), nil)
+
+	i, err := integration.New("test", "1.0.0")
+	assert.NoError(t, err)
+	e, err := i.Entity("topicEntity", "ka-topic")
+	assert.NoError(t, err)
+
+	disabled := e.NewMetricSet("disabledMetrics")
+	assert.NoError(t, populateTopicMetrics(myTopic, disabled, mockClient))
+	_, ok := disabled.Metrics["topic.replicationFactor"]
+	assert.False(t, ok, "topic.replicationFactor should not be collected when CollectTopicExtendedMetrics is false")
+
+	args.GlobalArgs.CollectTopicExtendedMetrics = true
+	enabled := e.NewMetricSet("enabledMetrics")
+	assert.NoError(t, populateTopicMetrics(myTopic, enabled, mockClient))
+	assert.Equal(t, float64(2), enabled.Metrics["topic.replicationFactor"])
+}

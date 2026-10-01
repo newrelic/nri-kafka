@@ -93,6 +93,7 @@ type ParsedArguments struct {
 	TopicBucket                  TopicBucket
 	CollectTopicSize             bool
 	CollectTopicOffset           bool
+	CollectTopicExtendedMetrics  bool
 	CollectBrokerExtendedMetrics bool
 
 	// DisableAttributes is the parsed []string form of ArgumentList.DisableAttributes.
@@ -301,6 +302,7 @@ func ParseArgs(a ArgumentList) (*ParsedArguments, error) {
 		ForceTopicSampleCollection:           a.ForceTopicSampleCollection,
 		CollectTopicSize:                     a.CollectTopicSize,
 		CollectTopicOffset:                   a.CollectTopicOffset,
+		CollectTopicExtendedMetrics:          a.CollectTopicExtendedMetrics,
 		ConsumerOffset:                       a.ConsumerOffset,
 		ConsumerGroupRegex:                   consumerGroupRegex,
 		ConsumerGroupOffsetByTopic:           a.ConsumerGroupOffsetByTopic,

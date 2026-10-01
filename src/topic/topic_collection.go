@@ -166,8 +166,10 @@ func populateTopicMetrics(t *Topic, sample *metric.Set, client connection.Client
 		return err
 	}
 
-	if err := sample.SetMetric("topic.replicationFactor", t.ReplicationFactor, metric.GAUGE); err != nil {
-		return err
+	if args.GlobalArgs.CollectTopicExtendedMetrics {
+		if err := sample.SetMetric("topic.replicationFactor", t.ReplicationFactor, metric.GAUGE); err != nil {
+			return err
+		}
 	}
 
 	responds := topicRespondsToMetadata(t, client)
