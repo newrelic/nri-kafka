@@ -235,19 +235,40 @@ func TestProducerConsumerEntitiesCreation(t *testing.T) {
 	}
 	for _, c := range cases {
 		t.Run(c.Name, func(t *testing.T) {
-			// setup integration
 			i, err := integration.New(c.Name, "1.0.0")
 			require.NoError(t, err)
 			testutils.SetupTestArgs()
+			args.GlobalArgs.ClusterID = "lkc-abc123"
 			connProvider := mocks.NewEmptyMockJMXProvider()
 			connProvider.Names = c.JMXNames
-			// run collection
 			c.CollectionFn(i, c.JMXInfo, connProvider)
 			var entityNames []string
 			for _, entity := range i.Entities {
 				entityNames = append(entityNames, entity.Metadata.Name)
+				// clusterId must NOT be an ID attribute - see connection.Broker.Entity.
+				assert.NotContains(t, entity.Metadata.IDAttrs, integration.NewIDAttribute("clusterId", "lkc-abc123"))
 			}
 			assert.ElementsMatch(t, c.ExpectedEntityNames, entityNames)
 		})
 	}
+}
+
+func TestCollectConsumerMetrics_IDAttributesMatchReleasedBehavior(t *testing.T) {
+	i, err := integration.New(t.Name(), "1.0.0")
+	require.NoError(t, err)
+	testutils.SetupTestArgs()
+	args.GlobalArgs.ClusterName = "test-cluster"
+	args.GlobalArgs.ClusterID = "lkc-abc123"
+
+	connProvider := mocks.NewEmptyMockJMXProvider()
+	connProvider.Names = []string{"kafka.consumer:type=consumer-fetch-manager-metrics,client-id=consumer-1"}
+
+	CollectConsumerMetrics(i, &args.JMXHost{Host: "10.0.0.5"}, connProvider)
+
+	require.Len(t, i.Entities, 1)
+	expected := []integration.IDAttribute{
+		integration.NewIDAttribute("clusterName", "test-cluster"),
+		integration.NewIDAttribute("host", "10.0.0.5"),
+	}
+	assert.ElementsMatch(t, expected, i.Entities[0].Metadata.IDAttrs)
 }

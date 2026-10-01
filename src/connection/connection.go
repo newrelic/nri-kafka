@@ -80,6 +80,7 @@ type Broker struct {
 
 // Entity gets the entity object for the broker
 func (b *Broker) Entity(i *integration.Integration) (*integration.Entity, error) {
+	// clusterId is deliberately NOT an ID attribute - it would change entity keys/GUIDs for every existing customer.
 	clusterIDAttr := integration.NewIDAttribute("clusterName", args.GlobalArgs.ClusterName)
 	brokerIDAttr := integration.NewIDAttribute("brokerID", string(b.ID))
 	return i.Entity(b.Addr(), "ka-broker", clusterIDAttr, brokerIDAttr)

@@ -86,22 +86,24 @@ func GetTopics(topicGetter Getter) ([]string, error) {
 	}
 }
 
-// FeedTopicPool sends Topic structs down the topicChan for workers to collect and build Topic structs
+// FeedTopicPool sends Topic structs down the topicChan for workers to collect and build Topic structs.
 func FeedTopicPool(topicChan chan<- *Topic, i *integration.Integration, collectedTopics []string) {
 	defer close(topicChan)
 
 	for _, topicName := range collectedTopics {
-		// create topic entity
+		// clusterId is deliberately NOT an ID attribute - see connection.Broker.Entity.
 		clusterIDAttr := integration.NewIDAttribute("clusterName", args.GlobalArgs.ClusterName)
 		topicEntity, err := i.Entity(topicName, "ka-topic", clusterIDAttr)
 		if err != nil {
 			log.Error("Unable to create an entity for topic %s", topicName)
 		}
 
-		topicChan <- &Topic{
+		newTopic := &Topic{
 			Name:   topicName,
 			Entity: topicEntity,
 		}
+
+		topicChan <- newTopic
 	}
 }
 
@@ -135,11 +137,13 @@ func topicWorker(topicChan <-chan *Topic, wg *sync.WaitGroup, client connection.
 		if args.GlobalArgs.HasMetrics() {
 			log.Debug("Collecting metrics for topic %s", topic.Name)
 			// Create metric set for topic
-			sample := topic.Entity.NewMetricSet("KafkaTopicSample",
-				attribute.Attribute{Key: "displayName", Value: topic.Name},
-				attribute.Attribute{Key: "entityName", Value: "topic:" + topic.Name},
-				attribute.Attribute{Key: "clusterName", Value: args.GlobalArgs.ClusterName},
-			)
+			attrs := []attribute.Attribute{
+				{Key: "displayName", Value: topic.Name},
+				{Key: "entityName", Value: "topic:" + topic.Name},
+				{Key: "clusterName", Value: args.GlobalArgs.ClusterName},
+			}
+			attrs = append(attrs, args.ClusterIDAttribute()...)
+			sample := topic.Entity.NewMetricSet("KafkaTopicSample", attrs...)
 
 			// Collect metrics and populate metric set with them
 			if err := populateTopicMetrics(topic, sample, client); err != nil {
@@ -160,6 +164,12 @@ func populateTopicMetrics(t *Topic, sample *metric.Set, client connection.Client
 
 	if err := calculateUnderReplicatedCount(t.Partitions, sample); err != nil {
 		return err
+	}
+
+	if args.GlobalArgs.CollectTopicExtendedMetrics {
+		if err := sample.SetMetric("topic.replicationFactor", t.ReplicationFactor, metric.GAUGE); err != nil {
+			return err
+		}
 	}
 
 	responds := topicRespondsToMetadata(t, client)

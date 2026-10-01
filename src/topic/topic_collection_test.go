@@ -75,6 +75,7 @@ func TestStartTopicPool(t *testing.T) {
 func TestFeedTopicPool(t *testing.T) {
 	testutils.SetupTestArgs()
 	args.GlobalArgs.TopicMode = "All"
+	args.GlobalArgs.ClusterID = "lkc-abc123"
 
 	i, err := integration.New("kafka", "1.0.0")
 	if err != nil {
@@ -108,6 +109,10 @@ func TestFeedTopicPool(t *testing.T) {
 			t.Errorf("Expected topic name %s, got %s", name, topics[index].Name)
 		}
 	}
+
+	// clusterId must NOT be an ID attribute - adding it would change entity keys/GUIDs for
+	// every existing customer already running a released nri-kafka.
+	assert.NotContains(t, topics[0].Entity.Metadata.IDAttrs, integration.NewIDAttribute("clusterId", "lkc-abc123"))
 }
 
 func TestPopulateTopicInventory(t *testing.T) {
@@ -148,4 +153,33 @@ func TestPopulateTopicInventory(t *testing.T) {
 
 	assert.Equal(t, expectedInventoryItems, myTopic.Entity.Inventory.Items())
 
+}
+
+func TestPopulateTopicMetrics_ReplicationFactorGating(t *testing.T) {
+	testutils.SetupTestArgs()
+
+	myTopic := &Topic{
+		ReplicationFactor: 2,
+		Partitions: []*partition{
+			{ID: 0, Leader: 1, Replicas: []int32{1, 2}, InSyncReplicas: []int32{1, 2}},
+		},
+	}
+
+	mockClient := &mocks.Client{}
+	mockClient.On("Controller").Return(sarama.NewBroker("fake:9092"), nil)
+
+	i, err := integration.New("test", "1.0.0")
+	assert.NoError(t, err)
+	e, err := i.Entity("topicEntity", "ka-topic")
+	assert.NoError(t, err)
+
+	disabled := e.NewMetricSet("disabledMetrics")
+	assert.NoError(t, populateTopicMetrics(myTopic, disabled, mockClient))
+	_, ok := disabled.Metrics["topic.replicationFactor"]
+	assert.False(t, ok, "topic.replicationFactor should not be collected when CollectTopicExtendedMetrics is false")
+
+	args.GlobalArgs.CollectTopicExtendedMetrics = true
+	enabled := e.NewMetricSet("enabledMetrics")
+	assert.NoError(t, populateTopicMetrics(myTopic, enabled, mockClient))
+	assert.Equal(t, float64(2), enabled.Metrics["topic.replicationFactor"])
 }

@@ -22,8 +22,15 @@ import (
 
 // GetBrokerMetrics collects all Broker JMX metrics and stores them in sample
 func GetBrokerMetrics(sample *metric.Set, conn connection.JMXConnection) {
+	// ActiveControllerCount/GlobalPartitionCount are cluster-wide; collected via ClusterMetricDefs instead.
 	CollectMetricDefinitions(sample, brokerMetricDefs, nil, conn)
 	CollectBrokerRequestMetrics(sample, brokerRequestMetricDefs, conn)
+
+	if args.GlobalArgs.CollectBrokerExtendedMetrics {
+		CollectMetricDefinitions(sample, brokerExtendedMetricDefs, nil, conn)
+		CollectMetricDefinitions(sample, jvmMetricDefs, nil, conn)
+		CollectGarbageCollectorMetrics(sample, conn)
+	}
 }
 
 // GetConsumerMetrics collects all Consumer metrics for the given
@@ -119,6 +126,33 @@ func CollectBrokerRequestMetrics(sample *metric.Set, metricSets []*JMXMetricSet,
 
 	if len(notFoundMetrics) > 0 {
 		log.Warn("Can't find raw metrics in results for keys: %v", notFoundMetrics)
+	}
+}
+
+// CollectGarbageCollectorMetrics sums CollectionTime across every GC MBean present.
+func CollectGarbageCollectorMetrics(sample *metric.Set, conn connection.JMXConnection) {
+	results, err := conn.QueryMBeanAttributes(jvmGCMBean)
+	if err != nil {
+		if jmxErr, ok := gojmx.IsJMXError(err); ok {
+			log.Error("Unable to execute JMX query for MBean '%s': %v", jvmGCMBean, jmxErr)
+			return
+		}
+		log.Error("Connection error for %s:%s : %s", jmx.HostName(), jmx.Port(), err)
+		os.Exit(1)
+	}
+
+	var collectionTime float64
+	for _, attr := range results {
+		if attr.ResponseType == gojmx.ResponseTypeErr || !strings.HasSuffix(attr.Name, jvmGCCollectionTimeAttr) {
+			continue
+		}
+		if value, err := attr.GetValueAsFloat(); err == nil {
+			collectionTime += value
+		}
+	}
+
+	if err := sample.SetMetric("jvm.gcTimePerSecond", collectionTime, metric.RATE); err != nil {
+		log.Error("Error setting value: %s", err)
 	}
 }
 
