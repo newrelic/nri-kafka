@@ -129,8 +129,7 @@ func CollectBrokerRequestMetrics(sample *metric.Set, metricSets []*JMXMetricSet,
 	}
 }
 
-// CollectGarbageCollectorMetrics sums CollectionCount/CollectionTime across every GC MBean, bucketed
-// into young/old via classifyGCGeneration (collector names vary by algorithm, so no fixed MetricDefinition).
+// CollectGarbageCollectorMetrics sums CollectionTime across every GC MBean present.
 func CollectGarbageCollectorMetrics(sample *metric.Set, conn connection.JMXConnection) {
 	results, err := conn.QueryMBeanAttributes(jvmGCMBean)
 	if err != nil {
@@ -142,58 +141,19 @@ func CollectGarbageCollectorMetrics(sample *metric.Set, conn connection.JMXConne
 		os.Exit(1)
 	}
 
-	var collectionCount, collectionTime float64
-	var youngCount, youngTime, oldCount, oldTime float64
+	var collectionTime float64
 	for _, attr := range results {
-		if attr.ResponseType == gojmx.ResponseTypeErr {
+		if attr.ResponseType == gojmx.ResponseTypeErr || !strings.HasSuffix(attr.Name, jvmGCCollectionTimeAttr) {
 			continue
 		}
-
-		value, err := attr.GetValueAsFloat()
-		if err != nil {
-			continue
-		}
-
-		var isCount, isTime bool
-		switch {
-		case strings.HasSuffix(attr.Name, jvmGCCollectionCountAttr):
-			collectionCount += value
-			isCount = true
-		case strings.HasSuffix(attr.Name, jvmGCCollectionTimeAttr):
+		if value, err := attr.GetValueAsFloat(); err == nil {
 			collectionTime += value
-			isTime = true
-		default:
-			continue
-		}
-
-		match := jvmMBeanNameRegex.FindStringSubmatch(attr.Name)
-		if match == nil {
-			continue
-		}
-		young, old := classifyGCGeneration(match[1])
-		switch {
-		case young && isCount:
-			youngCount += value
-		case young && isTime:
-			youngTime += value
-		case old && isCount:
-			oldCount += value
-		case old && isTime:
-			oldTime += value
 		}
 	}
 
-	setGCMetric := func(name string, value float64) {
-		if err := sample.SetMetric(name, value, metric.RATE); err != nil {
-			log.Error("Error setting value: %s", err)
-		}
+	if err := sample.SetMetric("jvm.gcTimePerSecond", collectionTime, metric.RATE); err != nil {
+		log.Error("Error setting value: %s", err)
 	}
-	setGCMetric("jvm.gcCollectionsPerSecond", collectionCount)
-	setGCMetric("jvm.gcTimePerSecond", collectionTime)
-	setGCMetric("jvm.gcYoungGenCollectionsPerSecond", youngCount)
-	setGCMetric("jvm.gcYoungGenTimePerSecond", youngTime)
-	setGCMetric("jvm.gcOldGenCollectionsPerSecond", oldCount)
-	setGCMetric("jvm.gcOldGenTimePerSecond", oldTime)
 }
 
 // CollectMetricDefinitions collects the set of metrics from the current open JMX connection and add them to the sample
