@@ -291,8 +291,7 @@ func collectClusterMetrics(broker *connection.Broker, i *integration.Integration
 		return
 	}
 
-	clusterCollector := cluster.NewCollector(jmxConn, activeControllerCount)
-	if err := clusterCollector.CollectMetrics(i); err != nil {
+	if err := cluster.CollectMetrics(i, jmxConn, activeControllerCount); err != nil {
 		log.Error("Failed to collect cluster metrics: %s", err)
 	}
 
@@ -301,12 +300,8 @@ func collectClusterMetrics(broker *connection.Broker, i *integration.Integration
 	}
 }
 
-// countActiveControllers sums ActiveControllerCount across every broker's own JMX connection.
-// Each broker reports a strict 0 or 1 (see broker.isActiveController) - Kafka itself has no
-// single authoritative source for the cluster-wide total, unlike every other ClusterMetricDefs
-// metric, so this is computed here rather than read from one broker. In a healthy cluster the
-// sum is exactly 1; 0 (no controller elected) or >1 (split-brain) both indicate a real problem.
-// Connection/query failures for a given broker are logged and skipped, not fatal.
+// countActiveControllers sums each broker's own strict 0/1 ActiveControllerCount - unlike other
+// ClusterMetricDefs metrics, Kafka has no single authoritative source for this cluster-wide total.
 func countActiveControllers(brokers []*connection.Broker, jmxConnProvider connection.JMXProvider) int {
 	activeCount := 0
 

@@ -252,14 +252,10 @@ var brokerMetricDefs = []*JMXMetricSet{
 	},
 }
 
-// brokerExtendedMetricDefs holds low-cost broker metrics gated behind CollectBrokerExtendedMetrics
-// (default off) - single extra attribute reads on Kafka MBean families already queried for
-// other always-on metrics in brokerMetricDefs, not requiring a new connection or MBean domain.
+// brokerExtendedMetricDefs holds low-cost metrics gated behind CollectBrokerExtendedMetrics
+// (default off): extra attribute reads on MBean families brokerMetricDefs already queries.
 var brokerExtendedMetricDefs = []*JMXMetricSet{
-	// Controller status - unlike GlobalPartitionCount (only accurate from the active
-	// controller's own tracked state, see ClusterMetricDefs), ActiveControllerCount is a
-	// strict 0/1 gauge that's valid to read from any broker's own JMX: it just reports
-	// whether that specific broker is currently the elected controller.
+	// Strict 0/1 per broker, unlike GlobalPartitionCount which needs the active controller - see ClusterMetricDefs.
 	{
 		MBean:        "kafka.controller:type=KafkaController,name=ActiveControllerCount",
 		MetricPrefix: "kafka.controller:type=KafkaController,name=ActiveControllerCount,",

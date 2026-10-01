@@ -31,9 +31,7 @@ type ParsedArguments struct {
 	ClusterName  string
 	KafkaVersion sarama.KafkaVersion
 
-	// ClusterID is the Kafka-native cluster identifier, fetched from broker metadata at
-	// startup. It is not a CLI argument; it is populated programmatically once brokers
-	// are discovered. Empty if the brokers didn't report one.
+	// ClusterID is populated from broker metadata after discovery, not a CLI argument.
 	ClusterID string
 
 	AutodiscoverStrategy string
@@ -97,9 +95,7 @@ type ParsedArguments struct {
 	CollectTopicOffset           bool
 	CollectBrokerExtendedMetrics bool
 
-	// DisableAttributes is the parsed form of the DisableAttributes JSON array - attribute
-	// names (e.g. "clusterId", "brokerId") to omit from every sample that would otherwise
-	// include them.
+	// DisableAttributes is the parsed []string form of ArgumentList.DisableAttributes.
 	DisableAttributes []string
 
 	// Consumer offset arguments

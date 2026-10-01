@@ -10,36 +10,24 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestCollector_CollectMetrics(t *testing.T) {
-	// Set up mock arguments
+func TestCollectMetrics(t *testing.T) {
 	args.GlobalArgs = &args.ParsedArguments{
 		ClusterName: "test-cluster",
 		ClusterID:   "lkc-abc123",
 	}
 
-	// Create integration
 	i, err := integration.New("test", "1.0.0")
 	require.NoError(t, err)
 
-	// Create a mock JMX client
-	mockJMX := mocks.NewEmptyMockJMXProvider()
-
-	// Create collector with mock JMX client and a pre-computed active controller count
-	collector := NewCollector(mockJMX, 1)
-
-	// Create the entity using the collector's Entity method
-	entity, err := collector.Entity(i)
+	entity, err := Entity(i)
 	require.NoError(t, err)
 
-	// Verify entity was created with correct metadata - identified by clusterName, not by
-	// whichever broker's JMX happened to answer this collection run. No ID attributes: the
-	// entity key is just namespace:name.
 	assert.Equal(t, ClusterName, entity.Metadata.Namespace)
 	assert.Equal(t, args.GlobalArgs.ClusterName, entity.Metadata.Name)
 	assert.Equal(t, 1, len(i.Entities))
 	assert.Empty(t, entity.Metadata.IDAttrs)
 
-	err = collector.CollectMetrics(i)
+	err = CollectMetrics(i, mocks.NewEmptyMockJMXProvider(), 1)
 	require.NoError(t, err)
 
 	require.Len(t, entity.Metrics, 1)
@@ -56,7 +44,7 @@ func TestCollector_CollectMetrics(t *testing.T) {
 	assert.Equal(t, expected, sample.Metrics)
 }
 
-func TestCollector_Entity_FallsBackToClusterIDWhenClusterNameUnset(t *testing.T) {
+func TestEntity_FallsBackToClusterIDWhenClusterNameUnset(t *testing.T) {
 	args.GlobalArgs = &args.ParsedArguments{
 		ClusterName: "",
 		ClusterID:   "lkc-abc123",
@@ -65,18 +53,14 @@ func TestCollector_Entity_FallsBackToClusterIDWhenClusterNameUnset(t *testing.T)
 	i, err := integration.New("test", "1.0.0")
 	require.NoError(t, err)
 
-	collector := NewCollector(mocks.NewEmptyMockJMXProvider(), 1)
-
-	entity, err := collector.Entity(i)
+	entity, err := Entity(i)
 	require.NoError(t, err)
 
-	// cluster_name is optional and has no default - clusterId is auto-populated from broker
-	// metadata, so it's what the entity should be named when cluster_name isn't set.
 	assert.Equal(t, "lkc-abc123", entity.Metadata.Name)
 	assert.Empty(t, entity.Metadata.IDAttrs)
 }
 
-func TestCollector_Entity_ErrorsWhenNeitherClusterNameNorClusterIDSet(t *testing.T) {
+func TestEntity_ErrorsWhenNeitherClusterNameNorClusterIDSet(t *testing.T) {
 	args.GlobalArgs = &args.ParsedArguments{
 		ClusterName: "",
 		ClusterID:   "",
@@ -85,8 +69,6 @@ func TestCollector_Entity_ErrorsWhenNeitherClusterNameNorClusterIDSet(t *testing
 	i, err := integration.New("test", "1.0.0")
 	require.NoError(t, err)
 
-	collector := NewCollector(mocks.NewEmptyMockJMXProvider(), 1)
-
-	_, err = collector.Entity(i)
+	_, err = Entity(i)
 	require.Error(t, err)
 }

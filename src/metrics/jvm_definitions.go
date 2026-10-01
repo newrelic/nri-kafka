@@ -7,9 +7,7 @@ import (
 	"github.com/newrelic/infra-integrations-sdk/v3/data/metric"
 )
 
-// jvmMetricDefs collects standard Java platform heap-memory MBean metrics. This isn't a
-// Kafka-specific MBean - it's a generic JVM platform MBean exposed on the same JMX connection
-// nri-kafka already holds open to the broker, since it's the same JVM process.
+// jvmMetricDefs collects standard JVM heap-memory metrics over the same JMX connection already open to the broker.
 var jvmMetricDefs = []*JMXMetricSet{
 	// Heap memory - nrjmx flattens the composite HeapMemoryUsage attribute with capitalized
 	// sub-field names (HeapMemoryUsage.Used, not .used), verified against a live broker.
@@ -42,14 +40,11 @@ const (
 	jvmGCCollectionTimeAttr  = ",attr=CollectionTime"
 )
 
-// jvmMBeanNameRegex extracts a wildcarded "name=" value without anchoring on what follows it:
-// key order varies by MBean (JDK platform beans put name before type, Kafka's own beans do
-// the opposite).
+// jvmMBeanNameRegex extracts a wildcarded "name=" value regardless of key order (varies by MBean).
 var jvmMBeanNameRegex = regexp.MustCompile(`name="?([^,"]+)"?`)
 
-// classifyGCGeneration buckets a GC collector name into young/old generation. Unmatched
-// collectors (e.g. G1's concurrent marking cycle) count toward neither bucket, only the
-// flat jvm.gcCollectionsPerSecond/gcTimePerSecond totals.
+// classifyGCGeneration buckets a GC collector name into young/old; unmatched collectors (e.g. G1's
+// concurrent marking cycle) count toward neither, only the flat jvm.gcCollectionsPerSecond totals.
 func classifyGCGeneration(collectorName string) (young, old bool) {
 	lower := strings.ToLower(collectorName)
 	switch {

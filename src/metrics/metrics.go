@@ -22,9 +22,7 @@ import (
 
 // GetBrokerMetrics collects all Broker JMX metrics and stores them in sample
 func GetBrokerMetrics(sample *metric.Set, conn connection.JMXConnection) {
-	// ActiveControllerCount and GlobalPartitionCount are only meaningful read from the
-	// controller broker specifically - see ClusterMetricDefs, which collects them correctly
-	// via connection.FindControllerBroker instead of every broker's own JMX connection.
+	// ActiveControllerCount/GlobalPartitionCount are cluster-wide; collected via ClusterMetricDefs instead.
 	CollectMetricDefinitions(sample, brokerMetricDefs, nil, conn)
 	CollectBrokerRequestMetrics(sample, brokerRequestMetricDefs, conn)
 
@@ -131,11 +129,8 @@ func CollectBrokerRequestMetrics(sample *metric.Set, metricSets []*JMXMetricSet,
 	}
 }
 
-// CollectGarbageCollectorMetrics sums CollectionCount and CollectionTime across every garbage
-// collector MBean present, and buckets the same values into young/old generation via
-// classifyGCGeneration. Collector names vary by GC algorithm, so unlike the rest of
-// jvmMetricDefs this can't be a fixed MetricDefinition - it aggregates by attribute suffix
-// instead, regardless of which collector name reported it.
+// CollectGarbageCollectorMetrics sums CollectionCount/CollectionTime across every GC MBean, bucketed
+// into young/old via classifyGCGeneration (collector names vary by algorithm, so no fixed MetricDefinition).
 func CollectGarbageCollectorMetrics(sample *metric.Set, conn connection.JMXConnection) {
 	results, err := conn.QueryMBeanAttributes(jvmGCMBean)
 	if err != nil {

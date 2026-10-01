@@ -235,14 +235,12 @@ func TestProducerConsumerEntitiesCreation(t *testing.T) {
 	}
 	for _, c := range cases {
 		t.Run(c.Name, func(t *testing.T) {
-			// setup integration
 			i, err := integration.New(c.Name, "1.0.0")
 			require.NoError(t, err)
 			testutils.SetupTestArgs()
 			args.GlobalArgs.ClusterID = "lkc-abc123"
 			connProvider := mocks.NewEmptyMockJMXProvider()
 			connProvider.Names = c.JMXNames
-			// run collection
 			c.CollectionFn(i, c.JMXInfo, connProvider)
 			var entityNames []string
 			for _, entity := range i.Entities {
@@ -256,9 +254,6 @@ func TestProducerConsumerEntitiesCreation(t *testing.T) {
 }
 
 func TestCollectConsumerMetrics_IDAttributesMatchReleasedBehavior(t *testing.T) {
-	// clusterId must NOT be an ID attribute here - adding it would change entity keys/GUIDs
-	// for every existing customer already running a released nri-kafka. host stays, matching
-	// the identity this path has always shipped with.
 	i, err := integration.New(t.Name(), "1.0.0")
 	require.NoError(t, err)
 	testutils.SetupTestArgs()

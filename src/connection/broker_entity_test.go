@@ -12,8 +12,6 @@ import (
 )
 
 func Test_Broker_Entity_ExcludesClusterID(t *testing.T) {
-	// clusterId must NOT be an ID attribute - adding it would change entity keys/GUIDs for
-	// every existing customer already running a released nri-kafka.
 	testutils.SetupTestArgs()
 	args.GlobalArgs.ClusterName = "test-cluster"
 	args.GlobalArgs.ClusterID = "lkc-abc123"

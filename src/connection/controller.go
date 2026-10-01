@@ -1,4 +1,3 @@
-// Package connection implements connection code
 package connection
 
 import (
@@ -7,8 +6,7 @@ import (
 	"github.com/newrelic/infra-integrations-sdk/v3/log"
 )
 
-// FindControllerBroker identifies and returns the controller broker from a list of brokers
-// If the controller cannot be found, it returns nil
+// FindControllerBroker returns nil if the controller cannot be found.
 func FindControllerBroker(brokers []*Broker) *Broker {
 	if len(brokers) == 0 {
 		return nil

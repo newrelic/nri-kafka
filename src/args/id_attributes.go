@@ -6,8 +6,7 @@ import (
 	"github.com/newrelic/infra-integrations-sdk/v3/data/attribute"
 )
 
-// idAttribute wraps key/value as an attribute, or returns nil if the customer disabled key
-// via DisableAttributes. Callers append the result to their sample's attribute list.
+// idAttribute returns nil if key was disabled via DisableAttributes.
 func idAttribute(key, value string) []attribute.Attribute {
 	if slices.Contains(GlobalArgs.DisableAttributes, key) {
 		return nil

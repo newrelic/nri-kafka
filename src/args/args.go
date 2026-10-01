@@ -92,7 +92,5 @@ type ArgumentList struct {
 
 	TopicSource string `default:"broker" help:"Collect topics list from either the Broker or Zookeeper"`
 
-	// DisableAttributes lists attribute names to omit from every sample that would otherwise
-	// include them. Supports: clusterId, brokerId.
 	DisableAttributes string `default:"[]" help:"JSON array of attribute names to omit from every sample that would otherwise include them. Currently supports 'clusterId' and 'brokerId'."`
 }
