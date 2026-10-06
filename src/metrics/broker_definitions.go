@@ -252,6 +252,52 @@ var brokerMetricDefs = []*JMXMetricSet{
 	},
 }
 
+// brokerExtendedMetricDefs holds low-cost metrics gated behind CollectBrokerExtendedMetrics
+// (default off): extra attribute reads on MBean families brokerMetricDefs already queries.
+var brokerExtendedMetricDefs = []*JMXMetricSet{
+	// Strict 0/1 per broker, unlike GlobalPartitionCount which needs the active controller - see ClusterMetricDefs.
+	{
+		MBean:        "kafka.controller:type=KafkaController,name=ActiveControllerCount",
+		MetricPrefix: "kafka.controller:type=KafkaController,name=ActiveControllerCount,",
+		MetricDefs: []*MetricDefinition{
+			{
+				Name:       "broker.isActiveController",
+				SourceType: metric.GAUGE,
+				JMXAttr:    "attr=Value",
+			},
+		},
+	},
+	{
+		MBean:        "kafka.server:type=ReplicaManager,name=*",
+		MetricPrefix: "kafka.server:type=ReplicaManager,",
+		MetricDefs: []*MetricDefinition{
+			{
+				Name:       "broker.leaderCount",
+				SourceType: metric.GAUGE,
+				JMXAttr:    "name=LeaderCount,attr=Value",
+			},
+			{
+				Name:       "broker.underMinIsrPartitionCount",
+				SourceType: metric.GAUGE,
+				JMXAttr:    "name=UnderMinIsrPartitionCount,attr=Value",
+			},
+		},
+	},
+	// Replica fetcher lag - how far this broker's follower replicas are behind their
+	// leaders, distinct from consumer lag.
+	{
+		MBean:        "kafka.server:type=ReplicaFetcherManager,name=MaxLag,clientId=Replica",
+		MetricPrefix: "kafka.server:type=ReplicaFetcherManager,name=MaxLag,clientId=Replica,",
+		MetricDefs: []*MetricDefinition{
+			{
+				Name:       "replication.maxLag",
+				SourceType: metric.GAUGE,
+				JMXAttr:    "attr=Value",
+			},
+		},
+	},
+}
+
 // BrokerTopicMetricDefs metric definitions for topic metrics that are specific to a Broker
 var BrokerTopicMetricDefs = []*JMXMetricSet{
 	{
