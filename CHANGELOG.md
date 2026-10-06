@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+### security
+- Bump apache/thrift  to v0.25.0
+
 ## v3.26.0 - 2026-09-30
 
 ### 🛡️ Security notices
