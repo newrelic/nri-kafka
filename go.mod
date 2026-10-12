@@ -1,6 +1,6 @@
 module github.com/newrelic/nri-kafka
 
-go 1.27.1
+go 1.27.2
 
 require (
 	github.com/IBM/sarama v1.43.3
