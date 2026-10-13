@@ -6,6 +6,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/newrelic/nri-kafka/src/args"
 	"github.com/newrelic/nri-kafka/src/connection/mocks"
 	"github.com/newrelic/nrjmx/gojmx"
 
@@ -17,6 +18,60 @@ import (
 var (
 	errTest = errors.New("this is an error")
 )
+
+func TestGetBrokerMetrics_LeaderCount(t *testing.T) {
+	testutils.SetupTestArgs()
+	args.GlobalArgs.CollectBrokerExtendedMetrics = true
+
+	mockResponse := &mocks.MockJMXResponse{
+		Result: []*gojmx.AttributeResponse{
+			{
+				Name:         "kafka.server:type=ReplicaManager,name=LeaderCount,attr=Value",
+				ResponseType: gojmx.ResponseTypeInt,
+				IntValue:     28,
+			},
+		},
+	}
+
+	mockJMXProvider := &mocks.MockJMXProvider{Response: mockResponse}
+
+	i, _ := integration.New("test", "1.0.0")
+	e, _ := i.Entity("leaderCountEntity", "leaderCountNamespace")
+	m := e.NewMetricSet("testMetrics")
+
+	GetBrokerMetrics(m, mockJMXProvider)
+
+	if got := m.Metrics["broker.leaderCount"]; got != float64(28) {
+		t.Errorf("expected broker.leaderCount = 28, got %v", got)
+	}
+}
+
+func TestGetBrokerMetrics_IsActiveController(t *testing.T) {
+	testutils.SetupTestArgs()
+	args.GlobalArgs.CollectBrokerExtendedMetrics = true
+
+	mockResponse := &mocks.MockJMXResponse{
+		Result: []*gojmx.AttributeResponse{
+			{
+				Name:         "kafka.controller:type=KafkaController,name=ActiveControllerCount,attr=Value",
+				ResponseType: gojmx.ResponseTypeInt,
+				IntValue:     1,
+			},
+		},
+	}
+
+	mockJMXProvider := &mocks.MockJMXProvider{Response: mockResponse}
+
+	i, _ := integration.New("test", "1.0.0")
+	e, _ := i.Entity("isActiveControllerEntity", "isActiveControllerNamespace")
+	m := e.NewMetricSet("testMetrics")
+
+	GetBrokerMetrics(m, mockJMXProvider)
+
+	if got := m.Metrics["broker.isActiveController"]; got != float64(1) {
+		t.Errorf("expected broker.isActiveController = 1, got %v", got)
+	}
+}
 
 func TestGetBrokerMetrics(t *testing.T) {
 	expected := map[string]interface{}{

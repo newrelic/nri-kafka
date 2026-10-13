@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+### enhancement
+- Add Kafka cluster-level metrics via `COLLECT_CLUSTER_METRICS`
+- Add real Kafka `clusterId`/`brokerId` on all samples; opt out via `DISABLE_ATTRIBUTES`
+- Add broker health and JVM metrics via `COLLECT_BROKER_EXTENDED_METRICS`
+- Add consumer offset lag metric via `COLLECT_CONSUMER_OFFSET_EXTENDED_METRICS`
+
+### bugfix
+- Fix the Kafka cluster ID never being captured due to a protocol version mismatch
+- Fix cluster and consumer entities fragmenting into duplicates under certain conditions
+
 ## v3.27.0 - 2026-10-07
 
 ### 🛡️ Security notices

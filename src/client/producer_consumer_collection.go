@@ -76,7 +76,7 @@ func CollectConsumerMetrics(i *integration.Integration, jmxInfo *args.JMXHost, j
 		return
 	}
 	for _, clientID := range clientIDs {
-		// Create an entity for the consumer
+		// clusterId is deliberately NOT an ID attribute - see connection.Broker.Entity.
 		clusterIDAttr := integration.NewIDAttribute("clusterName", args.GlobalArgs.ClusterName)
 		hostIDAttr := integration.NewIDAttribute("host", jmxInfo.Host)
 		consumerEntity, err := i.Entity(clientID, "ka-consumer", clusterIDAttr, hostIDAttr)
@@ -91,12 +91,16 @@ func CollectConsumerMetrics(i *integration.Integration, jmxInfo *args.JMXHost, j
 		// Gather Metrics for consumer
 		log.Debug("Collecting metrics for consumer %s", consumerEntity.Metadata.Name)
 		// Create a sample for consumer metrics
-		sample := consumerEntity.NewMetricSet("KafkaConsumerSample",
-			attribute.Attribute{Key: "clusterName", Value: args.GlobalArgs.ClusterName},
+		attrs := []attribute.Attribute{
+			{Key: "clusterName", Value: args.GlobalArgs.ClusterName},
+		}
+		attrs = append(attrs, args.ClusterIDAttribute()...)
+		attrs = append(attrs,
 			attribute.Attribute{Key: "displayName", Value: clientID},
 			attribute.Attribute{Key: "entityName", Value: "consumer:" + clientID},
 			attribute.Attribute{Key: "host", Value: jmxInfo.Host},
 		)
+		sample := consumerEntity.NewMetricSet("KafkaConsumerSample", attrs...)
 		// Collect the consumer metrics and populate the sample with them
 		log.Debug("Collecting metrics for Consumer '%s'", consumerEntity.Metadata.Name)
 		metrics.GetConsumerMetrics(consumerEntity.Metadata.Name, sample, conn)
@@ -121,7 +125,7 @@ func CollectProducerMetrics(i *integration.Integration, jmxInfo *args.JMXHost, j
 		return
 	}
 	for _, clientID := range clientIDs {
-		// Create the producer entity
+		// clusterId is deliberately NOT an ID attribute - see connection.Broker.Entity.
 		clusterIDAttr := integration.NewIDAttribute("clusterName", args.GlobalArgs.ClusterName)
 		hostIDAttr := integration.NewIDAttribute("host", jmxInfo.Host)
 		producerEntity, err := i.Entity(clientID, "ka-producer", clusterIDAttr, hostIDAttr)
@@ -132,12 +136,16 @@ func CollectProducerMetrics(i *integration.Integration, jmxInfo *args.JMXHost, j
 		if !(args.GlobalArgs.All() || args.GlobalArgs.Metrics) {
 			continue
 		}
-		sample := producerEntity.NewMetricSet("KafkaProducerSample",
-			attribute.Attribute{Key: "clusterName", Value: args.GlobalArgs.ClusterName},
+		attrs := []attribute.Attribute{
+			{Key: "clusterName", Value: args.GlobalArgs.ClusterName},
+		}
+		attrs = append(attrs, args.ClusterIDAttribute()...)
+		attrs = append(attrs,
 			attribute.Attribute{Key: "displayName", Value: clientID},
 			attribute.Attribute{Key: "entityName", Value: "producer:" + clientID},
 			attribute.Attribute{Key: "host", Value: jmxInfo.Host},
 		)
+		sample := producerEntity.NewMetricSet("KafkaProducerSample", attrs...)
 		// Collect producer metrics and populate the metric set with them
 		log.Debug("Collecting metrics for Producer '%s'", producerEntity.Metadata.Name)
 		metrics.GetProducerMetrics(producerEntity.Metadata.Name, sample, conn)

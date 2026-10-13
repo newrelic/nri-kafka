@@ -63,6 +63,53 @@ func (tm *TopicOffsetGetterMock) GetFromTopicPartition(topicName string, partiti
 	return 0, nil
 }
 
+func (tm *TopicOffsetGetterMock) GetEarliestFromTopicPartition(topicName string, partition int32) (int64, error) {
+	return 0, nil
+}
+
+type fixedOffsetGetterMock struct {
+	hwm      int64
+	earliest int64
+}
+
+func (f *fixedOffsetGetterMock) GetFromTopicPartition(topicName string, partition int32) (int64, error) {
+	return f.hwm, nil
+}
+
+func (f *fixedOffsetGetterMock) GetEarliestFromTopicPartition(topicName string, partition int32) (int64, error) {
+	return f.earliest, nil
+}
+
+func TestCollectClientPartitionOffsetMetrics_EarliestOffset(t *testing.T) {
+	block := &sarama.OffsetFetchResponseBlock{Offset: 50}
+	member := &sarama.GroupMemberDescription{ClientId: testClientID, ClientHost: "host-1"}
+	getter := &fixedOffsetGetterMock{hwm: 100, earliest: 10}
+
+	t.Run("omitted when CollectConsumerOffsetExtendedMetrics is false", func(t *testing.T) {
+		args.GlobalArgs = &args.ParsedArguments{}
+
+		i, err := integration.New("kafka", "1.0.0")
+		assert.NoError(t, err)
+
+		var result partitionLagResult
+		collectClientPartitionOffsetMetrics(&result, getter, consumerGroupOne, member, topicOne, 0, block, i)
+
+		assert.NotContains(t, i.Entities[0].Metrics[0].Metrics, "consumer.earliestOffset")
+	})
+
+	t.Run("present when CollectConsumerOffsetExtendedMetrics is true", func(t *testing.T) {
+		args.GlobalArgs = &args.ParsedArguments{CollectConsumerOffsetExtendedMetrics: true}
+
+		i, err := integration.New("kafka", "1.0.0")
+		assert.NoError(t, err)
+
+		var result partitionLagResult
+		collectClientPartitionOffsetMetrics(&result, getter, consumerGroupOne, member, topicOne, 0, block, i)
+
+		assert.Equal(t, float64(10), i.Entities[0].Metrics[0].Metrics["consumer.earliestOffset"])
+	})
+}
+
 func TestCollectOffsetsForConsumerGroup(t *testing.T) { // nolint: funlen
 	// MemberAssignment mock created as in sarama's consumer_group_member_test.go
 	members := map[string]*sarama.GroupMemberDescription{
@@ -82,6 +129,7 @@ func TestCollectOffsetsForConsumerGroup(t *testing.T) { // nolint: funlen
 	}
 
 	args.GlobalArgs = &args.ParsedArguments{}
+	args.GlobalArgs.ClusterID = "lkc-abc123"
 
 	testCases := []struct {
 		name                        string
@@ -218,6 +266,7 @@ func TestCollectOffsetsForConsumerGroup(t *testing.T) { // nolint: funlen
 				default:
 					assert.Fail(t, "not expected")
 				}
+				assert.Equal(t, args.GlobalArgs.ClusterID, entity.Metrics[0].Metrics["clusterId"])
 				assert.NotEmpty(t, entity)
 			}
 		})

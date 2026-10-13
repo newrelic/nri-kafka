@@ -159,6 +159,7 @@ func collectClientPartitionOffsetMetrics(
 
 	lag := hwm - block.Offset
 
+	// clusterId is deliberately NOT an ID attribute - see connection.Broker.Entity.
 	clusterIDAttr := integration.NewIDAttribute("clusterName", args.GlobalArgs.ClusterName)
 	consumerGroupIDAttr := integration.NewIDAttribute("consumerGroup", consumerGroup)
 	topicIDAttr := integration.NewIDAttribute("topic", topic)
@@ -170,14 +171,18 @@ func collectClientPartitionOffsetMetrics(
 		return
 	}
 
-	ms := partitionConsumerEntity.NewMetricSet("KafkaOffsetSample",
-		attribute.Attribute{Key: "clusterName", Value: args.GlobalArgs.ClusterName},
+	attrs := []attribute.Attribute{
+		{Key: "clusterName", Value: args.GlobalArgs.ClusterName},
+	}
+	attrs = append(attrs, args.ClusterIDAttribute()...)
+	attrs = append(attrs,
 		attribute.Attribute{Key: "consumerGroup", Value: consumerGroup},
 		attribute.Attribute{Key: "topic", Value: topic},
 		attribute.Attribute{Key: "partition", Value: strconv.Itoa(int(partition))},
 		attribute.Attribute{Key: "clientID", Value: memberDescription.ClientId},
 		attribute.Attribute{Key: "clientHost", Value: memberDescription.ClientHost},
 	)
+	ms := partitionConsumerEntity.NewMetricSet("KafkaOffsetSample", attrs...)
 
 	if block.Offset == kfkNoOffset {
 		log.Warn("Offset for topic %s, partition %d has expired (past retention period). Skipping offset and lag metrics", topic, partition)
@@ -190,6 +195,15 @@ func collectClientPartitionOffsetMetrics(
 		err = ms.SetMetric("consumer.lag", lag, metric.GAUGE)
 		if err != nil {
 			log.Error("Failed to set metric consumer.lag: %s", err)
+		}
+
+		if args.GlobalArgs.CollectConsumerOffsetExtendedMetrics {
+			earliestOffset, err := topicOffsetGetter.GetEarliestFromTopicPartition(topic, partition)
+			if err != nil {
+				log.Error("Failed to get earliest offset for topic %s, partition %d: %s", topic, partition, err)
+			} else if err := ms.SetMetric("consumer.earliestOffset", earliestOffset, metric.GAUGE); err != nil {
+				log.Error("Failed to set metric consumer.earliestOffset: %s", err)
+			}
 		}
 
 		partitionLagResult.ConsumerGroup = consumerGroup
@@ -262,6 +276,7 @@ func collectInactiveConsumerGroupOffsets(
 
 func generateConsumerNRMetrics(kafkaIntegration *integration.Integration, consumerClientRollup map[clientID]int) {
 	for clientID, totalLag := range consumerClientRollup {
+		// clusterId is deliberately NOT an ID attribute - see connection.Broker.Entity.
 		clusterIDAttr := integration.NewIDAttribute("clusterName", args.GlobalArgs.ClusterName)
 
 		clientEntity, err := kafkaIntegration.Entity(string(clientID), nrConsumerEntity, clusterIDAttr)
@@ -270,11 +285,12 @@ func generateConsumerNRMetrics(kafkaIntegration *integration.Integration, consum
 			continue
 		}
 
-		ms := clientEntity.NewMetricSet("KafkaOffsetSample",
-			attribute.Attribute{Key: "clusterName", Value: args.GlobalArgs.ClusterName},
-			attribute.Attribute{Key: "clientID", Value: string(clientID)},
-			attribute.Attribute{Key: "clusterName", Value: args.GlobalArgs.ClusterName},
-		)
+		attrs := []attribute.Attribute{
+			{Key: "clusterName", Value: args.GlobalArgs.ClusterName},
+		}
+		attrs = append(attrs, args.ClusterIDAttribute()...)
+		attrs = append(attrs, attribute.Attribute{Key: "clientID", Value: string(clientID)})
+		ms := clientEntity.NewMetricSet("KafkaOffsetSample", attrs...)
 
 		err = ms.SetMetric("consumer.totalLag", totalLag, metric.GAUGE)
 		if err != nil {
@@ -295,6 +311,7 @@ func consumerGroupMetrics(
 	cGroupActiveClientsRollup map[clientID]struct{},
 ) {
 	for consumerGroup, totalLag := range consumerGroupRollup {
+		// clusterId is deliberately NOT an ID attribute - see connection.Broker.Entity.
 		clusterIDAttr := integration.NewIDAttribute("clusterName", args.GlobalArgs.ClusterName)
 
 		consumerGroupEntity, err := kafkaIntegration.Entity(string(consumerGroup), nrConsumerGroupEntity, clusterIDAttr)
@@ -303,11 +320,12 @@ func consumerGroupMetrics(
 			continue
 		}
 
-		ms := consumerGroupEntity.NewMetricSet("KafkaOffsetSample",
-			attribute.Attribute{Key: "clusterName", Value: args.GlobalArgs.ClusterName},
-			attribute.Attribute{Key: "consumerGroup", Value: string(consumerGroup)},
-			attribute.Attribute{Key: "clusterName", Value: args.GlobalArgs.ClusterName},
-		)
+		attrs := []attribute.Attribute{
+			{Key: "clusterName", Value: args.GlobalArgs.ClusterName},
+		}
+		attrs = append(attrs, args.ClusterIDAttribute()...)
+		attrs = append(attrs, attribute.Attribute{Key: "consumerGroup", Value: string(consumerGroup)})
+		ms := consumerGroupEntity.NewMetricSet("KafkaOffsetSample", attrs...)
 
 		err = ms.SetMetric("consumerGroup.totalLag", totalLag, metric.GAUGE)
 		if err != nil {
@@ -335,6 +353,7 @@ func consumerGroupByTopicMetrics(
 	topicActiveClientsRollup map[topic]map[clientID]struct{},
 ) {
 	for topic, totalLag := range topicRollup {
+		// clusterId is deliberately NOT an ID attribute - see connection.Broker.Entity.
 		clusterIDAttr := integration.NewIDAttribute("clusterName", args.GlobalArgs.ClusterName)
 		consumerGroupIDAttr := integration.NewIDAttribute("consumerGroup", consumerGroup)
 		topicIDAttr := integration.NewIDAttribute("topic", string(topic))
@@ -345,11 +364,15 @@ func consumerGroupByTopicMetrics(
 			return
 		}
 
-		ms := partitionConsumerEntity.NewMetricSet("KafkaOffsetSample",
-			attribute.Attribute{Key: "clusterName", Value: args.GlobalArgs.ClusterName},
+		attrs := []attribute.Attribute{
+			{Key: "clusterName", Value: args.GlobalArgs.ClusterName},
+		}
+		attrs = append(attrs, args.ClusterIDAttribute()...)
+		attrs = append(attrs,
 			attribute.Attribute{Key: "consumerGroup", Value: consumerGroup},
 			attribute.Attribute{Key: "topic", Value: string(topic)},
 		)
+		ms := partitionConsumerEntity.NewMetricSet("KafkaOffsetSample", attrs...)
 
 		err = ms.SetMetric("consumerGroup.totalLag", totalLag, metric.GAUGE)
 		if err != nil {

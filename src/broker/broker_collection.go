@@ -151,11 +151,14 @@ func populateBrokerMetrics(b *connection.Broker, i *integration.Integration, con
 		log.Error("Failed to get entity for broker: %s", err)
 		return
 	}
-	sample := entity.NewMetricSet("KafkaBrokerSample",
-		attribute.Attribute{Key: "displayName", Value: entity.Metadata.Name},
-		attribute.Attribute{Key: "entityName", Value: "broker:" + entity.Metadata.Name},
-		attribute.Attribute{Key: "clusterName", Value: args.GlobalArgs.ClusterName},
-	)
+	attrs := []attribute.Attribute{
+		{Key: "displayName", Value: entity.Metadata.Name},
+		{Key: "entityName", Value: "broker:" + entity.Metadata.Name},
+		{Key: "clusterName", Value: args.GlobalArgs.ClusterName},
+	}
+	attrs = append(attrs, args.ClusterIDAttribute()...)
+	attrs = append(attrs, args.BrokerIDAttribute(b.ID)...)
+	sample := entity.NewMetricSet("KafkaBrokerSample", attrs...)
 
 	// Populate metrics set with broker metrics
 	metrics.GetBrokerMetrics(sample, conn)
@@ -172,12 +175,15 @@ func collectBrokerTopicMetrics(b *connection.Broker, collectedTopics []string, i
 	}
 
 	for _, topicName := range collectedTopics {
-		sample := entity.NewMetricSet("KafkaBrokerSample",
-			attribute.Attribute{Key: "displayName", Value: entity.Metadata.Name},
-			attribute.Attribute{Key: "entityName", Value: "broker:" + entity.Metadata.Name},
-			attribute.Attribute{Key: "clusterName", Value: args.GlobalArgs.ClusterName},
-			attribute.Attribute{Key: "topic", Value: topicName},
-		)
+		attrs := []attribute.Attribute{
+			{Key: "displayName", Value: entity.Metadata.Name},
+			{Key: "entityName", Value: "broker:" + entity.Metadata.Name},
+			{Key: "clusterName", Value: args.GlobalArgs.ClusterName},
+		}
+		attrs = append(attrs, args.ClusterIDAttribute()...)
+		attrs = append(attrs, args.BrokerIDAttribute(b.ID)...)
+		attrs = append(attrs, attribute.Attribute{Key: "topic", Value: topicName})
+		sample := entity.NewMetricSet("KafkaBrokerSample", attrs...)
 
 		// Insert into map
 		topicSampleLookup[topicName] = sample
