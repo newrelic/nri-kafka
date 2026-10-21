@@ -8,8 +8,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## Unreleased
 
 ### enhancement
-- Add Kafka cluster-level metrics via `COLLECT_CLUSTER_METRICS`
-- Add real Kafka `clusterId`/`brokerId` on all samples; opt out via `DISABLE_ATTRIBUTES`
+- Add Kafka cluster-level metrics via `COLLECT_CLUSTER_METRICS`; with `LOCAL_ONLY_COLLECTION` each instance reports its own `cluster.activeControllerCount` (read it with `max()`)
+- Add real Kafka `clusterId`/`brokerId` on all samples (omitted when the broker reports none); opt out via `DISABLE_ATTRIBUTES`
 - Add broker health and JVM metrics via `COLLECT_BROKER_EXTENDED_METRICS`
 - Add consumer offset lag metric via `COLLECT_CONSUMER_OFFSET_EXTENDED_METRICS`
 

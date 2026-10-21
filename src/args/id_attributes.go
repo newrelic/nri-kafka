@@ -6,9 +6,9 @@ import (
 	"github.com/newrelic/infra-integrations-sdk/v3/data/attribute"
 )
 
-// idAttribute returns nil if key was disabled via DisableAttributes.
+// idAttribute returns nil if key was disabled via DisableAttributes or has no value.
 func idAttribute(key, value string) []attribute.Attribute {
-	if slices.Contains(GlobalArgs.DisableAttributes, key) {
+	if value == "" || slices.Contains(GlobalArgs.DisableAttributes, key) {
 		return nil
 	}
 	return []attribute.Attribute{{Key: key, Value: value}}

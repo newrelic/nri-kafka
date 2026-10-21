@@ -23,6 +23,7 @@ import (
 	"github.com/newrelic/nri-kafka/src/consumeroffset"
 	"github.com/newrelic/nri-kafka/src/topic"
 	"github.com/newrelic/nri-kafka/src/zookeeper"
+	"github.com/newrelic/nrjmx/gojmx"
 )
 
 const (
@@ -251,14 +252,17 @@ func coreCollection(kafkaIntegration *integration.Integration, jmxConnProvider c
 		if args.GlobalArgs.CollectClusterMetrics {
 			log.Info("Collecting cluster metrics")
 			if len(brokers) > 0 {
-				activeControllerCount := countActiveControllers(brokers, jmxConnProvider)
-				controllerBroker := connection.FindControllerBroker(brokers)
-				if controllerBroker != nil {
-					log.Debug("Using controller broker (ID: %s) for cluster metrics collection", controllerBroker.ID)
+				activeControllerCount, controllerBroker, known := countActiveControllers(brokers, jmxConnProvider)
+				switch {
+				case !known:
+					log.Warn("Could not read ActiveControllerCount from every broker and none reported a controller; skipping cluster metrics this cycle")
+				case controllerBroker != nil:
 					collectClusterMetrics(controllerBroker, kafkaIntegration, jmxConnProvider, activeControllerCount)
-				} else {
-					log.Debug("Controller broker not found, falling back to first broker")
-					collectClusterMetrics(brokers[0], kafkaIntegration, jmxConnProvider, activeControllerCount)
+				default:
+					if controllerBroker = connection.FindControllerBroker(brokers); controllerBroker == nil {
+						controllerBroker = brokers[0]
+					}
+					collectClusterMetrics(controllerBroker, kafkaIntegration, jmxConnProvider, activeControllerCount)
 				}
 			} else {
 				log.Error("No brokers available for cluster metric collection")
@@ -302,8 +306,10 @@ func collectClusterMetrics(broker *connection.Broker, i *integration.Integration
 
 // countActiveControllers sums each broker's own strict 0/1 ActiveControllerCount - unlike other
 // ClusterMetricDefs metrics, Kafka has no single authoritative source for this cluster-wide total.
-func countActiveControllers(brokers []*connection.Broker, jmxConnProvider connection.JMXProvider) int {
-	activeCount := 0
+// controller is a listed broker that reported 1. known is false when a count of 0 only reflects
+// brokers that could not be read.
+func countActiveControllers(brokers []*connection.Broker, jmxConnProvider connection.JMXProvider) (activeCount int, controller *connection.Broker, known bool) {
+	answered := 0
 
 	for _, b := range brokers {
 		jmxConfig := connection.NewConfigBuilder().
@@ -326,11 +332,16 @@ func countActiveControllers(brokers []*connection.Broker, jmxConnProvider connec
 		}
 
 		for _, attr := range results {
-			if !strings.HasSuffix(attr.Name, "attr=Value") {
+			// nrjmx returns a failed attribute read as an error response whose value reads as 0.
+			if !strings.HasSuffix(attr.Name, "attr=Value") || attr.ResponseType == gojmx.ResponseTypeErr {
 				continue
 			}
 			if value, err := attr.GetValueAsFloat(); err == nil {
+				answered++
 				activeCount += int(value)
+				if value == 1 && controller == nil {
+					controller = b
+				}
 			}
 		}
 
@@ -339,7 +350,7 @@ func countActiveControllers(brokers []*connection.Broker, jmxConnProvider connec
 		}
 	}
 
-	return activeCount
+	return activeCount, controller, activeCount > 0 || answered == len(brokers)
 }
 
 // ExitOnErr will exit with a 1 if the error is non-nil

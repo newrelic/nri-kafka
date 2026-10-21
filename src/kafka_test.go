@@ -32,9 +32,11 @@ func TestCountActiveControllers_SumsAcrossBrokers(t *testing.T) {
 		{Host: "broker3", JMXPort: 9999},
 	}
 
-	count := countActiveControllers(brokers, mockJMXProvider)
+	count, controller, known := countActiveControllers(brokers, mockJMXProvider)
 
 	assert.Equal(t, 3, count)
+	assert.True(t, known)
+	assert.Equal(t, brokers[0], controller)
 }
 
 func TestCountActiveControllers_SkipsFailedConnections(t *testing.T) {
@@ -48,9 +50,41 @@ func TestCountActiveControllers_SkipsFailedConnections(t *testing.T) {
 		{Host: "broker1", JMXPort: 9999},
 	}
 
-	count := countActiveControllers(brokers, mockJMXProvider)
+	count, controller, known := countActiveControllers(brokers, mockJMXProvider)
 
 	assert.Equal(t, 0, count)
+	assert.Nil(t, controller)
+	assert.False(t, known, "a count of 0 from unreadable brokers is unknown, not zero")
+}
+
+func TestCountActiveControllers_ErrorResponseIsNotZero(t *testing.T) {
+	testutils.SetupTestArgs()
+
+	mockJMXProvider := &mocks.MockJMXProvider{
+		Response: &mocks.MockJMXResponse{Result: []*gojmx.AttributeResponse{
+			{Name: "kafka.controller:type=KafkaController,name=ActiveControllerCount,attr=Value", ResponseType: gojmx.ResponseTypeErr},
+		}},
+	}
+
+	_, _, known := countActiveControllers([]*connection.Broker{{Host: "broker1", JMXPort: 9999}}, mockJMXProvider)
+
+	assert.False(t, known)
+}
+
+func TestCountActiveControllers_ConfirmedZero(t *testing.T) {
+	testutils.SetupTestArgs()
+
+	mockJMXProvider := &mocks.MockJMXProvider{
+		Response: &mocks.MockJMXResponse{Result: []*gojmx.AttributeResponse{
+			{Name: "kafka.controller:type=KafkaController,name=ActiveControllerCount,attr=Value", ResponseType: gojmx.ResponseTypeInt, IntValue: 0},
+		}},
+	}
+
+	count, controller, known := countActiveControllers([]*connection.Broker{{Host: "broker1", JMXPort: 9999}}, mockJMXProvider)
+
+	assert.Equal(t, 0, count)
+	assert.Nil(t, controller)
+	assert.True(t, known, "every broker answered 0: no active controller")
 }
 
 func Test_enforceTopicLimit(t *testing.T) {

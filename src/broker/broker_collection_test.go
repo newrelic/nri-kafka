@@ -15,6 +15,7 @@ import (
 	"github.com/IBM/sarama"
 	"github.com/newrelic/infra-integrations-sdk/v3/data/inventory"
 	"github.com/newrelic/infra-integrations-sdk/v3/integration"
+	"github.com/newrelic/nri-kafka/src/args"
 	"github.com/newrelic/nri-kafka/src/connection"
 	"github.com/newrelic/nri-kafka/src/connection/mocks"
 	"github.com/newrelic/nri-kafka/src/testutils"
@@ -145,6 +146,7 @@ func TestPopulateBrokerMetrics_JMXOpenError(t *testing.T) {
 
 func TestPopulateBrokerMetrics_Normal(t *testing.T) {
 	testutils.SetupTestArgs()
+	args.GlobalArgs.ClusterID = "test-cluster-id"
 
 	mockResponse := &mocks.MockJMXResponse{
 		Err:    nil,
@@ -178,15 +180,35 @@ func TestPopulateBrokerMetrics_Normal(t *testing.T) {
 		"displayName": "kafkabroker:9090",
 		"entityName":  "broker:" + "kafkabroker:9090",
 		"clusterName": "",
-		"clusterId":   "",
+		"clusterId":   "test-cluster-id",
 		"brokerId":    "0",
 	}
 
 	assert.Equal(t, expected, sample.Metrics)
 }
 
+func TestPopulateBrokerMetrics_NoClusterID(t *testing.T) {
+	testutils.SetupTestArgs() // the broker reported no cluster id: ClusterID stays empty
+
+	mockJMXProvider := &mocks.MockJMXProvider{
+		Response: &mocks.MockJMXResponse{Result: []*gojmx.AttributeResponse{}},
+	}
+	mockBroker := &mocks.SaramaBroker{}
+	mockBroker.On("Addr").Return("kafkabroker:9090")
+	testBroker := &connection.Broker{Host: "kafkabroker", JMXPort: 9999, ID: "0", SaramaBroker: mockBroker}
+	i, _ := integration.New("kafka", "1.0.0")
+
+	populateBrokerMetrics(testBroker, i, mockJMXProvider)
+
+	entity, _ := testBroker.Entity(i)
+	assert.Len(t, entity.Metrics, 1)
+	assert.NotContains(t, entity.Metrics[0].Metrics, "clusterId", "an empty cluster id must not be sent")
+	assert.Equal(t, "0", entity.Metrics[0].Metrics["brokerId"])
+}
+
 func TestCollectBrokerTopicMetrics(t *testing.T) {
 	testutils.SetupTestArgs()
+	args.GlobalArgs.ClusterID = "test-cluster-id"
 
 	mockResponse := &mocks.MockJMXResponse{
 		Result: []*gojmx.AttributeResponse{
@@ -222,7 +244,7 @@ func TestCollectBrokerTopicMetrics(t *testing.T) {
 
 	sample := e.NewMetricSet("KafkaBrokerSample",
 		attribute.Attribute{Key: "clusterName", Value: ""},
-		attribute.Attribute{Key: "clusterId", Value: ""},
+		attribute.Attribute{Key: "clusterId", Value: "test-cluster-id"},
 		attribute.Attribute{Key: "brokerId", Value: "0"},
 		attribute.Attribute{Key: "displayName", Value: "kafkabroker:9090"},
 		attribute.Attribute{Key: "entityName", Value: "broker:kafkabroker:9090"},

@@ -77,7 +77,7 @@ type ArgumentList struct {
 	CollectTopicSize             bool   `default:"false" help:"Enablement of on disk Topic size metric collection. This metric can be very resource intensive to collect especially against many topics."`
 	CollectTopicOffset           bool   `default:"false" help:"Enablement of Topic offsets collection. This metric can be very resource intensive to collect especially against many topics."`
 	CollectTopicExtendedMetrics  bool   `default:"false" help:"Collect topic.replicationFactor on KafkaTopicSample."`
-	CollectClusterMetrics        bool   `default:"false" help:"Collect cluster-wide metrics from the Kafka controller."`
+	CollectClusterMetrics        bool   `default:"false" help:"Collect cluster-wide metrics from the Kafka controller. With LocalOnlyCollection each instance reports its own cluster.activeControllerCount (read it with max())."`
 	CollectBrokerExtendedMetrics bool   `default:"false" help:"Collect broker.isActiveController, broker.leaderCount, broker.underMinIsrPartitionCount, replication.maxLag, and broker JVM heap memory/GC time rate on KafkaBrokerSample. The default home for future broker-level additions."`
 
 	// Consumer offset arguments
