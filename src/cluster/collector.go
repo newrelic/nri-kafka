@@ -22,15 +22,16 @@ const (
 	ClusterEventType = "KafkaClusterSample"
 )
 
-// CollectMetrics collects cluster-wide metrics via conn, ideally the controller broker's JMX connection.
-func CollectMetrics(i *integration.Integration, conn connection.JMXConnection, activeControllerCount int) error {
+// CollectMetrics collects cluster-wide metrics via conn. The gauges read from conn (active brokers, offline
+// partitions) are only meaningful on the active controller, so they are collected only when controllerGauges is set.
+func CollectMetrics(i *integration.Integration, conn connection.JMXConnection, activeControllerCount int, controllerGauges bool) error {
 	clusterEntity, err := Entity(i)
 	if err != nil {
 		return fmt.Errorf("failed to create cluster entity: %v", err)
 	}
 
 	if args.GlobalArgs.HasMetrics() {
-		populateClusterMetrics(clusterEntity, conn, activeControllerCount)
+		populateClusterMetrics(clusterEntity, conn, activeControllerCount, controllerGauges)
 	}
 
 	return nil
@@ -62,7 +63,7 @@ func Entity(i *integration.Integration) (*integration.Entity, error) {
 }
 
 // populateClusterMetrics collects all cluster metrics and adds them to the entity
-func populateClusterMetrics(entity *integration.Entity, conn connection.JMXConnection, activeControllerCount int) {
+func populateClusterMetrics(entity *integration.Entity, conn connection.JMXConnection, activeControllerCount int, controllerGauges bool) {
 	attrs := []attribute.Attribute{
 		{Key: "displayName", Value: entity.Metadata.Name},
 		{Key: "entityName", Value: "cluster:" + entity.Metadata.Name},
@@ -72,7 +73,9 @@ func populateClusterMetrics(entity *integration.Entity, conn connection.JMXConne
 	attrs = append(attrs, attribute.Attribute{Key: "event_type", Value: ClusterEventType})
 	sample := entity.NewMetricSet(ClusterEventType, attrs...)
 
-	metrics.CollectMetricDefinitions(sample, metrics.ClusterMetricDefs, nil, conn)
+	if controllerGauges {
+		metrics.CollectMetricDefinitions(sample, metrics.ClusterMetricDefs, nil, conn)
+	}
 
 	if err := sample.SetMetric("cluster.activeControllerCount", activeControllerCount, metric.GAUGE); err != nil {
 		log.Error("Error setting value: %s", err)

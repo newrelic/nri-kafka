@@ -255,7 +255,7 @@ var brokerMetricDefs = []*JMXMetricSet{
 // brokerExtendedMetricDefs holds low-cost metrics gated behind CollectBrokerExtendedMetrics
 // (default off): extra attribute reads on MBean families brokerMetricDefs already queries.
 var brokerExtendedMetricDefs = []*JMXMetricSet{
-	// Strict 0/1 per broker, unlike GlobalPartitionCount which needs the active controller - see ClusterMetricDefs.
+	// Strict 0/1 per broker, unlike the cluster gauges in ClusterMetricDefs, which are only valid on the active controller.
 	{
 		MBean:        "kafka.controller:type=KafkaController,name=ActiveControllerCount",
 		MetricPrefix: "kafka.controller:type=KafkaController,name=ActiveControllerCount,",

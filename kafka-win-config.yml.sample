@@ -42,7 +42,7 @@ integrations:
     CONSUMER_GROUP_REGEX: '.*'
 
     # consumer.earliestOffset (partition's log-start offset) on KafkaOffsetSample (default: false)
-    COLLECT_CONSUMER_OFFSET_EXTENDED_METRICS: true
+    # COLLECT_CONSUMER_OFFSET_EXTENDED_METRICS: true
   interval: 15s
   labels:
     env: production
@@ -97,7 +97,7 @@ integrations:
     # Example of topic_list: '["topic1", "topic2"]'
     #
     # If monitoring topics via the "all" or "list" option for "topic_mode", the topic size can be collected from zookeeper by setting
-     "collect_topic_size" to true. This operation is intensive and can take a while to collect for a larger number of topics.
+    # "collect_topic_size" to true. This operation is intensive and can take a while to collect for a larger number of topics.
     # It is recommended to only enable this feature if using a small "topic_list".
     # If the field is omitted it will default to false.
     TOPIC_MODE: "regex"
@@ -137,22 +137,27 @@ integrations:
     BOOTSTRAP_BROKER_JMX_USER: admin
     BOOTSTRAP_BROKER_JMX_PASSWORD: password
     # Only collect metrics from the bootstrap broker configured. The integration will not attempt to collect metrics
-    # for any other broker, nor will it collect cluster-level metrics like topic metrics. This is useful for things
+    # for any other broker, nor will it collect topic metrics unless force_topic_sample_collection is set (cluster metrics come from the controller's instance). This is useful for things
     # like deployment to kubernetes, where a single integration instance is desired per broker.
     LOCAL_ONLY_COLLECTION: false
 
     # Enable collection of cluster-wide metrics from the Kafka controller
     # These metrics provide a holistic view of the cluster state, including information about brokers,
     # controller, partitions, and replication status.
+    # Enable on one instance per cluster, or on every per-broker instance with LOCAL_ONLY_COLLECTION and bootstrap discovery
+    # (only the active controller's instance reports). Nothing is sent while the active controller cannot be determined.
     COLLECT_CLUSTER_METRICS: false
 
     # Broker health (isActiveController, leaderCount, underMinIsrPartitionCount, maxLag) and JVM heap/GC metrics on KafkaBrokerSample (default: false)
-    COLLECT_BROKER_EXTENDED_METRICS: true
+    # broker.isActiveController (0/1 per broker) is the signal to alert on a missing active controller (sum it per cluster).
+    # COLLECT_BROKER_EXTENDED_METRICS: true
 
-    # topic.replicationFactor on KafkaTopicSample (default: false)
-    COLLECT_TOPIC_EXTENDED_METRICS: true
+    # topic.replicationFactor on KafkaTopicSample (default: false).
+    # With LOCAL_ONLY_COLLECTION it also needs FORCE_TOPIC_SAMPLE_COLLECTION on one instance.
+    # COLLECT_TOPIC_EXTENDED_METRICS: true
 
     # clusterId/brokerId are the real Kafka-native cluster/broker identifiers, used to correlate all Kafka samples and will power cluster-level entity relationships - disable only if you have a specific reason to
+    # On by default: about 40 bytes per sample (clusterId) plus 15 on KafkaBrokerSample (brokerId).
     # DISABLE_ATTRIBUTES: '["clusterId", "brokerId"]'
 
     TOPIC_MODE: "all"
@@ -219,7 +224,7 @@ integrations:
     # disables FAST negotiation that causes issues with Active Directory
     # sasl_gssapi_disable_fast_negotiation: false
     # Only collect metrics from the bootstrap broker configured. The integration will not attempt to collect metrics
-    # for any other broker, nor will it collect cluster-level metrics like topic metrics. This is useful for things
+    # for any other broker, nor will it collect topic metrics unless force_topic_sample_collection is set (cluster metrics come from the controller's instance). This is useful for things
     # like deployment to kubernetes, where a single integration instance is desired per broker.
     LOCAL_ONLY_COLLECTION: false
     TOPIC_MODE: "all"

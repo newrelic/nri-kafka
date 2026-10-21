@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"regexp"
+	"slices"
 	"strconv"
 
 	"github.com/IBM/sarama"
@@ -322,6 +323,10 @@ func ParseArgs(a ArgumentList) (*ParsedArguments, error) {
 		DisableAttributes:                    disableAttributes,
 	}
 
+	for _, w := range configWarnings(parsedArgs) {
+		log.Warn("%s", w)
+	}
+
 	return parsedArgs, nil
 }
 
@@ -382,4 +387,24 @@ func validateConsumerGroups(groups ConsumerGroups) error {
 	}
 
 	return nil
+}
+
+// configWarnings lists options that are accepted but cannot take effect.
+func configWarnings(a *ParsedArguments) []string {
+	var w []string
+	unknown := slices.DeleteFunc(slices.Clone(a.DisableAttributes), func(n string) bool { return slices.Contains(supportedAttributes, n) })
+	if len(unknown) > 0 {
+		w = append(w, fmt.Sprintf("disable_attributes: unknown names %v are ignored (supported: %v)", unknown, supportedAttributes))
+	}
+	if a.LocalOnlyCollection && a.CollectTopicExtendedMetrics && !a.ForceTopicSampleCollection {
+		w = append(w, "collect_topic_extended_metrics has no effect with local_only_collection unless force_topic_sample_collection is set: KafkaTopicSample is not collected")
+	}
+	// consumer_offset mode never runs the broker, topic or cluster collection.
+	if a.ConsumerOffset && (a.CollectClusterMetrics || a.CollectBrokerExtendedMetrics || a.CollectTopicExtendedMetrics) {
+		w = append(w, "collect_cluster_metrics, collect_broker_extended_metrics and collect_topic_extended_metrics are ignored when consumer_offset is true: enable them on a separate instance without consumer_offset")
+	}
+	if a.CollectConsumerOffsetExtendedMetrics && !a.ConsumerOffset {
+		w = append(w, "collect_consumer_offset_extended_metrics has no effect unless consumer_offset is true")
+	}
+	return w
 }

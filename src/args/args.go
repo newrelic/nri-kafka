@@ -76,8 +76,8 @@ type ArgumentList struct {
 	TopicBucket                  string `default:"1/1" help:"Allows the partitioning of topic collection across multiple instances. The second number is the number of instances topics are partitioned across. The first number is the bucket number of the current instance, which should be between 1 and the second number."`
 	CollectTopicSize             bool   `default:"false" help:"Enablement of on disk Topic size metric collection. This metric can be very resource intensive to collect especially against many topics."`
 	CollectTopicOffset           bool   `default:"false" help:"Enablement of Topic offsets collection. This metric can be very resource intensive to collect especially against many topics."`
-	CollectTopicExtendedMetrics  bool   `default:"false" help:"Collect topic.replicationFactor on KafkaTopicSample."`
-	CollectClusterMetrics        bool   `default:"false" help:"Collect cluster-wide metrics from the Kafka controller."`
+	CollectTopicExtendedMetrics  bool   `default:"false" help:"Collect topic.replicationFactor on KafkaTopicSample. With LocalOnlyCollection it also needs ForceTopicSampleCollection on one instance."`
+	CollectClusterMetrics        bool   `default:"false" help:"Collect cluster-wide metrics (KafkaClusterSample) from the active controller. Enable on one instance per cluster, or on every per-broker instance with LocalOnlyCollection and bootstrap discovery (only the controller's instance reports). Nothing is sent while the active controller cannot be determined."`
 	CollectBrokerExtendedMetrics bool   `default:"false" help:"Collect broker.isActiveController, broker.leaderCount, broker.underMinIsrPartitionCount, replication.maxLag, and broker JVM heap memory/GC time rate on KafkaBrokerSample. The default home for future broker-level additions."`
 
 	// Consumer offset arguments
@@ -93,5 +93,5 @@ type ArgumentList struct {
 
 	TopicSource string `default:"broker" help:"Collect topics list from either the Broker or Zookeeper"`
 
-	DisableAttributes string `default:"[]" help:"JSON array of attribute names to omit from every sample that would otherwise include them. Currently supports 'clusterId' and 'brokerId'."`
+	DisableAttributes string `default:"[]" help:"JSON array of attribute names to omit from every sample that would otherwise include them. Currently supports 'clusterId' and 'brokerId'; other names are ignored with a warning."`
 }
