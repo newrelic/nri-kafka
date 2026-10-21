@@ -8,7 +8,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## Unreleased
 
 ### enhancement
-- Add Kafka cluster-level metrics via `COLLECT_CLUSTER_METRICS`: enable on one instance per cluster, or on every per-broker instance with `LOCAL_ONLY_COLLECTION` (only the active controller's instance reports). Nothing is sent while the active controller cannot be determined, instead of `cluster.activeControllerCount` 0
+- Add Kafka cluster-level metrics via `COLLECT_CLUSTER_METRICS`: enable on one instance per cluster, or on every per-broker instance with `LOCAL_ONLY_COLLECTION`, where each reports its own broker's `cluster.activeControllerCount` (read it with `max()`) and only the active controller's instance reports the other gauges. Nothing is sent while the count cannot be determined, instead of `cluster.activeControllerCount` 0
 - Add real Kafka `clusterId`/`brokerId` on all samples (omitted when the broker reports none); opt out via `DISABLE_ATTRIBUTES`, which warns about unknown names
 - Add broker health and JVM metrics via `COLLECT_BROKER_EXTENDED_METRICS`
 - Add the `consumer.earliestOffset` metric via `COLLECT_CONSUMER_OFFSET_EXTENDED_METRICS`

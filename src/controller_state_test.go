@@ -119,10 +119,10 @@ func TestClusterMetricsTarget(t *testing.T) {
 		want      *connection.Broker
 	}{
 		{"local-only on the controller reports", local, controllerState{known: true, count: 1, controller: local[0]}, true, local[0]},
-		{"local-only on a non-controller skips", local, controllerState{known: true, count: 0}, true, nil},
+		{"local-only on a non-controller reports its own 0", local, controllerState{known: true, count: 0}, true, local[0]},
 		{"local-only with an unknown count skips", local, controllerState{known: false}, true, nil},
 		{"non-local reads the gauges from the controller", two, controllerState{known: true, count: 1, controller: two[1]}, false, two[1]},
-		{"non-local with a confirmed zero still reports, from the first broker", two, controllerState{known: true, count: 0}, false, two[0]},
+		{"non-local with a confirmed zero reports from the first broker", two, controllerState{known: true, count: 0}, false, two[0]},
 		{"non-local with an unknown count skips", two, controllerState{known: false}, false, nil},
 		{"no brokers skips", nil, controllerState{known: true}, false, nil},
 	}

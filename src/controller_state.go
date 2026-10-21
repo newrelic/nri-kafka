@@ -98,7 +98,8 @@ func queryActiveControllerCount(b *connection.Broker, provider connection.JMXPro
 	return 0, queryFailed
 }
 
-// clusterMetricsTarget returns the broker to read cluster metrics from, or nil to skip this cycle.
+// clusterMetricsTarget returns the broker to read cluster metrics from, or nil to skip this cycle. A local-only
+// instance lists one broker, so each reports its own count; only a controller broker's row carries the other gauges.
 func clusterMetricsTarget(brokers []*connection.Broker, st controllerState, localOnly bool) *connection.Broker {
 	if len(brokers) == 0 {
 		return nil
@@ -114,14 +115,6 @@ func clusterMetricsTarget(brokers []*connection.Broker, st controllerState, loca
 			log.Warn("Could not read ActiveControllerCount from every broker and none reported a controller; skipping cluster metrics this cycle")
 		}
 		return nil
-	}
-	if localOnly {
-		// Controller-only gauges read 0 on every other broker, so only the controller's instance reports.
-		if st.count == 0 {
-			log.Info("Broker '%s' is not the active controller; KafkaClusterSample is reported by the controller's instance only", brokers[0].Host)
-			return nil
-		}
-		return brokers[0]
 	}
 	if st.controller != nil {
 		return st.controller

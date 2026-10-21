@@ -36,8 +36,9 @@ integrations:
     # Enable collection of cluster-wide metrics from the Kafka controller
     # These metrics provide a holistic view of the cluster state, including information about brokers,
     # controller, partitions, and replication status.
-    # Enable on one instance per cluster, or on every per-broker instance with LOCAL_ONLY_COLLECTION and bootstrap discovery
-    # (only the active controller's instance reports). Nothing is sent while the active controller cannot be determined.
+    # Enable on one instance per cluster, or on every per-broker instance with LOCAL_ONLY_COLLECTION and bootstrap discovery:
+    # each then reports its own broker's cluster.activeControllerCount (read it with max()) and only the active controller's
+    # instance reports the other gauges. Nothing is sent while the count cannot be determined.
     COLLECT_CLUSTER_METRICS: false
 
     # Broker health (isActiveController, leaderCount, underMinIsrPartitionCount, maxLag) and JVM heap/GC metrics on KafkaBrokerSample (default: false)
@@ -235,7 +236,7 @@ integrations:
     # disables FAST negotiation that causes issues with Active Directory
     # sasl_gssapi_disable_fast_negotiation: false
     # Only collect metrics from the bootstrap broker configured. The integration will not attempt to collect metrics
-    # for any other broker, nor will it collect topic metrics unless force_topic_sample_collection is set (cluster metrics come from the controller's instance). This is useful for things
+    # for any other broker, nor will it collect topic metrics unless force_topic_sample_collection is set (cluster metrics are still reported). This is useful for things
     # like deployment to kubernetes, where a single integration instance is desired per broker.
     LOCAL_ONLY_COLLECTION: false
     TOPIC_MODE: "all"
