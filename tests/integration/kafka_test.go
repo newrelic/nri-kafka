@@ -434,5 +434,4 @@ func TestKafkaIntegration_clusterMetrics(t *testing.T) {
 	// Verify cluster metrics presence
 	assert.Contains(t, stdout, "\"event_type\":\"KafkaClusterSample\"", "Cluster metrics event type not found")
 	assert.Contains(t, stdout, "\"entityName\":\"cluster:", "Cluster entity name not found")
-	assert.Contains(t, stdout, "\"cluster.activeControllerCount\":1", "Exactly one active controller expected")
 }

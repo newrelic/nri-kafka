@@ -23,5 +23,3 @@ func ClusterIDAttribute() []attribute.Attribute {
 func BrokerIDAttribute(brokerID string) []attribute.Attribute {
 	return idAttribute("brokerId", brokerID)
 }
-
-var supportedAttributes = []string{"clusterId", "brokerId"}

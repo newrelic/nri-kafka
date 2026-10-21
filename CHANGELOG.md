@@ -8,11 +8,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## Unreleased
 
 ### enhancement
-- Add Kafka cluster-level metrics via `COLLECT_CLUSTER_METRICS`: enable on one instance per cluster, or on every per-broker instance with `LOCAL_ONLY_COLLECTION`, where each reports its own broker's `cluster.activeControllerCount` (read it with `max()`) and only the active controller's instance reports the other gauges. Nothing is sent while the count cannot be determined, instead of `cluster.activeControllerCount` 0
-- Add real Kafka `clusterId`/`brokerId` on all samples (omitted when the broker reports none); opt out via `DISABLE_ATTRIBUTES`, which warns about unknown names
+- Add Kafka cluster-level metrics via `COLLECT_CLUSTER_METRICS`; with `LOCAL_ONLY_COLLECTION` each instance reports its own `cluster.activeControllerCount` (read it with `max()`)
+- Add real Kafka `clusterId`/`brokerId` on all samples (omitted when the broker reports none); opt out via `DISABLE_ATTRIBUTES`
 - Add broker health and JVM metrics via `COLLECT_BROKER_EXTENDED_METRICS`
-- Add the `consumer.earliestOffset` metric via `COLLECT_CONSUMER_OFFSET_EXTENDED_METRICS`
-- Warn at startup about options that cannot take effect, such as `COLLECT_TOPIC_EXTENDED_METRICS` with `LOCAL_ONLY_COLLECTION` or broker options with `CONSUMER_OFFSET`
+- Add consumer offset lag metric via `COLLECT_CONSUMER_OFFSET_EXTENDED_METRICS`
 
 ### bugfix
 - Fix the Kafka cluster ID never being captured due to a protocol version mismatch

@@ -35,21 +35,15 @@ newrelic-infrastructure:
             # Enable collection of cluster-wide metrics from the Kafka controller
             # These metrics provide a holistic view of the cluster state, including information about brokers,
             # controller, partitions, and replication status.
-            # Enable on one instance per cluster, or on every per-broker instance with LOCAL_ONLY_COLLECTION and bootstrap discovery:
-            # each then reports its own broker's cluster.activeControllerCount (read it with max()) and only the active controller's
-            # instance reports the other gauges. Nothing is sent while the count cannot be determined.
             COLLECT_CLUSTER_METRICS: false
 
             # Broker health (isActiveController, leaderCount, underMinIsrPartitionCount, maxLag) and JVM heap/GC metrics on KafkaBrokerSample (default: false)
-            # broker.isActiveController (0/1 per broker) is the signal to alert on a missing active controller (sum it per cluster).
-            # COLLECT_BROKER_EXTENDED_METRICS: true
+            COLLECT_BROKER_EXTENDED_METRICS: true
 
-            # topic.replicationFactor on KafkaTopicSample (default: false).
-            # With LOCAL_ONLY_COLLECTION it also needs FORCE_TOPIC_SAMPLE_COLLECTION on one instance.
-            # COLLECT_TOPIC_EXTENDED_METRICS: true
+            # topic.replicationFactor on KafkaTopicSample (default: false)
+            COLLECT_TOPIC_EXTENDED_METRICS: true
 
             # clusterId/brokerId are the real Kafka-native cluster/broker identifiers, used to correlate all Kafka samples and will power cluster-level entity relationships - disable only if you have a specific reason to
-            # On by default: about 40 bytes per sample (clusterId) plus 15 on KafkaBrokerSample (brokerId).
             # DISABLE_ATTRIBUTES: '["clusterId", "brokerId"]'
     kafka-config-offset.yaml:
       discovery:
@@ -76,7 +70,7 @@ newrelic-infrastructure:
             CONSUMER_GROUP_REGEX: '.*'
 
             # consumer.earliestOffset (partition's log-start offset) on KafkaOffsetSample (default: false)
-            # COLLECT_CONSUMER_OFFSET_EXTENDED_METRICS: true
+            COLLECT_CONSUMER_OFFSET_EXTENDED_METRICS: true
     kafka-config-producer.yaml:
       discovery:
         command:

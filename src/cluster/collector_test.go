@@ -6,7 +6,6 @@ import (
 	"github.com/newrelic/infra-integrations-sdk/v3/integration"
 	"github.com/newrelic/nri-kafka/src/args"
 	"github.com/newrelic/nri-kafka/src/connection/mocks"
-	"github.com/newrelic/nrjmx/gojmx"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -28,7 +27,7 @@ func TestCollectMetrics(t *testing.T) {
 	assert.Equal(t, 1, len(i.Entities))
 	assert.Empty(t, entity.Metadata.IDAttrs)
 
-	err = CollectMetrics(i, mocks.NewEmptyMockJMXProvider(), 1, true)
+	err = CollectMetrics(i, mocks.NewEmptyMockJMXProvider(), 1)
 	require.NoError(t, err)
 
 	require.Len(t, entity.Metrics, 1)
@@ -72,32 +71,4 @@ func TestEntity_ErrorsWhenNeitherClusterNameNorClusterIDSet(t *testing.T) {
 
 	_, err = Entity(i)
 	require.Error(t, err)
-}
-
-func TestCollectMetrics_ControllerGaugesOnlyFromTheController(t *testing.T) {
-	provider := &mocks.MockJMXProvider{Response: &mocks.MockJMXResponse{Result: []*gojmx.AttributeResponse{
-		{Name: "kafka.controller:type=KafkaController,name=ActiveBrokerCount,attr=Value", ResponseType: gojmx.ResponseTypeInt, IntValue: 3},
-		{Name: "kafka.controller:type=KafkaController,name=OfflinePartitionsCount,attr=Value", ResponseType: gojmx.ResponseTypeInt, IntValue: 2},
-	}}}
-
-	for _, withGauges := range []bool{true, false} {
-		args.GlobalArgs = &args.ParsedArguments{ClusterName: "test-cluster", ClusterID: "lkc-abc123"}
-		i, err := integration.New("test", "1.0.0")
-		require.NoError(t, err)
-
-		require.NoError(t, CollectMetrics(i, provider, 0, withGauges))
-
-		entity, err := Entity(i)
-		require.NoError(t, err)
-		require.Len(t, entity.Metrics, 1)
-		m := entity.Metrics[0].Metrics
-		assert.Equal(t, float64(0), m["cluster.activeControllerCount"], "the count is always reported")
-		if withGauges {
-			assert.Equal(t, float64(3), m["cluster.activeBrokerCount"])
-			assert.Equal(t, float64(2), m["cluster.offlinePartitionsCount"])
-		} else {
-			assert.NotContains(t, m, "cluster.activeBrokerCount", "values read from a non-controller must not be published")
-			assert.NotContains(t, m, "cluster.offlinePartitionsCount")
-		}
-	}
 }
