@@ -8,7 +8,7 @@ require (
 	github.com/newrelic/nrjmx/gojmx v0.0.0-20261029125432-b1a82e4d8479
 	github.com/samuel/go-zookeeper v0.0.0-20201211165307-7117e9ea2414
 	github.com/stretchr/testify v1.12.1
-	github.com/xdg-go/scram v1.2.0
+	github.com/xdg-go/scram v1.3.0
 	github.com/xeipuuv/gojsonschema v1.2.0
 	golang.org/x/sync v0.24.0
 )
