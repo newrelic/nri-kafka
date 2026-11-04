@@ -5,7 +5,7 @@ go 1.27.3
 require (
 	github.com/IBM/sarama v1.43.3
 	github.com/newrelic/infra-integrations-sdk/v3 v3.9.1
-	github.com/newrelic/nrjmx/gojmx v0.0.0-20261029125432-b1a82e4d8479
+	github.com/newrelic/nrjmx/gojmx v0.0.0-20261104111527-f929a8ffc3c1
 	github.com/samuel/go-zookeeper v0.0.0-20201211165307-7117e9ea2414
 	github.com/stretchr/testify v1.12.1
 	github.com/xdg-go/scram v1.3.0
