@@ -7,8 +7,14 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
-### security
+## v3.29.0 - 2026-11-06
+
+### 🛡️ Security notices
 - Updated golang.org/x/net to v0.62.0 to address GO-2026-6860 and GO-2026-6866, with golang.org/x/crypto v0.58.0 and golang.org/x/text v0.43.0
+
+### ⛓️ Dependencies
+- Updated github.com/xdg-go/scram to v1.4.0 - [Changelog 🔗](https://github.com/xdg-go/scram/releases/tag/v1.4.0)
+- Updated github.com/newrelic/nrjmx/gojmx digest to f929a8f
 
 ## v3.28.0 - 2026-10-30
 
