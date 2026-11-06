@@ -7,7 +7,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
-### security
+## v3.30.0 - 2026-11-06
+
+### 🛡️ Security notices
 - Updated github.com/klauspost/compress to v1.20.2 to address GO-2026-6865, and go.opentelemetry.io/otel to v1.47.0 to address GO-2026-5158 and GHSA-q7gw-24fr-5p69
 
 ## v3.29.0 - 2026-11-06
