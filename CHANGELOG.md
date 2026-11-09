@@ -7,7 +7,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
-### bugfix
+## v3.30.1 - 2026-11-09
+
+### 🐞 Bug fixes
 - Publish the `nri-kafka-fips` packages, which were missing for v3.30.0, so FIPS installs receive its security fixes
 
 ## v3.30.0 - 2026-11-06
