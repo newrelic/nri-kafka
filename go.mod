@@ -3,14 +3,14 @@ module github.com/newrelic/nri-kafka
 go 1.27.4
 
 require (
-	github.com/IBM/sarama v1.43.3
+	github.com/IBM/sarama v1.62.0
 	github.com/newrelic/infra-integrations-sdk/v3 v3.9.1
 	github.com/newrelic/nrjmx/gojmx v0.0.0-20261104111527-f929a8ffc3c1
 	github.com/samuel/go-zookeeper v0.0.0-20201211165307-7117e9ea2414
 	github.com/stretchr/testify v1.12.1
 	github.com/xdg-go/scram v1.4.0
 	github.com/xeipuuv/gojsonschema v1.2.0
-	golang.org/x/sync v0.24.0
+	golang.org/x/sync v0.25.0
 )
 
 require (
@@ -28,9 +28,9 @@ require (
 	github.com/jcmturner/gofork v1.7.6 // indirect
 	github.com/jcmturner/gokrb5/v8 v8.4.4 // indirect
 	github.com/jcmturner/rpc/v2 v2.0.3 // indirect
-	github.com/klauspost/compress v1.20.2 // indirect
-	github.com/pierrec/lz4/v4 v4.1.21 // indirect
-	github.com/rcrowley/go-metrics v0.0.0-20201227073835-cf1acfcdf475 // indirect
+	github.com/klauspost/compress v1.20.4 // indirect
+	github.com/pierrec/lz4/v4 v4.1.33 // indirect
+	github.com/rcrowley/go-metrics v0.0.0-20250401214520-65e299d6c5c9 // indirect
 	github.com/stretchr/objx v0.5.3 // indirect
 	github.com/xdg-go/stringprep v1.0.4 // indirect
 	github.com/xeipuuv/gojsonpointer v0.0.0-20190905194746-02993c407bfb // indirect
@@ -38,7 +38,8 @@ require (
 	go.opentelemetry.io/otel/metric v1.47.0 // indirect
 	go.opentelemetry.io/otel/trace v1.47.0 // indirect
 	go.yaml.in/yaml/v3 v3.0.5 // indirect
-	golang.org/x/crypto v0.58.0 // indirect
-	golang.org/x/net v0.62.0 // indirect
-	golang.org/x/text v0.43.0 // indirect
+	golang.org/x/crypto v0.59.0 // indirect
+	golang.org/x/net v0.63.0 // indirect
+	golang.org/x/sys v0.50.0 // indirect
+	golang.org/x/text v0.44.0 // indirect
 )
